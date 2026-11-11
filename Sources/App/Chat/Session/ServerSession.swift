@@ -213,6 +213,8 @@ class ServerSession: ChatItem {
 	/// The SASL exchange, from the mechanisms the server offered to the reply
 	/// it is waiting on.
 	var sasl: SASLSession
+	/// An account registration on this connection, beside the SASL exchange.
+	var accountRegistration = AccountRegistrationSession()
 	var sts = STSUpgradeState()
 	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }

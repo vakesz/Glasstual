@@ -23,6 +23,10 @@ final class ChatServices {
 
 	var updateDockBadge: @MainActor () -> Void = {}
 
+	/// Where credentials the session saves on its own go, such as a password
+	/// an account registration created.
+	var credentialPersistence = KeychainPersistence.shared
+
 	var connectToServer: @MainActor (ServerConnectionRequest) -> Void
 
 	let certificates: (any CertificatePresenting)?

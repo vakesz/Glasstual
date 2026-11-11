@@ -138,6 +138,19 @@ struct ServerSessionXDCCTests {
 		#expect(sent(session) == lines)
 	}
 
+	/// `/dcc` and `/xdcc` share one dispatch case, and each still reaches its
+	/// own handler.
+	@Test("Typed /xdcc and /dcc reach their own handlers")
+	func typedCommandsAreDispatched() {
+		let session = makeSession()
+
+		session.sendCommand("xdcc list Bot", completeTarget: false, target: nil)
+		session.sendCommand("dcc trust d9 once", completeTarget: false, target: nil)
+
+		#expect(sent(session) == ["PRIVMSG Bot :XDCC LIST"])
+		#expect(printed(session).contains(String(localized: .IRC.dccQuestionUnknown("d9"))))
+	}
+
 	@Test("Malformed requests send nothing and print the syntax", arguments: [
 		"send Bot", "send Bot #0", "send Bot #1000000", "send #channel 5", "send -flag 5", "send Bot 5 extra",
 		"info Bot", "list Bot extra", "remove Bot five", "batch Bot", "frobnicate Bot",

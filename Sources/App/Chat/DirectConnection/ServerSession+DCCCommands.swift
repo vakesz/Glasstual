@@ -11,6 +11,19 @@ import Foundation
  identifier the transcript prints beside it, so nothing about a connection
  depends on the alert being on screen. */
 extension ServerSession {
+	/// `/dcc` or `/xdcc`, whichever `group` names.
+	func dispatchDirectConnectionCommand(
+		_ group: LocalCommand.Group,
+		parsed: ParsedUserCommand,
+		targetConversation: Conversation?
+	) {
+		if group == .xdcc {
+			handleXDCCCommand(parsed.arguments, command: parsed.command, targetConversation: targetConversation)
+		} else {
+			handleDCCCommand(parsed.arguments, command: parsed.command, targetConversation: targetConversation)
+		}
+	}
+
 	func handleDCCCommand(
 		_ input: CommandArguments,
 		command: String,

@@ -58,6 +58,7 @@ extension ServerSession {
 		identity = SessionIdentity()
 
 		resetSASLNegotiation()
+		accountRegistrationConnectionDidReset()
 		resetCapabilityNegotiation()
 		removeAllUsers()
 	}

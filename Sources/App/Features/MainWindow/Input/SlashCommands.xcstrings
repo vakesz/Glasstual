@@ -9024,6 +9024,294 @@
           }
         }
       }
+    },
+    "description-register": {
+      "comment": "The /register command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register an account on the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiók regisztrálása a szerveren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen Account auf dem Server registrieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar una cuenta en el servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer un compte sur le serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバにアカウントを登録"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar uma conta no servidor"
+          }
+        }
+      }
+    },
+    "syntax-register": {
+      "comment": "Arguments of the /register command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<account|*> <email|*> <password> | cancel]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<fiók|*> <e-mail|*> <jelszó> | cancel]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<Account|*> <E-Mail|*> <Passwort> | cancel]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<cuenta|*> <correo|*> <contraseña> | cancel]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<compte|*> <e-mail|*> <mot de passe> | cancel]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<アカウント|*> <メール|*> <パスワード> | cancel]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[<conta|*> <e-mail|*> <senha> | cancel]"
+          }
+        }
+      }
+    },
+    "hint-register": {
+      "comment": "Help for the /register command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* names the account after your nickname or leaves out the email. Without arguments, shows what the server accepts. The command is never kept in input history."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A * a beceneved alapján nevezi el a fiókot, vagy kihagyja az e-mailt. Argumentumok nélkül megmutatja, mit fogad el a szerver. A parancs soha nem kerül a beviteli előzményekbe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* benennt den Account nach deinem Nickname oder lässt die E-Mail weg. Ohne Argumente wird angezeigt, was der Server akzeptiert. Der Befehl wird nie im Eingabeverlauf gespeichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* da a la cuenta el nombre de tu apodo u omite el correo. Sin argumentos, muestra lo que acepta el servidor. El comando nunca se guarda en el historial de entrada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* donne au compte le nom de votre pseudo ou omet l’e-mail. Sans argument, affiche ce que le serveur accepte. La commande n’est jamais conservée dans l’historique de saisie."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* はアカウント名をニックネームにするか、メールを省略します。引数なしの場合はサーバが受け付ける内容を表示します。このコマンドは入力履歴に残りません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* dá à conta o nome do seu apelido ou omite o e-mail. Sem argumentos, mostra o que o servidor aceita. O comando nunca fica no histórico de entrada."
+          }
+        }
+      }
+    },
+    "description-verify": {
+      "comment": "The /verify command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify a newly registered account with its code"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újonnan regisztrált fiók megerősítése a kódjával"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen neu registrierten Account mit seinem Code bestätigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar una cuenta recién registrada con su código"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier un compte nouvellement enregistré avec son code"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しく登録したアカウントをコードで確認"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar uma conta recém-registrada com o código"
+          }
+        }
+      }
+    },
+    "syntax-verify": {
+      "comment": "Arguments of the /verify command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[account|*] <code>"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[fiók|*] <kód>"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Account|*] <Code>"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[cuenta|*] <código>"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[compte|*] <code>"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[アカウント|*] <コード>"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[conta|*] <código>"
+          }
+        }
+      }
+    },
+    "hint-verify": {
+      "comment": "Help for the /verify command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without an account, the code completes the registration in progress. The command is never kept in input history."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiók nélkül a kód a folyamatban lévő regisztrációt fejezi be. A parancs soha nem kerül a beviteli előzményekbe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Account schließt der Code die laufende Registrierung ab. Der Befehl wird nie im Eingabeverlauf gespeichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin cuenta, el código completa el registro en curso. El comando nunca se guarda en el historial de entrada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans compte, le code finalise l’enregistrement en cours. La commande n’est jamais conservée dans l’historique de saisie."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントを省略すると、進行中の登録をコードで完了します。このコマンドは入力履歴に残りません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem conta, o código conclui o registro em andamento. O comando nunca fica no histórico de entrada."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -127,6 +127,12 @@ extension ServerSession {
 			 pick the mechanism: this runs again on every `CAP NEW` and `CAP DEL`,
 			 and choosing here overwrote the mechanism of an exchange already in
 			 flight. The choice is made once, on the ACK. */
+			/* Registering an account and signing in to an older one on the same
+			 connection contradict each other. */
+			if capability.negotiation == .sasl, accountRegistration.phase.isIdle == false {
+				return nil
+			}
+
 			if capability.negotiation == .sasl {
 				let offered = offer[name] ?? []
 				let mechanism = nextSASLMechanism(from: offered)
@@ -306,7 +312,8 @@ extension ServerSession {
 			return
 		}
 
-		let isSASL = CapabilityRegistry.defaultRegistry.capability(named: name)?.identifier == .saslGeneric
+		let identifier = CapabilityRegistry.defaultRegistry.capability(named: name)?.identifier
+		let isSASL = identifier == .saslGeneric
 
 		if enabled {
 			guard capabilityNegotiation.acknowledge(name) else { return }
@@ -328,6 +335,10 @@ extension ServerSession {
 		          sendSASLIdentificationRequest()
 		{
 			pauseCapabilityNegotiation(.sasl)
+		}
+
+		if identifier == .accountRegistration {
+			noteAccountRegistrationCapability(enabled: enabled)
 		}
 
 		SessionCapabilitiesDidChange(subject: self).post()

@@ -86,6 +86,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case raw
 	case recv
 	case redact
+	case register
 	case rejoin
 	case remove
 	case sasl
@@ -113,6 +114,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case unmute
 	case unotice
 	case unquiet
+	case verify
 	case voice
 	case wallops
 	case watch
@@ -153,6 +155,7 @@ extension LocalCommand {
 		case capability
 		case information
 		case xdcc
+		case account
 	}
 
 	/// Matches the name however the user capitalised it.
@@ -205,6 +208,7 @@ extension LocalCommand {
 		case .chathistory, .umode, .monitor, .watch, .silence: .capability
 		case .who, .whois, .weights, .myversion, .tage, .lagcheck, .mylag: .information
 		case .attach, .detach, .znccert: .bouncer
+		case .register, .verify: .account
 		default: nil
 		}
 	}
@@ -213,6 +217,29 @@ extension LocalCommand {
 	/// to the server, unless the developer-mode setting is on.
 	var isDeveloperModeOnly: Bool {
 		Self.developerModeOnlyCommands.contains(self)
+	}
+
+	/** Whether the arguments hold a secret: a password or a verification code.
+
+	 Such a line is kept out of input history, and with it out of every draft
+	 the history keeps. */
+	var carriesSecret: Bool {
+		switch self {
+		case .pass, .register, .verify: true
+		default: false
+		}
+	}
+
+	/// Whether a line typed into the input field is a command that carries a
+	/// secret. Every line of a multi-line paste is checked.
+	static func inputCarriesSecret(_ text: String) -> Bool {
+		text.split(whereSeparator: \.isNewline).contains { line in
+			let trimmed = line.drop { $0 == " " || $0 == "\t" }
+
+			guard trimmed.hasPrefix("/"), trimmed.hasPrefix("//") == false else { return false }
+
+			return ParsedUserCommand(String(trimmed))?.localCommand?.carriesSecret == true
+		}
 	}
 
 	/// The documented argument syntax, or `nil` for a command that takes none.
@@ -300,6 +327,7 @@ extension LocalCommand {
 		.raw: "<input>",
 		.recv: "<input>",
 		.redact: "[message id [reason]]",
+		.register: "[<account | *> <email | *> <password> | cancel]",
 		.remove: "[target]",
 		.sasl: "[status | auth [mechanism] | mechanism <name | automatic> [only] | token <token | clear>]",
 		.server: "<address> [[+] port] [password]",
@@ -322,6 +350,7 @@ extension LocalCommand {
 		.unignore: "<nickname>",
 		.unotice: "<target> <message>",
 		.unquiet: "[channel] <nickname>",
+		.verify: "[account | *] <code>",
 		.voice: "[channel] <nickname>",
 		.wallops: "<message>",
 		.whisper: "<nickname> <message>",

@@ -40,8 +40,8 @@ extension ServerSession {
 		targetConversation: Conversation?
 	) {
 		switch group {
-		case .directChat:
-			handleDCCCommand(parsed.arguments, command: parsed.command, targetConversation: targetConversation)
+		case .directChat, .xdcc:
+			dispatchDirectConnectionCommand(group, parsed: parsed, targetConversation: targetConversation)
 		case .message:
 			dispatchMessageCommand(parsed, targetConversation: targetConversation)
 		case .broadcast:
@@ -78,8 +78,8 @@ extension ServerSession {
 			dispatchNativeCapabilityCommand(command, parsed: parsed, targetConversation: targetConversation)
 		case .information:
 			dispatchNativeInformationCommand(command, parsed: parsed, targetConversation: targetConversation)
-		case .xdcc:
-			handleXDCCCommand(parsed.arguments, command: parsed.command, targetConversation: targetConversation)
+		case .account:
+			dispatchAccountRegistrationCommand(command, parsed: parsed)
 		}
 	}
 

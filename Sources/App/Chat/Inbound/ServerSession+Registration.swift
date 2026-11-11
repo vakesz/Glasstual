@@ -100,6 +100,7 @@ extension ServerSession {
 		output?.updateTitle(for: self)
 		flushPreRegistrationISupportEffects()
 
+		accountRegistrationDidReceiveWelcome()
 		performAutoJoin()
 		scheduleChatHistoryTargetsSweep()
 

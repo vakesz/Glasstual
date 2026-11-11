@@ -67,6 +67,13 @@ extension CapabilityRegistry {
 				identifier: .changeHost,
 				specification: ircv3Specification("chghost")
 			),
+			/* `REGISTER` and `VERIFY` need the capability enabled; the unprefixed
+				name is never requested while the specification is a draft. */
+			Capability.capability(
+				named: AccountRegistrationCapabilityValues.capabilityName,
+				identifier: .accountRegistration,
+				specification: ircv3Specification("account-registration")
+			),
 			Capability.capability(
 				named: "draft/channel-rename",
 				identifier: .channelRename,

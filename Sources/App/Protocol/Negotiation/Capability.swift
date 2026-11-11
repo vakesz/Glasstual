@@ -129,4 +129,5 @@ nonisolated struct CapabilitySet: OptionSet, Hashable, Sendable {
 	static let bouncerNetworks = Self(rawValue: 1 << 39)
 	static let bouncerNetworksNotify = Self(rawValue: 1 << 40)
 	static let extendedISupport = Self(rawValue: 1 << 41)
+	static let accountRegistration = Self(rawValue: 1 << 42)
 }

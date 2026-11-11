@@ -16080,6 +16080,54 @@
           }
         }
       }
+    },
+    "ircv3-capability-account-registration": {
+      "comment": "Summary of the draft/account-registration capability in the IRCv3 settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lets you create an account on the server from Glasstual."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lehetővé teszi, hogy a Glasstualból fiókot hozz létre a szerveren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ermöglicht es, in Glasstual einen Account auf dem Server zu erstellen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permite crear una cuenta en el servidor desde Glasstual."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permet de créer un compte sur le serveur depuis Glasstual."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstualからサーバにアカウントを作成できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permite criar uma conta no servidor pelo Glasstual."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

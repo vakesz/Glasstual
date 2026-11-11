@@ -67,7 +67,13 @@ private struct InputHistoryObject {
 		return entryAtBufferPosition() ?? NSAttributedString(string: "")
 	}
 
+	/// A line that carries a password or a code never enters the buffer, as
+	/// an entry or as the draft Up and Down keep.
 	private mutating func addToBuffer(_ string: NSAttributedString) {
+		guard LocalCommand.inputCarriesSecret(string.string) == false else {
+			return
+		}
+
 		historyBuffer.append(NSAttributedString(attributedString: string))
 
 		guard historyBuffer.count > inputHistoryMaximumCount else {

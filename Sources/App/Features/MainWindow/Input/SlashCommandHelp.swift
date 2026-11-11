@@ -207,6 +207,7 @@ struct SlashCommandHelp {
 			.SlashCommands.hintTransport
 		),
 		.init([.redact], .SlashCommands.descriptionRedact, .SlashCommands.syntaxMessageIdentifierReason, .SlashCommands.hintRedact),
+		.init([.register], .SlashCommands.descriptionRegister, .SlashCommands.syntaxRegister, .SlashCommands.hintRegister),
 		.init([.setcolor], .SlashCommands.descriptionColor, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),
 		.init([.setname], .SlashCommands.descriptionRealName, .SlashCommands.syntaxRealName, .SlashCommands.hintRealName),
 		.init([.setqueryname], .SlashCommands.descriptionQueryName, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),
@@ -244,6 +245,7 @@ struct SlashCommandHelp {
 			.SlashCommands.syntaxChannelNickname,
 			.SlashCommands.hintChannelPrivileges
 		),
+		.init([.verify], .SlashCommands.descriptionVerify, .SlashCommands.syntaxVerify, .SlashCommands.hintVerify),
 		.init([.voice], .SlashCommands.descriptionVoice, .SlashCommands.syntaxChannelNickname, .SlashCommands.hintChannelPrivileges),
 		.init([.weights], .SlashCommands.descriptionNicknameCompletionPriorities),
 		.init(

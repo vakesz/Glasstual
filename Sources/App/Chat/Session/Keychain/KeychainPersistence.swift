@@ -71,7 +71,11 @@ final class KeychainPersistence {
 
 	/// Model commits keep their edits until this callback acknowledges success.
 	/// The service owns persistence even if the model is removed in the meantime.
-	func persist(_ edits: Edits, onSuccess: @escaping (Edits) -> Void = { _ in }) {
+	func persist(
+		_ edits: Edits,
+		onSuccess: @escaping (Edits) -> Void = { _ in },
+		onFailure: @escaping (any Error) -> Void = { _ in }
+	) {
 		guard !edits.isEmpty else { return }
 		let revision = UUID()
 		let task = enqueue(edits, revision: revision)
@@ -81,6 +85,7 @@ final class KeychainPersistence {
 				try await task.value
 				onSuccess(edits)
 			} catch {
+				onFailure(error)
 				if self?.isFinishingTermination == false {
 					self?.reportFailure(error) { [weak self] in
 						guard let self, !isFinishingTermination else { return }

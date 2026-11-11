@@ -22,6 +22,7 @@ struct IRCv3Pane: View {
 		"batch": .Settings.ircv3CapabilityBatch,
 		"cap-notify": .Settings.ircv3CapabilityCapNotify,
 		"chghost": .Settings.ircv3CapabilityChghost,
+		"draft/account-registration": .Settings.ircv3CapabilityAccountRegistration,
 		"draft/channel-rename": .Settings.ircv3CapabilityChannelRename,
 		"extended-join": .Settings.ircv3CapabilityExtendedJoin,
 		"extended-monitor": .Settings.ircv3CapabilityExtendedMonitor,

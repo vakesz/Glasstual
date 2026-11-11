@@ -199,6 +199,8 @@ private extension ServerSession {
 			receiveRedact(message)
 		case .rename:
 			receiveRename(message)
+		case .register, .verify:
+			receiveAccountRegistrationReply(message)
 		default:
 			break
 		}
@@ -228,6 +230,10 @@ extension ServerSession {
 
 		if message.remoteCommand == .fail, RemoteCommand(wireName: command) == .bouncer {
 			receiveBouncerFailure(message)
+		}
+
+		if receiveAccountRegistrationFailure(message) {
+			return
 		}
 
 		if message.remoteCommand == .fail, RemoteCommand(wireName: command) == .redact {
