@@ -133,12 +133,12 @@ extension ServerSession {
 			host: serverAddress,
 			port: port,
 			secured: sessionPrefersSecuredConnection,
-			origin: server,
+			origin: endpoints.current,
 			reason: .serverRedirect
 		)
 		addDisconnectCallback { [weak self] in
 			guard let self else { return }
-			pendingEndpoint = endpoint
+			endpoints.pending = endpoint
 			connect()
 		}
 		disconnect()

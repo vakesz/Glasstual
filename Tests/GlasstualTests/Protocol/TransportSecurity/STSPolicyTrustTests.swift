@@ -87,7 +87,7 @@ struct STSPolicyTrustTests {
 		var config = ServerConfig()
 		config.serverList = [ServerEndpoint(serverAddress: "irc.example.net", serverPort: 6667)]
 		let session = ServerSession(config: config, environment: ChatEnvironment(settings: .current(), services: services))
-		session.pendingEndpoint = PendingIRCEndpoint(
+		session.endpoints.pending = PendingIRCEndpoint(
 			host: "irc.example.net", port: 6697, secured: true, origin: nil, reason: .stsUpgrade
 		)
 		let connection = try #require(session.takeConnectionEndpoint())

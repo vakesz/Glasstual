@@ -20,7 +20,7 @@ struct MainWindowTitleContentTests {
 	func serverSelectionComposition() {
 		let session = TestServerSession()
 		session.config.connectionName = "Libera"
-		session.server = ServerEndpoint(serverAddress: "irc.example.test")
+		session.endpoints.current = ServerEndpoint(serverAddress: "irc.example.test")
 		session.userNickname = "Alice"
 
 		let content = MainWindowTitleContent(session: session, conversation: nil)

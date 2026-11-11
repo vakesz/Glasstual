@@ -50,7 +50,7 @@ extension ServerSession {
 		resetChatHistoryState()
 		// Reconnect intent belongs to the pending schedule, which survives this reset.
 		liveness.resetForTeardown()
-		server = nil
+		endpoints.current = nil
 		KeychainPersistence.shared.persist(Dictionary(uniqueKeysWithValues: retiredServerKeychainItems.map { ($0, .cleared) }))
 		retiredServerKeychainItems.removeAll()
 		identity = SessionIdentity()

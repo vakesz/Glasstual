@@ -140,7 +140,7 @@ struct ServerSessionCredentialConsentTests {
 		let session = TestServerSession(configDictionary: ["nickname": "Guest"], nicknamePassword: nil)
 		session.forwardsProcessedMessages = true
 		session.setConnectionTransportForTesting(.connected)
-		session.server = ServerEndpoint(
+		session.endpoints.current = ServerEndpoint(
 			serverAddress: "bouncer.example.test",
 			prefersSecuredConnection: serverWantsTLS,
 			pendingServerPassword: .set("bouncer-secret")

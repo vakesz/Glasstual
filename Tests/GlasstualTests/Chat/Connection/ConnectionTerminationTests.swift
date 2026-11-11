@@ -114,7 +114,7 @@ struct ConnectionTerminationTests {
 		let session = TestServerSession()
 		session.setConnectionTransportForTesting(.connecting)
 		session.reconnect.isEnabled = true
-		session.server = ServerEndpoint(serverAddress: "irc.example.test", pendingServerPassword: .set("private-password"))
+		session.endpoints.current = ServerEndpoint(serverAddress: "irc.example.test", pendingServerPassword: .set("private-password"))
 		let recorder = TerminationRecorder()
 		let connection = Connection(config: ConnectionConfig(), onSession: session, closeClock: .continuous,
 		                            recordTermination: recorder.record)

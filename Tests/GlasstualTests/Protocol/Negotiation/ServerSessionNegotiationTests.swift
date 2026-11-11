@@ -607,7 +607,7 @@ struct ServerSessionNegotiationTests {
 		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "secret")
 		defer { session.stopAllTimers() }
 		session.setConnectionTransportForTesting(.connected)
-		session.server = ServerEndpoint(serverAddress: "irc.example.net", prefersSecuredConnection: serverPrefersTLS)
+		session.endpoints.current = ServerEndpoint(serverAddress: "irc.example.net", prefersSecuredConnection: serverPrefersTLS)
 
 		try session.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * LS :sasl=PLAIN", on: session))
 

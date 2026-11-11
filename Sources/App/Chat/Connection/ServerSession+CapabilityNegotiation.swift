@@ -173,7 +173,7 @@ extension ServerSession {
 		switch action {
 		case let .upgrade(upgradePort):
 			// Snapshot the pending secret too: teardown may retire its keychain item.
-			var origin = server
+			var origin = endpoints.current
 			origin?.pendingServerPassword = PendingKeychainSecret(sessionServerPassword)
 			let endpoint = PendingIRCEndpoint(
 				host: host,
@@ -189,7 +189,7 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.serverOffersStrictTransportSecurityReconnecting(String(upgradePort))))
 			addDisconnectCallback { [weak self] in
 				guard let self else { return }
-				pendingEndpoint = endpoint
+				endpoints.pending = endpoint
 				connect()
 			}
 

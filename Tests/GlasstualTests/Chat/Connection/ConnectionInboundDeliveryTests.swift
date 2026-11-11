@@ -229,7 +229,7 @@ struct ConnectionInboundDeliveryTests {
 			try #require(origin.serverPasswordFromKeychain == "endpoint-secret")
 		}
 		session.config.serverList = [origin]
-		session.server = origin
+		session.endpoints.current = origin
 		let stored = await KeychainSecretLoader.passwords(for: [origin.keychainItem])
 		session.sessionCredentials.install(stored, items: [origin.keychainItem], applying: session.config.pendingKeychainEdits)
 		var config = ConnectionConfig()
@@ -248,7 +248,7 @@ struct ConnectionInboundDeliveryTests {
 		// Invoke the actual registered action while connect is guarded. This
 		// exercises its captured origin without launching a network service.
 		session.invokeDisconnectCallbacks()
-		let pending = try #require(session.pendingEndpoint)
+		let pending = try #require(session.endpoints.pending)
 		#expect(pending.reason == .stsUpgrade)
 		#expect(pending.origin?.uniqueIdentifier == origin.uniqueIdentifier)
 		session.retiredServerKeychainItems.insert(origin.keychainItem)
@@ -257,7 +257,7 @@ struct ConnectionInboundDeliveryTests {
 		#expect(endpoint.serverAddress == origin.serverAddress)
 		#expect(endpoint.serverPort == 6697)
 		#expect(endpoint.connectionPrefersSecuredConnection)
-		#expect(session.server?.uniqueIdentifier == origin.uniqueIdentifier)
+		#expect(session.endpoints.current?.uniqueIdentifier == origin.uniqueIdentifier)
 		// The upgraded connection checks the chain, so PASS follows the handshake.
 		var securedConfig = endpoint
 		securedConfig.connectionShouldValidateCertificateChain = true
@@ -291,7 +291,7 @@ struct ConnectionInboundDeliveryTests {
 		defer { session.stopAllTimers() }
 		let origin = ServerEndpoint(serverAddress: "origin.invalid", pendingServerPassword: .set("do-not-forward"))
 		session.config.serverList = [origin]
-		session.server = origin
+		session.endpoints.current = origin
 		try await observe(ServerSessionDidConnect.self, from: session) {
 			socket.callbackReceiver.didConnect(toHost: origin.serverAddress)
 		}
@@ -302,13 +302,13 @@ struct ConnectionInboundDeliveryTests {
 		try #require(session.isDisconnecting)
 		#expect(socket.isDisconnecting)
 		session.invokeDisconnectCallbacks()
-		let pending = try #require(session.pendingEndpoint)
+		let pending = try #require(session.endpoints.pending)
 		#expect(pending.reason == .serverRedirect)
 		session.resetAllPropertyValues()
 		let endpoint = try #require(session.takeConnectionEndpoint())
 		#expect(endpoint.serverAddress == "redirect.invalid")
 		#expect(endpoint.serverPort == 6668)
-		#expect(session.server == nil)
+		#expect(session.endpoints.current == nil)
 		let redirected = Connection(config: endpoint, onSession: session)
 		session.socket = redirected
 		try await observe(ServerSessionDidConnect.self, from: session) {
@@ -326,7 +326,7 @@ struct ConnectionInboundDeliveryTests {
 		defer { session.stopAllTimers() }
 		let origin = ServerEndpoint(serverAddress: "sts-abandon-test.invalid")
 		session.config.serverList = [origin]
-		session.server = origin
+		session.endpoints.current = origin
 		var config = ConnectionConfig()
 		config.serverAddress = origin.serverAddress
 		config.serverPort = 6667
@@ -364,7 +364,7 @@ struct ConnectionInboundDeliveryTests {
 		try #require(session.isDisconnecting)
 		session.invokeDisconnectCallbacks()
 
-		let pending = try #require(session.pendingEndpoint)
+		let pending = try #require(session.endpoints.pending)
 		#expect(pending.secured == secured)
 		session.resetAllPropertyValues()
 		let endpoint = try #require(session.takeConnectionEndpoint())
@@ -382,7 +382,7 @@ struct ConnectionInboundDeliveryTests {
 		session.connectionDidReceive(":server 010 me redirect.invalid 6697 :Try another server")
 
 		#expect(session.isDisconnecting == false)
-		#expect(session.pendingEndpoint == nil)
+		#expect(session.endpoints.pending == nil)
 		#expect(session.disconnectType != .serverRedirect)
 	}
 

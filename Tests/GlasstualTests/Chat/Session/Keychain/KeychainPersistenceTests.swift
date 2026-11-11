@@ -233,7 +233,7 @@ struct KeychainPersistenceTests {
 		case .stsUpgrade:
 			PendingIRCEndpoint(host: origin.serverAddress, port: 7001, secured: true, origin: origin, reason: .stsUpgrade)
 		}
-		session.pendingEndpoint = explicit
+		session.endpoints.pending = explicit
 		var printed: [String] = []
 		session.linePrintObserver = { printed.append($0.messageBody) }
 		let (firstGate, releaseFirst) = AsyncStream<Void>.makeStream()
@@ -250,7 +250,7 @@ struct KeychainPersistenceTests {
 		session.connect()
 		var iterator = started.makeAsyncIterator()
 		#expect(await iterator.next() == 1)
-		let selectedIndex = session.lastServerSelected
+		let selectedIndex = session.endpoints.lastIndex
 		if acknowledgePassword {
 			let edits = session.config.pendingKeychainEdits
 			session.config.acknowledgeKeychainEdits(edits)
@@ -264,9 +264,9 @@ struct KeychainPersistenceTests {
 			String(explicit?.port ?? origin.serverPort)
 		))
 		#expect(printed.filter { $0 == expected }.count == 2)
-		#expect(session.lastServerSelected == selectedIndex)
-		#expect(session.pendingEndpoint == nil)
-		#expect(session.server == (request == .configured || request == .stsUpgrade ? origin : nil))
+		#expect(session.endpoints.lastIndex == selectedIndex)
+		#expect(session.endpoints.pending == nil)
+		#expect(session.endpoints.current == (request == .configured || request == .stsUpgrade ? origin : nil))
 		#expect(session.socket == nil)
 		let preparation = try #require(session.startup.credentialTask)
 		session.disconnect()
@@ -292,7 +292,7 @@ struct KeychainPersistenceTests {
 		#expect(retry.serverAddress == "edited.invalid")
 		#expect(retry.serverPort == 7001)
 		#expect(retry.connectionPrefersSecuredConnection)
-		#expect(session.lastServerSelected == 1)
+		#expect(session.endpoints.lastIndex == 1)
 		#expect(try #require(session.takeConnectionEndpoint()).serverAddress == fallback.serverAddress)
 	}
 
@@ -318,7 +318,7 @@ struct KeychainPersistenceTests {
 		releaseFirst.finish()
 		#expect(await iterator.next() == 2)
 		#expect(session.socket == nil)
-		#expect(session.server?.serverAddress == "new.example")
+		#expect(session.endpoints.current?.serverAddress == "new.example")
 		#expect(session.sessionNicknamePassword == nil)
 		let preparation = try #require(session.startup.credentialTask)
 		session.disconnect()

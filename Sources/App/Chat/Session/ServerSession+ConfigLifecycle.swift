@@ -302,7 +302,7 @@ extension ServerSession {
 		 the same local credentials. */
 		let newIdentifiers = Set(newServers.map(\.uniqueIdentifier))
 		for oldServer in oldServers where !preservingLocalData && !newIdentifiers.contains(oldServer.uniqueIdentifier) {
-			if oldServer.uniqueIdentifier == server?.uniqueIdentifier {
+			if oldServer.uniqueIdentifier == endpoints.current?.uniqueIdentifier {
 				retiredServerKeychainItems.insert(oldServer.keychainItem)
 			} else {
 				KeychainPersistence.shared.persist([oldServer.keychainItem: .cleared])
@@ -310,7 +310,7 @@ extension ServerSession {
 		}
 
 		if newServers.isEmpty {
-			lastServerSelected = nil
+			endpoints.lastIndex = nil
 		} else {
 			writePasswordsToKeychain()
 		}

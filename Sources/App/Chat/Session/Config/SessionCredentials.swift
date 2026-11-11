@@ -70,7 +70,7 @@ extension ServerSession {
 	}
 
 	var sessionServerPassword: String? {
-		guard let server else { return nil }
+		guard let server = endpoints.current else { return nil }
 		return server.pendingServerPassword.value(orStored: sessionCredentials.password(for: server.keychainItem))
 	}
 
@@ -96,7 +96,7 @@ extension ServerSession {
 
 		let endpointWantsTLS = socket?.config.connectionPrefersSecuredConnection ?? false
 
-		return endpointWantsTLS == false && server?.prefersSecuredConnection != true
+		return endpointWantsTLS == false && endpoints.current?.prefersSecuredConnection != true
 	}
 
 	/// Whether the user allowed the host and port this connection is open to

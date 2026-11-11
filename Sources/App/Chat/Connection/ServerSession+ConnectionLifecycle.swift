@@ -90,7 +90,7 @@ extension ServerSession {
 			return
 		}
 		let configurationSnapshot = config
-		let requestedEndpoint = pendingEndpoint
+		let requestedEndpoint = endpoints.pending
 		let diagnostics = ConnectionDiagnostics()
 		diagnostics.record(.requested)
 		guard var socketConfig = takeConnectionEndpoint(retryingServerIdentifier: retryingServerIdentifier) else { return }
@@ -112,7 +112,7 @@ extension ServerSession {
 		socketConfig.apply(configurationSnapshot, bypassProxy: bypassProxy)
 		let startupIdentifier = startup.identifier
 		let loadCredentials = credentialLoader
-		let selectedServer = server
+		let selectedServer = endpoints.current
 		let conversationConfigs = conversationList.map(\.config)
 		let attempt = ConnectAttempt(
 			snapshot: configurationSnapshot,
@@ -159,7 +159,7 @@ extension ServerSession {
 			// an explicit target or advanced the configured-server rotation.
 			startup.credentialTask = nil
 			connectionState.cancelPreparation()
-			pendingEndpoint = attempt.requestedEndpoint
+			endpoints.pending = attempt.requestedEndpoint
 			connect(
 				attempt.mode,
 				bypassProxy: attempt.bypassProxy,
@@ -178,7 +178,7 @@ extension ServerSession {
 		var socketConfig = attempt.socketConfig
 		/* An explicit endpoint that is not one of the configured servers
 		 never receives the account password, over SASL or to services. */
-		if attempt.requestedEndpoint != nil, server == nil {
+		if attempt.requestedEndpoint != nil, endpoints.current == nil {
 			sessionCredentials.withholdsAccountCredentials = true
 			printDebugInformation(
 				toConsole: ConnectionSafetyStrings.Credentials.withheldFromUnconfiguredHost(
@@ -202,23 +202,10 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.thereAreNoServersConfigured))
 			return nil
 		}
-		let endpoint = pendingEndpoint
-		pendingEndpoint = nil
-		var host = endpoint?.host ?? ""
-		var port = endpoint?.port ?? ConnectionDefaults.serverPort
-		var secured = endpoint?.secured ?? false
-		server = endpoint?.credentialEndpoint(among: servers)
-		if host.isValidInternetAddress == false {
-			let retryIndex = servers.firstIndex { $0.uniqueIdentifier == retryingServerIdentifier }
-			let nextIndex = retryIndex.map(UInt.init)
-				?? lastServerSelected.map { ($0 + 1) % UInt(servers.count) } ?? 0
-			lastServerSelected = nextIndex
-			let selected = servers[Int(nextIndex)]
-			host = selected.serverAddress
-			port = selected.serverPort
-			secured = selected.prefersSecuredConnection
-			server = selected
-		}
+		let target = endpoints.take(from: servers, retrying: retryingServerIdentifier)
+		let host = target.host
+		var port = target.port
+		var secured = target.secured
 		let enforcedPort = environment.services.stsPolicies.enforcedPort(forHost: host)
 		if let enforcedPort {
 			if enforcedPort != port || secured == false {
@@ -231,7 +218,7 @@ extension ServerSession {
 		connectionConfig.serverAddress = host
 		connectionConfig.serverPort = port
 		connectionConfig.connectionPrefersSecuredConnection = secured
-		connectionConfig.connectionRequiresTrustedCertificate = enforcedPort != nil || endpoint?.reason == .stsUpgrade
+		connectionConfig.connectionRequiresTrustedCertificate = enforcedPort != nil || target.reason == .stsUpgrade
 		return connectionConfig
 	}
 
@@ -245,7 +232,7 @@ extension ServerSession {
 			return socket.isSecured || socket.config.connectionPrefersSecuredConnection
 		}
 
-		return (server ?? config.serverList.first)?.prefersSecuredConnection ?? false
+		return (endpoints.current ?? config.serverList.first)?.prefersSecuredConnection ?? false
 	}
 
 	/// The endpoint `/conn host` connects to: the host on the standard port
@@ -257,7 +244,7 @@ extension ServerSession {
 			host: host,
 			port: secured ? ConnectionDefaults.serverPortSecure : ConnectionDefaults.serverPort,
 			secured: secured,
-			origin: server,
+			origin: endpoints.current,
 			reason: .userCommand
 		)
 	}

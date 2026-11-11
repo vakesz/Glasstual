@@ -93,8 +93,8 @@ class ServerSession: ChatItem {
 	}
 
 	var cachedHighlights: [HighlightRecord] = []
-	/// The endpoint this connection selected, while it lasts.
-	var server: ServerEndpoint?
+	/// Which server the next connect dials, and which one this connection dialled.
+	var endpoints = EndpointSelection()
 	/** Keychain items belonging to endpoints the user deleted while the session
 	 was still connected to one of them. They are removed once the connection
 	 ends, so the live connection keeps its password until then. */
@@ -217,7 +217,6 @@ class ServerSession: ChatItem {
 	/// The SASL exchange, from the mechanisms the server offered to the reply
 	/// it is waiting on.
 	var sasl: SASLSession
-	var pendingEndpoint: PendingIRCEndpoint?
 	var sts = STSUpgradeState()
 	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }
@@ -280,9 +279,6 @@ class ServerSession: ChatItem {
 	/// When and whether the session comes back after the connection ends.
 	var reconnect: ReconnectSchedule
 	var whoisReply: WhoisReply?
-	/// The index in `config.serverList` the last connect attempt dialled, or
-	/// `nil` when none has been dialled yet.
-	var lastServerSelected: UInt?
 	var conversationListPrivate: [Conversation] = []
 	/** `findConversation(_:)` sits on the path of nearly every inbound line, so the
 	 conversation list is mirrored by casefolded name. The mirror is rebuilt

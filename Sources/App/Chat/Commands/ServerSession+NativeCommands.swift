@@ -204,7 +204,7 @@ extension ServerSession {
 				printDebugInformation(String(localized: .IRC.oneOrMoreArgumentsAreNot))
 				return
 			}
-			pendingEndpoint = connectCommandEndpoint(host: serverAddress)
+			endpoints.pending = connectCommandEndpoint(host: serverAddress)
 		}
 		if isConnecting || isConnected {
 			addDisconnectCallback { [weak self] in self?.connect() }

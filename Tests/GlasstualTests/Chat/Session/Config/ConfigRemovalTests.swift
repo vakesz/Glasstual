@@ -214,7 +214,7 @@ struct ConfigRemovalTests {
 		await oldPreparation.value
 		#expect(session.isConnecting)
 		#expect(session.startup.identifier == newSession)
-		#expect(session.server?.serverAddress == "new.example.test")
+		#expect(session.endpoints.current?.serverAddress == "new.example.test")
 		#expect(session.startup.credentialTask != nil)
 		#expect(!newPreparation.isCancelled)
 		#expect(session.socket == nil)
@@ -296,7 +296,7 @@ struct ConfigRemovalTests {
 		let session = fixture.chatSession.createSession(with: ServerConfig(connectionName: "Endpoint fixture"))
 		let endpoint = ServerEndpoint(serverAddress: "irc.example.test", pendingServerPassword: .set("fixture-server"))
 		session.config.serverList = [endpoint]
-		session.server = endpoint
+		session.endpoints.current = endpoint
 		var replacement = session.config
 		replacement.serverList = []
 
@@ -307,9 +307,9 @@ struct ConfigRemovalTests {
 		}
 
 		#expect(session.config.serverList.isEmpty)
-		#expect(session.lastServerSelected == nil)
+		#expect(session.endpoints.lastIndex == nil)
 		#expect(session.retiredServerKeychainItems.contains(endpoint.keychainItem) == !preservingLocalData)
-		#expect(session.server?.pendingServerPassword == .set("fixture-server"))
+		#expect(session.endpoints.current?.pendingServerPassword == .set("fixture-server"))
 		// The legacy path queued a deletion; do not flush it to the personal keychain.
 		session.retiredServerKeychainItems.removeAll()
 	}

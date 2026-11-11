@@ -15,7 +15,7 @@ extension ServerSession {
 	}
 
 	var serverAddress: String? {
-		supportInfo.serverAddress ?? socket?.config.serverAddress ?? server?.serverAddress
+		supportInfo.serverAddress ?? socket?.config.serverAddress ?? endpoints.current?.serverAddress
 	}
 
 	var isReconnecting: Bool {
