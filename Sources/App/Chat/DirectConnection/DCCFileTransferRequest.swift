@@ -5,10 +5,28 @@
 import CocoaExtensions
 import Foundation
 
+/// Whether an offer asks for a plain connection or a TLS one. A secure offer
+/// names its verb with an `S` prefix, the convention KVIrc started.
+enum DCCOfferSecurity: Equatable {
+	case plain
+	case secure
+}
+
 enum DCCFileTransferRequest: Equatable {
-	case send(filename: String, address: String, port: UInt16, filesize: UInt64, token: String?)
+	case send(
+		filename: String,
+		address: String,
+		port: UInt16,
+		filesize: UInt64,
+		token: String?,
+		security: DCCOfferSecurity = .plain
+	)
 	case resume(filename: String, port: UInt16, position: UInt64, token: String?)
 	case accept(filename: String, port: UInt16, position: UInt64, token: String?)
+	/// A DCC form other clients send that Glasstual does not take part in,
+	/// named so it can be declined in so many words rather than reported as
+	/// malformed.
+	case unsupported(verb: String)
 }
 
 enum DCCCommand: String {
@@ -16,10 +34,28 @@ enum DCCCommand: String {
 	case chat = "CHAT"
 	case resume = "RESUME"
 	case send = "SEND"
+	case secureChat = "SCHAT"
+	case secureSend = "SSEND"
 
 	var ctcpCommand: String {
 		"DCC \(rawValue)"
 	}
+
+	/// The verb a file offer goes out under. `RESUME` and `ACCEPT` carry no
+	/// prefix for either kind: the transfer they name keeps its own.
+	static func offer(for security: DCCOfferSecurity) -> DCCCommand {
+		switch security {
+		case .plain: .send
+		case .secure: .secureSend
+		}
+	}
+
+	/** Forms that KVIrc and others send but Glasstual declines.
+
+	 A `T` prefix asks for a turbo transfer, in which the receiver sends no
+	 acknowledgements, alone or combined with the secure `S` prefix. The
+	 `RECV`, `GET` and `RSEND` families reverse who sends. */
+	static let unsupportedVerbs: Set<String> = ["TSEND", "TSSEND", "STSEND", "SRECV", "SGET", "SRSEND"]
 }
 
 enum DCCFileTransferRequestParser {
@@ -27,7 +63,11 @@ enum DCCFileTransferRequestParser {
 
 	static func parse(_ source: String) -> DCCFileTransferRequest? {
 		var input = CommandTokenizer(source)
-		guard let command = DCCCommand(rawValue: input.nextUppercaseToken()), command != .chat else { return nil }
+		let verb = input.nextUppercaseToken()
+		if DCCCommand.unsupportedVerbs.contains(verb) {
+			return .unsupported(verb: verb)
+		}
+		guard let command = DCCCommand(rawValue: verb), command != .chat, command != .secureChat else { return nil }
 
 		let filenameToken = input.remainder.hasPrefix("\"") ? input.nextQuotedToken() : input.nextToken()
 		let section2 = input.nextToken()
@@ -36,7 +76,7 @@ enum DCCFileTransferRequestParser {
 		let section5 = input.nextToken()
 		let filename = filenameToken.trimmingCharacters(in: .whitespacesAndNewlines).safeFilename
 
-		if command == .send {
+		if command == .send || command == .secureSend {
 			let token = normalizedToken(section5)
 			guard !filename.isEmpty, !section2.isEmpty, !section4.isEmpty,
 			      validToken(token),
@@ -48,7 +88,8 @@ enum DCCFileTransferRequestParser {
 				address: DCCWireFormat.displayAddress(section2),
 				port: port,
 				filesize: filesize,
-				token: token
+				token: token,
+				security: command == .secureSend ? .secure : .plain
 			)
 		}
 

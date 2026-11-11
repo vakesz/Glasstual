@@ -48,7 +48,8 @@ extension ServerSession {
 		      let target = message.params.first, nicknameIsMyself(target),
 		      let sender = message.senderNickname
 		else { return }
-		if text.uppercased().hasPrefix("CHAT ") {
+		let uppercased = text.uppercased()
+		if uppercased.hasPrefix("CHAT ") || uppercased.hasPrefix("SCHAT ") {
 			receivedDCCChatQuery(sender, text: text)
 			return
 		}
@@ -179,7 +180,19 @@ extension ServerSession {
 
 	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String) {
 		switch request {
-		case let .send(filename, address, port, filesize, token):
+		case let .send(filename, _, _, _, _, .secure):
+			/* Glasstual does not open secure transfers yet. An SSEND is declined
+			 before anything else is read from it, so its token cannot answer a
+			 plain offer of ours either. Each decline is a line in front of the
+			 user, so a flood of them is throttled like any other offer. */
+			guard admitsDCCOffer(from: sender) else { return }
+			print(String(localized: .IRC.declinedSecureFileTransferOffer(sender, filename)), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+		case let .unsupported(verb):
+			guard admitsDCCOffer(from: sender) else { return }
+			print(String(localized: .IRC.declinedUnsupportedDccOffer(sender, verb)), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+		case let .send(filename, address, port, filesize, token, .plain):
 			/* An active offer decides which host the session dials, so a peer
 			 must not be able to point it at loopback or a private network. A
 			 passive one — port zero — is dialled by the peer instead, and a

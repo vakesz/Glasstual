@@ -57,6 +57,26 @@ struct ServerSessionDCCPolicyTests {
 		#expect(DirectChatPolicy.parseOffer("CHAT chat 3232235777 0") == nil)
 	}
 
+	@Test("A secure chat offer is understood in its active, passive and passive-reply forms")
+	func parsesSecureChatOffers() {
+		#expect(
+			DirectChatPolicy.parseOffer("SCHAT chat 1568397154 5000")
+				== DirectChatOffer(address: "93.123.215.98", port: 5000, token: nil, isSecure: true)
+		)
+		#expect(
+			DirectChatPolicy.parseOffer("schat CHAT 0 0 T99")
+				== DirectChatOffer(address: "0.0.0.0", port: 0, token: "99", isSecure: true)
+		)
+		#expect(
+			DirectChatPolicy.parseOffer("SCHAT chat 1568397154 5000 99")
+				== DirectChatOffer(address: "93.123.215.98", port: 5000, token: "99", isSecure: true)
+		)
+		#expect(DirectChatPolicy.parseOffer("CHAT chat 1568397154 5000")?.isSecure == false)
+		#expect(DirectChatPolicy.parseOffer("SCHAT schat 1568397154 5000") == nil)
+		#expect(DirectChatPolicy.parseOffer("SCHAT chat 0 0") == nil)
+		#expect(DirectChatPolicy.parseOffer("SCHAT chat 1568397154 5000 T\u{00B2}") == nil)
+	}
+
 	/// `isNumber` admits superscripts, other scripts' digits and fractions; a
 	/// wire number is ASCII, as the file-transfer parser already requires.
 	@Test("A chat offer with a digit that is not ASCII is refused", arguments: [

@@ -10,6 +10,15 @@ struct DirectChatOffer: Equatable {
 	let address: String
 	let port: UInt16
 	let token: String?
+	/// Offered as `DCC SCHAT`, asking for the chat to run over TLS.
+	let isSecure: Bool
+
+	init(address: String, port: UInt16, token: String?, isSecure: Bool = false) {
+		self.address = address
+		self.port = port
+		self.token = token
+		self.isSecure = isSecure
+	}
 
 	var isPassive: Bool {
 		port == 0
@@ -21,10 +30,12 @@ enum DirectChatPolicy {
 		var input = CommandTokenizer(source)
 		/* A DCC CHAT offer names the DCC subcommand and then the chat protocol,
 		 both spelled "CHAT". The two reads look identical because the tokens
-		 are. */
+		 are. A secure offer spells the subcommand "SCHAT" and keeps the
+		 protocol "CHAT". */
 		let dccSubcommand = input.nextUppercaseToken()
 		let chatProtocol = input.nextUppercaseToken()
-		guard dccSubcommand == "CHAT", chatProtocol == "CHAT" else { return nil }
+		let isSecure = dccSubcommand == DCCCommand.secureChat.rawValue
+		guard dccSubcommand == DCCCommand.chat.rawValue || isSecure, chatProtocol == "CHAT" else { return nil }
 		let address = DCCWireFormat.displayAddress(input.nextToken())
 		let portText = input.nextToken()
 		let rawToken = input.nextToken()
@@ -38,7 +49,7 @@ enum DirectChatPolicy {
 		if portValue > 0, !address.isIPAddress {
 			return nil
 		}
-		return DirectChatOffer(address: address, port: UInt16(portValue), token: token)
+		return DirectChatOffer(address: address, port: UInt16(portValue), token: token, isSecure: isSecure)
 	}
 
 	/** Whether the session is willing to dial the address the offer names.
@@ -124,6 +135,15 @@ extension ServerSession {
 	func receivedDCCChatQuery(_ sender: String, text: String) {
 		guard let offer = DirectChatPolicy.parseOffer(text) else {
 			printInvalidDCCChatRequest(from: sender)
+			return
+		}
+		/* Glasstual does not open secure chats yet. Every SCHAT is declined
+		 before anything else is read from it, which also keeps a passive SCHAT
+		 reply from answering a plain chat this session is listening for. */
+		if offer.isSecure {
+			guard admitsDCCOffer(from: sender) else { return }
+			print(String(localized: .IRC.declinedSecureDirectChatOffer(sender)), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
 			return
 		}
 		if !offer.isPassive, offer.token != nil {

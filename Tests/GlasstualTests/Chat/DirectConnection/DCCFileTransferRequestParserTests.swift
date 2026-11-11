@@ -80,5 +80,61 @@ struct DCCFileTransferRequestParserTests {
 		#expect(DCCCommand.resume.ctcpCommand == "DCC RESUME")
 		#expect(DCCCommand.accept.ctcpCommand == "DCC ACCEPT")
 		#expect(DCCCommand.chat.ctcpCommand == "DCC CHAT")
+		#expect(DCCCommand.secureSend.ctcpCommand == "DCC SSEND")
+		#expect(DCCCommand.secureChat.ctcpCommand == "DCC SCHAT")
+	}
+
+	@Test("A plain offer is SEND and a secure one SSEND")
+	func offerVerb() {
+		#expect(DCCCommand.offer(for: .plain) == .send)
+		#expect(DCCCommand.offer(for: .secure) == .secureSend)
+	}
+
+	@Test("SSEND is understood in its active, passive and passive-reply forms, in any case", arguments: [
+		("SSEND file 3232235777 5000 42", (5000, nil)),
+		("ssend file 3232235777 0 42 T77", (0, "77")),
+		("SsEnD file 3232235777 5000 42 77", (5000, "77")),
+	] as [(String, (port: UInt16, token: String?))])
+	func secureSend(source: String, expected: (port: UInt16, token: String?)) {
+		#expect(DCCFileTransferRequestParser.parse(source) == .send(
+			filename: "file", address: "192.168.1.1", port: expected.port, filesize: 42, token: expected.token,
+			security: .secure
+		))
+	}
+
+	@Test("A secure offer keeps a quoted filename and the plain safety rules", arguments: [
+		("SSEND \"my file.txt\" 3232235777 5000 42", true),
+		("SSEND file 3232235777 0 42", false),
+		("SSEND file 3232235777 5000 \u{0663}", false),
+		("SSEND file 3232235777 5000 42 T\u{00B2}", false),
+		("SSEND file 3232235777 5000 1000000000001", false),
+	])
+	func secureSendRules(source: String, accepted: Bool) {
+		#expect((DCCFileTransferRequestParser.parse(source) != nil) == accepted)
+	}
+
+	@Test("A secure offer's filename is sanitized like a plain one's")
+	func secureFilename() {
+		let plain = DCCFileTransferRequestParser.parse("SEND ../../etc/passwd 3232235777 5000 42")
+		let secure = DCCFileTransferRequestParser.parse("SSEND ../../etc/passwd 3232235777 5000 42")
+		guard case let .send(plainName, _, _, _, _, _) = plain, case let .send(secureName, _, _, _, _, .secure) = secure else {
+			Issue.record("both offers should parse")
+			return
+		}
+		#expect(secureName == plainName)
+		#expect(secureName.contains("/") == false)
+	}
+
+	@Test("Turbo and reversed forms are recognised so they can be declined", arguments: [
+		"TSEND", "TSSEND", "STSEND", "SRECV", "SGET", "SRSEND",
+	])
+	func unsupportedForms(verb: String) {
+		#expect(DCCFileTransferRequestParser.parse("\(verb) file 3232235777 5000 42") == .unsupported(verb: verb))
+		#expect(DCCFileTransferRequestParser.parse("\(verb.lowercased()) whatever") == .unsupported(verb: verb))
+	}
+
+	@Test("A secure chat offer is not a file transfer")
+	func secureChatIsNotAFileTransfer() {
+		#expect(DCCFileTransferRequestParser.parse("SCHAT chat 3232235777 5000") == nil)
 	}
 }

@@ -13420,6 +13420,150 @@
           }
         }
       }
+    },
+    "declined-secure-file-transfer-offer": {
+      "comment": "File transfer server console messages. Printed when someone offers a file over an encrypted (TLS) connection with DCC SSEND, which this version declines. %1$@ is the sender's nickname and %2$@ the offered file name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ offered %2$@ over an encrypted connection, which Glasstual does not support yet. The offer was declined."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ titkosított kapcsolaton ajánlotta fel ezt: %2$@, de ezt a Glasstual még nem támogatja. Az ajánlat elutasítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat %2$@ über eine verschlüsselte Verbindung angeboten, was Glasstual noch nicht unterstützt. Das Angebot wurde abgelehnt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ofreció %2$@ mediante una conexión cifrada, que Glasstual aún no admite. Se rechazó la oferta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a proposé %2$@ via une connexion chiffrée, ce que Glasstual ne prend pas encore en charge. L’offre a été refusée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@が暗号化された接続で%2$@を送ろうとしましたが、Glasstualはまだこれに対応していません。オファーを拒否しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ofereceu %2$@ por uma conexão criptografada, que o Glasstual ainda não aceita. A oferta foi recusada."
+          }
+        }
+      }
+    },
+    "declined-secure-direct-chat-offer": {
+      "comment": "Direct chat (DCC CHAT) messages. Printed when someone asks for an encrypted (TLS) direct chat with DCC SCHAT, which this version declines. %@ is the sender's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start an encrypted direct chat, which Glasstual does not support yet. The request was declined."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ titkosított közvetlen csevegést szeretne indítani, de ezt a Glasstual még nem támogatja. A kérés elutasítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ möchte einen verschlüsselten direkten Chat starten, was Glasstual noch nicht unterstützt. Die Anfrage wurde abgelehnt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quiere iniciar un chat directo cifrado, que Glasstual aún no admite. Se rechazó la solicitud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ souhaite démarrer une discussion directe chiffrée, ce que Glasstual ne prend pas encore en charge. La demande a été refusée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@が暗号化されたダイレクトチャットを開始しようとしましたが、Glasstualはまだこれに対応していません。リクエストを拒否しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ quer iniciar um chat direto criptografado, que o Glasstual ainda não aceita. A solicitação foi recusada."
+          }
+        }
+      }
+    },
+    "declined-unsupported-dcc-offer": {
+      "comment": "File transfer server console messages. Printed when someone sends a kind of DCC offer Glasstual does not support, such as a turbo transfer. %1$@ is the sender's nickname and %2$@ the DCC command word they used, such as TSEND; it is not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sent a DCC %2$@ offer, which Glasstual does not support. The offer was declined."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ DCC %2$@ ajánlatot küldött, de ezt a Glasstual nem támogatja. Az ajánlat elutasítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat ein DCC-%2$@-Angebot gesendet, das Glasstual nicht unterstützt. Das Angebot wurde abgelehnt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ envió una oferta DCC %2$@, que Glasstual no admite. Se rechazó la oferta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a envoyé une offre DCC %2$@, que Glasstual ne prend pas en charge. L’offre a été refusée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@がDCC %2$@のオファーを送信しましたが、Glasstualはこれに対応していません。オファーを拒否しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ enviou uma oferta DCC %2$@, que o Glasstual não aceita. A oferta foi recusada."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
