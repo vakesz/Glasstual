@@ -132,30 +132,16 @@ final class AddressBookUserTrackingContainer {
 		return status(ofUser: nickname)
 	}
 
-	func addTrackedUser(_ nickname: String) {
-		guard canonicalNickname(matching: nickname) == nil else {
-			return
-		}
-
+	/// Starts tracking `nickname`. The caller has already checked, under the
+	/// session's casemapping, that no spelling of it is tracked.
+	func addTrackedUser(canonical nickname: String) {
 		availabilityByNickname[nickname] = false
 		NotificationCenter.default.post(AddressBookTrackedUserAdded(subject: self, nickname: nickname), subject: self)
 	}
 
-	func addTrackedUserWithoutDuplicateCheck(_ nickname: String) {
-		availabilityByNickname[nickname] = false
-		NotificationCenter.default.post(AddressBookTrackedUserAdded(subject: self, nickname: nickname), subject: self)
-	}
-
-	func removeTrackedUser(_ nickname: String) {
-		guard let canonicalNickname = canonicalNickname(matching: nickname) else {
-			return
-		}
-
-		availabilityByNickname.removeValue(forKey: canonicalNickname)
-		NotificationCenter.default.post(AddressBookTrackedUserRemoved(subject: self, nickname: canonicalNickname), subject: self)
-	}
-
-	func removeTrackedUserWithoutLookup(_ nickname: String) {
+	/// Stops tracking `nickname`, which must be the spelling stored in
+	/// `trackedUsers`.
+	func removeTrackedUser(canonical nickname: String) {
 		availabilityByNickname.removeValue(forKey: nickname)
 		NotificationCenter.default.post(AddressBookTrackedUserRemoved(subject: self, nickname: nickname), subject: self)
 	}

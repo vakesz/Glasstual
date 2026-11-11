@@ -21,7 +21,7 @@ struct ServerSessionExtendedMonitorTests {
 		if extendedMonitor {
 			session.enableCapability(.extendedMonitor)
 		}
-		session.trackedUsers.addTrackedUser("alice")
+		session.trackedUsers.addTrackedUser(canonical: "alice")
 		return session
 	}
 

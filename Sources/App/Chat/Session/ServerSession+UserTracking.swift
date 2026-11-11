@@ -82,7 +82,7 @@ extension ServerSession {
 			}
 
 			additions.append(nickname)
-			trackedUsers.addTrackedUserWithoutDuplicateCheck(nickname)
+			trackedUsers.addTrackedUser(canonical: nickname)
 		}
 
 		/* Folded the way the server folds nicknames: `caseInsensitiveCompare`
@@ -93,7 +93,7 @@ extension ServerSession {
 			where foldedCurrentNicknames.contains(casefoldNickname(nickname)) == false
 		{
 			removals.append(nickname)
-			trackedUsers.removeTrackedUserWithoutLookup(nickname)
+			trackedUsers.removeTrackedUser(canonical: nickname)
 		}
 
 		modifyWatchList(byAdding: true, nicknames: additions)

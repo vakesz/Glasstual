@@ -14,10 +14,25 @@ struct AddressBookUserTrackingTests {
 		tracker = AddressBookUserTrackingContainer()
 	}
 
+	private func trackingEntry(forNickname nickname: String) -> AddressBookEntry {
+		var entry = AddressBookEntry.newUserTrackingEntry()
+		entry.hostmask = nickname
+		return entry
+	}
+
+	private func loggedInSession(tracking nicknames: [String]) -> TestServerSession {
+		let session = TestServerSession(configDictionary: ["nickname": "me", "username": "me"])
+		session.config.ignoreList = nicknames.map(trackingEntry(forNickname:))
+		session.markAsLoggedIn()
+		return session
+	}
+
 	@Test("Tracking matches without regard to case but keeps the nickname as added")
 	func trackingIsCaseInsensitiveAndPreservesOriginalNickname() {
-		tracker.addTrackedUser("Alice")
-		tracker.addTrackedUser("ALICE")
+		let session = loggedInSession(tracking: ["Alice", "ALICE"])
+		let tracker = session.trackedUsers
+
+		session.populateISONTrackedUsersList()
 
 		#expect(tracker.trackedUsers.count == 1)
 		#expect(tracker.trackedUsers["Alice"] != nil)
@@ -38,9 +53,14 @@ struct AddressBookUserTrackingTests {
 		#expect(tracker.status(ofUser: "absent") == .unknown)
 	}
 
-	@Test("Removal announces the nickname as tracked, not the spelling passed in")
+	@Test("Removal announces the nickname as tracked, not the spelling configured")
 	func removalUsesCanonicalNicknameInNotification() async {
-		tracker.addTrackedUser("Alice")
+		let session = loggedInSession(tracking: ["Alice"])
+		let tracker = session.trackedUsers
+		session.populateISONTrackedUsersList()
+		session.config.ignoreList = [trackingEntry(forNickname: "ALICE")]
+		session.populateISONTrackedUsersList()
+		session.config.ignoreList = []
 		let center = NotificationCenter.default
 
 		await confirmation("The removal notification is posted") { removed in
@@ -53,7 +73,7 @@ struct AddressBookUserTrackingTests {
 			}
 			defer { center.removeObserver(token) }
 
-			tracker.removeTrackedUser("ALICE")
+			session.populateISONTrackedUsersList()
 		}
 
 		#expect(tracker.trackedUsers.isEmpty)
@@ -61,8 +81,8 @@ struct AddressBookUserTrackingTests {
 
 	@Test("Clearing announces itself and leaves nobody tracked")
 	func clearPostsNotificationAndRemovesAllUsers() async {
-		tracker.addTrackedUser("Alice")
-		tracker.addTrackedUser("Bob")
+		tracker.addTrackedUser(canonical: "Alice")
+		tracker.addTrackedUser(canonical: "Bob")
 		let center = NotificationCenter.default
 
 		await confirmation("The cleared notification is posted") { cleared in
@@ -124,7 +144,7 @@ struct AddressBookTrackingMessageTests {
 		) { nicknames.append($0.nickname) }
 		defer { NotificationCenter.default.removeObserver(token) }
 
-		tracker.addTrackedUser("Bob")
+		tracker.addTrackedUser(canonical: "Bob")
 
 		#expect(nicknames == ["Bob"])
 	}
