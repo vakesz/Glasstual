@@ -8,6 +8,8 @@ final class PendingChatHistoryPaging {
 	enum Kind {
 		case catchUp(ChatHistoryCatchUp)
 		case gapFill(ChatHistoryGapFill)
+		/// One `AROUND` page for a message the transcript is looking for.
+		case messageContext
 	}
 
 	var kind: Kind
@@ -16,6 +18,19 @@ final class PendingChatHistoryPaging {
 	let connectionIdentifier: String?
 	weak var conversation: Conversation?
 	var timeoutTimer: SessionTimer?
+	/// Learns whether an `AROUND` page arrived. Taken when it is answered, so
+	/// it is answered once whichever path ends the paging first.
+	private var continuation: CheckedContinuation<Bool, Never>?
+
+	func answer(_ arrived: Bool) {
+		let pending = continuation
+		continuation = nil
+		pending?.resume(returning: arrived)
+	}
+
+	func awaitAnswer(_ continuation: CheckedContinuation<Bool, Never>) {
+		self.continuation = continuation
+	}
 
 	init(kind: Kind, conversation: Conversation, connectionIdentifier: String?) {
 		self.kind = kind
@@ -23,7 +38,10 @@ final class PendingChatHistoryPaging {
 		self.connectionIdentifier = connectionIdentifier
 	}
 
-	isolated deinit { timeoutTimer?.stop() }
+	isolated deinit {
+		timeoutTimer?.stop()
+		answer(false)
+	}
 }
 
 extension ChatHistoryPolicy {
@@ -150,8 +168,41 @@ extension ServerSession {
 	/// a gap fill keeps its gap and says why it stopped.
 	func endPaging(_ paging: PendingChatHistoryPaging, failure reason: String?) {
 		removePaging(paging)
-		guard case .gapFill = paging.kind, let conversation = paging.conversation else { return }
-		conversation.presentation?.noteMissingServerHistory(.failed(reason: reason))
+		switch paging.kind {
+		case .gapFill:
+			paging.conversation?.presentation?.noteMissingServerHistory(.failed(reason: reason))
+		case .messageContext:
+			paging.answer(false)
+		case .catchUp:
+			break
+		}
+	}
+
+	/** Asks the server for the messages around `identifier`, stores them, and
+	 reports whether the page arrived. Nothing is asked for where the server
+	 does not look messages up by identifier, or while other history is being
+	 fetched for the conversation. */
+	func requestMessageContext(identifier: String, in conversation: Conversation) async -> Bool {
+		let key = conversation.uniqueIdentifier
+		let command = ChatHistoryCommand.around(
+			target: conversation.name,
+			.messageIdentifier(identifier),
+			limit: chatHistoryRequestLimit()
+		)
+		guard chatHistoryIsAvailable(for: conversation), chatHistoryReferenceSupport.messageIdentifiers,
+		      chatHistory.paging[key] == nil, chatHistory.serverRequests[key] == nil,
+		      chatHistoryArguments(command) != nil
+		else { return false }
+		return await withCheckedContinuation { continuation in
+			let paging = PendingChatHistoryPaging(
+				kind: .messageContext,
+				conversation: conversation,
+				connectionIdentifier: socket?.uniqueIdentifier
+			)
+			paging.awaitAnswer(continuation)
+			chatHistory.paging[key] = paging
+			perform(.send(command), for: paging)
+		}
 	}
 
 	private func removePaging(_ paging: PendingChatHistoryPaging) {
@@ -198,10 +249,9 @@ extension ServerSession {
 			$0.rootBatch === contents && $0.batchIsOpen
 		}
 		let conversation = paging.conversation
-		let isGapFill = if case .gapFill = paging.kind {
-			true
-		} else {
-			false
+		let isGapFill = switch paging.kind {
+		case .gapFill, .messageContext: true
+		case .catchUp: false
 		}
 		if isGapFill {
 			chatHistory.prependConversation = conversation
@@ -235,6 +285,9 @@ extension ServerSession {
 			}
 		}
 
+		/* Anything the page's lines set off may have ended this paging already —
+		 a reset, a FAIL relayed inside the batch — and it is answered once. */
+		guard chatHistory.paging.values.contains(where: { $0 === paging }) else { return }
 		guard incomplete == false else {
 			endPaging(paging, failure: nil)
 			return
@@ -247,6 +300,10 @@ extension ServerSession {
 		case var .gapFill(fill):
 			step = fill.receivedPage(count: count, last: last)
 			paging.kind = .gapFill(fill)
+		case .messageContext:
+			removePaging(paging)
+			paging.answer(true)
+			return
 		}
 		perform(step, for: paging)
 	}
@@ -262,10 +319,12 @@ extension ServerSession {
 	}
 
 	func resetChatHistoryPaging() {
-		for paging in chatHistory.paging.values {
-			paging.timeoutTimer?.stop()
-		}
+		let pending = chatHistory.paging.values
 		chatHistory.paging.removeAll()
+		for paging in pending {
+			paging.timeoutTimer?.stop()
+			paging.answer(false)
+		}
 		let conversations = chatHistory.gaps.keys.compactMap { key in conversationList.first { $0.uniqueIdentifier == key } }
 		chatHistory.gaps.removeAll()
 		for conversation in conversations {

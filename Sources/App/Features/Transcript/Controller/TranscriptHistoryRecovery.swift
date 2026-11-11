@@ -109,6 +109,8 @@ final class TranscriptHistoryRecovery {
 	var isRetrying = false
 	/// Whether the server holds messages a catch-up could not reach.
 	var missingServerHistory = MissingServerHistoryState.none
+	/// Set when a reply's original message could not be found, until dismissed.
+	var unavailableMessageNotice = false
 
 	/// What this view's own failure reads as, or nothing where its history
 	/// loaded.
@@ -139,6 +141,18 @@ struct TranscriptHistoryRecoveryView: View {
 		VStack(spacing: 0) {
 			if history?.isDetachedFromLive == true {
 				TranscriptDetachedBanner { controller?.returnToLive() }
+			}
+			if let history, history.unavailableMessageNotice {
+				TranscriptNoticeBanner(
+					symbol: "questionmark.bubble",
+					title: String(localized: .Transcript.originalMessageUnavailable),
+					primaryAction: .init(
+						title: String(localized: .Transcript.dismissNotice),
+						identifier: "original-message-dismiss",
+						perform: { history.unavailableMessageNotice = false }
+					),
+					identifier: "original-message-banner"
+				)
 			}
 			if let history, history.missingServerHistory != .none {
 				TranscriptMissingHistoryBanner(state: history.missingServerHistory) {

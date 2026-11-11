@@ -1,6 +1,55 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "chat-history-message-not-found" : {
+      "comment" : "/chathistory around: the message could not be found in stored history or on the server. %@ is the message ID.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The message %@ isn’t stored and the server didn’t return it."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A(z) %@ üzenet nincs tárolva, és a kiszolgáló sem küldte vissza."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Nachricht %@ ist nicht gespeichert, und der Server hat sie nicht zurückgegeben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El mensaje %@ no está guardado y el servidor no lo devolvió."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le message %@ n’est pas enregistré et le serveur ne l’a pas renvoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メッセージ%@は保存されておらず、サーバからも返されませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A mensagem %@ não está armazenada e o servidor não a retornou."
+          }
+        }
+      }
+    },
     "chat-history-nothing-missing" : {
       "comment" : "/chathistory fill: no missing messages are recorded for the conversation. %@ is its name.",
       "extractionState" : "manual",

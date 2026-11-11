@@ -49,6 +49,67 @@ nonisolated extension ScrollbackQueries {
 		return .page(older + [anchor] + newer)
 	}
 
+	/** The cursor of the stored row `messageIdentifier` names in one view, or
+	 `nil` when none is stored. The identifier is an indexed column; each match
+	 is checked against its archive, as a redaction checks it. */
+	static func cursor(
+		forMessageIdentifier messageIdentifier: String,
+		inView viewIdentifier: String,
+		in context: NSManagedObjectContext
+	) -> Result<ScrollbackRowCursor?, ScrollbackFetchFailure> {
+		guard messageIdentifier.isEmpty == false else { return .success(nil) }
+		let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+		request.predicate = NSPredicate(
+			format: "%K == %@ AND %K == %@",
+			ScrollbackAttribute.viewID.rawValue, viewIdentifier,
+			ScrollbackAttribute.messageID.rawValue, messageIdentifier
+		)
+		request.returnsObjectsAsFaults = false
+		do {
+			for object in try context.fetch(request) {
+				guard let data = object.value(forKey: ScrollbackAttribute.lineData.rawValue) as? Data,
+				      let line = ChatLine(data: data),
+				      MessageIdentifierKey.equal(line.messageIdentifier, messageIdentifier),
+				      let cursor = ScrollbackRowCursor(object: object)
+				else { continue }
+				return .success(cursor)
+			}
+			return .success(nil)
+		} catch {
+			return .failure(.read(error.localizedDescription))
+		}
+	}
+
+	/// The rows around the line a message identifier names; an empty page
+	/// when no stored line carries it.
+	static func fetchWindow(
+		in context: NSManagedObjectContext,
+		viewIdentifier: String,
+		aroundMessageIdentifier messageIdentifier: String,
+		olderLimit: UInt,
+		newerLimit: UInt
+	) -> ScrollbackFetchOutcome {
+		/* A row has a cursor once it is saved, and the line may have been
+		 written moments ago, by the fetch that brought it from the server. */
+		if context.hasChanges {
+			quickSave(context)
+		}
+		switch cursor(forMessageIdentifier: messageIdentifier, inView: viewIdentifier, in: context) {
+		case let .success(cursor?):
+			return fetchWindow(
+				in: context,
+				viewIdentifier: viewIdentifier,
+				around: cursor,
+				olderLimit: olderLimit,
+				newerLimit: newerLimit
+			)
+		case .success(nil):
+			return .page([])
+		case let .failure(failure):
+			return .failed(failure)
+		}
+	}
+
 	/// The one row a cursor names, or why there is none.
 	private static func fetchRow(
 		in context: NSManagedObjectContext,

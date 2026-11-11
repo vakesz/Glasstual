@@ -24,6 +24,18 @@ enum TranscriptContextMenuSuppressionKey: String {
 	}
 }
 
+/// The message a "Show Original Message" item looks for, and the transcript
+/// that looks.
+final class TranscriptOriginalMessageRequest: NSObject {
+	let identifier: String
+	weak var controller: TranscriptController?
+
+	init(identifier: String, controller: TranscriptController) {
+		self.identifier = identifier
+		self.controller = controller
+	}
+}
+
 final class TranscriptContextTarget: NSObject {
 	var foldLineNumber: String?
 	var anchorURL: String?
@@ -315,8 +327,35 @@ final class TranscriptCommands: NSObject {
 	)
 
 	private func messageMenuItems(for target: TranscriptContextTarget, in view: TranscriptView) -> [NSMenuItem] {
-		let privateReply = privateReplyItems(for: target, in: view)
+		let privateReply = privateReplyItems(for: target, in: view) + originalMessageItems(for: target, in: view)
 		return publicMessageMenuItems(for: target, in: view, privateReply: privateReply)
+	}
+
+	/// "Show Original Message" for a line that replies to another.
+	private func originalMessageItems(for target: TranscriptContextTarget, in view: TranscriptView) -> [NSMenuItem] {
+		guard let lineNumber = target.lineNumber,
+		      let identifier = view.displayedLines.first(where: { $0.matches(identifier: lineNumber) })?.replyToMessageIdentifier,
+		      identifier.isEmpty == false,
+		      let controller = view.viewController
+		else { return [] }
+		let item = NSMenuItem(
+			title: String(localized: .Transcript.showOriginalMessage),
+			action: #selector(showOriginalMessage(_:)),
+			keyEquivalent: ""
+		)
+		item.target = self
+		item.image = NSImage(systemSymbolName: "arrow.turn.up.left", accessibilityDescription: item.title)
+		item.isEnabled = controller.canRevealMessage(identifier: identifier)
+		if item.isEnabled == false {
+			item.action = nil
+		}
+		item.representedObject = TranscriptOriginalMessageRequest(identifier: identifier, controller: controller)
+		return [item]
+	}
+
+	@objc private func showOriginalMessage(_ sender: Any?) {
+		guard let request = (sender as? NSMenuItem)?.representedObject as? TranscriptOriginalMessageRequest else { return }
+		request.controller?.showOriginalMessage(identifier: request.identifier)
 	}
 
 	/// "Reply Privately" for a channel line written by another member.

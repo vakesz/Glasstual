@@ -74,6 +74,10 @@ protocol ChatItemPresenting: AnyObject {
 	func archiveRecoveredChatLines(_ chatLines: [ChatLine])
 	/// Whether the conversation is missing messages the server still has.
 	func noteMissingServerHistory(_ state: MissingServerHistoryState)
+	/** Shows the message `identifier` names, fetching it from the server when
+	 it is not stored, and says so in the conversation if it cannot. Returns
+	 whether the presentation took the request. */
+	func revealMessage(withIdentifier identifier: String) -> Bool
 
 	func tearDown(_ reason: ChatItemTeardown)
 }
@@ -87,6 +91,11 @@ extension ChatItemPresenting {
 
 	/// A presentation without a history banner has nothing to show.
 	func noteMissingServerHistory(_: MissingServerHistoryState) {}
+
+	/// A presentation without stored history cannot show one message of it.
+	func revealMessage(withIdentifier _: String) -> Bool {
+		false
+	}
 
 	func replacePendingLine(_ line: ChatLine, reason: String?) {
 		updateDeliveryState(forLineNumber: line.uniqueIdentifier, state: line.deliveryState,

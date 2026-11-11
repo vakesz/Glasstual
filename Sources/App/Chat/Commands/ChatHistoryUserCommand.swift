@@ -227,6 +227,14 @@ extension ServerSession {
 			guard let target = chatHistoryCommandTarget(named: name, in: selected) else { return }
 			sendChatHistoryCommand(.after(target: target, reference, limit: limit(requested)))
 		case let .around(name, reference, requested):
+			/* Around a message in an open conversation is "show me that
+			 message": the transcript finds it, asking the server if it must. */
+			if case let .messageIdentifier(identifier) = reference,
+			   let conversation = name.flatMap(findConversation) ?? (name == nil ? selected : nil),
+			   conversation.presentation?.revealMessage(withIdentifier: identifier) == true
+			{
+				return
+			}
 			guard let target = chatHistoryCommandTarget(named: name, in: selected) else { return }
 			sendChatHistoryCommand(.around(target: target, reference, limit: limit(requested)))
 		case let .between(name, first, second, requested):

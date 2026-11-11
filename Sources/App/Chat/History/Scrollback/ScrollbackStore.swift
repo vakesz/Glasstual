@@ -330,6 +330,10 @@ actor ScrollbackStore {
 			case let .window(cursor, olderLimit, newerLimit):
 				ScrollbackQueries.fetchWindow(in: context, viewIdentifier: request.viewIdentifier, around: cursor,
 				                              olderLimit: olderLimit, newerLimit: newerLimit)
+			case let .messageWindow(messageIdentifier, olderLimit, newerLimit):
+				ScrollbackQueries.fetchWindow(in: context, viewIdentifier: request.viewIdentifier,
+				                              aroundMessageIdentifier: messageIdentifier,
+				                              olderLimit: olderLimit, newerLimit: newerLimit)
 			}
 		}
 		return Task.isCancelled ? .cancelled : outcome

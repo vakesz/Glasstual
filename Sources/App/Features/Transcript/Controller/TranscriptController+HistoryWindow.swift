@@ -39,15 +39,26 @@ extension TranscriptController {
 			return true
 		}
 
-		let generation = renderScheduler.generation
 		let request = ScrollbackFetchRequest(
 			viewIdentifier: associatedItem.uniqueIdentifier,
 			kind: .window(around: hit.cursor, olderLimit: Self.historyWindowRadius, newerLimit: Self.historyWindowRadius)
 		)
+		return await showHistoryWindow(request) { $0.cursor == hit.cursor }
+	}
+
+	/** Fetches a window of stored rows and shows it, scrolled to the row
+	 `isAnchor` picks. Reports whether that row is showing. */
+	func showHistoryWindow(
+		_ request: ScrollbackFetchRequest,
+		anchoredAt isAnchor: (ScrollbackEntry) -> Bool
+	) async -> Bool {
+		guard let associatedItem else { return false }
+		let generation = renderScheduler.generation
 		let outcome = await historyPageFetcher(request)
 		guard case let .page(entries) = outcome, entries.isEmpty == false else { return false }
 		let rows = entries.compactMap { row in ChatLine(entry: row).map { (row: row, line: $0) } }
-		guard rows.contains(where: { $0.row.cursor == hit.cursor }) else { return false }
+		guard let anchor = rows.first(where: { isAnchor($0.row) }) else { return false }
+		let anchorLineIdentifier = anchor.row.cursor?.lineIdentifier ?? anchor.line.uniqueIdentifier
 
 		let context = makeHistoryRenderContext()
 		let snapshots = rows.map { ChatLineSnapshot($0.line, in: context, historyCursor: $0.row.cursor) }
@@ -58,7 +69,7 @@ extension TranscriptController {
 		historyRecovery.beginDetached()
 		scrollback.duplicates.indexChatLines(rows.map(\.line), forView: associatedItem.uniqueIdentifier)
 		applyReloadedLines(results, isReload: false)
-		_ = backingView?.jump(to: hit.lineIdentifier)
+		_ = backingView?.jump(to: anchorLineIdentifier)
 		backingView?.updateJumpToLatestVisibility()
 		return true
 	}
@@ -80,7 +91,7 @@ extension TranscriptController {
 	}
 
 	/// Waits, a bounded number of turns, for a history read in flight.
-	private func settleInitialHistory() async {
+	func settleInitialHistory() async {
 		var turns = 0
 		while historyRecovery.isReloading, turns < 50, !terminating {
 			await drainRenderJobs()

@@ -15,6 +15,9 @@ nonisolated struct ScrollbackFetchRequest: Sendable {
 		 Named by the row's cursor rather than its line identifier, because a
 		 line identifier can be held by two rows and a cursor names exactly one. */
 		case window(around: ScrollbackRowCursor, olderLimit: UInt, newerLimit: UInt)
+		/// The rows around the stored line a message identifier names, as
+		/// ``window(around:olderLimit:newerLimit:)`` reads them.
+		case messageWindow(messageIdentifier: String, olderLimit: UInt, newerLimit: UInt)
 	}
 
 	let viewIdentifier: String
