@@ -284,7 +284,7 @@ struct ServerSessionCredentialConsentTests {
 		session.credentialConsent = Self.consent("bouncer.example.test", 6697)
 
 		try await secure(connection, presenting: Self.otherCertificate)
-		try await Eventually.until("the registration") { session.registrationGate == .sent }
+		try await Eventually.until("the registration") { session.registration.gate == .sent }
 
 		let request = try #require(session.recordedOutput.responseRequests.first)
 		#expect(session.recordedOutput.responseRequests.count == 1)
@@ -302,7 +302,7 @@ struct ServerSessionCredentialConsentTests {
 		session.recordedOutput.responseAnswer = .alternate
 
 		try await secure(connection, presenting: Self.otherCertificate)
-		try await Eventually.until("the registration") { session.registrationGate == .sent }
+		try await Eventually.until("the registration") { session.registration.gate == .sent }
 
 		try #expect(passLines(of: session) == [SendingMessage.string(command: .pass, arguments: ["bouncer-secret"])])
 		#expect(session.credentialConsent == Self.consent("bouncer.example.test", 6697, certificate: Self.otherCertificate))
@@ -315,7 +315,7 @@ struct ServerSessionCredentialConsentTests {
 		session.credentialConsent = Self.consent("bouncer.example.test", 6697, certificate: nil)
 
 		try await secure(connection, presenting: nil)
-		try await Eventually.until("the registration") { session.registrationGate == .sent }
+		try await Eventually.until("the registration") { session.registration.gate == .sent }
 
 		#expect(session.recordedOutput.responseRequests.count == 1)
 		#expect(passLines(of: session).isEmpty)
