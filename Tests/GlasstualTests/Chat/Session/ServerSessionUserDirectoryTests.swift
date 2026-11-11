@@ -15,7 +15,7 @@ struct ServerSessionUserDirectoryTests {
 
 		#expect(session.findUser("ALICE") == user)
 		#expect(session.findUserOrCreate("alice") == user)
-		#expect(session.numberOfUsers == 1)
+		#expect(session.userIndex.count == 1)
 	}
 
 	@Test("Adding a draft user stores that very instance")
@@ -39,7 +39,7 @@ struct ServerSessionUserDirectoryTests {
 
 		#expect(session.findUser("Alice") == nil)
 		#expect(session.findUser("Bob")?.nickname == "Bob")
-		#expect(session.numberOfUsers == 1)
+		#expect(session.userIndex.count == 1)
 	}
 
 	@Test("Renaming into a nickname a stale person still holds retires that person")
@@ -65,7 +65,7 @@ struct ServerSessionUserDirectoryTests {
 		#expect(session.findUser("bar")?.id == foo.id)
 		#expect(session.findUser("foo") == nil)
 		#expect(session.userStores[staleBar.id] == nil)
-		#expect(session.numberOfUsers == 2)
+		#expect(session.userIndex.count == 2)
 		#expect(channel.memberInfo?.findMember("bar")?.id == foo.id)
 	}
 
@@ -121,7 +121,7 @@ struct ServerSessionUserDirectoryTests {
 
 		#expect(session.findUser("Alice") == nil)
 		#expect(session.userList.map(\.nickname) == ["Bob"])
-		#expect(session.numberOfUsers == 1)
+		#expect(session.userIndex.count == 1)
 	}
 
 	@Test("Removing every user empties the directory")
@@ -133,7 +133,7 @@ struct ServerSessionUserDirectoryTests {
 		session.removeAllUsers()
 
 		#expect(session.userList.isEmpty)
-		#expect(session.numberOfUsers == 0)
+		#expect(session.userIndex.count == 0)
 	}
 
 	@Test("A channel is found under any casing the server considers the same, and is never duplicated")

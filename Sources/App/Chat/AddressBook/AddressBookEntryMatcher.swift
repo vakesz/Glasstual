@@ -156,7 +156,6 @@ nonisolated enum HostmaskGlob {
  `AddressBookEntry` stores it, so a reference here made a struct that claims to
  be a value type hold a reference after all. */
 nonisolated struct AddressBookEntryMatcher: Sendable {
-	let regularExpressionPattern: String
 	let trackingNickname: String?
 
 	private let globTokens: [HostmaskGlobToken]?
@@ -174,7 +173,6 @@ nonisolated struct AddressBookEntryMatcher: Sendable {
 
 		switch entryType {
 		case .ignore:
-			regularExpressionPattern = HostmaskGlob.regularExpressionPattern(for: hostmask)
 			globTokens = HostmaskGlob.compile(hostmask, caseMapping: caseMapping)
 			trackingNickname = nil
 		case .userTracking:
@@ -185,16 +183,12 @@ nonisolated struct AddressBookEntryMatcher: Sendable {
 			 folding, under which a tracking entry for `nick[home]` missed
 			 `nick{home}` while an ignore for the same mask matched it. */
 			let mask = Self.escapedGlobLiteral(Self.nickname(from: hostmask)) + "!*@*"
-
-			regularExpressionPattern = HostmaskGlob.regularExpressionPattern(for: mask)
 			globTokens = HostmaskGlob.compile(mask, caseMapping: caseMapping)
 			trackingNickname = Self.nickname(from: hostmask)
 		case .mixed:
-			regularExpressionPattern = ""
 			globTokens = nil
 			trackingNickname = nil
 		@unknown default:
-			regularExpressionPattern = ""
 			globTokens = nil
 			trackingNickname = nil
 		}

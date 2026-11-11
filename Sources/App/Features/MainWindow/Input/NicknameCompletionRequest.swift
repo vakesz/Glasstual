@@ -31,7 +31,7 @@ struct CompletionRequest {
 			for index in stride(from: selection.location - 1, through: 0, by: -1) {
 				let character = text.character(at: index)
 
-				if Self.isWordDelimiter(character) {
+				if NicknameCompletionDelimiters.isWordDelimiter(character) {
 					searchStart = index + 1
 					break
 				}
@@ -118,7 +118,7 @@ struct CompletionRequest {
 		   SettingsKeys.Input.tabCompletionCutForward.value,
 		   start < text.length
 		{
-			for index in start ..< text.length where isSuffixDelimiter(text.character(at: index)) {
+			for index in start ..< text.length where NicknameCompletionDelimiters.isSuffixDelimiter(text.character(at: index)) {
 				range.length = index - start
 				return range
 			}
@@ -132,12 +132,4 @@ struct CompletionRequest {
 	/// How far past the caret the preferred suffix may be found and still be
 	/// treated as the suffix of the word being completed.
 	private static let maximumSuffixDistance = 30
-
-	private static func isWordDelimiter(_ character: UniChar) -> Bool {
-		NicknameCompletionDelimiters.isWordDelimiter(character)
-	}
-
-	private static func isSuffixDelimiter(_ character: UniChar) -> Bool {
-		NicknameCompletionDelimiters.isSuffixDelimiter(character)
-	}
 }

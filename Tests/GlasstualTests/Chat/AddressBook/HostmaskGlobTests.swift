@@ -73,6 +73,6 @@ struct HostmaskGlobTests {
 	/// The pattern is still published for display.
 	@Test
 	func displayPatternIsStillProduced() {
-		#expect(matcher("nick[1]!*@example.com").regularExpressionPattern == #"^nick\[1]!.*?@example\.com$"#)
+		#expect(HostmaskGlob.regularExpressionPattern(for: "nick[1]!*@example.com") == #"^nick\[1]!.*?@example\.com$"#)
 	}
 }

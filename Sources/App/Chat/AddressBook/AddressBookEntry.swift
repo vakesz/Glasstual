@@ -219,10 +219,6 @@ nonisolated extension AddressBookEntry {
 		return entry
 	}
 
-	var hostmaskRegularExpression: String {
-		matcher.regularExpressionPattern
-	}
-
 	var trackingNickname: String? {
 		matcher.trackingNickname
 	}

@@ -328,7 +328,7 @@ struct TranscriptControllerApplicationTests {
 		controller.historyPageFetcher = { _ in .failed(.read("Injected read failure")) }
 		controller.loadOlderHistory()
 		await controller.drainRenderJobs()
-		#expect(controller.olderHistoryFailed)
+		#expect(controller.historyRecovery.olderFailure != nil)
 		#expect(controller.historyRecovery.olderFailure == .read("Injected read failure"))
 		#expect(controller.oldestLineNumber == live.uniqueIdentifier)
 		var older = line("older", date: 1)
@@ -340,7 +340,7 @@ struct TranscriptControllerApplicationTests {
 		controller.historyPageFetcher = { _ in .page([entry]) }
 		controller.loadOlderHistory()
 		await controller.drainRenderJobs()
-		#expect(!controller.olderHistoryFailed)
+		#expect(controller.historyRecovery.olderFailure == nil)
 		#expect(controller.oldestLineNumber == older.uniqueIdentifier)
 		#expect(view.displayedLines.first?.reactions == ["+1": ["alice"]])
 	}
@@ -367,7 +367,7 @@ struct TranscriptControllerApplicationTests {
 		await controller.drainRenderJobs()
 		#expect(completed == lines.map(\.uniqueIdentifier))
 		#expect(view.displayedLines.map(\.lineNumber) == lines.suffix(5).map(\.uniqueIdentifier))
-		#expect(controller.numberOfLines == 5)
+		#expect(view.displayedBounds.count == 5)
 		#expect(controller.oldestLineNumber == lines[75].uniqueIdentifier)
 		#expect(controller.newestLineNumber == lines.last?.uniqueIdentifier)
 	}

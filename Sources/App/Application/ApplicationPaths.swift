@@ -32,10 +32,6 @@ nonisolated enum ApplicationPaths {
 		.default
 	}
 
-	private static var productIdentifier: String {
-		ApplicationInfo.applicationBundleIdentifier()
-	}
-
 	// MARK: - Directory creation
 
 	static func createDirectory(at directoryURL: URL) {
@@ -141,15 +137,6 @@ nonisolated enum ApplicationPaths {
 		}
 
 		let baseURL = sourceURL.appendingPathComponent("/Library/Application Support/Glasstual/")
-		createDirectory(at: baseURL)
-
-		return baseURL
-	}
-
-	static var applicationTemporaryURL: URL {
-		let baseURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-			.appendingPathComponent(productIdentifier, isDirectory: true)
-
 		createDirectory(at: baseURL)
 
 		return baseURL

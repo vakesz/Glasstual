@@ -263,12 +263,12 @@ struct InboundPresenceTrackingTests {
 
 		try receive(":irc.example.net 353 me = #chan :nick[home] nick{home}", on: session)
 
-		#expect(session.numberOfUsers == 2)
+		#expect(session.userIndex.count == 2)
 		#expect(channel.numberOfMembers == 2)
 
 		try receive(":irc.example.net 005 me CASEMAPPING=rfc1459 :are supported by this server", on: session)
 
-		#expect(session.numberOfUsers == 1)
+		#expect(session.userIndex.count == 1)
 		#expect(channel.numberOfMembers == 1)
 
 		let members = try #require(channel.memberInfo).memberList

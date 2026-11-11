@@ -60,7 +60,7 @@ struct InboundNumericHandlingTests {
 		#expect(channel.numberOfMembers == 1)
 		#expect(channel.memberExists("alice"))
 		#expect(session.findUser("") == nil)
-		#expect(session.numberOfUsers == 1)
+		#expect(session.userIndex.count == 1)
 	}
 
 	/// A NAMES line is ordered as one batch when it ends, not one sorted insert

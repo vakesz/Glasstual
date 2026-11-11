@@ -83,10 +83,6 @@ extension ServerSession {
 		findUser(nickname) ?? User(nickname: nickname)
 	}
 
-	var numberOfUsers: UInt {
-		UInt(userIndex.count)
-	}
-
 	var userList: [User] {
 		Array(userIndex.values)
 	}
@@ -135,11 +131,6 @@ extension ServerSession {
 
 	func rename(_ user: User, to nickname: String) {
 		modify(user) { $0.nickname = nickname }
-	}
-
-	func renameUser(withNickname oldNickname: String, to newNickname: String) {
-		guard let user = findUser(oldNickname) else { return }
-		rename(user, to: newNickname)
 	}
 
 	/** Edits a copy of `user` and stores the result under its new nickname.

@@ -18,16 +18,8 @@ struct ApplicationPathsTests {
 		#expect(ApplicationPaths.systemDiagnosticReportsURL.path == "/Library/Logs/DiagnosticReports")
 	}
 
-	@Test("The temporary directory is created on demand, and so is an explicitly named one")
-	func applicationPathsCreateTemporaryDirectoryAndExplicitDirectory() throws {
-		let temporaryURL = ApplicationPaths.applicationTemporaryURL
-		var isDirectory = ObjCBool(false)
-		let temporaryExists = FileManager.default.fileExists(atPath: temporaryURL.path, isDirectory: &isDirectory)
-
-		#expect(temporaryExists)
-		#expect(isDirectory.boolValue)
-		#expect(temporaryURL.path.contains(Bundle.main.bundleIdentifier ?? ""))
-
+	@Test("An explicitly named directory is created on demand")
+	func applicationPathsCreateExplicitDirectory() throws {
 		let directory = FileManager.default.temporaryDirectory
 			.appendingPathComponent("GlasstualPathTests-\(UUID().uuidString)", isDirectory: true)
 

@@ -53,9 +53,6 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	}
 
 	var historyRetryTask: Task<Void, Never>?
-	var olderHistoryFailed: Bool {
-		historyRecovery.olderFailure != nil
-	}
 
 	var historyPageFetcher: @Sendable @concurrent (ScrollbackFetchRequest) async
 		-> ScrollbackFetchOutcome
@@ -138,10 +135,6 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	var associatedItem: ChatItem? {
 		associatedConversation ?? associatedSession
-	}
-
-	var numberOfLines: UInt {
-		UInt(backingView?.displayedBounds.count ?? transcriptProjection.lineCount)
 	}
 
 	var inlineMediaEnabledForView: Bool {

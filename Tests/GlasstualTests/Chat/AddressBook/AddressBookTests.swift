@@ -14,7 +14,7 @@ struct AddressBookTests {
 
 		#expect(entry.checkMatch("NICK[1]!user@example.com"))
 		#expect(entry.checkMatch("nick1!user@example.com") == false)
-		#expect(entry.hostmaskRegularExpression == #"^nick\[1]!.*?@example\.com$"#)
+		#expect(HostmaskGlob.regularExpressionPattern(for: "nick[1]!*@example.com") == #"^nick\[1]!.*?@example\.com$"#)
 	}
 
 	@Test("IRC wildcards are honoured and the match is anchored at both ends")
@@ -44,7 +44,6 @@ struct AddressBookTests {
 
 		entry.entryType = .mixed
 
-		#expect(entry.hostmaskRegularExpression == "")
 		#expect(entry.trackingNickname == nil)
 		#expect(entry.checkMatch("") == false)
 	}

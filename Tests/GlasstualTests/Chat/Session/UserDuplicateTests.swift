@@ -50,7 +50,7 @@ struct UserDuplicateTests {
 		#expect(session.findUser("Alice") == nil)
 		#expect(session.findUser("Bob")?.nickname == "Bob")
 		#expect(session.findUser("Bob")?.id == original.id)
-		#expect(session.numberOfUsers == 1)
+		#expect(session.userIndex.count == 1)
 	}
 
 	@Test("Replacing a member stores the edited copy")

@@ -275,7 +275,7 @@ struct MemberListSectionTests {
 		channel.changeMember("alice", mode: ChannelModeSymbol(Character("o")), value: true)
 		#expect(cache.members(in: channel) == [RenderedMember(nickname: "alice", mark: "@")])
 		#expect(cache.rebuildCount == 2)
-		session.renameUser(withNickname: "alice", to: "zoe")
+		try session.rename(#require(session.findUser("alice")), to: "zoe")
 		#expect(cache.members(in: channel) == [RenderedMember(nickname: "zoe", mark: "@")])
 		#expect(selectedNicknames == ["zoe"])
 		#expect(cache.rebuildCount == 3)
