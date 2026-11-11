@@ -28,68 +28,27 @@ actor ScrollbackStore {
 	typealias ResizeDelay = @Sendable () -> Duration
 
 	private enum Lifecycle { case closed, open, closing }
-	private struct ScheduledResize {
-		let identifier: UUID
-		let task: Task<Void, Never>
-	}
-
-	private struct BurstSave {
-		let identifier: UUID
-		let task: Task<Void, Never>
-	}
-
-	private struct ViewState {
-		var totalLineCount: UInt
-		var maximumIdentifier: UInt
-		var resize: ScheduledResize?
-	}
 
 	private var lifecycle = Lifecycle.closed
-	private var occupied = false
+	private var turns = ScrollbackTurnQueue()
 	private var closingCount = 0
-	/** Operations queued behind the one in flight, oldest first. `waitingHead`
-	 is the next to resume, so handing the store on is O(1) rather than the
-	 shift `removeFirst` makes of every entry behind it. Every waiter is resumed
-	 by ``leave()`` and each operation runs even for a cancelled caller, so
-	 cancellation has nothing to remove and nothing to strand. */
-	private var waiting: [CheckedContinuation<Void, Never>?] = []
-	private var waitingHead = 0
 	private var context: NSManagedObjectContext?
 	private var databaseURL: URL?
-	private var views: [String: ViewState] = [:]
-	private var maximumLineCount: UInt = 100
+	private var views = ScrollbackViewCounts()
 	private var saveTask: Task<Void, Never>?
-	/** The save armed by the rows written since the last one. It waits
-	 `saveDelay` from the first of them, or runs at once when `saveRowThreshold`
-	 of them have piled up. */
-	private var burstSave: BurstSave?
-	/** Rows inserted since a save was last attempted, whether or not it landed.
-	 Counted from the attempt rather than the success, so a save that keeps
-	 failing is retried when the next batch of rows or the next delay is up and
-	 not on every row. */
-	private var rowsSinceSave = 0
+	private var saves: ScrollbackSaveSchedule
 	private let filenameSetting: ScrollbackFilenameSetting
 	private let deletionHandler: DeletionHandler
 	private let saveFailureHandler: SaveFailureHandler
 	private let makeStack: MakeStack
 	private let resizeDelay: ResizeDelay
-	/// How long the store waits between the saves it makes on its own. Writes
-	/// arm earlier ones; this loop is the safety net for changes they do not
-	/// count, such as a replacement or a redaction.
-	private let saveInterval: Duration
-	/** Unsaved rows are about 1.4 KB each in Core Data's registered objects, so
-	 500 of them hold the pending cost to roughly 0.7 MB, and a save of that many
-	 rows in WAL mode is a few milliseconds. */
-	private let saveRowThreshold: Int
-	/// The longest a written row waits for a save while traffic continues.
-	private let saveDelay: Duration
 	/** The most rows one step of a removal or a retention pass deletes and
 	 saves before queued work gets its turn. A thousand rows is about 1.4 MB of
 	 registered objects. */
 	private let deletionChunkSize: Int
 	private let willPerform: (@Sendable (ScrollbackStoreOperation) async -> Void)?
 	var pendingOperationCount: Int {
-		waiting.count - waitingHead
+		turns.pendingCount
 	}
 
 	init(
@@ -108,9 +67,7 @@ actor ScrollbackStore {
 		self.filenameSetting = filenameSetting
 		self.makeStack = makeStack ?? { try ScrollbackQueries.makeStack(at: $0, migrationProgress: migrationProgress) }
 		self.resizeDelay = resizeDelay
-		self.saveInterval = saveInterval
-		self.saveRowThreshold = max(1, saveRowThreshold)
-		self.saveDelay = saveDelay
+		saves = ScrollbackSaveSchedule(saveInterval: saveInterval, saveRowThreshold: saveRowThreshold, saveDelay: saveDelay)
 		self.deletionChunkSize = max(1, deletionChunkSize)
 		self.willPerform = willPerform
 		self.saveFailureHandler = saveFailureHandler
@@ -118,29 +75,13 @@ actor ScrollbackStore {
 	}
 
 	private func enter() async {
-		if occupied {
-			await withCheckedContinuation { waiting.append($0) }
-		} else {
-			occupied = true
+		if !turns.claim() {
+			await withCheckedContinuation { turns.enqueue($0) }
 		}
 	}
 
 	private func leave() {
-		guard waitingHead < waiting.count else {
-			waiting.removeAll(keepingCapacity: true)
-			waitingHead = 0
-			occupied = false
-			return
-		}
-		let next = waiting[waitingHead]
-		waiting[waitingHead] = nil
-		waitingHead += 1
-		/* Reclaim the consumed prefix once it dominates, keeping the cost amortized O(1). */
-		if waitingHead >= 32, waitingHead * 2 >= waiting.count {
-			waiting.removeFirst(waitingHead)
-			waitingHead = 0
-		}
-		next?.resume()
+		turns.handOff()?.resume()
 	}
 
 	/** What a database this build minted is called.
@@ -185,14 +126,11 @@ actor ScrollbackStore {
 		closingCount += 1
 		saveTask?.cancel()
 		saveTask = nil
-		burstSave?.task.cancel()
-		burstSave = nil
+		saves.cancel()
 		await enter()
 		defer { closingCount -= 1; leave() }
 		await willPerform?(.close)
-		for state in views.values {
-			state.resize?.task.cancel()
-		}
+		views.cancelAllResizes()
 		guard let context else { lifecycle = .closed; return .saved }
 		let outcome = await commit(context)
 		switch outcome {
@@ -203,9 +141,7 @@ actor ScrollbackStore {
 		case .failed:
 			// No reset: unsaved objects remain available to saveData or a later close.
 			lifecycle = closingCount == 1 ? .open : .closing
-			for identifier in views.keys {
-				views[identifier]?.resize = nil
-			}
+			views.forgetResizes()
 			/* Admission cancelled the periodic save. A store that stays open has
 			 to keep saving on its own, or the rows the next writes add wait for a
 			 close that may never come; a close still queued behind this one
@@ -218,27 +154,17 @@ actor ScrollbackStore {
 	}
 
 	func setMaximumLineCount(_ count: UInt) {
-		guard count > 0 else { return }
-		let lowered = count < maximumLineCount
-		maximumLineCount = count
-		for identifier in views.keys {
-			/* A pass already waiting was armed for the old limit and may not be
-			 due for another half hour. Retiring it is what lets the new limit
-			 arm a pass of its own. */
-			if lowered {
-				views[identifier]?.resize?.task.cancel()
-				views[identifier]?.resize = nil
-			}
+		for identifier in views.setMaximumLineCount(count) {
 			scheduleResize(identifier)
 		}
 	}
 
 	private func initializeView(_ identifier: String, in context: NSManagedObjectContext) async throws {
-		guard views[identifier] == nil else { return }
+		guard views.contains(identifier) == false else { return }
 		let counts = try await context.perform {
 			try ScrollbackQueries.initialCounts(in: context, viewIdentifier: identifier)
 		}
-		views[identifier] = ViewState(totalLineCount: counts.lineCount, maximumIdentifier: counts.maximumIdentifier)
+		views.insert(identifier, lineCount: counts.lineCount, maximumIdentifier: counts.maximumIdentifier)
 		scheduleResize(identifier)
 	}
 
@@ -251,15 +177,16 @@ actor ScrollbackStore {
 		guard let context else { return .unavailable }
 		do {
 			try await initializeView(entry.viewIdentifier, in: context)
-			guard let state = views[entry.viewIdentifier], state.maximumIdentifier < UInt(Int64.max) else {
+			guard let maximumIdentifier = views.maximumIdentifier(of: entry.viewIdentifier),
+			      maximumIdentifier < UInt(Int64.max)
+			else {
 				return .failed(CocoaError(.validationNumberTooLarge).localizedDescription)
 			}
-			let next = state.maximumIdentifier + 1
+			let next = maximumIdentifier + 1
 			let inserted = await context
 				.perform { ScrollbackQueries.insert(entry, in: context, entryIdentifier: next) }
 			guard inserted else { return .failed(CocoaError(.persistentStoreOperation).localizedDescription) }
-			views[entry.viewIdentifier]?.maximumIdentifier = next
-			views[entry.viewIdentifier]?.totalLineCount = saturatedAdd(state.totalLineCount, 1)
+			views.noteInserted(entry.viewIdentifier, entryIdentifier: next)
 			noteInsertedRow()
 			scheduleResize(entry.viewIdentifier)
 			return .accepted
@@ -313,15 +240,14 @@ actor ScrollbackStore {
 			}
 		} catch { return .failed(error.localizedDescription) }
 		let outcome = await deleteInChunks(
-			.everything(throughEntryIdentifier: max(ceiling, views[identifier]?.maximumIdentifier ?? 0)),
+			.everything(throughEntryIdentifier: max(ceiling, views.maximumIdentifier(of: identifier) ?? 0)),
 			inView: identifier, context: context, continues: { true }
 		)
 		if case .deleted = outcome {
-			views[identifier]?.resize?.task.cancel()
 			if forget {
-				views.removeValue(forKey: identifier)
+				views.removeView(identifier)
 			} else {
-				views[identifier]?.resize = nil
+				views.cancelResize(identifier)
 			}
 		}
 		return outcome
@@ -346,7 +272,7 @@ actor ScrollbackStore {
 		var uniqueIdentifiers: [String] = []
 		while true {
 			// A deletion saves what is pending before it deletes, and again after.
-			rowsSinceSave = 0
+			saves.noteSaveAttempt()
 			let outcome = await context.perform {
 				ScrollbackQueries.deleteOutcome(
 					deletion, in: context, viewIdentifier: identifier, chunkLimit: chunkLimit
@@ -355,9 +281,7 @@ actor ScrollbackStore {
 			guard case let .deleted(chunk) = outcome else { return outcome }
 			deletedCount = saturatedAdd(deletedCount, chunk.deletedCount)
 			uniqueIdentifiers += chunk.uniqueIdentifiers
-			if let count = views[identifier]?.totalLineCount {
-				views[identifier]?.totalLineCount = count - min(count, chunk.deletedCount)
-			}
+			views.subtract(chunk.deletedCount, from: identifier)
 			// The one-way notification completes before a newer view generation can enter.
 			if !chunk.uniqueIdentifiers.isEmpty {
 				await deletionHandler(chunk.uniqueIdentifiers, identifier)
@@ -434,29 +358,8 @@ actor ScrollbackStore {
 			return .failed(reason)
 		}
 
-		let reader = await context.perform { () -> NSManagedObjectContext? in
-			guard let coordinator = context.persistentStoreCoordinator else { return nil }
-			let reader = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-			reader.persistentStoreCoordinator = coordinator
-			reader.undoManager = nil
-			return reader
-		}
-		guard let reader else { return .unavailable }
-		let normalized = query.normalized
-		var hits: [ScrollbackSearchHit] = []
-		for view in normalized.viewIdentifiers {
-			guard !Task.isCancelled else { return .cancelled }
-			let found = await reader.perform {
-				ScrollbackQueries.search(in: reader, viewIdentifier: view, query: normalized)
-			}
-			switch found {
-			case let .success(rows): hits.append(contentsOf: rows)
-			case let .failure(reason): return .failed(reason)
-			}
-		}
-		hits.sort { $0.sortsBefore($1) }
-		let truncated = hits.count > normalized.limit
-		return .results(Array(hits.prefix(normalized.limit)), truncated: truncated)
+		guard let reader = await ScrollbackQueries.makeReader(for: context) else { return .unavailable }
+		return await ScrollbackQueries.search(query.normalized, reader: reader)
 	}
 
 	@discardableResult
@@ -472,24 +375,21 @@ actor ScrollbackStore {
 	/// Saves on the store's own context. Only called holding the store, so no
 	/// row can be inserted between the count being cleared and the save.
 	private func commit(_ context: NSManagedObjectContext) async -> ScrollbackSaveOutcome {
-		rowsSinceSave = 0
+		saves.noteSaveAttempt()
 		return await context.perform { ScrollbackQueries.quickSave(context) }
 	}
 
 	/// Arms the save the rows just written are owed: after `saveDelay` from the
 	/// first of them, or now once `saveRowThreshold` of them are waiting.
 	private func noteInsertedRow() {
-		rowsSinceSave += 1
-		if rowsSinceSave >= saveRowThreshold {
-			armBurstSave(after: .zero)
-		} else if burstSave == nil {
-			armBurstSave(after: saveDelay)
+		if let delay = saves.noteInsertedRow() {
+			armBurstSave(after: delay)
 		}
 	}
 
 	private func armBurstSave(after delay: Duration) {
 		guard lifecycle == .open else { return }
-		burstSave?.task.cancel()
+		saves.burstSave?.task.cancel()
 		let identifier = UUID()
 		let task = Task { [weak self] in
 			if delay > .zero {
@@ -498,20 +398,18 @@ actor ScrollbackStore {
 			guard !Task.isCancelled else { return }
 			await self?.runBurstSave(identifier)
 		}
-		burstSave = BurstSave(identifier: identifier, task: task)
+		saves.arm(ScrollbackSaveSchedule.BurstSave(identifier: identifier, task: task))
 	}
 
 	private func runBurstSave(_ identifier: UUID) async {
-		guard burstSave?.identifier == identifier, lifecycle == .open else { return }
 		// Cleared before the save takes its turn, so rows written while it waits arm the next.
-		burstSave = nil
-		guard case let .failed(reason) = await saveData() else { return }
+		guard lifecycle == .open, saves.takeBurst(identifier), case let .failed(reason) = await saveData() else { return }
 		await saveFailureHandler(reason)
 	}
 
 	private func scheduleSave() {
 		guard saveTask == nil else { return }
-		let interval = saveInterval
+		let interval = saves.saveInterval
 		saveTask = Task { [weak self] in
 			while !Task.isCancelled {
 				try? await Task.sleep(for: interval)
@@ -522,8 +420,7 @@ actor ScrollbackStore {
 	}
 
 	private func scheduleResize(_ identifier: String) {
-		guard lifecycle == .open, let state = views[identifier], state.resize == nil,
-		      state.totalLineCount > maximumLineCount else { return }
+		guard lifecycle == .open, views.needsResize(identifier) else { return }
 		let delay = resizeDelay()
 		let requestIdentifier = UUID()
 		let task = Task { [weak self] in
@@ -531,16 +428,7 @@ actor ScrollbackStore {
 			guard !Task.isCancelled else { return }
 			_ = await self?.resize(identifier, requestIdentifier: requestIdentifier)
 		}
-		views[identifier]?.resize = ScheduledResize(identifier: requestIdentifier, task: task)
-	}
-
-	/// A cancelled pass can finish after a replacement is scheduled for the same view.
-	private func releaseResizeSlot(_ identifier: String, requestIdentifier: UUID?) {
-		guard requestIdentifier == nil || requestIdentifier == views[identifier]?.resize?.identifier else { return }
-		if requestIdentifier == nil {
-			views[identifier]?.resize?.task.cancel()
-		}
-		views[identifier]?.resize = nil
+		views.armResize(identifier, ScrollbackViewCounts.ScheduledResize(identifier: requestIdentifier, task: task))
 	}
 
 	@discardableResult
@@ -549,24 +437,21 @@ actor ScrollbackStore {
 		await enter()
 		defer { leave() }
 		await willPerform?(.resize)
-		guard !Task.isCancelled, requestIdentifier == nil || requestIdentifier == views[identifier]?.resize?.identifier,
-		      let context
-		else {
-			releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
+		guard !Task.isCancelled, views.isCurrent(requestIdentifier, for: identifier), let context else {
+			views.releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
 			return .unavailable
 		}
 		/* A retention pass commits pending rows first, as a removal does. A pass
 		 that was cancelled, replaced or given another limit between its chunks
 		 stops there; the limit's own pass takes over. */
-		let limit = maximumLineCount
+		let limit = views.maximumLineCount
 		let outcome = await deleteInChunks(
 			.retainingNewest(count: limit), inView: identifier, context: context,
 			continues: {
-				!Task.isCancelled && maximumLineCount == limit
-					&& (requestIdentifier == nil || requestIdentifier == views[identifier]?.resize?.identifier)
+				!Task.isCancelled && views.maximumLineCount == limit && views.isCurrent(requestIdentifier, for: identifier)
 			}
 		)
-		releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
+		views.releaseResizeSlot(identifier, requestIdentifier: requestIdentifier)
 		if case let .deleted(result) = outcome, result.deletedCount > 0 {
 			/* One pass may leave the view over its limit — the limit can have been
 			 lowered again while this one ran. A pass that deleted nothing arms no
@@ -575,9 +460,4 @@ actor ScrollbackStore {
 		}
 		return outcome
 	}
-}
-
-nonisolated func saturatedAdd(_ lhs: UInt, _ rhs: UInt) -> UInt { // nonisolated: pure
-	let (result, overflow) = lhs.addingReportingOverflow(rhs)
-	return overflow ? UInt.max : result
 }

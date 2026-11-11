@@ -13,6 +13,37 @@ nonisolated extension ScrollbackQueries {
 		case failure(String)
 	}
 
+	/// A context of its own on the store's coordinator, so a search reads
+	/// without holding the store's.
+	static func makeReader(for context: NSManagedObjectContext) async -> NSManagedObjectContext? {
+		await context.perform { () -> NSManagedObjectContext? in
+			guard let coordinator = context.persistentStoreCoordinator else { return nil }
+			let reader = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+			reader.persistentStoreCoordinator = coordinator
+			reader.undoManager = nil
+			return reader
+		}
+	}
+
+	/// Searches every view the query names on `reader`, newest match first.
+	/// Cancelling the task stops it between views.
+	static func search(_ normalized: ScrollbackSearchQuery, reader: NSManagedObjectContext) async -> ScrollbackSearchOutcome {
+		var hits: [ScrollbackSearchHit] = []
+		for view in normalized.viewIdentifiers {
+			guard !Task.isCancelled else { return .cancelled }
+			let found = await reader.perform {
+				search(in: reader, viewIdentifier: view, query: normalized)
+			}
+			switch found {
+			case let .success(rows): hits.append(contentsOf: rows)
+			case let .failure(reason): return .failed(reason)
+			}
+		}
+		hits.sort { $0.sortsBefore($1) }
+		let truncated = hits.count > normalized.limit
+		return .results(Array(hits.prefix(normalized.limit)), truncated: truncated)
+	}
+
 	/** The rows of one view whose text, or whose sender, contains the query.
 
 	 `normalized` has already folded the text, so it is compared against the
