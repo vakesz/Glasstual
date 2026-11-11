@@ -62,6 +62,7 @@ final class ServerPropertiesModel {
 		case serverPassword
 		case nicknamePassword
 		case proxyPassword
+		case saslBearerToken
 	}
 
 	/// What the one keychain read found, by item — the channel keys included.
@@ -143,6 +144,7 @@ final class ServerPropertiesModel {
 			.serverPassword: config.serverList.first?.pendingServerPassword.value(orStored: nil) ?? "",
 			.nicknamePassword: config.pendingNicknamePassword.value(orStored: nil) ?? "",
 			.proxyPassword: config.pendingProxyPassword.value(orStored: nil) ?? "",
+			.saslBearerToken: config.pendingSASLBearerToken.value(orStored: nil) ?? "",
 		]
 		if config.bouncerNetwork != nil {
 			selection = .channelList
@@ -208,6 +210,7 @@ final class ServerPropertiesModel {
 		)
 		secretTexts[.nicknamePassword] = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
 		secretTexts[.proxyPassword] = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
+		secretTexts[.saslBearerToken] = secret(config.pendingSASLBearerToken, from: config.saslBearerTokenKeychainItem)
 	}
 
 	/** Reads the sheet's secrets off the main actor.
@@ -308,6 +311,11 @@ final class ServerPropertiesModel {
 			text: secretText(.nicknamePassword),
 			pending: result.pendingNicknamePassword
 		)
+		result.pendingSASLBearerToken = submittedSecret(
+			.saslBearerToken,
+			text: secretText(.saslBearerToken),
+			pending: result.pendingSASLBearerToken
+		)
 		result.alternateNicknames = uniqueNonempty(alternateNicknames.components(separatedBy: .whitespaces))
 		result.proxyAddress = Self.nilIfEmpty(proxyAddress.firstToken.lowercased())
 		result.proxyPort = UInt16(proxyPort) ?? UInt16(ConnectionDefaults.proxyPort)
@@ -344,6 +352,10 @@ final class ServerPropertiesModel {
 			(.identity, CommonValidationStrings.invalidNickname)
 		} else if let nickname = ServerPropertiesValidation.invalidAlternateNickname(in: alternateNicknames) {
 			(.identity, String(localized: .ServerProperties.pleaseEnterAListOfProperly(nickname)))
+		} else if let token = secretText(.saslBearerToken).trimmed.nonEmpty,
+		          !OAuthBearerClient.isValidToken(token)
+		{
+			(.identity, String(localized: .ServerProperties.saslBearerTokenInvalid))
 		} else if !config.username.firstToken.isHostmaskUsername {
 			(.identity, String(localized: .ServerProperties.pleaseEnterAProperlyFormattedUsername))
 		} else if !ServerPropertiesValidation.isRealName(config.realName) {

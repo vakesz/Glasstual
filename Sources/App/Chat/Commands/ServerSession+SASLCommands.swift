@@ -11,6 +11,8 @@ enum SASLCommandRequest: Equatable {
 	case mechanism(SASLMechanism?, only: Bool)
 	/// The name typed after `mechanism` is not one the session speaks.
 	case unknownMechanism(String)
+	case setToken(String)
+	case clearToken
 	case invalid
 
 	init(_ arguments: CommandArguments) {
@@ -20,6 +22,13 @@ enum SASLCommandRequest: Equatable {
 			self = arguments.isEmpty ? .status : .invalid
 		case "mechanism":
 			self = Self.mechanismRequest(&arguments)
+		case "token":
+			let token = arguments.next()
+			guard token.isEmpty == false, arguments.isEmpty else {
+				self = .invalid
+				return
+			}
+			self = token.lowercased() == "clear" ? .clearToken : .setToken(token)
 		default:
 			self = .invalid
 		}
@@ -51,9 +60,28 @@ extension ServerSession {
 		case let .unknownMechanism(name):
 			let names = SASLMechanism.defaultOrder.map(\.wireName).joined(separator: ", ")
 			printDebugInformation(toConsole: String(localized: .IRC.saslMechanismUnknown(name, names)))
+		case let .setToken(token):
+			guard OAuthBearerClient.isValidToken(token) else {
+				printDebugInformation(toConsole: String(localized: .IRC.saslTokenInvalid))
+				return
+			}
+			storeSASLBearerToken(.set(token))
+			printDebugInformation(toConsole: String(localized: .IRC.saslTokenSaved))
+		case .clearToken:
+			storeSASLBearerToken(.cleared)
+			printDebugInformation(toConsole: String(localized: .IRC.saslTokenCleared))
 		case .invalid:
 			printInvalidSyntaxMessage(for: parsed.command)
 		}
+	}
+
+	/// Hands the token to the keychain through the same path the connection
+	/// sheet uses. It is never printed, logged or kept in input history.
+	private func storeSASLBearerToken(_ edit: PendingKeychainSecret) {
+		var mutableConfig = config
+		mutableConfig.pendingSASLBearerToken = edit
+		updateConfig(mutableConfig)
+		chatSession?.save()
 	}
 
 	/// Writes the preference the way the connection sheet does, so it persists
@@ -139,6 +167,8 @@ enum SASLAvailabilityText {
 		case .externalDisabled: String(localized: .IRC.saslUnavailableExternalDisabled)
 		case .noSigningKey: String(localized: .IRC.saslUnavailableNoSigningKey)
 		case .noPassword: String(localized: .IRC.saslUnavailableNoPassword)
+		case .noBearerToken: String(localized: .IRC.saslUnavailableNoBearerToken)
+		case .requiresTLS: String(localized: .IRC.saslUnavailableRequiresTls)
 		case .clearTextNotPermitted: String(localized: .IRC.saslUnavailableClearTextNotPermitted)
 		case .accountCredentialsWithheld: String(localized: .IRC.saslUnavailableCredentialsWithheld)
 		}

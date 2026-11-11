@@ -89,6 +89,22 @@ nonisolated enum ConnectionSafetyStrings {
 			String(localized: .ConnectionSafety.saslEcdsaChallengeInvalid)
 		}
 
+		static func oauthTokenRejected(status: String) -> String {
+			String(localized: .ConnectionSafety.saslOauthTokenRejected(status))
+		}
+
+		static var oauthTokenRejectedWithoutStatus: String {
+			String(localized: .ConnectionSafety.saslOauthTokenRejectedWithoutStatus)
+		}
+
+		static var oauthRequiresTLS: String {
+			String(localized: .ConnectionSafety.saslOauthRequiresTls)
+		}
+
+		static var oauthExchangeInvalid: String {
+			String(localized: .ConnectionSafety.saslOauthExchangeInvalid)
+		}
+
 		static var timedOut: String {
 			String(localized: .ConnectionSafety.saslAuthenticationTimedOut)
 		}

@@ -39,6 +39,7 @@ extension ServerPropertiesModel {
 			config.nicknamePasswordKeychainItem,
 			config.proxyPasswordKeychainItem,
 			config.saslSigningKeyKeychainItem,
+			config.saslBearerTokenKeychainItem,
 		]
 
 		if let primaryServer {
@@ -66,6 +67,9 @@ extension ServerPropertiesModel {
 		}
 		if editedSecretFields.contains(.proxyPassword) == false {
 			secretTexts[.proxyPassword] = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
+		}
+		if editedSecretFields.contains(.saslBearerToken) == false {
+			secretTexts[.saslBearerToken] = secret(config.pendingSASLBearerToken, from: config.saslBearerTokenKeychainItem)
 		}
 	}
 

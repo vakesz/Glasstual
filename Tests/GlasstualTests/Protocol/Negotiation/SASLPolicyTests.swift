@@ -90,6 +90,35 @@ struct SASLPolicyTests {
 		) == example.expected)
 	}
 
+	@Test("A bearer token is never sent over plaintext, waits for consent on an unchecked chain and is sent over trusted TLS")
+	func bearerTokenNeedsTLS() {
+		let inventory = SASLCredentialInventory(hasBearerToken: true)
+		func availability(_ transport: SASLTransportAssurance) -> SASLAvailability {
+			SASLPolicy.availability(of: .oauthBearer, inventory: inventory, transport: transport, withholdsAccountCredentials: false)
+		}
+
+		#expect(availability(.plaintext(clearCredentialsAllowed: true)) == .unavailable(.requiresTLS))
+		#expect(availability(.unverifiedTLS(consented: false, mayAsk: true)) == .needsConsent)
+		#expect(availability(.unverifiedTLS(consented: true, mayAsk: false)) == .usable)
+		#expect(availability(.verifiedTLS) == .usable)
+		#expect(SASLPolicy.availability(
+			of: .oauthBearer,
+			inventory: SASLCredentialInventory(hasPassword: true),
+			transport: .verifiedTLS,
+			withholdsAccountCredentials: false
+		) == .unavailable(.noBearerToken))
+	}
+
+	@Test("With a token, OAUTHBEARER is tried before SCRAM")
+	func bearerTokenOrdersBeforeSCRAM() {
+		#expect(SASLPolicy.supportedMechanisms(
+			inventory: SASLCredentialInventory(hasPassword: true, hasBearerToken: true),
+			transport: .verifiedTLS,
+			withholdsAccountCredentials: false,
+			preferred: nil
+		) == [.oauthBearer, .scramSHA512, .scramSHA256, .plain])
+	}
+
 	@Test("Every account credential is withheld from a host outside the configured servers", arguments: SASLMechanism.allCases)
 	func withheldCredentialsMakeEveryMechanismUnavailable(_ mechanism: SASLMechanism) {
 		#expect(SASLPolicy.availability(

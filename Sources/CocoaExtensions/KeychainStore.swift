@@ -97,6 +97,8 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	case channelSecretKey(String)
 	/// The base64 raw representation of the P-256 key SASL ECDSA signs with.
 	case saslSigningKey(String)
+	/// The OAuth 2.0 bearer token SASL OAUTHBEARER signs in with.
+	case saslBearerToken(String)
 	/// The base64 X9.63 representation of the P-256 key behind one network's
 	/// secure DCC certificate.
 	case dccIdentityKey(String)
@@ -111,6 +113,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case .serverPassword: "Glasstual (Server Password)"
 		case .channelSecretKey: "Glasstual (Channel JOIN Key)"
 		case .saslSigningKey: "Glasstual (SASL ECDSA Key)"
+		case .saslBearerToken: "Glasstual (SASL OAuth Token)"
 		case .dccIdentityKey: "Glasstual (Secure DCC Key)"
 		case .dccIdentityCertificate: "Glasstual (Secure DCC Certificate)"
 		}
@@ -125,6 +128,7 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		case let .serverPassword(identifier): "glasstual.server.\(identifier)"
 		case let .channelSecretKey(identifier): "glasstual.channel-key.\(identifier)"
 		case let .saslSigningKey(identifier): "glasstual.sasl-ecdsa.\(identifier)"
+		case let .saslBearerToken(identifier): "glasstual.sasl-oauthbearer.\(identifier)"
 		case let .dccIdentityKey(identifier): "glasstual.dcc-identity-key.\(identifier)"
 		case let .dccIdentityCertificate(identifier): "glasstual.dcc-identity-certificate.\(identifier)"
 		}

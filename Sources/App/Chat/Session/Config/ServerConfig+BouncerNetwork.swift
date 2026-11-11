@@ -89,6 +89,7 @@ nonisolated extension ServerConfig {
 		merged.pendingNicknamePassword = .unchanged
 		merged.pendingProxyPassword = .unchanged
 		merged.pendingSASLSigningKey = .unchanged
+		merged.pendingSASLBearerToken = .unchanged
 		merged.serverList = parent.serverList.map {
 			var server = $0
 			server.pendingServerPassword = .unchanged

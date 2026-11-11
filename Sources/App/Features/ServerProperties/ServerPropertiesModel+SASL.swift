@@ -33,7 +33,8 @@ extension ServerPropertiesModel {
 			hasClientCertificate: config.identityClientSideCertificate != nil,
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
 			hasPassword: secretText(.nicknamePassword).isEmpty == false,
-			hasSigningKey: hasSigningKey
+			hasSigningKey: hasSigningKey,
+			hasBearerToken: secretText(.saslBearerToken).isEmpty == false
 		)
 	}
 
@@ -65,7 +66,8 @@ extension ServerPropertiesModel {
 		case .externalDisabled: String(localized: .ServerProperties.saslMechanismExternalDisabled)
 		case .noSigningKey: String(localized: .ServerProperties.saslMechanismMissingSigningKey)
 		case .noPassword: String(localized: .ServerProperties.saslMechanismMissingPassword)
-		case .clearTextNotPermitted, .accountCredentialsWithheld: nil
+		case .noBearerToken: String(localized: .ServerProperties.saslMechanismMissingBearerToken)
+		case .clearTextNotPermitted, .requiresTLS, .accountCredentialsWithheld: nil
 		}
 	}
 }
@@ -76,6 +78,7 @@ extension SASLMechanism {
 		switch self {
 		case .external: String(localized: .ServerProperties.saslMechanismExternalTitle)
 		case .ecdsaNIST256PChallenge: String(localized: .ServerProperties.saslMechanismEcdsaTitle)
+		case .oauthBearer: String(localized: .ServerProperties.saslMechanismOauthTitle)
 		case .scramSHA512, .scramSHA256: String(localized: .ServerProperties.saslMechanismScramTitle)
 		case .plain: String(localized: .ServerProperties.saslMechanismPlainTitle)
 		}

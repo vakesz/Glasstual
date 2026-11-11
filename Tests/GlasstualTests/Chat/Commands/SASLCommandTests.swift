@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
 import Testing
@@ -28,6 +29,10 @@ struct SASLCommandTests {
 		("mechanism", .invalid),
 		("mechanism plain later", .invalid),
 		("status extra", .invalid),
+		("token abc.def", .setToken("abc.def")),
+		("token clear", .clearToken),
+		("token", .invalid),
+		("token a b", .invalid),
 		("frobnicate", .invalid),
 	])
 	func requestsAreParsed(_ line: String, _ expected: SASLCommandRequest) {
@@ -119,5 +124,44 @@ struct SASLCommandTests {
 		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
 		#expect(session.sasl.mechanism == .scramSHA256)
 		#expect(session.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == false)
+	}
+
+	@Test("A token is stored as a pending keychain edit and never printed")
+	func tokenIsStored() {
+		let session = session()
+
+		session.sendCommand("sasl token abc.def~", completeTarget: false)
+
+		#expect(session.sessionSASLBearerToken == "abc.def~")
+		#expect(printed(by: session).last == String(localized: .IRC.saslTokenSaved))
+		#expect(printed(by: session).contains { $0.contains("abc.def~") } == false)
+
+		session.sendCommand("sasl token clear", completeTarget: false)
+		#expect(session.sessionSASLBearerToken == nil)
+		#expect(printed(by: session).last == String(localized: .IRC.saslTokenCleared))
+	}
+
+	@Test("An invalid token is refused without being echoed")
+	func invalidTokenIsRefused() {
+		let session = session()
+
+		session.sendCommand("sasl token tök€n", completeTarget: false)
+
+		#expect(session.config.pendingSASLBearerToken == .unchanged)
+		#expect(printed(by: session).last == String(localized: .IRC.saslTokenInvalid))
+		#expect(printed(by: session).contains { $0.contains("tök€n") } == false)
+	}
+
+	@Test("Lines carrying a secret are recognised so input history can skip them", arguments: [
+		("/sasl token abc", true),
+		("  /SASL Token abc", true),
+		("/pass hunter2", true),
+		("/sasl status", false),
+		("//sasl token abc", false),
+		("sasl token abc", false),
+		("/msg bob /sasl token abc", false),
+	])
+	func secretLines(_ line: String, _ carriesSecret: Bool) {
+		#expect(LocalCommand.lineCarriesSecret(line) == carriesSecret)
 	}
 }

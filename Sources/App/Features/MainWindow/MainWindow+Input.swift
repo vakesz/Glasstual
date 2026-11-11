@@ -213,7 +213,9 @@ extension MainWindow {
 		let value = NSAttributedString(attributedString: inputTextField.attributedStringValue)
 		guard value.length > 0 else { return }
 		inputTextField.attributedStringValue = NSAttributedString(string: "")
-		inputHistory.add(value)
+		if LocalCommand.lineCarriesSecret(value.string) == false {
+			inputHistory.add(value)
+		}
 		inputTextField.consumeReply(into: selectedSession)
 		guard let destination = selectedItem, let session = destination.associatedSession else { return }
 		session.inputText(value, as: command, destination: destination)

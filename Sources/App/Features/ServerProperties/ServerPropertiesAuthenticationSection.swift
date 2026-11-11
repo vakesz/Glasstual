@@ -38,6 +38,12 @@ struct ServerPropertiesAuthenticationSection: View {
 			)
 			.disabled(model.config.usesSASL == false || model.config.saslMechanismPreference == nil)
 			.accessibilityIdentifier("server-sasl-mechanism-only")
+			SecureField(
+				.ServerProperties.saslBearerToken,
+				text: model.secretBinding(.saslBearerToken)
+			)
+			.accessibilityIdentifier("server-sasl-bearer-token")
+			.accessibilityHint(.ServerProperties.saslBearerTokenHelp)
 			Toggle(
 				.ServerProperties.disconnectOnSaslFailure,
 				isOn: $model.config.disconnectOnSASLFailure
@@ -63,6 +69,7 @@ struct ServerPropertiesAuthenticationSection: View {
 					.accessibilityLabel(Text(verbatim: warning))
 				}
 				Text(.ServerProperties.nicknamePasswordHelp)
+				Text(.ServerProperties.saslBearerTokenHelp)
 			}
 		}
 	}

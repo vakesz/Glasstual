@@ -12,6 +12,7 @@ nonisolated struct SASLCredentialInventory: Sendable, Equatable {
 	var externalMechanismDisabled = false
 	var hasPassword = false
 	var hasSigningKey = false
+	var hasBearerToken = false
 }
 
 /// How far the connection vouches for the server that would receive a credential.
@@ -40,7 +41,10 @@ nonisolated enum SASLUnavailableReason: Sendable, Equatable {
 	case externalDisabled
 	case noSigningKey
 	case noPassword
+	case noBearerToken
 	case clearTextNotPermitted
+	/// The mechanism is only ever sent over TLS (RFC 7628 §5).
+	case requiresTLS
 	case accountCredentialsWithheld
 }
 
@@ -82,6 +86,14 @@ nonisolated enum SASLPolicy {
 			return inventory.hasPassword ? .usable : .unavailable(.noPassword)
 		case .passwordInClear:
 			guard inventory.hasPassword else { return .unavailable(.noPassword) }
+			return clearCredentialAvailability(over: transport)
+		case .bearerToken:
+			guard inventory.hasBearerToken else { return .unavailable(.noBearerToken) }
+			/* RFC 7628 requires TLS whatever the endpoint asked for: a token on a
+			 plaintext socket is a session anyone on the path can replay. */
+			if case .plaintext = transport {
+				return .unavailable(.requiresTLS)
+			}
 			return clearCredentialAvailability(over: transport)
 		}
 	}

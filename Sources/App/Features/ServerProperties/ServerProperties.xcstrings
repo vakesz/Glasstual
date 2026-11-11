@@ -1,6 +1,246 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "sasl-mechanism-oauth-title" : {
+      "comment" : "Server Properties ▸ Identity: SASL mechanism menu item for OAUTHBEARER, which signs in with an OAuth token. The wire name follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth Token"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-token"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-Token"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token de OAuth"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeton OAuth"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuthトークン"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token OAuth"
+          }
+        }
+      }
+    },
+    "sasl-bearer-token" : {
+      "comment" : "Server Properties ▸ Identity: secure field for the OAuth 2.0 bearer token SASL OAUTHBEARER signs in with.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth Bearer Token"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-hozzáférési token"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth-Bearer-Token"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token portador de OAuth"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeton porteur OAuth"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuthベアラートークン"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token portador OAuth"
+          }
+        }
+      }
+    },
+    "sasl-bearer-token-help" : {
+      "comment" : "Server Properties ▸ Identity: footer explaining where the OAuth token is sent and that it is not renewed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The OAuth token is sent only over an encrypted connection whose certificate is trusted. Glasstual doesn’t renew tokens; paste a new one when it expires."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az OAuth-token csak olyan titkosított kapcsolaton kerül elküldésre, amelynek tanúsítványa megbízható. A Glasstual nem újítja meg a tokeneket; lejáratkor illesszen be egy újat."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das OAuth-Token wird nur über eine verschlüsselte Verbindung mit vertrauenswürdigem Zertifikat gesendet. Glasstual erneuert keine Tokens; fügen Sie ein neues ein, wenn es abläuft."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El token de OAuth solo se envía mediante una conexión cifrada cuyo certificado es de confianza. Glasstual no renueva los tokens; pegue uno nuevo cuando caduque."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton OAuth n’est envoyé que par une connexion chiffrée dont le certificat est approuvé. Glasstual ne renouvelle pas les jetons ; collez-en un nouveau lorsqu’il expire."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuthトークンは、証明書が信頼されている暗号化された接続でのみ送信されます。Glasstualはトークンを更新しません。期限が切れたら新しいトークンを貼り付けてください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O token OAuth só é enviado por uma conexão criptografada cujo certificado é confiável. O Glasstual não renova tokens; cole um novo quando ele expirar."
+          }
+        }
+      }
+    },
+    "sasl-bearer-token-invalid" : {
+      "comment" : "Server Properties: validation message when the OAuth token field contains characters a bearer token cannot contain.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The token contains characters an OAuth bearer token can’t contain."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A token olyan karaktereket tartalmaz, amelyeket egy OAuth-hozzáférési token nem tartalmazhat."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Token enthält Zeichen, die ein OAuth-Bearer-Token nicht enthalten darf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El token contiene caracteres que un token portador de OAuth no puede contener."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton contient des caractères qu’un jeton porteur OAuth ne peut pas contenir."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークンに、OAuthベアラートークンでは使用できない文字が含まれています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O token contém caracteres que um token portador OAuth não pode conter."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-missing-bearer-token" : {
+      "comment" : "Server Properties ▸ Identity: warning when the chosen SASL mechanism is OAUTHBEARER and no token is set.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No OAuth bearer token is set for this server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ehhez a kiszolgálóhoz nincs OAuth-hozzáférési token beállítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für diesen Server ist kein OAuth-Bearer-Token festgelegt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún token portador de OAuth configurado para este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun jeton porteur OAuth n’est défini pour ce serveur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバにはOAuthベアラートークンが設定されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum token portador OAuth está definido para este servidor."
+          }
+        }
+      }
+    },
     "authentication-header" : {
       "comment" : "Server Properties ▸ Identity: header of the section holding the account password and SASL options.",
       "extractionState" : "manual",

@@ -89,6 +89,9 @@ extension ServerSession {
 		}
 		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
 		let failed = Self.saslFailureNumerics.contains(numeric)
+		if failed {
+			reportOAuthBearerRejection()
+		}
 		/* 904 is a refused attempt, not a refused login: a certificate the
 		 account does not know fails EXTERNAL while the password would still
 		 pass SCRAM. The exchange ends only once every mechanism both sides

@@ -49,6 +49,13 @@ struct WireRedactionTests {
 				== "AUTHENTICATE SCRAM-SHA-256"
 		)
 		#expect(WireRedaction.redactedRawChatLine("AUTHENTICATE ANONYMOUS") == "AUTHENTICATE \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("AUTHENTICATE OAUTHBEARER") == "AUTHENTICATE OAUTHBEARER")
+		#expect(WireRedaction.redactedRawChatLine("AUTHENTICATE SCRAM-SHA-512") == "AUTHENTICATE SCRAM-SHA-512")
+		#expect(
+			WireRedaction
+				.redactedRawChatLine("AUTHENTICATE biwsAWhvc3Q9aXJjLmV4YW1wbGUubmV0AXBvcnQ9NjY5NwFhdXRoPUJlYXJlciB2RjlkZnQ0cW1UAQE=")
+				== "AUTHENTICATE \(mask)"
+		)
 	}
 
 	/// The oper name is not the secret, and losing it would leave the line

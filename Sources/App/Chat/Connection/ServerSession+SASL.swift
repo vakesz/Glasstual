@@ -30,7 +30,8 @@ extension ServerSession {
 			hasClientCertificate: socket?.isConnectedWithClientSideCertificate ?? false,
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
 			hasPassword: sessionNicknamePassword?.isEmpty == false,
-			hasSigningKey: saslSigningKey != nil
+			hasSigningKey: saslSigningKey != nil,
+			hasBearerToken: sessionSASLBearerToken?.isEmpty == false
 		)
 	}
 
@@ -120,7 +121,7 @@ extension ServerSession {
 		switch sasl.mechanism {
 		case .plain:
 			guard permitsCredentialsInClear else {
-				holdSASLPlainForConsent(serverData: serverData)
+				holdSASLCredentialForConsent(serverData: serverData)
 				return
 			}
 			let username = config.username.nonEmpty ?? config.nickname
@@ -140,16 +141,20 @@ extension ServerSession {
 			sendSASLScramInformation(forServerData: serverData)
 		case .ecdsaNIST256PChallenge:
 			sendSASLECDSAInformation(forServerData: serverData)
+		case .oauthBearer:
+			sendSASLOAuthBearerInformation(forServerData: serverData)
 		case nil:
 			break
 		}
 	}
 
-	/** `PLAIN` is the one mechanism that puts the password itself on the wire,
-	 so when the connection cannot vouch for the server it waits for the user.
-	 The server has asked for the payload and the exchange's own timer bounds
-	 the wait; an answer that comes after SASL has ended sends nothing. */
-	private func holdSASLPlainForConsent(serverData: String) {
+	/** `PLAIN` and `OAUTHBEARER` put the credential itself on the wire, so when
+	 the connection cannot vouch for the server they wait for the user. The
+	 server has asked for the payload and the exchange's own timer bounds the
+	 wait; an answer that comes after SASL has ended, or after it moved on to
+	 another mechanism, sends nothing. */
+	private func holdSASLCredentialForConsent(serverData: String) {
+		let mechanism = sasl.mechanism
 		guard mayAskToSendCredentials else {
 			abortSASLNegotiation(reason: isSecured
 				? ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate
@@ -158,11 +163,65 @@ extension ServerSession {
 		}
 		sessionCredentials.reportedWithheldCredentials = true
 		askToSendCredentials(sent: { session in
-			guard session.isCapabilityEnabled(.isInSASLNegotiation), session.sasl.mechanism == .plain else { return }
+			guard session.isCapabilityEnabled(.isInSASLNegotiation), session.sasl.mechanism == mechanism else { return }
 			session.sendSASLIdentificationInformation(forServerData: serverData)
 		}, declined: { session in
 			session.abortSASLNegotiation(reason: ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate)
 		})
+	}
+
+	/** OAUTHBEARER (RFC 7628): the token goes out once, over TLS only. A server
+	 that refuses it answers with a JSON error, which the client acknowledges
+	 with a lone `%x01`; the 904 that follows moves on to the next mechanism. */
+	private func sendSASLOAuthBearerInformation(forServerData serverData: String) {
+		switch sasl.oauthExchange {
+		case nil:
+			switch saslAvailability(of: .oauthBearer) {
+			case .usable:
+				break
+			case .needsConsent:
+				holdSASLCredentialForConsent(serverData: serverData)
+				return
+			case .unavailable(.requiresTLS):
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.oauthRequiresTLS)
+				return
+			case .unavailable:
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate)
+				return
+			}
+			guard let socket, let token = sessionSASLBearerToken,
+			      let response = try? OAuthBearerClient.initialResponse(
+			      	token: token,
+			      	host: socket.config.serverAddress,
+			      	port: socket.config.serverPort
+			      )
+			else {
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.oauthExchangeInvalid)
+				return
+			}
+			sasl.oauthExchange = .sentInitialResponse
+			sendSASLPayloadInChunks(response)
+		case .sentInitialResponse:
+			guard serverData.isEmpty == false else {
+				abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.oauthExchangeInvalid)
+				return
+			}
+			sasl.oauthExchange = .acknowledgedError(OAuthBearerClient.failure(fromServerPayload: serverData))
+			sendSASLPayloadInChunks(OAuthBearerClient.errorAcknowledgement)
+		case .acknowledgedError:
+			abortSASLNegotiation(reason: ConnectionSafetyStrings.SASL.oauthExchangeInvalid)
+		}
+	}
+
+	/// Says why the server refused the token, once its 904 has arrived.
+	func reportOAuthBearerRejection() {
+		guard case let .acknowledgedError(failure) = sasl.oauthExchange else { return }
+		let status = failure.map { String(ControlCharacterDisposition.singleLine($0.status).prefix(64)) }
+		if let status, status.isEmpty == false {
+			printDebugInformation(toConsole: ConnectionSafetyStrings.SASL.oauthTokenRejected(status: status))
+		} else {
+			printDebugInformation(toConsole: ConnectionSafetyStrings.SASL.oauthTokenRejectedWithoutStatus)
+		}
 	}
 
 	private func sendSASLECDSAInformation(forServerData serverData: String) {
@@ -336,6 +395,7 @@ extension ServerSession {
 		sasl.mechanism = nil
 		sasl.scramSession = nil
 		sasl.ecdsaExchange = nil
+		sasl.oauthExchange = nil
 		sasl.incomingPayload = nil
 		if failed {
 			disableCapability(.isIdentifiedWithSASL)
@@ -355,6 +415,7 @@ extension ServerSession {
 
 		sasl.scramSession = nil
 		sasl.ecdsaExchange = nil
+		sasl.oauthExchange = nil
 		sasl.incomingPayload = nil
 
 		let offered = mechanisms.isEmpty ? sasl.offeredMechanisms ?? [] : mechanisms
@@ -393,6 +454,7 @@ extension ServerSession {
 		sasl.mechanism = nil
 		sasl.scramSession = nil
 		sasl.ecdsaExchange = nil
+		sasl.oauthExchange = nil
 		sasl.incomingPayload = nil
 	}
 }

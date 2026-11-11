@@ -69,6 +69,12 @@ extension ServerSession {
 		return config.pendingNicknamePassword.value(orStored: sessionCredentials.password(for: config.nicknamePasswordKeychainItem))
 	}
 
+	/// The OAUTHBEARER token, resolved the same way as the nickname password.
+	var sessionSASLBearerToken: String? {
+		guard sessionCredentials.withholdsAccountCredentials == false else { return nil }
+		return config.pendingSASLBearerToken.value(orStored: sessionCredentials.password(for: config.saslBearerTokenKeychainItem))
+	}
+
 	var sessionServerPassword: String? {
 		guard let server = endpoints.current else { return nil }
 		return server.pendingServerPassword.value(orStored: sessionCredentials.password(for: server.keychainItem))

@@ -1,6 +1,246 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "sasl-unavailable-no-bearer-token": {
+      "comment": "/sasl status: OAUTHBEARER cannot be used because no OAuth token is set. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no OAuth bearer token"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs OAuth-hozzáférési token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kein OAuth-Bearer-Token"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin token portador de OAuth"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucun jeton porteur OAuth"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OAuthベアラートークンなし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sem token portador OAuth"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-requires-tls": {
+      "comment": "/sasl status: OAUTHBEARER is only sent over an encrypted (TLS) connection. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "requires a TLS connection"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TLS-kapcsolatot igényel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "erfordert eine TLS-Verbindung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "requiere una conexión TLS"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nécessite une connexion TLS"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TLS接続が必要"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "requer uma conexão TLS"
+          }
+        }
+      }
+    },
+    "sasl-token-invalid": {
+      "comment": "/sasl token: the typed value contains characters an OAuth bearer token cannot contain. The token itself is never shown.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That isn’t a valid OAuth bearer token. A token contains only letters, digits and - . _ ~ + /, optionally followed by =."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem érvényes OAuth-hozzáférési token. A token csak betűket, számjegyeket és a - . _ ~ + / jeleket tartalmazhatja, amelyeket = követhet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist kein gültiges OAuth-Bearer-Token. Ein Token enthält nur Buchstaben, Ziffern und - . _ ~ + /, optional gefolgt von =."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese no es un token portador de OAuth válido. Un token solo contiene letras, dígitos y - . _ ~ + /, seguidos opcionalmente de =."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce n’est pas un jeton porteur OAuth valide. Un jeton ne contient que des lettres, des chiffres et - . _ ~ + /, éventuellement suivis de =."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効なOAuthベアラートークンではありません。トークンに使用できるのは英字、数字、- . _ ~ + / のみで、末尾に = を付けることができます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esse não é um token portador OAuth válido. Um token contém apenas letras, dígitos e - . _ ~ + /, opcionalmente seguidos de =."
+          }
+        }
+      }
+    },
+    "sasl-token-saved": {
+      "comment": "/sasl token: the OAuth token was stored in the keychain. It is used at the next sign-in.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The OAuth token was saved to the keychain and will be used at the next sign-in."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az OAuth-token a kulcskarikába került, és a következő bejelentkezéskor lesz használva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das OAuth-Token wurde im Schlüsselbund gesichert und wird bei der nächsten Anmeldung verwendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El token de OAuth se guardó en el llavero y se usará en el próximo inicio de sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le jeton OAuth a été enregistré dans le trousseau et sera utilisé à la prochaine connexion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OAuthトークンをキーチェーンに保存しました。次回のサインインで使用されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O token OAuth foi salvo nas Chaves e será usado no próximo início de sessão."
+          }
+        }
+      }
+    },
+    "sasl-token-cleared": {
+      "comment": "/sasl token clear: the OAuth token was removed from the keychain.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The OAuth token was removed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az OAuth-token eltávolítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das OAuth-Token wurde entfernt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó el token de OAuth."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le jeton OAuth a été supprimé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OAuthトークンを削除しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O token OAuth foi removido."
+          }
+        }
+      }
+    },
     "sasl-mechanism-unknown": {
       "comment": "/sasl mechanism: the typed name is not a mechanism Glasstual speaks. %1$@ is the typed name; %2$@ lists the mechanism wire names. Keep “automatic” untranslated: it is typed.",
       "extractionState": "manual",

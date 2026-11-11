@@ -293,7 +293,7 @@ extension LocalCommand {
 		.recv: "<input>",
 		.redact: "[message id [reason]]",
 		.remove: "[target]",
-		.sasl: "[status | mechanism <name | automatic> [only]]",
+		.sasl: "[status | mechanism <name | automatic> [only] | token <token | clear>]",
 		.server: "<address> [[+] port] [password]",
 		.setcolor: "<nickname>",
 		.setname: "<real name>",
@@ -320,6 +320,25 @@ extension LocalCommand {
 		.whowas: "<nickname>",
 		.zline: "<+ | -><hostmask | nickname> [duration] [comment]",
 	]
+}
+
+extension LocalCommand {
+	/** Whether a typed line carries a secret, and so must stay out of input
+	 history: `/pass` and `/sasl token`. Anything that is not a command, and
+	 `//text` sent as a message, carries none. */
+	static func lineCarriesSecret(_ line: String) -> Bool {
+		let trimmed = line.drop { $0.isWhitespace }
+		guard trimmed.hasPrefix("/"), trimmed.hasPrefix("//") == false else { return false }
+		var arguments = CommandArguments(String(trimmed.dropFirst()))
+		switch LocalCommand(typedName: arguments.next()) {
+		case .pass:
+			return true
+		case .sasl:
+			return arguments.next().lowercased() == "token"
+		default:
+			return false
+		}
+	}
 }
 
 /// The commands offered by both input completion paths, with the same

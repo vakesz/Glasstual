@@ -15,6 +15,14 @@ enum ECDSAChallengeExchange {
 	case answered
 }
 
+/// Where an OAUTHBEARER exchange stands.
+enum OAuthBearerExchange: Equatable {
+	/// The token went out; the server's verdict is next.
+	case sentInitialResponse
+	/// The server answered with an error, which was acknowledged; its 904 is next.
+	case acknowledgedError(OAuthBearerFailure?)
+}
+
 /** One SASL exchange.
 
  The mechanisms the server offered, the one being tried, the ones already
@@ -29,6 +37,7 @@ struct SASLSession {
 	var lastAuthenticatedMechanism: SASLMechanism?
 	var incomingPayload: String?
 	var ecdsaExchange: ECDSAChallengeExchange?
+	var oauthExchange: OAuthBearerExchange?
 	var scramTask: Task<Void, Never>?
 	var scramSession: SCRAMClient? {
 		didSet {

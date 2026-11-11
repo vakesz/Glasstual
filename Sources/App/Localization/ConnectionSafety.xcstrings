@@ -1,6 +1,198 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "sasl-oauth-token-rejected" : {
+      "comment" : "Console line when the server refuses the SASL OAUTHBEARER token. %@ is the error status the server reported, such as invalid_token; it is not translated.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server rejected the OAuth token (%@)."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló elutasította az OAuth-tokent (%@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat das OAuth-Token abgelehnt (%@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor rechazó el token de OAuth (%@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a refusé le jeton OAuth (%@)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがOAuthトークンを拒否しました（%@）。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor rejeitou o token OAuth (%@)."
+          }
+        }
+      }
+    },
+    "sasl-oauth-token-rejected-without-status" : {
+      "comment" : "Console line when the server refuses the SASL OAUTHBEARER token without a readable reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server rejected the OAuth token."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló elutasította az OAuth-tokent."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat das OAuth-Token abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor rechazó el token de OAuth."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a refusé le jeton OAuth."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがOAuthトークンを拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor rejeitou o token OAuth."
+          }
+        }
+      }
+    },
+    "sasl-oauth-requires-tls" : {
+      "comment" : "Console line when SASL OAUTHBEARER would run on an unencrypted connection; the token is not sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The OAuth token is only sent over a TLS connection, so it wasn’t sent."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az OAuth-token csak TLS-kapcsolaton keresztül kerül elküldésre, ezért nem lett elküldve."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das OAuth-Token wird nur über eine TLS-Verbindung gesendet und wurde daher nicht gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El token de OAuth solo se envía mediante una conexión TLS, así que no se envió."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton OAuth n’est envoyé que par une connexion TLS ; il n’a donc pas été envoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuthトークンはTLS接続でのみ送信されるため、送信しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O token OAuth só é enviado por uma conexão TLS, por isso não foi enviado."
+          }
+        }
+      }
+    },
+    "sasl-oauth-exchange-invalid" : {
+      "comment" : "Console line when the server's half of the SASL OAUTHBEARER exchange does not follow RFC 7628.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL OAuth sign-in failed: the server’s reply wasn’t part of the exchange."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL OAuth-bejelentkezés sikertelen: a kiszolgáló válasza nem volt része a cserének."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL-OAuth-Anmeldung fehlgeschlagen: Die Antwort des Servers gehörte nicht zum Austausch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error al iniciar sesión con SASL OAuth: la respuesta del servidor no formaba parte del intercambio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la connexion SASL OAuth : la réponse du serveur ne faisait pas partie de l’échange."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL OAuthのサインインに失敗しました：サーバの応答が交換の一部ではありませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha no início de sessão SASL OAuth: a resposta do servidor não fazia parte da troca."
+          }
+        }
+      }
+    },
     "credentials-changed-certificate-body" : {
       "comment" : "Body of the alert asking whether to send the account password to a server whose certificate is not checked, shown instead of the usual body when the user allowed this host before and it now presents a different certificate. %1$@ is the server's host name.",
       "extractionState" : "manual",

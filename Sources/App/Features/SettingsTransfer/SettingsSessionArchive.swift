@@ -47,6 +47,7 @@ nonisolated enum SettingsSessionArchive {
 		config.pendingNicknamePassword = .unchanged
 		config.pendingProxyPassword = .unchanged
 		config.pendingSASLSigningKey = .unchanged
+		config.pendingSASLBearerToken = .unchanged
 		config.serverList = config.serverList.map {
 			var server = $0
 			server.pendingServerPassword = .unchanged

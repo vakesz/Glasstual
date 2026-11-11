@@ -156,6 +156,8 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 	/// An unflushed edit to the SASL ECDSA signing key, as ``ECDSASigningKey`` stores
 	/// it. Never encoded.
 	var pendingSASLSigningKey: PendingKeychainSecret = .unchanged
+	/// An unflushed edit to the SASL OAUTHBEARER token. Never encoded.
+	var pendingSASLBearerToken: PendingKeychainSecret = .unchanged
 
 	init(connectionName: String? = nil) {
 		self.connectionName = connectionName ?? ApplicationStrings.untitledConnection
@@ -217,6 +219,10 @@ nonisolated extension ServerConfig {
 		.saslSigningKey(credentialIdentifier)
 	}
 
+	var saslBearerTokenKeychainItem: KeychainItem {
+		.saslBearerToken(credentialIdentifier)
+	}
+
 	var nicknamePasswordFromKeychain: String? {
 		nicknamePasswordKeychainItem.password
 	}
@@ -252,6 +258,7 @@ nonisolated extension ServerConfig {
 		copy.pendingNicknamePassword = pendingNicknamePassword.detached(from: nicknamePasswordFromKeychain)
 		copy.pendingProxyPassword = pendingProxyPassword.detached(from: proxyPasswordFromKeychain)
 		copy.pendingSASLSigningKey = pendingSASLSigningKey.detached(from: saslSigningKeyKeychainItem.password)
+		copy.pendingSASLBearerToken = pendingSASLBearerToken.detached(from: saslBearerTokenKeychainItem.password)
 		copy.conversationList = conversationList.map { $0.uniqueCopy() }
 		copy.highlightList = highlightList.map { $0.uniqueCopy() }
 		copy.ignoreList = ignoreList.map { $0.uniqueCopy() }
@@ -283,6 +290,7 @@ nonisolated extension ServerConfig {
 		copy.pendingNicknamePassword = .unchanged
 		copy.pendingProxyPassword = .unchanged
 		copy.pendingSASLSigningKey = .unchanged
+		copy.pendingSASLBearerToken = .unchanged
 		copy.serverList = serverList.map {
 			var server = $0
 			server.uniqueIdentifier = derived(server.uniqueIdentifier)

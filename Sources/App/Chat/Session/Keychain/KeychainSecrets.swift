@@ -10,6 +10,7 @@ extension ServerConfig {
 			nicknamePasswordKeychainItem: pendingNicknamePassword,
 			proxyPasswordKeychainItem: pendingProxyPassword,
 			saslSigningKeyKeychainItem: pendingSASLSigningKey,
+			saslBearerTokenKeychainItem: pendingSASLBearerToken,
 		]
 		for server in serverList {
 			edits[server.keychainItem] = server.pendingServerPassword
@@ -21,7 +22,7 @@ extension ServerConfig {
 	}
 
 	var keychainItems: [KeychainItem] {
-		[nicknamePasswordKeychainItem, proxyPasswordKeychainItem, saslSigningKeyKeychainItem]
+		[nicknamePasswordKeychainItem, proxyPasswordKeychainItem, saslSigningKeyKeychainItem, saslBearerTokenKeychainItem]
 			+ serverList.map(\.keychainItem) + conversationList.map(\.keychainItem)
 	}
 
@@ -34,6 +35,9 @@ extension ServerConfig {
 		}
 		if edits[saslSigningKeyKeychainItem] == pendingSASLSigningKey {
 			pendingSASLSigningKey = .unchanged
+		}
+		if edits[saslBearerTokenKeychainItem] == pendingSASLBearerToken {
+			pendingSASLBearerToken = .unchanged
 		}
 		for index in serverList.indices where edits[serverList[index].keychainItem] == serverList[index].pendingServerPassword {
 			serverList[index].pendingServerPassword = .unchanged
