@@ -33,6 +33,7 @@ nonisolated struct ChatSettings: Sendable, Equatable {
 	var requestChatHistory = true
 	var synchronizeReadMarkers = true
 	var showChannelContextMessagesInChannel = true
+	var discoverMissedDirectMessages = true
 	/// The IRCv3 capabilities the user switched off, by wire name. Empty means
 	/// every capability the registry knows is available.
 	var disabledCapabilities: Set<String> = []

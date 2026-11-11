@@ -41,6 +41,7 @@ extension ServerSession {
 		chatHistory.prependedLines = nil
 		chatHistory.refusesMessageIdentifiers = false
 		resetChatHistoryPaging()
+		resetChatHistoryTargets()
 		readMarkers.sentDates.removeAll()
 		readMarkers.pendingConversations.removeAll()
 		readMarkers.timer.stop()
@@ -159,6 +160,12 @@ extension ServerSession {
 
 	func noteChatHistoryFailure(_ message: Message) -> Bool {
 		let label = message.messageTags?["label"] ?? message.parentBatchMessage?.labeledResponseBatch?.labeledDelivery.label
+		if noteChatHistoryTargetsFailure(message, label: label) {
+			return true
+		}
+		if label?.hasPrefix(ChatHistoryPolicy.targetsLabelPrefix) == true {
+			return false
+		}
 		if let paging = pagingFailed(
 			label: label?.hasPrefix(ChatHistoryPolicy.pagingLabelPrefix) == true ? label : nil,
 			target: label == nil ? message.params.dropFirst(2).dropLast().first(where: { findConversation($0) != nil }) : nil

@@ -29,6 +29,8 @@ nonisolated enum BatchKind: Sendable, Equatable {
 	/// `draft/extended-isupport`'s RPL_ISUPPORT batch, or the name it will
 	/// have once final.
 	case isupport
+	/// The list of conversations a `CHATHISTORY TARGETS` request returns.
+	case chatHistoryTargets
 	case other(String)
 
 	init(wireType: String) {
@@ -42,6 +44,7 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		case "znc.in/playback": self = .zncPlayback
 		case "znc.in/tlsinfo": self = .zncTLSInfo
 		case "draft/isupport", "isupport": self = .isupport
+		case "draft/chathistory-targets", "chathistory-targets": self = .chatHistoryTargets
 		default: self = .other(wireType)
 		}
 	}
@@ -59,6 +62,7 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		case .zncPlayback: "znc.in/playback"
 		case .zncTLSInfo: "znc.in/tlsinfo"
 		case .isupport: "draft/isupport"
+		case .chatHistoryTargets: "draft/chathistory-targets"
 		case let .other(type): type
 		}
 	}

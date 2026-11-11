@@ -32,4 +32,11 @@ struct ChatHistorySession {
 	var paging: [String: PendingChatHistoryPaging] = [:]
 	/// Messages known to be missing, keyed by conversation identity.
 	var gaps: [String: ChatHistoryGap] = [:]
+	/// The `TARGETS` request in flight; one at a time.
+	var targetsSweep: PendingTargetsSweep?
+	/// Delays the automatic sweep after registration, so the catch-ups the
+	/// autojoin starts go first.
+	var targetsSweepTimer: SessionTimer?
+	/// Set once the server refused `TARGETS`; it is not asked again on this connection.
+	var refusesTargets = false
 }

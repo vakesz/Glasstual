@@ -128,6 +128,11 @@ struct IRCv3Pane: View {
 				isOn: model.settings.binding(for: SettingsKeys.Connection.requestChatHistory)
 			)
 			SettingsToggle(
+				title: .Settings.ircv3DiscoverMissedDirectMessages,
+				isEnabled: model.settings[SettingsKeys.Connection.requestChatHistory],
+				isOn: model.settings.binding(for: SettingsKeys.Connection.discoverMissedDirectMessages)
+			)
+			SettingsToggle(
 				title: .Settings.ircv3SynchronizeReadMarkers,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.synchronizeReadMarkers)
 			)

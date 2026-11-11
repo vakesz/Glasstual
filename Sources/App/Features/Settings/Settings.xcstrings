@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "ircv3-discover-missed-direct-messages": {
+      "comment": "Settings ▸ IRCv3: switch that opens private conversations with messages that arrived while disconnected (CHATHISTORY TARGETS).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open conversations with messages you missed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beszélgetések megnyitása a kihagyott üzenetekkel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterhaltungen mit verpassten Nachrichten öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir conversaciones con mensajes que se perdió"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les conversations avec des messages manqués"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "見逃したメッセージがある会話を開く"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir conversas com mensagens que você perdeu"
+          }
+        }
+      }
+    },
     "ircv3-show-channel-context-in-channel": {
       "comment": "Settings ▸ IRCv3: switch that shows a private reply tagged with a channel (channel-context) in that channel rather than in the private conversation.",
       "extractionState": "manual",

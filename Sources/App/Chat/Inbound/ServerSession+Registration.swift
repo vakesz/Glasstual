@@ -101,6 +101,7 @@ extension ServerSession {
 		flushPreRegistrationISupportEffects()
 
 		performAutoJoin()
+		scheduleChatHistoryTargetsSweep()
 
 		presencePolling.populationTask?.stop()
 		presencePolling.populationTask = SessionTimer.once(after: 10) { [weak self] in

@@ -249,10 +249,13 @@ extension ServerSession {
 				)
 				return
 			}
-		case .targets:
-			printDebugInformation(String(localized: .ChatHistory.chatHistoryUnknownSubcommand(
-				command.subcommandName
-			)))
+		case let .targets(since, requested):
+			let since = since ?? Date(timeIntervalSince1970: config.lastMessageServerTime)
+			let count = limit(requested.map { min($0, ChatHistoryTargetsPolicy.requestLimit) })
+			guard requestChatHistoryTargets(since: since, reason: .command(limit: Int(count)), limit: count) else {
+				printDebugInformation(String(localized: .ChatHistory.chatHistoryReferenceUnsupported))
+				return
+			}
 		}
 	}
 

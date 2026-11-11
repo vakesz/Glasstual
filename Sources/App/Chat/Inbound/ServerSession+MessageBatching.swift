@@ -173,7 +173,9 @@ private extension ServerSession {
 		let historyBatches = family.filter { $0.kind == .chatHistory }
 		let nestedHistory = historyBatches.first { $0.parentBatchMessage != nil }
 
-		if let nestedHistory, historyBatches.count == 1 {
+		if let targets = family.first(where: { $0.kind == .chatHistoryTargets }) {
+			receiveChatHistoryTargetsBatch(targets, contents: batch)
+		} else if let nestedHistory, historyBatches.count == 1 {
 			replayChatHistoryBatch(nestedHistory, contents: batch)
 		} else {
 			switch batch.kind {
