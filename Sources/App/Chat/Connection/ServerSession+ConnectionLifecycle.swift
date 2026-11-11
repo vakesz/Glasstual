@@ -102,6 +102,37 @@ extension ServerSession {
 		stopReconnectTimer()
 		reconnect.isEnabled = true
 		output?.updateTitle(for: self)
+		announceConnectionAttempt(mode, to: socketConfig)
+		sessionCredentials.forget()
+		if credentialConsent?.covers(host: socketConfig.serverAddress, port: socketConfig.serverPort) != true {
+			credentialConsent = nil
+		}
+		ServerSessionWillConnect(subject: self).post()
+
+		socketConfig.apply(configurationSnapshot, bypassProxy: bypassProxy)
+		let startupIdentifier = startup.identifier
+		let loadCredentials = credentialLoader
+		let selectedServer = server
+		let conversationConfigs = conversationList.map(\.config)
+		let attempt = ConnectAttempt(
+			snapshot: configurationSnapshot,
+			requestedEndpoint: requestedEndpoint,
+			selectedServer: selectedServer,
+			conversationConfigs: conversationConfigs,
+			items: configurationSnapshot.keychainItems + conversationConfigs.map(\.keychainItem)
+				+ (selectedServer.map { [$0.keychainItem] } ?? []),
+			socketConfig: socketConfig,
+			mode: mode,
+			bypassProxy: bypassProxy
+		)
+		startup.credentialTask = Task { [weak self] in
+			let stored = await loadCredentials(attempt.items)
+			guard !Task.isCancelled, let self, !isTerminating, isConnecting, startup.identifier == startupIdentifier else { return }
+			finishConnecting(attempt, stored: stored)
+		}
+	}
+
+	private func announceConnectionAttempt(_ mode: SessionConnectMode, to socketConfig: ConnectionConfig) {
 		if mode == .reconnect {
 			printDebugInformation(toConsole: String(localized: .IRC.miscellaneousMessagesRelatedReconnecting))
 		} else if mode == .retry {
@@ -114,79 +145,55 @@ extension ServerSession {
 			socketConfig.serverAddress,
 			String(socketConfig.serverPort)
 		)))
-		sessionCredentials.forget()
-		if credentialConsent?.covers(host: socketConfig.serverAddress, port: socketConfig.serverPort) != true {
-			credentialConsent = nil
-		}
-		ServerSessionWillConnect(subject: self).post()
+	}
 
-		socketConfig.addressType = config.addressType
-		socketConfig.cipherSuites = config.cipherSuites
-		socketConfig.connectionShouldValidateCertificateChain = config.validateServerCertificateChain
-			|| socketConfig.connectionRequiresTrustedCertificate
-		socketConfig.identityClientSideCertificate = config.identityClientSideCertificate
-		if bypassProxy == false {
-			socketConfig.proxyType = config.proxyType
-			if socketConfig.proxyType == .socks5 || socketConfig.proxyType == .HTTP {
-				socketConfig.proxyPort = config.proxyPort
-				socketConfig.proxyAddress = config.proxyAddress
-				socketConfig.proxyUsername = config.proxyUsername
-			}
+	/// The rest of `connect`, once the keychain has answered for the attempt.
+	private func finishConnecting(_ attempt: ConnectAttempt, stored: [KeychainItem: String]) {
+		guard canContinueConnecting else {
+			cancelReconnect()
+			disconnect()
+			return
 		}
-		socketConfig.setFloodControl(
-			delayInterval: config.floodControlDelayTimerInterval,
-			maximumMessages: config.floodControlMaximumMessages
-		)
-		let startupIdentifier = startup.identifier
-		let loadCredentials = credentialLoader
-		let selectedServer = server
-		let conversationConfigs = conversationList.map(\.config)
-		let items = configurationSnapshot.keychainItems + conversationConfigs.map(\.keychainItem)
-			+ (selectedServer.map { [$0.keychainItem] } ?? [])
-		startup.credentialTask = Task { [weak self] in
-			let stored = await loadCredentials(items)
-			guard !Task.isCancelled, let self, !isTerminating, isConnecting, startup.identifier == startupIdentifier else { return }
-			guard canContinueConnecting else {
-				cancelReconnect()
-				disconnect()
-				return
-			}
-			guard config == configurationSnapshot else {
-				// Refresh the same attempt. Endpoint selection has already consumed
-				// an explicit target or advanced the configured-server rotation.
-				startup.credentialTask = nil
-				connectionState.cancelPreparation()
-				pendingEndpoint = requestedEndpoint
-				connect(mode, bypassProxy: bypassProxy, retryingServerIdentifier: selectedServer?.uniqueIdentifier)
-				return
-			}
-			var edits = configurationSnapshot.pendingKeychainEdits
-			for conversationConfig in conversationConfigs {
-				edits.merge(conversationConfig.pendingKeychainEdits) { _, newest in newest }
-			}
-			if let selectedServer {
-				edits[selectedServer.keychainItem] = selectedServer.pendingServerPassword
-			}
-			sessionCredentials.install(stored, items: items, applying: edits)
-			/* An explicit endpoint that is not one of the configured servers
-			 never receives the account password, over SASL or to services. */
-			if requestedEndpoint != nil, server == nil {
-				sessionCredentials.withholdsAccountCredentials = true
-				printDebugInformation(
-					toConsole: ConnectionSafetyStrings.Credentials.withheldFromUnconfiguredHost(
-						socketConfig.serverAddress
-					)
-				)
-			}
-			socketConfig.proxyPassword = configurationSnapshot.pendingProxyPassword.value(
-				orStored: sessionCredentials.password(for: configurationSnapshot.proxyPasswordKeychainItem)
-			)
-			let connection = Connection(config: socketConfig, onSession: self)
-			socket = connection
+		guard config == attempt.snapshot else {
+			// Refresh the same attempt. Endpoint selection has already consumed
+			// an explicit target or advanced the configured-server rotation.
 			startup.credentialTask = nil
-			connectionState.finishPreparation()
-			connection.open()
+			connectionState.cancelPreparation()
+			pendingEndpoint = attempt.requestedEndpoint
+			connect(
+				attempt.mode,
+				bypassProxy: attempt.bypassProxy,
+				retryingServerIdentifier: attempt.selectedServer?.uniqueIdentifier
+			)
+			return
 		}
+		var edits = attempt.snapshot.pendingKeychainEdits
+		for conversationConfig in attempt.conversationConfigs {
+			edits.merge(conversationConfig.pendingKeychainEdits) { _, newest in newest }
+		}
+		if let selectedServer = attempt.selectedServer {
+			edits[selectedServer.keychainItem] = selectedServer.pendingServerPassword
+		}
+		sessionCredentials.install(stored, items: attempt.items, applying: edits)
+		var socketConfig = attempt.socketConfig
+		/* An explicit endpoint that is not one of the configured servers
+		 never receives the account password, over SASL or to services. */
+		if attempt.requestedEndpoint != nil, server == nil {
+			sessionCredentials.withholdsAccountCredentials = true
+			printDebugInformation(
+				toConsole: ConnectionSafetyStrings.Credentials.withheldFromUnconfiguredHost(
+					socketConfig.serverAddress
+				)
+			)
+		}
+		socketConfig.proxyPassword = attempt.snapshot.pendingProxyPassword.value(
+			orStored: sessionCredentials.password(for: attempt.snapshot.proxyPasswordKeychainItem)
+		)
+		let connection = Connection(config: socketConfig, onSession: self)
+		socket = connection
+		startup.credentialTask = nil
+		connectionState.finishPreparation()
+		connection.open()
 	}
 
 	func takeConnectionEndpoint(retryingServerIdentifier: String? = nil) -> ConnectionConfig? {
@@ -406,4 +413,16 @@ extension ServerSession {
 			action()
 		}
 	}
+}
+
+/// One `connect` call's choices, carried across the keychain read.
+private struct ConnectAttempt {
+	let snapshot: ServerConfig
+	let requestedEndpoint: PendingIRCEndpoint?
+	let selectedServer: ServerEndpoint?
+	let conversationConfigs: [ConversationConfig]
+	let items: [KeychainItem]
+	let socketConfig: ConnectionConfig
+	let mode: SessionConnectMode
+	let bypassProxy: Bool
 }
