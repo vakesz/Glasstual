@@ -87,6 +87,8 @@ extension ServerSession {
 		switch command {
 		case .defaults:
 			dispatchDefaultsCommand(parsed)
+		case .transport:
+			dispatchTransportCommand(parsed.arguments)
 		default:
 			dispatchIgnoreCommand(command, parsed: parsed, targetConversation: targetConversation)
 		}

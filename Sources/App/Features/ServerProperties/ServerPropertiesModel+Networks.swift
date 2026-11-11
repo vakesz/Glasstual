@@ -90,6 +90,12 @@ extension ServerPropertiesModel {
 
 		lastResolvedAddressText = text
 
+		if applyPastedAddress(text) {
+			lastResolvedAddressText = serverAddress
+			valuesReplacedByNetwork = nil
+			return
+		}
+
 		guard let network = networkList.network(named: text) ?? networkList.network(withServerAddress: text)
 		else {
 			restorePreviousValuesForPrimaryServer()

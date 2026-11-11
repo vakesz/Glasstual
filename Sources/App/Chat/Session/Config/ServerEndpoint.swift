@@ -139,6 +139,15 @@ nonisolated extension ServerEndpoint {
 }
 
 nonisolated extension ServerEndpoint {
+	/// Changes the transport, moving a port that is unset or still the old
+	/// transport's default to the new one's: a port someone chose is kept.
+	mutating func switchTransport(to newTransport: ServerTransport) {
+		if serverPort == 0 || serverPort == transport.defaultPort(secured: prefersSecuredConnection) {
+			serverPort = newTransport.defaultPort(secured: prefersSecuredConnection)
+		}
+		transport = newTransport
+	}
+
 	/// The `ws://` or `wss://` URL a WebSocket entry dials, and nil for IRC.
 	var webSocketURL: String? {
 		guard transport == .webSocket else { return nil }

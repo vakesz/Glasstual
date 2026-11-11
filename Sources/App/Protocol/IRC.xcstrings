@@ -15820,6 +15820,198 @@
           }
         }
       }
+    },
+    "transport-command-usage": {
+      "comment": "Reply to /transport with arguments it does not take. Command names and the words irc and websocket stay unchanged.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: /transport [irc | websocket [path]]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verwendung: /transport [irc | websocket [Pfad]]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uso: /transport [irc | websocket [ruta]]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Utilisation : /transport [irc | websocket [chemin]]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Használat: /transport [irc | websocket [útvonal]]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "使い方: /transport [irc | websocket [パス]]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uso: /transport [irc | websocket [caminho]]"
+          }
+        }
+      }
+    },
+    "transport-command-invalid-path": {
+      "comment": "Reply to /transport websocket with a path that cannot be used.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That WebSocket path is not valid. A path starts with “/” and contains no spaces or “#”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dieser WebSocket-Pfad ist ungültig. Ein Pfad beginnt mit „/“ und enthält keine Leerzeichen oder „#“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esa ruta WebSocket no es válida. Una ruta empieza por «/» y no contiene espacios ni «#»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ce chemin WebSocket n’est pas valide. Un chemin commence par « / » et ne contient ni espace ni « # »."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ez a WebSocket-útvonal érvénytelen. Az útvonal „/” jellel kezdődik, és nem tartalmaz szóközt vagy „#” jelet."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "そのWebSocketパスは無効です。パスは「/」で始まり、スペースや「#」を含めることはできません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Esse caminho WebSocket é inválido. Um caminho começa com “/” e não contém espaços nem “#”."
+          }
+        }
+      }
+    },
+    "transport-command-shows-irc": {
+      "comment": "Reply to /transport. The first server connects over IRC. The first argument is the host, the second the port.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first server connects over IRC: %1$@ port %2$@. Changes apply on the next connect."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der erste Server verbindet über IRC: %1$@ Port %2$@. Änderungen gelten ab der nächsten Verbindung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El primer servidor se conecta mediante IRC: %1$@ puerto %2$@. Los cambios se aplican en la próxima conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le premier serveur se connecte via IRC : %1$@ port %2$@. Les changements s’appliquent à la prochaine connexion."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Az első kiszolgáló IRC-n csatlakozik: %1$@, %2$@ port. A módosítások a következő kapcsolódáskor lépnek életbe."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最初のサーバーはIRCで接続します：%1$@、ポート%2$@。変更は次回の接続から適用されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O primeiro servidor se conecta via IRC: %1$@ porta %2$@. As alterações valem a partir da próxima conexão."
+          }
+        }
+      }
+    },
+    "transport-command-shows-web-socket": {
+      "comment": "Reply to /transport. The first server connects over WebSocket. The argument is the ws:// or wss:// address with query values hidden.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first server connects over WebSocket: %@. Changes apply on the next connect."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der erste Server verbindet über WebSocket: %@. Änderungen gelten ab der nächsten Verbindung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El primer servidor se conecta mediante WebSocket: %@. Los cambios se aplican en la próxima conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le premier serveur se connecte via WebSocket : %@. Les changements s’appliquent à la prochaine connexion."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Az első kiszolgáló WebSocketen csatlakozik: %@. A módosítások a következő kapcsolódáskor lépnek életbe."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最初のサーバーはWebSocketで接続します：%@。変更は次回の接続から適用されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O primeiro servidor se conecta via WebSocket: %@. As alterações valem a partir da próxima conexão."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

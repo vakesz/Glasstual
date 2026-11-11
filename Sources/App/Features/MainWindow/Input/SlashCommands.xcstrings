@@ -8736,6 +8736,150 @@
           }
         }
       }
+    },
+    "description-transport": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or change how the first server is reached"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Anzeigen oder ändern, wie der erste Server erreicht wird"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar o cambiar cómo se llega al primer servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher ou modifier la façon de joindre le premier serveur"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Az első kiszolgáló elérési módjának megjelenítése vagy módosítása"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最初のサーバーへの接続方法を表示または変更します"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mostrar ou alterar como o primeiro servidor é acessado"
+          }
+        }
+      }
+    },
+    "syntax-transport": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[irc | websocket [path]]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[irc | websocket [Pfad]]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[irc | websocket [ruta]]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[irc | websocket [chemin]]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[irc | websocket [útvonal]]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[irc | websocket [パス]]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "[irc | websocket [caminho]]"
+          }
+        }
+      }
+    },
+    "hint-transport": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without arguments, shows the current transport. Changes apply on the next connect."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ohne Argumente wird der aktuelle Transport angezeigt. Änderungen gelten ab der nächsten Verbindung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sin argumentos, muestra el transporte actual. Los cambios se aplican en la próxima conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sans argument, affiche le transport actuel. Les changements s’appliquent à la prochaine connexion."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Argumentum nélkül a jelenlegi átvitelt mutatja. A módosítások a következő kapcsolódáskor lépnek életbe."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "引数なしの場合は現在の接続方式を表示します。変更は次回の接続から適用されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sem argumentos, mostra o transporte atual. As alterações valem a partir da próxima conexão."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

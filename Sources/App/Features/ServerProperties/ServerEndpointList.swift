@@ -48,6 +48,8 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 	var address: String
 	var port: String
 	var prefersSecuredConnection: Bool
+	var transport: ServerTransport
+	var webSocketPath: String
 
 	/// Typing into the field is what turns the draft's secret into an
 	/// instruction for the keychain; see ``passwordWasEdited``.
@@ -73,6 +75,8 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 		address = server.serverAddress
 		port = String(server.serverPort)
 		prefersSecuredConnection = server.prefersSecuredConnection
+		transport = server.transport
+		webSocketPath = server.webSocketPath
 		/* Only an unflushed edit: reading the stored one is a synchronous
 		 keychain lookup, and a draft is built for every endpoint in the list.
 		 `ServerEndpointListModel` fills the rest in off the main actor. */
@@ -94,12 +98,17 @@ struct ServerEndpointDraft: Identifiable, Equatable {
 		guard let port = ServerEndpointValidation.validatedPort(port) else {
 			return .failure(.port)
 		}
+		guard transport == .irc || ServerTransport.isValidWebSocketPath(webSocketPath) else {
+			return .failure(.webSocketPath)
+		}
 
 		return .success(ServerEndpoint(
 			uniqueIdentifier: id,
 			serverAddress: address,
 			serverPort: port,
 			prefersSecuredConnection: prefersSecuredConnection,
+			transport: transport,
+			webSocketPath: webSocketPath,
 			pendingServerPassword: passwordWasEdited ? .edited(password) : storedPassword
 		))
 	}
@@ -112,6 +121,7 @@ final class ServerEndpointListModel {
 	@ObservationIgnored private var passwordsTask: Task<Void, Never>?
 	private(set) var invalidAddressIDs: Set<String> = []
 	private(set) var invalidPortIDs: Set<String> = []
+	private(set) var invalidPathIDs: Set<String> = []
 
 	var canMoveSelectionUp: Bool {
 		guard let selectedIndex else { return false }
@@ -174,6 +184,7 @@ final class ServerEndpointListModel {
 		entries.removeAll { $0.id == selectedID }
 		invalidAddressIDs.remove(selectedID)
 		invalidPortIDs.remove(selectedID)
+		invalidPathIDs.remove(selectedID)
 		self.selectedID = nil
 	}
 
@@ -204,6 +215,35 @@ final class ServerEndpointListModel {
 
 	func password(for entryID: String) -> Binding<String> {
 		binding(for: entryID, \.password) { _ in }
+	}
+
+	func webSocketPath(for entryID: String) -> Binding<String> {
+		binding(for: entryID, \.webSocketPath) { $0.invalidPathIDs.remove(entryID) }
+	}
+
+	func transport(for entryID: String) -> Binding<ServerTransport> {
+		Binding(
+			get: { [weak self] in self?.entries.first { $0.id == entryID }?.transport ?? .irc },
+			set: { [weak self] transport in self?.setTransport(transport, for: entryID) }
+		)
+	}
+
+	/// Switches a row's transport, moving its port along when it is still the
+	/// default of the transport it leaves.
+	func setTransport(_ transport: ServerTransport, for entryID: String) {
+		guard let index = entries.firstIndex(where: { $0.id == entryID }) else { return }
+		let server = ServerEndpointValidation.server(
+			ServerEndpoint(
+				serverPort: UInt16(entries[index].port) ?? 0,
+				prefersSecuredConnection: entries[index].prefersSecuredConnection,
+				transport: entries[index].transport
+			),
+			switchingTo: transport
+		)
+		entries[index].transport = transport
+		entries[index].port = String(server.serverPort)
+		invalidPortIDs.remove(entryID)
+		invalidPathIDs.remove(entryID)
 	}
 
 	func isSecured(for entryID: String) -> Binding<Bool> {
@@ -245,6 +285,7 @@ final class ServerEndpointListModel {
 			serverAddress: entries[index].address,
 			serverPort: UInt16(entries[index].port) ?? ConnectionDefaults.serverPort,
 			prefersSecuredConnection: entries[index].prefersSecuredConnection,
+			transport: entries[index].transport,
 			pendingServerPassword: .unchanged
 		)
 		server = ServerEndpointValidation.server(server, preferringSecuredConnection: secured)
@@ -272,6 +313,9 @@ final class ServerEndpointListModel {
 		if invalidPortIDs.isEmpty == false {
 			faults.append(.port)
 		}
+		if invalidPathIDs.isEmpty == false {
+			faults.append(.webSocketPath)
+		}
 
 		return faults
 	}
@@ -290,12 +334,15 @@ final class ServerEndpointListModel {
 				invalidAddressIDs.insert(entry.id)
 			case .failure(.port):
 				invalidPortIDs.insert(entry.id)
+			case .failure(.webSocketPath):
+				invalidPathIDs.insert(entry.id)
 			}
 		}
 
-		guard invalidAddressIDs.isEmpty, invalidPortIDs.isEmpty else {
+		let invalidIDs = invalidAddressIDs.union(invalidPortIDs).union(invalidPathIDs)
+		guard invalidIDs.isEmpty else {
 			// Selecting the first refused row is what points at the message.
-			selectedID = entries.first { invalidAddressIDs.contains($0.id) || invalidPortIDs.contains($0.id) }?.id
+			selectedID = entries.first { invalidIDs.contains($0.id) }?.id
 			return nil
 		}
 
@@ -305,6 +352,7 @@ final class ServerEndpointListModel {
 	private func clearValidation() {
 		invalidAddressIDs = []
 		invalidPortIDs = []
+		invalidPathIDs = []
 	}
 }
 
@@ -315,11 +363,13 @@ final class ServerEndpointListModel {
 nonisolated enum ServerEndpointFault: Error, Hashable {
 	case address
 	case port
+	case webSocketPath
 
 	var message: LocalizedStringResource {
 		switch self {
 		case .address: .ServerProperties.valueYouEnteredIsNot
 		case .port: .ServerProperties.enterAWholeNumberBetween1
+		case .webSocketPath: .ServerProperties.invalidWebSocketPath
 		}
 	}
 }
@@ -343,12 +393,18 @@ nonisolated enum ServerEndpointValidation {
 		var updated = server
 		updated.prefersSecuredConnection = prefers
 
-		if prefers, server.serverPort == ConnectionDefaults.serverPort {
-			updated.serverPort = ConnectionDefaults.serverPortSecure
-		} else if prefers == false, server.serverPort == ConnectionDefaults.serverPortSecure {
-			updated.serverPort = ConnectionDefaults.serverPort
+		if server.serverPort == server.transport.defaultPort(secured: server.prefersSecuredConnection) {
+			updated.serverPort = server.transport.defaultPort(secured: prefers)
 		}
 
+		return updated
+	}
+
+	/// Moves the port with the transport on the same terms: only a port still at
+	/// the default of the transport being left.
+	static func server(_ server: ServerEndpoint, switchingTo transport: ServerTransport) -> ServerEndpoint {
+		var updated = server
+		updated.switchTransport(to: transport)
 		return updated
 	}
 }

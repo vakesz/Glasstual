@@ -10512,6 +10512,438 @@
           }
         }
       }
+    },
+    "connection-type" : {
+      "comment" : "Server properties, General. Label of the segmented control choosing IRC or WebSocket.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verbindungsart"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo de conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Type de connexion"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kapcsolat típusa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続の種類"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo de conexão"
+          }
+        }
+      }
+    },
+    "transport-irc" : {
+      "comment" : "Server properties. The IRC over TCP or TLS transport choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IRC"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IRC"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IRC"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IRC"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IRC"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IRC"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "IRC"
+          }
+        }
+      }
+    },
+    "transport-web-socket" : {
+      "comment" : "Server properties. The IRC over WebSocket transport choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WebSocket"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "WebSocket"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "WebSocket"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "WebSocket"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "WebSocket"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "WebSocket"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "WebSocket"
+          }
+        }
+      }
+    },
+    "web-socket-path" : {
+      "comment" : "Server properties, General. Label of the field for the WebSocket request path, such as /irc.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Path"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pfad"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ruta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chemin"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Útvonal"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "パス"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Caminho"
+          }
+        }
+      }
+    },
+    "web-socket-path-help" : {
+      "comment" : "Server properties, General. Help tag for the WebSocket path field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The path the server’s WebSocket gateway listens on, such as /irc or /webirc/websocket/."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Pfad, auf dem das WebSocket-Gateway des Servers wartet, etwa /irc oder /webirc/websocket/."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La ruta en la que escucha la pasarela WebSocket del servidor, como /irc o /webirc/websocket/."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le chemin sur lequel écoute la passerelle WebSocket du serveur, par exemple /irc ou /webirc/websocket/."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Az útvonal, amelyen a kiszolgáló WebSocket-átjárója figyel, például /irc vagy /webirc/websocket/."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーのWebSocketゲートウェイが待ち受けるパス（例：/irc、/webirc/websocket/）。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O caminho em que o gateway WebSocket do servidor escuta, como /irc ou /webirc/websocket/."
+          }
+        }
+      }
+    },
+    "endpoint-list-transport-column" : {
+      "comment" : "Alternate servers table. Column heading and label of the IRC or WebSocket choice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Art"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Type"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Típus"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "種類"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tipo"
+          }
+        }
+      }
+    },
+    "endpoint-list-path-column" : {
+      "comment" : "Alternate servers table. Column heading and label of the WebSocket path field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Path"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pfad"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ruta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Chemin"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Útvonal"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "パス"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Caminho"
+          }
+        }
+      }
+    },
+    "invalid-web-socket-path" : {
+      "comment" : "Server properties validation. Shown when a WebSocket path cannot be used.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a path that starts with “/” and contains no spaces or “#”."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gib einen Pfad ein, der mit „/“ beginnt und keine Leerzeichen oder „#“ enthält."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Introduce una ruta que empiece por «/» y no contenga espacios ni «#»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Saisissez un chemin qui commence par « / » et ne contient ni espace ni « # »."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adj meg egy „/” jellel kezdődő útvonalat, amely nem tartalmaz szóközt vagy „#” jelet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「/」で始まり、スペースや「#」を含まないパスを入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Digite um caminho que comece com “/” e não contenha espaços nem “#”."
+          }
+        }
+      }
+    },
+    "connect-securely-web-socket-footer" : {
+      "comment" : "Server properties, General. Footer shown for a WebSocket server, explaining the Connect securely switch.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With “Connect securely” on, the connection uses wss:// (WebSocket over TLS); off, it uses unencrypted ws://."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mit „Sicher verbinden“ wird wss:// (WebSocket über TLS) verwendet, sonst das unverschlüsselte ws://."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Con «Conectar de forma segura» activado, la conexión usa wss:// (WebSocket sobre TLS); desactivado, usa ws:// sin cifrar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Avec « Se connecter de façon sécurisée », la connexion utilise wss:// (WebSocket sur TLS) ; sinon, ws:// non chiffré."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A „Biztonságos kapcsolódás” bekapcsolásával a kapcsolat wss:// (WebSocket TLS-en át) protokollt használ, kikapcsolva a titkosítatlan ws://-t."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「安全に接続」をオンにするとwss://（TLS上のWebSocket）、オフにすると暗号化されないws://を使用します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Com “Conectar com segurança” ativado, a conexão usa wss:// (WebSocket sobre TLS); desativado, usa ws:// sem criptografia."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

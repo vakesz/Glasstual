@@ -298,6 +298,45 @@ final class ServerPropertiesModel {
 		set { setPrimaryServerSecured(newValue) }
 	}
 
+	/// IRC or WebSocket for the primary endpoint. Switching moves a port that
+	/// is still the old transport's default to the new one's.
+	var primaryServerTransport: ServerTransport {
+		get { primaryServer?.transport ?? .irc }
+		set {
+			var server = primaryServer ?? ServerEndpoint()
+			server.serverPort = UInt16(serverPort) ?? 0
+			server = ServerEndpointValidation.server(server, switchingTo: newValue)
+			serverPort = String(server.serverPort)
+			storePrimaryServer(server)
+		}
+	}
+
+	var primaryWebSocketPath: String {
+		get { primaryServer?.webSocketPath ?? "/" }
+		set {
+			var server = primaryServer ?? ServerEndpoint()
+			server.webSocketPath = newValue
+			storePrimaryServer(server)
+		}
+	}
+
+	/** Takes a `ws://` or `wss://` URL typed or pasted into the address field
+	 apart into the fields it describes. Returns whether the text was one. */
+	@discardableResult
+	func applyPastedAddress(_ text: String) -> Bool {
+		guard let address = WebSocketAddress(text) else { return false }
+		var server = primaryServer ?? ServerEndpoint()
+		server.serverAddress = address.host
+		server.serverPort = address.port
+		server.prefersSecuredConnection = address.secured
+		server.transport = .webSocket
+		server.webSocketPath = address.path
+		storePrimaryServer(server)
+		serverAddress = address.host
+		serverPort = String(address.port)
+		return true
+	}
+
 	func submittedConfig() -> ServerConfig? {
 		guard validate() else { return nil }
 		var result = config
@@ -344,6 +383,8 @@ final class ServerPropertiesModel {
 			(.general, CommonValidationStrings.invalidServerAddress)
 		} else if !serverPort.isValidInternetPort {
 			(.general, CommonValidationStrings.invalidInternetPort)
+		} else if primaryServerTransport == .webSocket, !ServerTransport.isValidWebSocketPath(primaryWebSocketPath) {
+			(.general, String(localized: .ServerProperties.invalidWebSocketPath))
 		} else if !config.nickname.firstToken.isHostmaskNickname {
 			(.identity, CommonValidationStrings.invalidNickname)
 		} else if let away = config.awayNickname, !away.isEmpty,

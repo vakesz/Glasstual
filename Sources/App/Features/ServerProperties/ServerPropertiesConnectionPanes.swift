@@ -21,6 +21,12 @@ struct ServerPropertiesGeneralPane: View {
 		Form {
 			Section {
 				TextField(.ServerProperties.connectionName, text: $model.config.connectionName)
+				Picker(.ServerProperties.connectionType, selection: $model.primaryServerTransport) {
+					Text(.ServerProperties.transportIrc).tag(ServerTransport.irc)
+					Text(.ServerProperties.transportWebSocket).tag(ServerTransport.webSocket)
+				}
+				.pickerStyle(.segmented)
+				.accessibilityIdentifier("server-connection-type")
 				TextField(.ServerProperties.serverAddress, text: $model.serverAddress)
 					/* The suggestion rows complete to a network's name, and the
 					 model turns that name into the network's address, port and
@@ -33,10 +39,20 @@ struct ServerPropertiesGeneralPane: View {
 					.accessibilityHint(.ServerProperties.serverAddressNetworkHint)
 					.onChange(of: model.serverAddress) { model.serverAddressTextDidChange() }
 				TextField(.ServerProperties.serverPort, text: $model.serverPort)
+				if model.primaryServerTransport == .webSocket {
+					TextField(.ServerProperties.webSocketPath, text: $model.primaryWebSocketPath, prompt: Text(verbatim: "/"))
+						.help(.ServerProperties.webSocketPathHelp)
+						.accessibilityIdentifier("server-websocket-path")
+				}
 				Toggle(.ServerProperties.connectSecurely, isOn: $model.primaryServerIsSecured)
 				SecureField(.ServerProperties.serverPassword, text: model.secretBinding(.serverPassword))
 			} footer: {
-				Text(.ServerProperties.serverPasswordHelp)
+				VStack(alignment: .leading) {
+					Text(.ServerProperties.serverPasswordHelp)
+					if model.primaryServerTransport == .webSocket {
+						Text(.ServerProperties.connectSecurelyWebSocketFooter)
+					}
+				}
 			}
 
 			Section {

@@ -104,6 +104,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case tempshun
 	case timer
 	case topic
+	case transport
 	case ume
 	case umode
 	case umsg
@@ -186,7 +187,7 @@ extension LocalCommand {
 		case .msg, .omsg, .smsg, .umsg, .me, .sme, .ume, .notice, .onotice, .unotice: .message
 		case .ame, .amsg: .broadcast
 		case .ctcp, .ctcpreply: .ctcp
-		case .defaults, .ignore, .unignore: .configuration
+		case .defaults, .ignore, .unignore, .transport: .configuration
 		case .timer: .timer
 		case .ban, .banaccount, .kb, .kick, .kickban, .quiet, .unban, .unquiet: .moderation
 		case .j, .join, .joinRandom, .cycle, .hop, .rejoin, .leave, .part, .invite: .lifecycle
@@ -296,6 +297,7 @@ extension LocalCommand {
 		.remove: "[target]",
 		.sasl: "[status | auth [mechanism] | mechanism <name | automatic> [only] | token <token | clear>]",
 		.server: "<address> [[+] port] [password]",
+		.transport: "[irc | websocket [path]]",
 		.setcolor: "<nickname>",
 		.setname: "<real name>",
 		.setqueryname: "<nickname>",

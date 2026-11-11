@@ -200,6 +200,12 @@ struct SlashCommandHelp {
 		.init([.recv], .SlashCommands.descriptionReceive, .SlashCommands.syntaxIrcLine, .SlashCommands.hintIrcProtocolLine),
 		.init([.sasl], .SlashCommands.descriptionSasl, .SlashCommands.syntaxSaslStatusMechanism, .SlashCommands.hintSaslStatusMechanism),
 		.init([.server], .SlashCommands.descriptionServer, .SlashCommands.syntaxAddressPortPassword, .SlashCommands.hintPortTlsPrefix),
+		.init(
+			[.transport],
+			.SlashCommands.descriptionTransport,
+			.SlashCommands.syntaxTransport,
+			.SlashCommands.hintTransport
+		),
 		.init([.redact], .SlashCommands.descriptionRedact, .SlashCommands.syntaxMessageIdentifierReason, .SlashCommands.hintRedact),
 		.init([.setcolor], .SlashCommands.descriptionColor, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),
 		.init([.setname], .SlashCommands.descriptionRealName, .SlashCommands.syntaxRealName, .SlashCommands.hintRealName),

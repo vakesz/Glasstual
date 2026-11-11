@@ -65,8 +65,8 @@ struct ServerEndpointListView: View {
 			}
 		}
 		.frame(
-			minWidth: 620,
-			idealWidth: 700,
+			minWidth: 760,
+			idealWidth: 860,
 			maxWidth: .infinity,
 			minHeight: 360,
 			idealHeight: 440,
@@ -88,7 +88,20 @@ struct ServerEndpointListView: View {
 					.labelsHidden()
 					.accessibilityLabel(.ServerProperties.serverAddress)
 			}
-			.width(min: 160, ideal: 240)
+			.width(min: 160, ideal: 220)
+
+			TableColumn(String(localized: .ServerProperties.endpointListTransportColumn)) { entry in
+				Picker(.ServerProperties.endpointListTransportColumn, selection: model.transport(for: entry.id)) {
+					Text(.ServerProperties.transportIrc).tag(ServerTransport.irc)
+					Text(.ServerProperties.transportWebSocket).tag(ServerTransport.webSocket)
+				}
+				.labelsHidden()
+				.pickerStyle(.menu)
+				.buttonStyle(.borderless)
+				.accessibilityLabel(.ServerProperties.endpointListTransportColumn)
+				.accessibilityIdentifier("server-endpoint-transport")
+			}
+			.width(min: 90, ideal: 110)
 
 			TableColumn(String(localized: .ServerProperties.port)) { entry in
 				TextField(.ServerProperties.port, text: model.port(for: entry.id))
@@ -103,6 +116,15 @@ struct ServerEndpointListView: View {
 					.accessibilityLabel(.ServerProperties.endpointListSecureColumn)
 			}
 			.width(min: 52, ideal: 64)
+
+			TableColumn(String(localized: .ServerProperties.endpointListPathColumn)) { entry in
+				TextField(.ServerProperties.endpointListPathColumn, text: model.webSocketPath(for: entry.id), prompt: Text(verbatim: "/"))
+					.labelsHidden()
+					.disabled(entry.transport == .irc)
+					.accessibilityLabel(.ServerProperties.endpointListPathColumn)
+					.accessibilityIdentifier("server-endpoint-path")
+			}
+			.width(min: 70, ideal: 100)
 
 			TableColumn(String(localized: .ServerProperties.serverPassword)) { entry in
 				SecureField(.ServerProperties.serverPassword, text: model.password(for: entry.id))
