@@ -24,10 +24,31 @@ extension ServerSession {
 		delivery.label = label
 		delivery.conversation = conversation
 		delivery.state = .pending
-		delivery.deadline = .now + LabeledResponsePolicy.timeout
+		/* The line still has the connection's flood queue ahead of it. Its
+		 deadline starts over when the connection writes it. */
+		delivery.deadline = .now + LabeledResponsePolicy.queuedTimeout
 		labeledResponses.pending[label] = delivery
 		scheduleDeliveryDeadlineSweep()
 		return label
+	}
+
+	/** Starts a labelled line's deadline once the connection writes it.
+
+	 The connection reports each line as flood control releases it, which can be
+	 well after it was printed: a long paste goes out a few lines a second. The
+	 server's time to answer is counted from here. */
+	func noteLabeledLineWritten(_ line: String) {
+		guard labeledResponses.pending.isEmpty == false,
+		      let label = LabeledResponsePolicy.label(inOutgoingLine: line),
+		      let delivery = labeledResponses.pending[label], delivery.resolved == false
+		else { return }
+		delivery.deadline = .now + LabeledResponsePolicy.timeout
+		if let fireDate = labeledResponses.deadlineTaskFireDate, delivery.deadline < fireDate {
+			labeledResponses.deadlineTask?.cancel()
+			labeledResponses.deadlineTask = nil
+			labeledResponses.deadlineTaskFireDate = nil
+		}
+		scheduleDeliveryDeadlineSweep()
 	}
 
 	/** Keeps one task waiting for the earliest pending deadline.
@@ -41,12 +62,14 @@ extension ServerSession {
 		      let earliest = labeledResponses.pending.values.lazy.map(\.deadline).min()
 		else { return }
 
+		labeledResponses.deadlineTaskFireDate = earliest
 		labeledResponses.deadlineTask = Task { [weak self] in
 			try? await Task.sleep(until: earliest, clock: .continuous)
 
 			guard Task.isCancelled == false, let self else { return }
 
 			labeledResponses.deadlineTask = nil
+			labeledResponses.deadlineTaskFireDate = nil
 			failDeliveries(dueBy: .now)
 			scheduleDeliveryDeadlineSweep()
 		}
@@ -69,6 +92,8 @@ extension ServerSession {
 	func failPendingDeliveriesForDisconnect() {
 		labeledResponses.deadlineTask?.cancel()
 		labeledResponses.deadlineTask = nil
+		labeledResponses.deadlineTaskFireDate = nil
+		labeledResponses.timedOut.removeAll()
 
 		for label in Array(labeledResponses.pending.keys) {
 			resolveDelivery(
@@ -90,6 +115,12 @@ extension ServerSession {
 			messageIdentifier: nil,
 			reason: String(localized: .IRC.serverDidNotAcknowledgeThisMessage)
 		)
+		guard let conversation = delivery.conversation, delivery.lineNumber != nil else { return }
+		labeledResponses.timedOut.insert(TimedOutDeliveries.Entry(
+			label: label,
+			target: IRCCaseFolding.fold(conversation.name, using: supportInfo.caseMapping),
+			delivery: delivery
+		))
 	}
 
 	func resolveDelivery(
@@ -108,10 +139,29 @@ extension ServerSession {
 		if labeledResponses.pending.isEmpty {
 			labeledResponses.deadlineTask?.cancel()
 			labeledResponses.deadlineTask = nil
+			labeledResponses.deadlineTaskFireDate = nil
 		}
 		for batch in batchMessages.queuedEntries.values where batch.labeledDelivery.label == label {
 			batch.labeledDelivery.label = nil
 		}
+		applyDeliveryOutcome(
+			to: delivery,
+			state: state,
+			messageIdentifier: messageIdentifier,
+			reason: reason,
+			echoedMessage: echoedMessage
+		)
+	}
+
+	/// Redraws a delivery's printed line in its settled state, taking the
+	/// echo's text and time when the server sent one back.
+	private func applyDeliveryOutcome(
+		to delivery: LabeledDelivery,
+		state: ChatLineDeliveryState,
+		messageIdentifier: String?,
+		reason: String?,
+		echoedMessage: Message?
+	) {
 		guard let lineNumber = delivery.lineNumber else { return }
 
 		if var line = delivery.printedLine {
@@ -152,13 +202,13 @@ extension ServerSession {
 		}
 		guard
 			let label,
-			!label.isEmpty,
-			let delivery = labeledResponses.pending[label],
-			!delivery.resolved
-		else {
+			!label.isEmpty
+		else { return false }
+		guard let delivery = labeledResponses.pending[label], !delivery.resolved else {
 			/* An unknown or already-resolved label must not consume the message: the
-			 inbound dispatcher drops anything this reports as handled. */
-			return false
+			 inbound dispatcher drops anything this reports as handled. Only the
+			 late echo of a line that timed out settles that line instead. */
+			return settleTimedOutDelivery(echoedBy: message, label: label)
 		}
 
 		// Numerics still reach their normal handler after settling the delivery so
@@ -201,6 +251,35 @@ extension ServerSession {
 		case .unrelated:
 			return false
 		}
+	}
+
+	/** Settles a line drawn as failed when its echo arrives after all.
+
+	 Only an echo from this session, to the conversation the line was printed
+	 in, claims a timed-out label; anything else carrying it is handled as if
+	 the label were unknown. */
+	private func settleTimedOutDelivery(echoedBy message: Message, label: String) -> Bool {
+		guard message.parentBatchMessage == nil,
+		      LabeledResponsePolicy.responseKind(command: message.remoteCommand, numeric: message.commandNumeric) == .echo,
+		      let sender = message.senderNickname, nicknameIsMyself(sender),
+		      var target = message.params.first
+		else { return false }
+		if supportInfo.extractStatusMessagePrefix(fromTargetNamed: target).count == 1 {
+			target.removeFirst()
+		}
+		guard let entry = labeledResponses.timedOut.take(
+			label: label,
+			target: IRCCaseFolding.fold(target, using: supportInfo.caseMapping)
+		) else { return false }
+		entry.delivery.state = .delivered
+		applyDeliveryOutcome(
+			to: entry.delivery,
+			state: .delivered,
+			messageIdentifier: message.messageIdentifier,
+			reason: nil,
+			echoedMessage: message
+		)
+		return true
 	}
 
 	/// The state of a delivery still awaiting a response. Resolved deliveries are

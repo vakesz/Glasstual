@@ -20,6 +20,12 @@ nonisolated enum ChatLineFormat {
 	static let loggerUndefinedNickname = "<%@%n>"
 	static let noticeNickname = "-%@-"
 	static let specialNoticeMessage = "[%@]: %@"
+
+	/// The sender of a message only some of the channel's members received,
+	/// with the `@#channel` target it went to.
+	static func statusMessageSender(_ formattedNickname: String, target: String) -> String {
+		String(localized: .IRC.statusMessageSender(formattedNickname, target))
+	}
 }
 
 /** How a line's enumerations are named outside the model.

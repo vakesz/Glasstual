@@ -157,7 +157,43 @@ struct ChatLineTests {
 
 		#expect(Set(encodedLine.keys) == Set(fixtureLine.keys))
 		// Optional additions remain absent when re-encoding an older row.
-		#expect(Set(encodedLine.keys).union(["serverTimestamp"]) == Set(ChatLine.CodingKeys.allCases.map(\.rawValue)))
+		#expect(
+			Set(encodedLine.keys).union(["serverTimestamp", "statusMessageTarget"])
+				== Set(ChatLine.CodingKeys.allCases.map(\.rawValue))
+		)
+	}
+
+	@Test("The target of a message only some members received survives the scrollback archive")
+	func statusMessageTargetSurvivesArchiving() throws {
+		var line = ChatLine()
+		line.lineType = .privateMessage
+		line.nickname = "alice"
+		line.messageBody = "ops only"
+		line.statusMessageTarget = "@#staff"
+
+		let decoded = try #require(ChatLine(data: line.scrollbackEntry(forView: "view").data))
+
+		#expect(decoded.statusMessageTarget == "@#staff")
+		#expect(try #require(ChatLine(data: ChatLine().scrollbackEntry(forView: "view").data)).statusMessageTarget == nil)
+	}
+
+	@Test("The transcript log names the target of a message only some members received")
+	func transcriptLogNamesStatusMessageTarget() throws {
+		let session = TestServerSession(configDictionary: ["nickname": "me"])
+		let channel = try #require(session.findConversationOrCreate("#staff"))
+		var line = ChatLine()
+		line.lineType = .privateMessage
+		line.nickname = "alice"
+		line.messageBody = "ops only"
+
+		let publicText = line.renderedBodyForTranscriptLog(in: channel)
+		line.statusMessageTarget = "@#staff"
+		let restrictedText = line.renderedBodyForTranscriptLog(in: channel)
+
+		#expect(publicText.contains("@#staff") == false)
+		#expect(restrictedText.contains("@#staff"))
+		#expect(restrictedText.contains("alice"))
+		#expect(restrictedText.hasSuffix("ops only"))
 	}
 
 	@Test("The renderer's names for the line and member types are the ones the templates read")

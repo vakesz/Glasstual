@@ -59,7 +59,9 @@ nonisolated extension ChatLine {
 		}
 
 		if let formattedNickname = formattedNickname(in: conversation, with: nicknameFormat) {
-			components.append(formattedNickname)
+			components.append(statusMessageTarget.map {
+				ChatLineFormat.statusMessageSender(formattedNickname, target: $0)
+			} ?? formattedNickname)
 		}
 
 		components.append(messageBody)

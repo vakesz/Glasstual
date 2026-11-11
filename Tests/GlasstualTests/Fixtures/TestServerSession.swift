@@ -100,6 +100,7 @@ final class TestServerSession: ServerSession {
 		line["command"] = request.command
 		line["channel"] = request.conversation
 		line["nickname"] = request.nickname
+		line["statusMessageTarget"] = request.statusMessageTarget
 
 		printedLines.add(line)
 	}

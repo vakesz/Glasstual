@@ -106,6 +106,9 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 
 	var nickname: String?
 	private(set) var sessionIdentifier: UInt = 0
+	/// The `@#channel` target of a message only some of the channel's members
+	/// received; `nil` for one sent to the whole channel.
+	var statusMessageTarget: String?
 
 	/// The line's identity, stable across copies and archives.
 	private(set) var uniqueIdentifier = ""
@@ -137,6 +140,7 @@ nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertibl
 		case nickname
 		case sessionIdentifier
 		case uniqueIdentifier
+		case statusMessageTarget
 	}
 
 	/** Withdraws everything a reader could read from the line, keeping what

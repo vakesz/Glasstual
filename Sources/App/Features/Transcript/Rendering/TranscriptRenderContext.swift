@@ -132,6 +132,7 @@ nonisolated struct ChatLineSnapshot: Sendable {
 	var fromCurrentSession = true
 	var modeSymbol = ""
 	var historyCursor: ScrollbackRowCursor?
+	var statusMessageTarget: String?
 
 	init() {}
 
@@ -161,6 +162,7 @@ nonisolated struct ChatLineSnapshot: Sendable {
 		isEncrypted = chatLine.isEncrypted
 		isFirstForDay = chatLine.isFirstForDay
 		fromCurrentSession = chatLine.fromCurrentSession
+		statusMessageTarget = chatLine.statusMessageTarget
 
 		modeSymbol = if let knownModeSymbol {
 			knownModeSymbol

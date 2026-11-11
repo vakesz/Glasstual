@@ -16,6 +16,8 @@ private final class DeliveryPresentation: ChatItemPresenting {
 
 	let presentationIdentifier = "delivery-presentation"
 	var updates: [Update] = []
+	/// Every line a settled delivery redrew, with the reason it was given.
+	var replacements: [(line: ChatLine, reason: String?)] = []
 	func print(_: ChatLine, completionBlock _: PrintedLineCompletion?) {}
 	func lastPrintedLine() -> ChatLine? {
 		nil
@@ -37,6 +39,10 @@ private final class DeliveryPresentation: ChatItemPresenting {
 			messageIdentifier: messageIdentifier,
 			reason: reason
 		))
+	}
+
+	func replacePendingLine(_ line: ChatLine, reason: String?) {
+		replacements.append((line, reason))
 	}
 
 	func prependEarlierChatLines(_: [ChatLine]) {}
@@ -288,6 +294,128 @@ struct LabeledResponseRetirementTests {
 		#expect(session.labeledResponses.pending.count == 0)
 	}
 
+	/// A session whose labelled line to `#chat` was printed and then timed out.
+	private struct TimedOutDelivery {
+		let session: TestServerSession
+		let presentation: DeliveryPresentation
+		let line: ChatLine
+		let label: String
+	}
+
+	private func timedOutDelivery() throws -> TimedOutDelivery {
+		let session = sessionWithLabeledResponse()
+		session.userNickname = "me"
+		session.setConnectionTransportForTesting(.connected)
+		session.forwardsProcessedMessages = true
+		session.socket = Connection(config: ConnectionConfig(), onSession: session)
+		let channel = try #require(session.findConversationOrCreate("#chat"))
+		let presentation = DeliveryPresentation()
+		channel.presentation = presentation
+		let label = try #require(session.registerPendingDelivery(for: channel))
+		var line = ChatLine()
+		line.nickname = "me"
+		line.messageBody = "hello"
+		line.lineType = .privateMessage
+		line.deliveryState = .pending
+		session.attachPrintedLine(line, toDeliveryWithLabel: label)
+
+		session.timeoutDelivery(withLabel: label)
+		try #require(presentation.replacements.last?.line.deliveryState == .failed)
+		return TimedOutDelivery(session: session, presentation: presentation, line: line, label: label)
+	}
+
+	@Test("The echo of a line that timed out settles that line and prints nothing new")
+	func timedOutEchoSettlesTheFailedLine() throws {
+		let fixture = try timedOutDelivery()
+		let (session, presentation, line, label) = (fixture.session, fixture.presentation, fixture.line, fixture.label)
+
+		session.connectionDidReceive("@label=\(label);msgid=late :me!u@h PRIVMSG #CHAT :hello")
+
+		#expect(session.printedLines.count == 0)
+		let replacement = try #require(presentation.replacements.last)
+		#expect(replacement.line.uniqueIdentifier == line.uniqueIdentifier)
+		#expect(replacement.line.deliveryState == .delivered)
+		#expect(replacement.line.messageIdentifier == "late")
+		#expect(replacement.reason == nil)
+	}
+
+	@Test("A timed-out label from another sender or to another target is not consumed")
+	func timedOutLabelNeedsOwnEchoToSameTarget() throws {
+		let fixture = try timedOutDelivery()
+		let (session, label) = (fixture.session, fixture.label)
+
+		let otherSender = try #require(Message(line: "@label=\(label) :alice!u@h PRIVMSG #chat :hello", on: session))
+		#expect(session.resolveLabeledResponse(for: otherSender) == false)
+		let otherTarget = try #require(Message(line: "@label=\(label) :me!u@h PRIVMSG #other :hello", on: session))
+		#expect(session.resolveLabeledResponse(for: otherTarget) == false)
+		let acknowledgement = try #require(Message(line: "@label=\(label) :server ACK", on: session))
+		#expect(session.resolveLabeledResponse(for: acknowledgement) == false)
+
+		let echo = try #require(Message(line: "@label=\(label) :me!u@h PRIVMSG #chat :hello", on: session))
+		#expect(session.resolveLabeledResponse(for: echo))
+	}
+
+	@Test("A second echo of the same timed-out label is not consumed")
+	func timedOutLabelSettlesOnce() throws {
+		let fixture = try timedOutDelivery()
+		let (session, label) = (fixture.session, fixture.label)
+		let echo = try #require(Message(line: "@label=\(label) :me!u@h PRIVMSG #chat :hello", on: session))
+
+		#expect(session.resolveLabeledResponse(for: echo))
+		#expect(session.resolveLabeledResponse(for: echo) == false)
+	}
+
+	@Test("With every label taken, a line echo-message returns is left to its echo", arguments: [true, false])
+	func ceilingLeavesThePrintToTheEcho(_ echoMessage: Bool) throws {
+		let session = TestServerSession()
+		session.enableCapability(.messageTags)
+		if echoMessage {
+			session.enableCapability(.echoMessage)
+		}
+		session.enableCapability([.batch, .labeledResponse])
+		defer { session.failPendingDeliveriesForDisconnect() }
+		let channel = try #require(session.findConversationOrCreate("#chat"))
+		for _ in 0 ..< LabeledResponsePolicy.maximumPendingDeliveries {
+			_ = try #require(session.registerPendingDelivery(for: nil))
+		}
+		let policy = try #require(OutboundMessageOptions(remoteCommand: .privmsg))
+
+		#expect(session.printLocallyIfNeeded("hello", in: channel, policy: policy) == nil)
+		#expect(session.printedLines.count == (echoMessage ? 0 : 1))
+	}
+
+	@Test("The label of an outgoing line is read from its tags", arguments: [
+		("@label=g12;+draft/reply=x PRIVMSG #c :hi", "g12"),
+		("@+draft/reply=x;label=g3 PRIVMSG #c :hi", "g3"),
+		("@+draft/reply=x PRIVMSG #c :label=g4", nil),
+		("PRIVMSG #c :@label=g5", nil),
+		("@label= PRIVMSG #c :hi", nil),
+	] as [(String, String?)])
+	func labelIsReadFromTags(_ line: String, _ label: String?) {
+		#expect(LabeledResponsePolicy.label(inOutgoingLine: line) == label)
+	}
+
+	@Test("A labelled line's deadline starts when the connection writes it")
+	func deadlineStartsWhenWritten() throws {
+		let session = sessionWithLabeledResponse()
+		defer { session.failPendingDeliveriesForDisconnect() }
+		let written = try #require(session.registerPendingDelivery(for: nil))
+		let queued = try #require(session.registerPendingDelivery(for: nil))
+		let start = ContinuousClock.now
+
+		session.connectionWillSend("@label=\(written) PRIVMSG #c :hi")
+
+		let deadline = try #require(session.labeledResponses.pending[written]).deadline
+		#expect(deadline > start + .seconds(29))
+		#expect(deadline <= .now + LabeledResponsePolicy.timeout)
+		#expect(try #require(session.labeledResponses.deadlineTaskFireDate) <= deadline)
+
+		session.failDeliveries(dueBy: start + .seconds(31))
+
+		#expect(session.labeledResponses.pending[written] == nil)
+		#expect(session.deliveryState(forLabel: queued) == .pending)
+	}
+
 	@Test("A label the server reuses after resolution does not swallow the message")
 	func reusedLabelIsNotConsumedTwice() throws {
 		let session = sessionWithLabeledResponse()
@@ -343,5 +471,12 @@ private final class CallbackRecorder {
 private extension ServerSession {
 	func attachLineNumber(_ lineNumber: String, toDeliveryWithLabel label: String) {
 		labeledResponses.pending[label]?.lineNumber = lineNumber
+	}
+
+	/// What printing the line would have recorded; the test session's print
+	/// observer stops short of it.
+	func attachPrintedLine(_ line: ChatLine, toDeliveryWithLabel label: String) {
+		labeledResponses.pending[label]?.printedLine = line
+		labeledResponses.pending[label]?.lineNumber = line.uniqueIdentifier
 	}
 }

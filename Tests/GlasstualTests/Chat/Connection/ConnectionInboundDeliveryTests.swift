@@ -258,11 +258,17 @@ struct ConnectionInboundDeliveryTests {
 		#expect(endpoint.serverPort == 6697)
 		#expect(endpoint.connectionPrefersSecuredConnection)
 		#expect(session.server?.uniqueIdentifier == origin.uniqueIdentifier)
-		let secured = Connection(config: endpoint, onSession: session)
+		// The upgraded connection checks the chain, so PASS follows the handshake.
+		var securedConfig = endpoint
+		securedConfig.connectionShouldValidateCertificateChain = true
+		let secured = Connection(config: securedConfig, onSession: session)
 		session.socket = secured
 		try await observe(ServerSessionDidConnect.self, from: session) {
 			secured.callbackReceiver.didConnect(toHost: endpoint.serverAddress)
 		}
+		#expect(session.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") } == false)
+		secured.callbackReceiver.didSecureConnection(withProtocolType: .TLSv13, cipherSuite: tlsCipherSuiteUnknown)
+		try await Eventually.until("TLS to come up") { secured.isSecured }
 		let passwords = session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("PASS ") }
 		let expectedPassword = try SendingMessage.string(command: .pass, arguments: ["endpoint-secret"])
 		#expect(passwords == [expectedPassword])

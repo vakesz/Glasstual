@@ -90,7 +90,8 @@ extension TranscriptController {
 			body: body,
 			modeSymbol: line.modeSymbol,
 			historyCursor: line.historyCursor,
-			serverTimestamp: line.serverTimestamp
+			serverTimestamp: line.serverTimestamp,
+			statusMessageTarget: line.statusMessageTarget
 		)
 		let inlineMedia = request.context.inlineMediaEnabled &&
 			(line.lineType == .privateMessage || line.lineType == .action)

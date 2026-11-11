@@ -107,8 +107,25 @@ extension ServerSession {
 		}
 		var target = message.params[0]
 		guard !target.isEmpty else { return }
+		/* A message to `@#channel` reached only some of its members. It is still
+		 filed in the channel, and the line keeps the target it went to. */
+		var statusMessageTarget: String?
 		if supportInfo.extractStatusMessagePrefix(fromTargetNamed: target).count == 1 {
+			statusMessageTarget = target
 			target.removeFirst()
+		}
+
+		if let sender = message.senderNickname, nicknameIsMyself(sender) {
+			/* The echo of a message sent without a local print stays unprinted,
+			 and one of our own messages to services is shown with its
+			 credentials masked, as it was when printed locally. Channel text is
+			 never rewritten. */
+			if consumeUnprintedEcho(message, target: target, text: text, lineType: originalLineType) {
+				return
+			}
+			if stringIsChannelName(target) == false {
+				text = WireRedaction.redactedServiceMessage(text, sentTo: target)
+			}
 		}
 
 		let ignore = message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
@@ -121,7 +138,9 @@ extension ServerSession {
 
 		if stringIsChannelName(target) {
 			guard ignore?.ignorePublicMessages != true else { return }
-			receivePublicText(message, lineType: lineType, target: target, text: text)
+			receivePublicText(
+				message, lineType: lineType, target: target, text: text, statusMessageTarget: statusMessageTarget
+			)
 		} else if !message.sender.isServer {
 			guard ignore?.ignorePrivateMessages != true else { return }
 			receivePrivateText(message, lineType: lineType, target: target, text: text)
@@ -131,7 +150,7 @@ extension ServerSession {
 	}
 
 	private func receivePublicText(
-		_ message: Message, lineType: ChatLineKind, target: String, text: String
+		_ message: Message, lineType: ChatLineKind, target: String, text: String, statusMessageTarget: String?
 	) {
 		guard let channel = findConversation(target) else { return }
 		let sender = message.senderNickname ?? ""
@@ -161,7 +180,7 @@ extension ServerSession {
 		if shouldPrintReceivedText(text, message: message, destination: channel, lineType: lineType) {
 			print(text, by: sender, in: channel, as: lineType, command: message.command,
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message,
-			      completionBlock: completion)
+			      statusMessageTarget: statusMessageTarget, completionBlock: completion)
 		}
 		/* This weights the speaker. `TranscriptController` weights whoever the rendered
 		 line mentioned, which is a different subject; the two do not overlap. */
@@ -291,6 +310,7 @@ extension ServerSession {
 		)
 		switch action {
 		case let .sendIdentification(target, text):
+			noteUnprintedSend(to: target, text: text, lineType: .privateMessage)
 			send(.privmsg, arguments: [target, text])
 			nickServ.isWaiting = true
 			nickServ.isConfirmed = false
@@ -331,6 +351,7 @@ extension ServerSession {
 		guard case let .sendIdentification(target, text) = ServiceNoticePolicy.identificationAction(for: nickServContext()) else {
 			return
 		}
+		noteUnprintedSend(to: target, text: text, lineType: .privateMessage)
 		send(.privmsg, arguments: [target, text])
 		nickServ.isWaiting = true
 		nickServ.isConfirmed = false

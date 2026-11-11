@@ -294,11 +294,14 @@ extension ServerSession {
 					 message uncorrelated. */
 					var deliveryLabel: String?
 					for (index, channel) in groupChannels.enumerated() {
+						/* The echo of a comma list is filed nowhere, so this print
+						 is the only one the message gets. */
 						let label = session.printLocallyIfNeeded(
 							WireRedaction.redactedServiceMessage(message, sentTo: channel.name),
 							in: channel,
 							policy: policy,
-							registeringDelivery: index == 0
+							registeringDelivery: index == 0,
+							echoReturnsHere: false
 						)
 
 						if index == 0 {
@@ -348,7 +351,9 @@ extension ServerSession {
 		in conversation: Conversation,
 		policy: OutboundMessageOptions,
 		localCommand: String? = nil,
-		registeringDelivery: Bool = true
+		statusMessageTarget: String? = nil,
+		registeringDelivery: Bool = true,
+		echoReturnsHere: Bool = true
 	) -> String? {
 		/* With echo-message the server sends this message back and the inbound
 		 path prints it, so printing here too would show it twice -- unless a
@@ -359,6 +364,12 @@ extension ServerSession {
 
 		let label = registeringDelivery ? registerPendingDelivery(for: conversation) : nil
 
+		/* Every label is taken, so the line goes out without one and nothing can
+		 match its echo to a line printed now. The echo prints instead, once. */
+		if label == nil, registeringDelivery, echoReturnsHere, isCapabilityEnabled(.echoMessage) {
+			return nil
+		}
+
 		print(
 			message,
 			by: userNickname,
@@ -368,7 +379,8 @@ extension ServerSession {
 			receivedAt: Date(),
 			isEncrypted: false,
 			referenceMessage: nil,
-			deliveryLabel: label
+			deliveryLabel: label,
+			statusMessageTarget: statusMessageTarget
 		)
 
 		return label
@@ -393,8 +405,8 @@ extension ServerSession {
 
 		let destinationIsChannel = conversation?.isChannel == true ||
 			(conversation == nil && stringIsChannelName(destinationName))
-		let wireTarget = prefix.flatMap { destinationIsChannel ? "\($0)\(destinationName)" : nil }
-			?? destinationName
+		let statusMessageTarget = prefix.flatMap { destinationIsChannel ? "\($0)\(destinationName)" : nil }
+		let wireTarget = statusMessageTarget ?? destinationName
 		var cursor = LineCursor(text)
 		enqueueOutboundText(conversations: conversation.map { [$0] } ?? []) { session in
 			guard let message = cursor.nextLine(forTarget: wireTarget, on: session, with: policy.lineType)
@@ -405,15 +417,20 @@ extension ServerSession {
 				session.printDebugInformation(
 					toConsole: String(localized: .IRC.connectCommandSent(wireTarget, redactedMessage))
 				)
+				session.noteUnprintedSend(to: destinationName, text: message, lineType: policy.lineType)
 				deliveryLabel = nil
 			} else if let conversation, policy.isSecretMessage == false {
 				deliveryLabel = session.printLocallyIfNeeded(
 					redactedMessage,
 					in: conversation,
 					policy: policy,
-					localCommand: localCommand
+					localCommand: localCommand,
+					statusMessageTarget: statusMessageTarget
 				)
 			} else {
+				if policy.isSecretMessage {
+					session.noteUnprintedSend(to: destinationName, text: message, lineType: policy.lineType)
+				}
 				deliveryLabel = nil
 			}
 

@@ -45,6 +45,8 @@ extension ServerSession {
 		inWhoisResponse = false
 		inWhowasResponse = false
 		nickServ = NickServIdentification()
+		registrationGate = .notStarted
+		unprintedEchoes.removeAll()
 		away.isAway = false
 		userIsIRCop = false
 		znc.isConnected = false
@@ -157,9 +159,13 @@ extension ServerSession {
 		 produces and the only way one is ever offered. Keyed on what was
 		 negotiated rather than on whether the fallback ran, so the warning cannot
 		 be missed by a path that reaches the same suite another way. */
-		guard isLegacy else { return }
+		if isLegacy {
+			printDebugInformation(toConsole: String(localized: .IRC.connectionIsNotForwardSecret))
+		}
 
-		printDebugInformation(toConsole: String(localized: .IRC.connectionIsNotForwardSecret))
+		if registrationGate == .awaitingTLS {
+			beginRegistration()
+		}
 	}
 
 	func connectionDidConnect() {
@@ -182,18 +188,14 @@ extension ServerSession {
 		output?.updateTitle(for: self)
 		ServerSessionDidConnect(subject: self).post()
 
-		/* What `USER` sends: an empty username or real name falls back to the
-		 nickname, and the mode bits are the RFC 2812 ones for invisible and
-		 plain. */
-		let username = config.username.isEmpty ? config.nickname : config.username
-		let realName = config.realName.isEmpty ? config.nickname : config.realName
-		let modeSymbols = config.setInvisibleModeOnConnect ? "8" : "0"
-		sendCapability("LS", data: "302")
-		if let password = sessionServerPassword {
-			sendPassword(password)
+		/* A connection that is to be TLS registers once the handshake says
+		 what stands behind the certificate: `PASS` waits on that, and the
+		 lines after it wait on `PASS`. */
+		if socket?.config.connectionPrefersSecuredConnection == true, isSecured == false {
+			registrationGate = .awaitingTLS
+			return
 		}
-		changeNickname(config.nickname)
-		send(.user, arguments: [username, modeSymbols, "*", realName])
+		beginRegistration()
 	}
 
 	func connectionDidDisconnect(error disconnectError: Error?) {
@@ -219,6 +221,7 @@ extension ServerSession {
 
 	func connectionWillSend(_ data: String) {
 		guard !isTerminating else { return }
+		noteLabeledLineWritten(data)
 		rawDataLogOutgoingTraffic(data)
 	}
 }

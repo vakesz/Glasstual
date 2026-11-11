@@ -45,6 +45,8 @@ struct LinePrintRequest {
 	let referenceMessage: Message?
 	let completionBlock: PrintedLineCompletion?
 	var deliveryLabel: String?
+	/// The `@#channel` form of the target, for a message only some members received.
+	var statusMessageTarget: String?
 }
 
 extension ServerSession {
@@ -67,6 +69,7 @@ extension ServerSession {
 		escapeMessage: Bool = true,
 		referenceMessage: Message? = nil,
 		deliveryLabel: String? = nil,
+		statusMessageTarget: String? = nil,
 		completionBlock: PrintedLineCompletion? = nil
 	) {
 		let request = LinePrintRequest(
@@ -80,7 +83,8 @@ extension ServerSession {
 			escapeMessage: escapeMessage,
 			referenceMessage: referenceMessage,
 			completionBlock: completionBlock,
-			deliveryLabel: deliveryLabel
+			deliveryLabel: deliveryLabel,
+			statusMessageTarget: statusMessageTarget
 		)
 		#if DEBUG
 			if let linePrintObserver {
@@ -206,6 +210,7 @@ private extension ServerSession {
 		if let reference = request.referenceMessage, reference.hasServerTime {
 			chatLine.serverTimestamp = reference.receivedAt
 		}
+		chatLine.statusMessageTarget = request.statusMessageTarget
 
 		if let label = request.deliveryLabel {
 			labeledResponses.pending[label]?.printedLine = chatLine

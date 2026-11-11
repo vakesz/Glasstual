@@ -67,6 +67,8 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 	var modeSymbol = ""
 	var historyCursor: ScrollbackRowCursor?
 	var serverTimestamp: Date?
+	/// The `@#channel` target of a message only some members received.
+	var statusMessageTarget: String?
 
 	/** Whether `identifier` names this row.
 
@@ -124,7 +126,11 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 				format: theme.nicknameFormat.isEmpty ? TranscriptTheme.lines.nicknameFormat : theme.nicknameFormat
 			)
 		}
-		return (timestamp, formattedNickname.trimmingCharacters(in: .whitespacesAndNewlines))
+		let sender = formattedNickname.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard let statusMessageTarget else { return (timestamp, sender) }
+		return (timestamp, ChatLineFormat.statusMessageSender(
+			sender, target: ControlCharacterDisposition.singleLine(statusMessageTarget)
+		))
 	}
 
 	var lineTypeString: String {

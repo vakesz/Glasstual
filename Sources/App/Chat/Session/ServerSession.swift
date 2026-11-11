@@ -357,6 +357,10 @@ class ServerSession: ChatItem {
 	var ctcpReplyThrottle = CTCPReplyThrottle()
 	/// How many unsolicited DCC offers this connection has taken lately.
 	var dccOfferThrottle = DCCOfferThrottle()
+	/// Messages sent without a local print, whose echo is dropped rather than shown.
+	var unprintedEchoes = UnprintedEchoRegistry()
+	/// How far this connection has got with sending its registration lines.
+	var registrationGate = RegistrationGate.notStarted
 
 	/** Settings and services this session reads instead of reaching for the
 	 application's singletons. The chat session it belongs to keeps the setting half
