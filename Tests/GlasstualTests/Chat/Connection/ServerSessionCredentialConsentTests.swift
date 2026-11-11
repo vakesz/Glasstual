@@ -100,9 +100,9 @@ struct ServerSessionCredentialConsentTests {
 		let session = try await securedSession(validatingChain: false)
 
 		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN"]))
-		#expect(session.sasl.mechanism == "PLAIN")
-		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN", SCRAMClient.mechanismName]))
-		#expect(session.sasl.mechanism == SCRAMClient.mechanismName)
+		#expect(session.sasl.mechanism == .plain)
+		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
+		#expect(session.sasl.mechanism == .scramSHA256)
 
 		session.sessionCredentials.reportedWithheldCredentials = true
 

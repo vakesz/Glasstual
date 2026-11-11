@@ -537,30 +537,30 @@ struct IRCSpecCapabilityNegotiationTests {
 	func mechanismSelectionPrefersTheStrongest() {
 		#expect(
 			SASLPolicy.nextMechanism(
-				from: ["SCRAM-SHA-256", "PLAIN"],
+				from: [.scramSHA256, .plain],
 				offered: ["PLAIN", "SCRAM-SHA-256"],
 				tried: []
-			) == "SCRAM-SHA-256"
+			) == .scramSHA256
 		)
 		#expect(
 			SASLPolicy.nextMechanism(
-				from: ["SCRAM-SHA-256", "PLAIN"],
+				from: [.scramSHA256, .plain],
 				offered: ["PLAIN"],
 				tried: []
-			) == "PLAIN"
+			) == .plain
 		)
 		#expect(
 			SASLPolicy.nextMechanism(
-				from: ["SCRAM-SHA-256", "PLAIN"],
-				offered: ["PLAIN", "SCRAM-SHA-256"],
-				tried: ["scram-sha-256"]
-			) == "PLAIN"
+				from: [.scramSHA256, .plain],
+				offered: ["PLAIN", "scram-sha-256"],
+				tried: [.scramSHA256]
+			) == .plain
 		)
 		#expect(
 			SASLPolicy.nextMechanism(
-				from: ["PLAIN"],
+				from: [.plain],
 				offered: ["PLAIN"],
-				tried: ["PLAIN"]
+				tried: [.plain]
 			) == nil
 		)
 	}
@@ -613,29 +613,34 @@ struct IRCSpecCapabilityNegotiationTests {
 	/// 904.
 	@Test("sasl-3.2: the mechanism list follows the credentials the session holds")
 	func mechanismListFollowsCredentials() {
+		let anyTransport = SASLTransportAssurance.verifiedTLS
 		#expect(
 			SASLPolicy.supportedMechanisms(
-				hasClientCertificate: true,
-				externalMechanismDisabled: false,
-				hasPassword: true,
-				preferredMechanism: nil
-			) == ["EXTERNAL", SCRAMClient.mechanismName, "PLAIN"]
+				inventory: SASLCredentialInventory(hasClientCertificate: true, hasPassword: true),
+				transport: anyTransport,
+				withholdsAccountCredentials: false,
+				preferred: nil
+			) == [.external, .scramSHA256, .plain]
 		)
 		#expect(
 			SASLPolicy.supportedMechanisms(
-				hasClientCertificate: false,
-				externalMechanismDisabled: false,
-				hasPassword: false,
-				preferredMechanism: nil
+				inventory: SASLCredentialInventory(),
+				transport: anyTransport,
+				withholdsAccountCredentials: false,
+				preferred: nil
 			).isEmpty
 		)
 		#expect(
 			SASLPolicy.supportedMechanisms(
-				hasClientCertificate: true,
-				externalMechanismDisabled: true,
-				hasPassword: true,
-				preferredMechanism: "plain"
-			) == ["PLAIN", SCRAMClient.mechanismName]
+				inventory: SASLCredentialInventory(
+					hasClientCertificate: true,
+					externalMechanismDisabled: true,
+					hasPassword: true
+				),
+				transport: anyTransport,
+				withholdsAccountCredentials: false,
+				preferred: .plain
+			) == [.plain, .scramSHA256]
 		)
 	}
 
@@ -676,16 +681,16 @@ struct IRCSpecCapabilityNegotiationTests {
 		try receive("CAP * LS :sasl=SCRAM-SHA-256,PLAIN", on: session)
 		try receive("CAP me ACK :sasl", on: session)
 
-		#expect(session.sasl.mechanism == SCRAMClient.mechanismName)
+		#expect(session.sasl.mechanism == .scramSHA256)
 
 		let mechanisms = try #require(Message(line: ":irc.example.net 908 me PLAIN :Available mechanisms", on: session))
 		let failure = try #require(Message(line: ":irc.example.net 904 me :SASL authentication failed", on: session))
 		try handleAuthentication(mechanisms, on: session)
-		#expect(session.sasl.mechanism == SCRAMClient.mechanismName)
+		#expect(session.sasl.mechanism == .scramSHA256)
 		#expect(session.sentLines.contains("AUTHENTICATE PLAIN") == false)
 
 		try handleAuthentication(failure, on: session)
-		#expect(session.sasl.mechanism == "PLAIN")
+		#expect(session.sasl.mechanism == .plain)
 		#expect(session.sentLines.contains("AUTHENTICATE PLAIN"))
 		#expect(session.isCapabilityEnabled(.isInSASLNegotiation))
 		#expect(capabilityCommands(of: session).contains("END") == false)

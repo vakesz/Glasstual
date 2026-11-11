@@ -1,6 +1,1062 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "sasl-mechanism-unknown": {
+      "comment": "/sasl mechanism: the typed name is not a mechanism Glasstual speaks. %1$@ is the typed name; %2$@ lists the mechanism wire names. Keep “automatic” untranslated: it is typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ isn’t a SASL mechanism Glasstual can use. Choose one of %2$@, or automatic."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) %1$@ nem olyan SASL-mechanizmus, amelyet a Glasstual használni tud. Válasszon ezek közül: %2$@, vagy automatic."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist kein SASL-Mechanismus, den Glasstual verwenden kann. Wählen Sie %2$@ oder automatic."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no es un mecanismo SASL que Glasstual pueda usar. Elija uno de %2$@, o automatic."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n’est pas un mécanisme SASL que Glasstual peut utiliser. Choisissez parmi %2$@, ou automatic."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@はGlasstualで使用できるSASLメカニズムではありません。%2$@、またはautomaticから選択してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não é um mecanismo SASL que o Glasstual possa usar. Escolha um entre %2$@, ou automatic."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-set": {
+      "comment": "/sasl mechanism: confirmation. %@ is the mechanism wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASL will try %@ first from the next sign-in."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A következő bejelentkezéstől a SASL először a(z) %@ mechanizmust próbálja."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ab der nächsten Anmeldung versucht SASL zuerst %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir del próximo inicio de sesión, SASL probará primero %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À partir de la prochaine connexion, SASL essaiera d’abord %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次回のサインインから、SASLはまず%@を試します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir do próximo início de sessão, o SASL tentará %@ primeiro."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-set-only": {
+      "comment": "/sasl mechanism … only: confirmation. %@ is the mechanism wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASL will use only %@ from the next sign-in."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A következő bejelentkezéstől a SASL csak a(z) %@ mechanizmust használja."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ab der nächsten Anmeldung verwendet SASL nur %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir del próximo inicio de sesión, SASL usará solo %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À partir de la prochaine connexion, SASL utilisera uniquement %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次回のサインインから、SASLは%@のみを使用します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir do próximo início de sessão, o SASL usará apenas %@."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-set-automatic": {
+      "comment": "/sasl mechanism automatic: confirmation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASL will choose the mechanism automatically from the next sign-in."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A következő bejelentkezéstől a SASL automatikusan választ mechanizmust."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ab der nächsten Anmeldung wählt SASL den Mechanismus automatisch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir del próximo inicio de sesión, SASL elegirá el mecanismo automáticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À partir de la prochaine connexion, SASL choisira le mécanisme automatiquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次回のサインインから、SASLはメカニズムを自動的に選択します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir do próximo início de sessão, o SASL escolherá o mecanismo automaticamente."
+          }
+        }
+      }
+    },
+    "sasl-status-account": {
+      "comment": "/sasl status: the services account the connection is logged in to. %@ is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in as %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejelentkezve mint %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angemeldet als %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión iniciada como %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecté en tant que %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@としてサインインしています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessão iniciada como %@."
+          }
+        }
+      }
+    },
+    "sasl-status-not-signed-in": {
+      "comment": "/sasl status: the connection is not logged in to a services account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not signed in."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs bejelentkezve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht angemeldet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ha iniciado sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non connecté."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインしていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessão não iniciada."
+          }
+        }
+      }
+    },
+    "sasl-status-last-mechanism": {
+      "comment": "/sasl status: the mechanism of the last successful SASL sign-in. %@ is its wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in with %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejelentkezés ezzel: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angemeldet mit %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión iniciada con %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecté avec %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@でサインインしました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessão iniciada com %@."
+          }
+        }
+      }
+    },
+    "sasl-status-offered": {
+      "comment": "/sasl status: the mechanisms the server offers. %@ is a comma-separated list of wire names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server offers SASL: %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló SASL-t kínál: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server bietet SASL an: %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor ofrece SASL: %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur propose SASL : %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバはSASLを提供しています：%@。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor oferece SASL: %@."
+          }
+        }
+      }
+    },
+    "sasl-status-offered-unlisted": {
+      "comment": "/sasl status: stands in for the mechanism list when the server offers SASL without naming mechanisms.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mechanisms not listed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a mechanizmusok nincsenek felsorolva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanismen nicht aufgeführt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mecanismos no indicados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mécanismes non indiqués"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メカニズムの一覧なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mecanismos não listados"
+          }
+        }
+      }
+    },
+    "sasl-status-not-offered": {
+      "comment": "/sasl status: the server does not offer the sasl capability on this connection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server doesn’t offer SASL on this connection."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kiszolgáló nem kínál SASL-t ezen a kapcsolaton."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server bietet auf dieser Verbindung kein SASL an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no ofrece SASL en esta conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur ne propose pas SASL sur cette connexion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバはこの接続でSASLを提供していません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não oferece SASL nesta conexão."
+          }
+        }
+      }
+    },
+    "sasl-status-preference-automatic": {
+      "comment": "/sasl status: no preferred mechanism is configured.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanism: Automatic."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanizmus: automatikus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanismus: Automatisch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mecanismo: automático."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mécanisme : automatique."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メカニズム：自動。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mecanismo: automático."
+          }
+        }
+      }
+    },
+    "sasl-status-preference": {
+      "comment": "/sasl status: the preferred mechanism, with fallback to others. %@ is its wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanism: %@ first, then others."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanizmus: először %@, majd a többi."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanismus: zuerst %@, dann andere."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mecanismo: primero %@, luego otros."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mécanisme : %@ d’abord, puis les autres."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メカニズム：まず%@、次にその他。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mecanismo: %@ primeiro, depois outros."
+          }
+        }
+      }
+    },
+    "sasl-status-preference-only": {
+      "comment": "/sasl status: the only mechanism SASL will use. %@ is its wire name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanism: %@ only."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanizmus: csak %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mechanismus: nur %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mecanismo: solo %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mécanisme : %@ uniquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メカニズム：%@のみ。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mecanismo: apenas %@."
+          }
+        }
+      }
+    },
+    "sasl-status-mechanism-line": {
+      "comment": "/sasl status: one mechanism and whether it can sign in on this connection. %1$@ is the wire name; %2$@ is the state, such as “ready”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@：%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "sasl-availability-usable": {
+      "comment": "/sasl status: the mechanism can sign in on this connection. Lower case; follows a mechanism name and a colon.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ready"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "használható"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bereit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lista"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "prêt"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用可能"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pronto"
+          }
+        }
+      }
+    },
+    "sasl-availability-needs-consent": {
+      "comment": "/sasl status: the mechanism sends the password, and Glasstual will ask before sending it. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "asks before sending the password"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rákérdez a jelszó elküldése előtt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fragt vor dem Senden des Passworts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pregunta antes de enviar la contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "demande avant d’envoyer le mot de passe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードを送信する前に確認"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pergunta antes de enviar a senha"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-no-client-certificate": {
+      "comment": "/sasl status: why a mechanism cannot be used. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no client certificate"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs ügyféltanúsítvány"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kein Clientzertifikat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin certificado de cliente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucun certificat client"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クライアント証明書なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sem certificado de cliente"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-external-disabled": {
+      "comment": "/sasl status: EXTERNAL is turned off for this server. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "turned off for this server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ki van kapcsolva ennél a kiszolgálónál"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "für diesen Server ausgeschaltet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desactivado para este servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "désactivé pour ce serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバではオフ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desativado para este servidor"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-no-signing-key": {
+      "comment": "/sasl status: why a mechanism cannot be used. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no signing key"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs aláírókulcs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kein Signaturschlüssel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin clave de firma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucune clé de signature"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名鍵なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sem chave de assinatura"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-no-password": {
+      "comment": "/sasl status: why a mechanism cannot be used. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no password"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nincs jelszó"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kein Passwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucun mot de passe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードなし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sem senha"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-clear-text-not-permitted": {
+      "comment": "/sasl status: PLAIN cannot be used because the connection cannot carry the password safely. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the connection can’t carry the password safely"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a kapcsolat nem tudja biztonságosan továbbítani a jelszót"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "die Verbindung kann das Passwort nicht sicher übertragen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la conexión no puede transmitir la contraseña de forma segura"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la connexion ne peut pas transmettre le mot de passe en toute sécurité"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この接続ではパスワードを安全に送信できません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a conexão não pode transmitir a senha com segurança"
+          }
+        }
+      }
+    },
+    "sasl-unavailable-credentials-withheld": {
+      "comment": "/sasl status: the connection went to a host outside the network's configured servers, so no account credential is sent. Lower case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "withheld from this host"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "visszatartva ettől a géptől"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "diesem Host vorenthalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "retenido para este host"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "retenu pour cet hôte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このホストには送信しません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "retido para este host"
+          }
+        }
+      }
+    },
     "nickname-retries-exhausted": {
       "comment": "Console warning after the server refused every nickname the client tried while registering; the client stops retrying and waits for the user to choose one.",
       "extractionState": "manual",

@@ -24,6 +24,7 @@ nonisolated extension ServerConfig {
 		case alternateNicknames
 		case usesSASL
 		case saslMechanismPreference
+		case saslUsesOnlyPreferredMechanism
 		case saslAuthenticationDisableExternalMechanism
 		case sendAuthenticationRequestsToUserServ
 		case identityClientSideCertificate
@@ -137,7 +138,15 @@ nonisolated extension ServerConfig {
 			forKey: .alternateNicknames,
 			default: Self.codingDefaults.alternateNicknames
 		)
+		/* Stored as the wire name, which older builds wrote as typed. A name this
+		 build does not speak reads as Automatic rather than failing the decode. */
 		saslMechanismPreference = container.decodeOptional(String.self, forKey: .saslMechanismPreference)
+			.flatMap(SASLMechanism.init(wireName:))
+		saslUsesOnlyPreferredMechanism = container.decode(
+			Bool.self,
+			forKey: .saslUsesOnlyPreferredMechanism,
+			default: Self.codingDefaults.saslUsesOnlyPreferredMechanism
+		)
 		usesSASL = container.decode(Bool.self, forKey: .usesSASL, default: Self.codingDefaults.usesSASL)
 		saslAuthenticationDisableExternalMechanism = container.decode(
 			Bool.self,
@@ -407,7 +416,8 @@ nonisolated extension ServerConfig {
 		try container.encode(username, forKey: .username)
 		try container.encode(realName, forKey: .realName)
 		try container.encodeIfPresent(awayNickname, forKey: .awayNickname)
-		try container.encodeIfPresent(saslMechanismPreference, forKey: .saslMechanismPreference)
+		try container.encodeIfPresent(saslMechanismPreference?.wireName, forKey: .saslMechanismPreference)
+		try encode(\.saslUsesOnlyPreferredMechanism, forKey: .saslUsesOnlyPreferredMechanism, &container)
 		try encode(\.usesSASL, forKey: .usesSASL, &container)
 		try container.encodeIfPresent(identityClientSideCertificate, forKey: .identityClientSideCertificate)
 

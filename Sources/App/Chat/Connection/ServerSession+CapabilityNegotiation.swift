@@ -125,9 +125,9 @@ extension ServerSession {
 				let mechanism = nextSASLMechanism(from: offered)
 				/* Said only when `PLAIN` is what was left out and nothing else will
 				 log in: a password SCRAM never sends in clear was not withheld. */
-				if mechanism == nil, config.usesSASL, sessionNicknamePassword?.isEmpty == false,
-				   permitsCredentialsInClear == false,
-				   offered.isEmpty || offered.contains(where: { $0.caseInsensitiveCompare("PLAIN") == .orderedSame })
+				if mechanism == nil, config.usesSASL,
+				   saslAvailability(of: .plain) == .unavailable(.clearTextNotPermitted),
+				   offered.isEmpty || SASLPolicy.knownMechanisms(in: offered).contains(.plain)
 				{
 					reportWithheldCredentials()
 				}

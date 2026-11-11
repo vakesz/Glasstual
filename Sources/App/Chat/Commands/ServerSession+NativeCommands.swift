@@ -144,6 +144,9 @@ extension ServerSession {
 		case .conn:
 			reconnect(toServerAddress: arguments.next().lowercased())
 
+		case .sasl:
+			dispatchSASLCommand(parsed)
+
 		case .back:
 			guard isLoggedIn else { return }
 			for session in broadcastTargets(whenAllConnections: environment.settings.awayAllConnections) {

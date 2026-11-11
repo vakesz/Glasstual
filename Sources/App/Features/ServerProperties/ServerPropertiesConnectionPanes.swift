@@ -86,28 +86,7 @@ struct ServerPropertiesIdentityPane: View {
 				)
 			}
 
-			Section {
-				SecureField(
-					.ServerProperties.nickservOrSaslPassword,
-					text: model.secretBinding(.nicknamePassword)
-				)
-				.accessibilityIdentifier("server-nickserv-password")
-				/* The onboarding network picker was the only place this
-				 could be chosen, so a connection made any other way was
-				 stuck with the default until someone hand-edited the
-				 stored configuration. */
-				Toggle(.ServerProperties.signInWithSasl, isOn: $model.config.usesSASL)
-				Toggle(
-					.ServerProperties.disconnectOnSaslFailure,
-					isOn: $model.config.disconnectOnSASLFailure
-				)
-				Toggle(
-					.ServerProperties.autojoinWaitsForNickserv,
-					isOn: $model.config.autojoinWaitsForNickServ
-				)
-			} footer: {
-				Text(.ServerProperties.nicknamePasswordHelp)
-			}
+			ServerPropertiesAuthenticationSection(model: model)
 
 			Section {
 				if model.hasSigningKey {

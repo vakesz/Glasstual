@@ -61,7 +61,11 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 	/// A connection authenticates with SASL unless it says otherwise, so the
 	/// stored dictionary only ever names this to switch it off.
 	var usesSASL = true
-	var saslMechanismPreference: String?
+	/// The mechanism SASL tries first, or `nil` to choose automatically.
+	var saslMechanismPreference: SASLMechanism?
+	/// Stops SASL falling back to other mechanisms when the preferred one is
+	/// refused or cannot be used. Meaningless without a preference.
+	var saslUsesOnlyPreferredMechanism = false
 	var saslAuthenticationDisableExternalMechanism = false
 	var sendAuthenticationRequestsToUserServ = false
 	var identityClientSideCertificate: Data?

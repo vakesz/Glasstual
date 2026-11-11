@@ -198,6 +198,7 @@ struct SlashCommandHelp {
 		.init([.quit], .SlashCommands.descriptionDisconnectNetwork, .SlashCommands.syntaxComment, .SlashCommands.hintOptionalReason),
 		.init([.quote, .raw], .SlashCommands.descriptionRaw, .SlashCommands.syntaxIrcLine, .SlashCommands.hintIrcProtocolLine),
 		.init([.recv], .SlashCommands.descriptionReceive, .SlashCommands.syntaxIrcLine, .SlashCommands.hintIrcProtocolLine),
+		.init([.sasl], .SlashCommands.descriptionSasl, .SlashCommands.syntaxSaslStatusMechanism, .SlashCommands.hintSaslStatusMechanism),
 		.init([.server], .SlashCommands.descriptionServer, .SlashCommands.syntaxAddressPortPassword, .SlashCommands.hintPortTlsPrefix),
 		.init([.redact], .SlashCommands.descriptionRedact, .SlashCommands.syntaxMessageIdentifierReason, .SlashCommands.hintRedact),
 		.init([.setcolor], .SlashCommands.descriptionColor, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),

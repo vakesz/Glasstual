@@ -24,19 +24,49 @@ extension ServerSession {
 		return stored.flatMap(ECDSASigningKey.privateKey(fromStored:))
 	}
 
-	private var supportedSASLMechanisms: [String] {
-		guard config.usesSASL else { return [] }
-		return SASLPolicy.supportedMechanisms(
+	/// The credentials this connection could sign in with right now.
+	var saslCredentialInventory: SASLCredentialInventory {
+		SASLCredentialInventory(
 			hasClientCertificate: socket?.isConnectedWithClientSideCertificate ?? false,
 			externalMechanismDisabled: config.saslAuthenticationDisableExternalMechanism,
 			hasPassword: sessionNicknamePassword?.isEmpty == false,
-			hasSigningKey: saslSigningKey != nil,
-			sendsPasswordInClear: permitsCredentialsInClear || mayAskToSendCredentials,
-			preferredMechanism: config.saslMechanismPreference
+			hasSigningKey: saslSigningKey != nil
 		)
 	}
 
-	func nextSASLMechanism(from offered: [String]) -> String? {
+	/// How far the open connection vouches for the server, in the terms
+	/// ``permitsCredentialsInClear`` and the consent alert already use.
+	var saslTransportAssurance: SASLTransportAssurance {
+		guard isSecured else {
+			return .plaintext(clearCredentialsAllowed: permitsCredentialsInClear)
+		}
+		guard socket?.certificateAssurance == .unverified else {
+			return .verifiedTLS
+		}
+		return .unverifiedTLS(consented: hasCredentialConsent, mayAsk: mayAskToSendCredentials)
+	}
+
+	func saslAvailability(of mechanism: SASLMechanism) -> SASLAvailability {
+		SASLPolicy.availability(
+			of: mechanism,
+			inventory: saslCredentialInventory,
+			transport: saslTransportAssurance,
+			withholdsAccountCredentials: sessionCredentials.withholdsAccountCredentials
+		)
+	}
+
+	private var supportedSASLMechanisms: [SASLMechanism] {
+		guard config.usesSASL else { return [] }
+		return SASLPolicy.supportedMechanisms(
+			inventory: saslCredentialInventory,
+			transport: saslTransportAssurance,
+			withholdsAccountCredentials: sessionCredentials.withholdsAccountCredentials,
+			preferred: config.saslMechanismPreference,
+			onlyPreferred: config.saslUsesOnlyPreferredMechanism
+		)
+	}
+
+	func nextSASLMechanism(from offered: [String]) -> SASLMechanism? {
 		SASLPolicy.nextMechanism(
 			from: supportedSASLMechanisms,
 			offered: offered,
@@ -88,7 +118,7 @@ extension ServerSession {
 
 	private func sendSASLIdentificationInformation(forServerData serverData: String) {
 		switch sasl.mechanism {
-		case "PLAIN":
+		case .plain:
 			guard permitsCredentialsInClear else {
 				holdSASLPlainForConsent(serverData: serverData)
 				return
@@ -104,13 +134,13 @@ extension ServerSession {
 				return
 			}
 			sendSASLPayloadInChunks("\(username)\0\(username)\0\(password)")
-		case "EXTERNAL":
+		case .external:
 			sendCapabilityAuthenticate("+")
-		case SCRAMClient.mechanismName:
+		case .scramSHA256:
 			sendSASLScramInformation(forServerData: serverData)
-		case ECDSAChallengeClient.mechanismName:
+		case .ecdsaNIST256PChallenge:
 			sendSASLECDSAInformation(forServerData: serverData)
-		default:
+		case nil:
 			break
 		}
 	}
@@ -128,7 +158,7 @@ extension ServerSession {
 		}
 		sessionCredentials.reportedWithheldCredentials = true
 		askToSendCredentials(sent: { session in
-			guard session.isCapabilityEnabled(.isInSASLNegotiation), session.sasl.mechanism == "PLAIN" else { return }
+			guard session.isCapabilityEnabled(.isInSASLNegotiation), session.sasl.mechanism == .plain else { return }
 			session.sendSASLIdentificationInformation(forServerData: serverData)
 		}, declined: { session in
 			session.abortSASLNegotiation(reason: ConnectionSafetyStrings.Credentials.withheldUnverifiedCertificate)
@@ -245,8 +275,8 @@ extension ServerSession {
 	 turn it away. */
 	func scramMutualAuthenticationIsSatisfied() -> Bool {
 		guard isCapabilityEnabled(.isIdentifiedWithSASL) == false,
-		      isCapabilityEnabled(.isInSASLNegotiation), let mechanism = sasl.mechanism,
-		      mechanism.caseInsensitiveCompare(SCRAMClient.mechanismName) == .orderedSame
+		      isCapabilityEnabled(.isInSASLNegotiation),
+		      sasl.mechanism?.credential == .passwordProof
 		else {
 			return true
 		}
@@ -315,11 +345,7 @@ extension ServerSession {
 	}
 
 	func retrySASLNegotiation(withMechanisms mechanisms: [String]) -> Bool {
-		if let mechanism = sasl.mechanism,
-		   sasl.triedMechanisms.contains(where: {
-		   	$0.caseInsensitiveCompare(mechanism) == .orderedSame
-		   }) == false
-		{
+		if let mechanism = sasl.mechanism, sasl.triedMechanisms.contains(mechanism) == false {
 			sasl.triedMechanisms.append(mechanism)
 		}
 
@@ -336,7 +362,7 @@ extension ServerSession {
 		sasl.mechanism = mechanism
 		sasl.offeredMechanisms = offered
 		startSASLTimeoutTimer()
-		sendCapabilityAuthenticate(mechanism)
+		sendCapabilityAuthenticate(mechanism.wireName)
 
 		return true
 	}
@@ -351,7 +377,7 @@ extension ServerSession {
 
 		enableCapability(.isInSASLNegotiation)
 		startSASLTimeoutTimer()
-		sendCapabilityAuthenticate(mechanism)
+		sendCapabilityAuthenticate(mechanism.wireName)
 
 		return true
 	}

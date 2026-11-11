@@ -21,9 +21,12 @@ enum ECDSAChallengeExchange {
  refused, and the payload waiting to be answered. It is a value the session
  owns: the exchange is per connection and is thrown away whole on a reset. */
 struct SASLSession {
+	/// Raw, because sasl-3.2 has clients tolerate names they do not know.
 	var offeredMechanisms: [String]?
-	var mechanism: String?
-	var triedMechanisms: [String] = []
+	var mechanism: SASLMechanism?
+	var triedMechanisms: [SASLMechanism] = []
+	/// The mechanism of the last exchange that succeeded on this connection.
+	var lastAuthenticatedMechanism: SASLMechanism?
 	var incomingPayload: String?
 	var ecdsaExchange: ECDSAChallengeExchange?
 	var scramTask: Task<Void, Never>?

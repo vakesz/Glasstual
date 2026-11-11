@@ -235,7 +235,7 @@ struct ServerSessionSCRAMMutualAuthenticationTests {
 	}
 
 	/// A session mid-exchange: the check only guards a SASL negotiation in flight.
-	private func session(mechanism: String?, scram: SCRAMClient?) -> TestServerSession {
+	private func session(mechanism: SASLMechanism?, scram: SCRAMClient?) -> TestServerSession {
 		let session = TestServerSession()
 		session.enableCapability(.isInSASLNegotiation)
 		session.sasl.mechanism = mechanism
@@ -246,8 +246,8 @@ struct ServerSessionSCRAMMutualAuthenticationTests {
 	@Test
 	func nonSCRAMMechanismsDoNotRequireAServerSignature() {
 		#expect(session(mechanism: nil, scram: nil).scramMutualAuthenticationIsSatisfied())
-		#expect(session(mechanism: "PLAIN", scram: nil).scramMutualAuthenticationIsSatisfied())
-		#expect(session(mechanism: "EXTERNAL", scram: nil).scramMutualAuthenticationIsSatisfied())
+		#expect(session(mechanism: .plain, scram: nil).scramMutualAuthenticationIsSatisfied())
+		#expect(session(mechanism: .external, scram: nil).scramMutualAuthenticationIsSatisfied())
 	}
 
 	/// A server that skips `server-final-message` and jumps straight to
@@ -255,7 +255,7 @@ struct ServerSessionSCRAMMutualAuthenticationTests {
 	@Test
 	func scramWithoutAVerifiedServerFinalMessageIsNotSatisfied() {
 		let scram = SCRAMClient(username: "user", password: "pencil")
-		let session = session(mechanism: SCRAMClient.mechanismName, scram: scram)
+		let session = session(mechanism: .scramSHA256, scram: scram)
 
 		#expect(session.scramMutualAuthenticationIsSatisfied() == false)
 
@@ -274,7 +274,7 @@ struct ServerSessionSCRAMMutualAuthenticationTests {
 		)
 		try scram.verifyServerFinalMessage("v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=")
 
-		let session = session(mechanism: SCRAMClient.mechanismName, scram: scram)
+		let session = session(mechanism: .scramSHA256, scram: scram)
 
 		#expect(session.scramMutualAuthenticationIsSatisfied())
 	}

@@ -243,7 +243,8 @@ nonisolated enum SettingsSessionArchive {
 		case .conversationList: .records(.channel)
 		case .highlightList: .records(.highlight)
 		case .ignoreList: .records(.ignore)
-		case .usesSASL, .saslAuthenticationDisableExternalMechanism, .sendAuthenticationRequestsToUserServ,
+		case .usesSASL, .saslUsesOnlyPreferredMechanism, .saslAuthenticationDisableExternalMechanism,
+		     .sendAuthenticationRequestsToUserServ,
 		     .connectionPrefersIPv4,
 		     .validateServerCertificateChain, .autoConnect, .autoReconnect, .autoSleepModeDisconnect,
 		     .performDisconnectOnReachabilityChange, .performPongTimer, .performDisconnectOnPongTimer,

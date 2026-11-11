@@ -32,8 +32,6 @@ nonisolated enum ECDSAChallengeError: Error, Equatable, Sendable {
  those servers reject. The signature goes out DER-encoded, which is what
  `ecdsatool sign` prints and the servers decode. */
 nonisolated struct ECDSAChallengeClient: Sendable {
-	static let mechanismName = "ECDSA-NIST256P-CHALLENGE"
-
 	/// The length of the challenge the mechanism defines, which is also the
 	/// size of the digest a P-256 signature covers.
 	static let challengeLength = 32

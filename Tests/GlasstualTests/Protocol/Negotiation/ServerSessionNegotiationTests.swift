@@ -146,7 +146,7 @@ struct ServerSessionNegotiationTests {
 		let session = makeSession(configuration: ["nickname": "me"], nicknamePassword: "secret")
 
 		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
-		#expect(session.sasl.mechanism == "SCRAM-SHA-256")
+		#expect(session.sasl.mechanism == .scramSHA256)
 	}
 
 	@Test("PLAIN is chosen when SCRAM is not offered")
@@ -154,7 +154,7 @@ struct ServerSessionNegotiationTests {
 		let session = makeSession(configuration: ["nickname": "me"], nicknamePassword: "secret")
 
 		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN"]))
-		#expect(session.sasl.mechanism == "PLAIN")
+		#expect(session.sasl.mechanism == .plain)
 	}
 
 	@Test("A retry moves to the next mechanism and never repeats one")
@@ -162,10 +162,10 @@ struct ServerSessionNegotiationTests {
 		let session = makeSession(configuration: ["nickname": "me"], nicknamePassword: "secret")
 		_ = session.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"])
 
-		#expect(session.sasl.mechanism == "SCRAM-SHA-256")
+		#expect(session.sasl.mechanism == .scramSHA256)
 		#expect(session.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
-		#expect(session.sasl.mechanism == "PLAIN")
-		#expect(session.sasl.triedMechanisms.contains("SCRAM-SHA-256"))
+		#expect(session.sasl.mechanism == .plain)
+		#expect(session.sasl.triedMechanisms.contains(.scramSHA256))
 		#expect(session.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == false)
 	}
 
@@ -501,7 +501,7 @@ struct ServerSessionNegotiationTests {
 
 		let chosen = session.sasl.mechanism
 
-		#expect(chosen == SCRAMClient.mechanismName)
+		#expect(chosen == .scramSHA256)
 
 		try session.handleCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * NEW :sasl=PLAIN",
@@ -528,12 +528,12 @@ struct ServerSessionNegotiationTests {
 			on: session
 		))
 		try session.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * ACK :sasl", on: session))
-		try #require(session.sasl.mechanism == "PLAIN")
+		try #require(session.sasl.mechanism == .plain)
 
 		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: session)
 
-		#expect(session.sasl.mechanism == SCRAMClient.mechanismName)
-		#expect(sentLines(of: session).last == "AUTHENTICATE \(SCRAMClient.mechanismName)")
+		#expect(session.sasl.mechanism == .scramSHA256)
+		#expect(sentLines(of: session).last == "AUTHENTICATE SCRAM-SHA-256")
 		#expect(session.isCapabilityEnabled(.isInSASLNegotiation))
 		#expect(capabilityCommands(of: session).contains("END") == false)
 
@@ -549,7 +549,7 @@ struct ServerSessionNegotiationTests {
 	@Test("A 900 after a failed SCRAM exchange confirms the account")
 	func loggedInAfterFailedSCRAMIsBelieved() throws {
 		let session = makeSession(
-			configuration: ["nickname": "me", "usesSASL": true, "saslMechanismPreference": SCRAMClient.mechanismName],
+			configuration: ["nickname": "me", "usesSASL": true, "saslMechanismPreference": "SCRAM-SHA-256"],
 			nicknamePassword: "secret"
 		)
 		defer { session.stopAllTimers() }
@@ -613,7 +613,7 @@ struct ServerSessionNegotiationTests {
 
 		#expect(capabilityCommands(of: session) == (serverPrefersTLS ? ["END"] : ["REQ sasl"]))
 		#expect(session.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
-		#expect(session.sasl.mechanism == SCRAMClient.mechanismName)
+		#expect(session.sasl.mechanism == .scramSHA256)
 		#expect(session.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == (serverPrefersTLS == false))
 		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
 		#expect(bodies.contains(ConnectionSafetyStrings.Credentials.withheldOverPlaintext) == serverPrefersTLS)

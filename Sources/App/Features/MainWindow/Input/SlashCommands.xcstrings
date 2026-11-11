@@ -1,6 +1,150 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "description-sasl": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or change how SASL signs in"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A SASL-bejelentkezés megjelenítése vagy módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASL-Anmeldung anzeigen oder ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar o cambiar cómo inicia sesión SASL"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher ou modifier la connexion SASL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASLのサインイン方法を表示または変更"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar ou alterar como o SASL inicia sessão"
+          }
+        }
+      }
+    },
+    "syntax-sasl-status-mechanism": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <name | automatic> [only]]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <név | automatic> [only]]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <Name | automatic> [only]]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <nombre | automatic> [only]]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <nom | automatic> [only]]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <名前 | automatic> [only]]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[status | mechanism <nome | automatic> [only]]"
+          }
+        }
+      }
+    },
+    "hint-sasl-status-mechanism": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status lists the account and each mechanism. mechanism sets which one signs in first; only stops fallback."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A status kilistázza a fiókot és a mechanizmusokat. A mechanism beállítja, melyik jelentkezik be először; az only megakadályozza a tartalékmechanizmusokat."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status zeigt das Konto und jeden Mechanismus. mechanism legt fest, welcher sich zuerst anmeldet; only verhindert das Ausweichen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status muestra la cuenta y cada mecanismo. mechanism define cuál inicia sesión primero; only impide recurrir a otros."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status affiche le compte et chaque mécanisme. mechanism choisit celui qui se connecte en premier ; only empêche le repli."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "statusはアカウントと各メカニズムを表示します。mechanismは最初にサインインするメカニズムを設定し、onlyは代替を使わないようにします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status mostra a conta e cada mecanismo. mechanism define qual inicia sessão primeiro; only impede o recurso a outros."
+          }
+        }
+      }
+    },
     "command-suggestions": {
       "comment": "Slash-command suggestions above the input field. Keyboard keys name their action.",
       "extractionState": "manual",

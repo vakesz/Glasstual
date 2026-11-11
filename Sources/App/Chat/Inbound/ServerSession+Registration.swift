@@ -42,6 +42,7 @@ extension ServerSession {
 		sasl.scramSession = nil
 		sasl.incomingPayload = nil
 		sasl.triedMechanisms.removeAll()
+		sasl.lastAuthenticatedMechanism = nil
 		failPendingDeliveriesForDisconnect()
 		SessionCapabilitiesDidChange(subject: self).post()
 	}

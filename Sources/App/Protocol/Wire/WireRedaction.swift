@@ -21,9 +21,7 @@ nonisolated enum WireRedaction {
 	 secret — masking it left a traffic log unable to say which mechanism the
 	 login failed under, which is the first thing anyone reading one wants. Only
 	 the names this session can send are spared; anything else is a payload. */
-	private static let saslMechanismNames: Set<String> = [
-		"EXTERNAL", "PLAIN", SCRAMClient.mechanismName, ECDSAChallengeClient.mechanismName,
-	]
+	private static let saslMechanismNames = Set(SASLMechanism.allCases.map(\.wireName))
 	private static let sensitiveServiceVerbs: Set<String> = [
 		"AUTH", "CONFIRM", "GHOST", "GROUP", "IDENTIFY", "LOGIN", "PASSWD", "PASSWORD", "RECOVER",
 		"REGAIN", "REGISTER", "RELEASE", "RESETPASS", "SENDPASS", "SET", "SETPASS", "SIDENTIFY",

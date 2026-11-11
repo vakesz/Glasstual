@@ -20,6 +20,7 @@ extension ServerSession {
 				abortUnverifiedSASLSuccess()
 				return
 			}
+			identity.account = message.params[2]
 			noteAccountAuthenticated()
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 3)
@@ -27,6 +28,8 @@ extension ServerSession {
 		case .loggedout:
 			guard message.params.count == 3 else { return }
 			resetSASLNegotiation()
+			identity.account = nil
+			sasl.lastAuthenticatedMechanism = nil
 			if startup.authentication == .confirmed {
 				startup.authentication = .pending
 			}
@@ -99,6 +102,7 @@ extension ServerSession {
 			return
 		}
 		if !failed {
+			sasl.lastAuthenticatedMechanism = sasl.mechanism
 			enableCapability(.isIdentifiedWithSASL)
 			noteAccountAuthenticated()
 		}

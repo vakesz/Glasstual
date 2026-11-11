@@ -88,6 +88,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case redact
 	case rejoin
 	case remove
+	case sasl
 	case server
 	case setcolor
 	case setname
@@ -194,7 +195,7 @@ extension LocalCommand {
 		case .aquote, .araw, .quote, .raw, .cap, .caps, .debug, .echo: .raw
 		case .ison, .names, .recv, .redact, .setname, .wallops: .request
 		case .gline, .gzline, .shun, .tempshun, .zline, .kill: .operatorControl
-		case .conn, .back, .away, .autojoin, .nick, .quit, .server, .sslcontext: .session
+		case .conn, .back, .away, .autojoin, .nick, .quit, .sasl, .server, .sslcontext: .session
 		case .mute, .unmute, .notifybubble, .notifysound: .notification
 		case .chathistory, .umode, .monitor, .watch, .silence: .capability
 		case .who, .whois, .weights, .myversion, .tage, .lagcheck, .mylag: .information
@@ -292,6 +293,7 @@ extension LocalCommand {
 		.recv: "<input>",
 		.redact: "[message id [reason]]",
 		.remove: "[target]",
+		.sasl: "[status | mechanism <name | automatic> [only]]",
 		.server: "<address> [[+] port] [password]",
 		.setcolor: "<nickname>",
 		.setname: "<real name>",

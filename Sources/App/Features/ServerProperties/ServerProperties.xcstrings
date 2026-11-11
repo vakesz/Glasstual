@@ -1,6 +1,678 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "authentication-header" : {
+      "comment" : "Server Properties ▸ Identity: header of the section holding the account password and SASL options.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hitelesítés"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentifizierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentification"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "認証"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticação"
+          }
+        }
+      }
+    },
+    "sasl-mechanism" : {
+      "comment" : "Server Properties ▸ Identity: label of the menu choosing which SASL mechanism signs in first.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL Mechanism"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL-mechanizmus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL-Mechanismus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mecanismo SASL"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mécanisme SASL"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASLメカニズム"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mecanismo SASL"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-automatic" : {
+      "comment" : "Server Properties ▸ Identity: SASL mechanism menu item that lets Glasstual choose the strongest mechanism.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatikus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automático"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatique"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automático"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-external-title" : {
+      "comment" : "Server Properties ▸ Identity: SASL mechanism menu item for EXTERNAL, which signs in with the TLS client certificate. The wire name follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client Certificate"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ügyféltanúsítvány"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clientzertifikat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificado de cliente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificat client"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クライアント証明書"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificado de cliente"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-ecdsa-title" : {
+      "comment" : "Server Properties ▸ Identity: SASL mechanism menu item for ECDSA-NIST256P-CHALLENGE, which signs in with a key. The wire name follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing Key"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aláírókulcs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaturschlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de firma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé de signature"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "署名鍵"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chave de assinatura"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-scram-title" : {
+      "comment" : "Server Properties ▸ Identity: SASL mechanism menu item for SCRAM-SHA-256, which proves the password without sending it. The wire name follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password Proof"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jelszóigazolás"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwortnachweis"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preuve de mot de passe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パスワード証明"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova de senha"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-plain-title" : {
+      "comment" : "Server Properties ▸ Identity: SASL mechanism menu item for PLAIN, which sends the password. The wire name follows it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jelszó"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mot de passe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パスワード"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senha"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-only" : {
+      "comment" : "Server Properties ▸ Identity: switch that stops SASL from falling back to other mechanisms when the chosen one fails.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Only This Mechanism"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csak ez a mechanizmus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur diesen Mechanismus verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar solo este mecanismo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser uniquement ce mécanisme"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このメカニズムのみを使用"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar apenas este mecanismo"
+          }
+        }
+      }
+    },
+    "sasl-mechanism-missing-certificate" : {
+      "comment" : "Server Properties ▸ Identity: warning when the chosen SASL mechanism needs a client certificate and none is set.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No client certificate is set for this server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ehhez a kiszolgálóhoz nincs ügyféltanúsítvány beállítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für diesen Server ist kein Clientzertifikat festgelegt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún certificado de cliente configurado para este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun certificat client n’est défini pour ce serveur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバにはクライアント証明書が設定されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum certificado de cliente está definido para este servidor."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-external-disabled" : {
+      "comment" : "Server Properties ▸ Identity: warning when the chosen SASL mechanism is EXTERNAL but the automatic EXTERNAL response is turned off for the server.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signing in with the client certificate is turned off for this server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az ügyféltanúsítvánnyal való bejelentkezés ki van kapcsolva ennél a kiszolgálónál."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung mit dem Clientzertifikat ist für diesen Server ausgeschaltet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El inicio de sesión con el certificado de cliente está desactivado para este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion avec le certificat client est désactivée pour ce serveur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバでは、クライアント証明書によるサインインがオフになっています。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O início de sessão com o certificado de cliente está desativado para este servidor."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-missing-signing-key" : {
+      "comment" : "Server Properties ▸ Identity: warning when the chosen SASL mechanism needs a signing key and none is stored.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No signing key is stored for this server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ehhez a kiszolgálóhoz nincs aláírókulcs tárolva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für diesen Server ist kein Signaturschlüssel gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ninguna clave de firma guardada para este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune clé de signature n’est enregistrée pour ce serveur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバには署名鍵が保存されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma chave de assinatura está armazenada para este servidor."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-missing-password" : {
+      "comment" : "Server Properties ▸ Identity: warning when the chosen SASL mechanism needs the account password and the field is empty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No password is set for this server."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ehhez a kiszolgálóhoz nincs jelszó beállítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für diesen Server ist kein Passwort festgelegt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ninguna contraseña configurada para este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun mot de passe n’est défini pour ce serveur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバにはパスワードが設定されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma senha está definida para este servidor."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-missing-fallback" : {
+      "comment" : "Server Properties ▸ Identity: follows a missing-credential warning when SASL may fall back to other mechanisms.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual will try other mechanisms first."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Glasstual először más mechanizmusokat próbál meg."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual versucht zuerst andere Mechanismen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual probará primero otros mecanismos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual essaiera d’abord d’autres mécanismes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstualは先に他のメカニズムを試します。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Glasstual tentará outros mecanismos primeiro."
+          }
+        }
+      }
+    },
+    "sasl-mechanism-missing-only" : {
+      "comment" : "Server Properties ▸ Identity: follows a missing-credential warning when Use Only This Mechanism is on. Quote the switch name as translated.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL won’t sign in until you add it or turn off Use Only This Mechanism."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL addig nem jelentkezik be, amíg meg nem adja, vagy ki nem kapcsolja a Csak ez a mechanizmus beállítást."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL meldet sich erst an, wenn Sie es hinzufügen oder „Nur diesen Mechanismus verwenden“ ausschalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL no iniciará sesión hasta que lo añada o desactive Usar solo este mecanismo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ne se connectera pas tant que vous ne l’aurez pas ajouté ou que vous n’aurez pas désactivé Utiliser uniquement ce mécanisme."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加するか「このメカニズムのみを使用」をオフにするまで、SASLはサインインしません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SASL não iniciará sessão até que você o adicione ou desative Usar apenas este mecanismo."
+          }
+        }
+      }
+    },
     "add-address-book-entry-button" : {
       "comment" : "Help tag and accessibility label for the menu button that adds an Address Book entry.",
       "extractionState" : "manual",

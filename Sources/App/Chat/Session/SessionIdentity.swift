@@ -8,4 +8,7 @@ struct SessionIdentity {
 	/// The user's own `nick!user@host`, as the server last reported it.
 	var hostmask: String?
 	var isIRCop = false
+	/// The services account the server last reported the session logged in to,
+	/// or `nil` while it is not logged in.
+	var account: String?
 }

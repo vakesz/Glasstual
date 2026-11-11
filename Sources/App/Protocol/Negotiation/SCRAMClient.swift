@@ -62,9 +62,6 @@ final class SCRAMClient {
 		case failed
 	}
 
-	/// The mechanism name as advertised in `sasl=` values and on the wire.
-	nonisolated static let mechanismName = "SCRAM-SHA-256"
-
 	private static let gs2Header = "n,,"
 	private static let minimumIterationCount = 4096
 
