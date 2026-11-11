@@ -88,6 +88,79 @@ nonisolated struct WebSocketFrameCodecTests {
 		#expect(events == [.close(code: 4000, reason: Data("bye".utf8)), .close(code: nil, reason: Data())])
 	}
 
+	@Test("Close codes a peer may send are accepted", arguments: [1000, 1001, 1003, 1007, 1011, 1014, 3000, 4999] as [UInt16])
+	func validCloseCodes(code: UInt16) throws {
+		var decoder = WebSocketFrameDecoder(maximumMessageSize: 1024)
+		let payload = Data([UInt8(code >> 8), UInt8(code & 0xFF)]) + Data("é".utf8)
+
+		#expect(try decoder.events(appending: Self.serverFrame(0x8, payload)) == [.close(code: code, reason: Data("é".utf8))])
+	}
+
+	static let invalidText: [(String, Data)] = [
+		("a lone continuation byte", serverFrame(0x1, Data([0x61, 0x80]))),
+		("a truncated sequence", serverFrame(0x1, Data([0x61, 0xC3]))),
+		("an encoded surrogate", serverFrame(0x1, Data([0xED, 0xA0, 0x80]))),
+		(
+			"fragments that end inside a sequence",
+			serverFrame(0x1, Data([0x61]), final: false) + serverFrame(0x0, Data([0xE2, 0x82]))
+		),
+	]
+
+	@Test("A text message that is not UTF-8 fails with invalid payload data", arguments: invalidText.indices)
+	func invalidTextIsRefused(index: Int) {
+		var decoder = WebSocketFrameDecoder(maximumMessageSize: 1024)
+		let (name, read) = Self.invalidText[index]
+
+		do {
+			_ = try decoder.events(appending: read)
+			Issue.record("\(name) was accepted")
+		} catch {
+			#expect(error.kind == .invalidPayloadData, "\(name)")
+		}
+	}
+
+	@Test("A character split across fragments is valid once the message is whole")
+	func characterSplitAcrossFragments() throws {
+		var decoder = WebSocketFrameDecoder(maximumMessageSize: 1024)
+		var read = Self.serverFrame(0x1, Data([0x61, 0xE2]), final: false)
+		read.append(Self.serverFrame(0x0, Data([0x82]), final: false))
+		read.append(Self.serverFrame(0x0, Data([0xAC])))
+
+		#expect(try decoder.events(appending: read) == [.message(Data("a€".utf8), .text)])
+	}
+
+	/** Each fragment used to copy everything gathered before it, so a message
+	 of one-byte fragments cost time in the square of their count. Eight times
+	 the fragments now costs about eight times the time; the square would be
+	 sixty-four. The best of three runs keeps a busy machine from deciding it. */
+	@Test("Reassembling many small fragments costs time in proportion to their number")
+	func fragmentReassemblyIsLinear() throws {
+		func duration(fragments count: Int) throws -> Duration {
+			var read = Self.serverFrame(0x2, Data([0x61]), final: false)
+			for _ in 2 ..< count {
+				read.append(Self.serverFrame(0x0, Data([0x61]), final: false))
+			}
+			read.append(Self.serverFrame(0x0, Data([0x61])))
+
+			var best = Duration.seconds(3600)
+			for _ in 0 ..< 3 {
+				var decoder = WebSocketFrameDecoder(maximumMessageSize: count)
+				var events: [WebSocketFrameEvent] = []
+				let elapsed = try ContinuousClock().measure {
+					events = try decoder.events(appending: read)
+				}
+				#expect(events == [.message(Data(repeating: 0x61, count: count), .binary)])
+				best = min(best, elapsed)
+			}
+			return best
+		}
+
+		let few = try duration(fragments: 1 << 15)
+		let many = try duration(fragments: 1 << 18)
+
+		#expect(many < few * 20, "8× the fragments took \(many / few)× the time")
+	}
+
 	@Test("Pings carry their payload and pongs are reported")
 	func controlFrames() throws {
 		var decoder = WebSocketFrameDecoder(maximumMessageSize: 1024)
@@ -109,7 +182,13 @@ nonisolated struct WebSocketFrameCodecTests {
 			serverFrame(0x1, Data("a".utf8), final: false) + serverFrame(0x1, Data("b".utf8))
 		),
 		("a one-byte close payload", serverFrame(0x8, Data([0x03]))),
-	]
+		("a close reason that is not UTF-8", serverFrame(0x8, Data([0x03, 0xE8, 0xC3, 0x28]))),
+	] + invalidCloseCodes.map { code in
+		("close code \(code)", serverFrame(0x8, Data([UInt8(code >> 8), UInt8(code & 0xFF)])))
+	}
+
+	/// Reserved, wire-forbidden (1005, 1006, 1015) and unassigned close codes.
+	static let invalidCloseCodes: [UInt16] = [0, 999, 1004, 1005, 1006, 1015, 1016, 2999, 5000, 0xFFFF]
 
 	@Test("Framing a client must refuse is a protocol violation", arguments: violations.indices)
 	func protocolViolations(index: Int) {

@@ -380,6 +380,78 @@ nonisolated struct WebSocketLoopbackTests {
 		#expect(pong.isMasked)
 	}
 
+	/** RFC 6455 §5.5.3 lets a client answer only the most recent ping, and a
+	 read packed with pings used to cost one awaited pong each. Answering the
+	 last of each read is enough; a thousand pings in a few reads get a few. */
+	@Test("A read packed with pings is answered with one pong, for the last of them")
+	@concurrent
+	func pingFloodIsAnsweredOnce() async throws {
+		let server = try LoopbackWebSocketServer(secure: false)
+		let port = try await server.start()
+		var harness = try WebSocketHostHarness(config: Self.config(port: port))
+		defer {
+			harness.finish()
+			Task { await server.stop() }
+		}
+
+		_ = try await harness.untilNegotiated()
+		var flood = Data()
+		for index in 0 ..< 1000 {
+			flood.append(LoopbackWebSocketFraming.serverFrame(0x9, Data("p\(index)".utf8)))
+		}
+		flood.append(LoopbackWebSocketFraming.text(":s 001 tester :after"))
+		try await server.send(flood)
+
+		_ = try await harness.lines(count: 1)
+		_ = try await server.frame { $0.opcode == 0xA && $0.payload == Data("p999".utf8) }
+
+		let pongs = await server.frames.filter { $0.opcode == 0xA }
+		#expect(pongs.count < 10, "\(pongs.count) pongs answered 1000 pings")
+	}
+
+	@Test("A close carrying a code a peer may not send fails the connection with 1002", arguments: [1005, 1006, 1015, 2000] as [UInt16])
+	@concurrent
+	func invalidCloseCodeIsAProtocolViolation(code: UInt16) async throws {
+		let server = try LoopbackWebSocketServer(secure: false)
+		let port = try await server.start()
+		var harness = try WebSocketHostHarness(config: Self.config(port: port))
+		defer {
+			harness.finish()
+			Task { await server.stop() }
+		}
+
+		_ = try await harness.untilNegotiated()
+		try await server.send(LoopbackWebSocketFraming.text("before") + LoopbackWebSocketFraming.close(code: code))
+
+		let outcome = try await harness.untilDisconnected()
+		#expect(outcome.lines == ["before"])
+		#expect(try #require(outcome.error).code == Int(ConnectionErrorCode.other.rawValue))
+		#expect(try await Self.closeCode(of: server.frame(where: Self.isClose)) == 1002)
+	}
+
+	@Test("A text message that is not UTF-8 fails the connection after the lines before it, with close code 1007")
+	@concurrent
+	func invalidTextFailsWithInvalidPayloadData() async throws {
+		let server = try LoopbackWebSocketServer(secure: false)
+		let port = try await server.start()
+		var harness = try WebSocketHostHarness(config: Self.config(port: port))
+		defer {
+			harness.finish()
+			Task { await server.stop() }
+		}
+
+		_ = try await harness.untilNegotiated()
+		try await server.send(
+			LoopbackWebSocketFraming.text("before")
+				+ LoopbackWebSocketFraming.serverFrame(0x1, Data("PRIVMSG #a :".utf8) + Data([0xC3, 0x28]))
+		)
+
+		let outcome = try await harness.untilDisconnected()
+		#expect(outcome.lines == ["before"])
+		#expect(try #require(outcome.error).code == Int(ConnectionErrorCode.other.rawValue))
+		#expect(try await Self.closeCode(of: server.frame(where: Self.isClose)) == 1007)
+	}
+
 	// MARK: - TLS
 
 	@Test("wss: the trust prompt guards the upgrade, and an accepted certificate reports what was negotiated")

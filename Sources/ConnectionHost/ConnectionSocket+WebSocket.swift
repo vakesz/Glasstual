@@ -33,23 +33,13 @@ struct WebSocketSession {
 		)
 		lines = WebSocketLineCodec(framing: framing, maximumLineLength: ConnectionSocket.maximumBufferedLineLength)
 	}
-
-	/// The frames one queued write goes out as, each with a fresh mask.
-	static func frames(for data: Data, framedBy lines: WebSocketLineCodec) -> Data {
-		lines.messages(fromQueued: data).reduce(into: Data()) { frames, message in
-			frames.append(WebSocketFrameEncoder.frame(
-				message.kind == .text ? .text : .binary,
-				payload: message.payload,
-				maskingKey: .random(in: .min ... .max)
-			))
-		}
-	}
 }
 
 /// Why the server's side of a WebSocket ended before the connection did.
 enum WebSocketEnding {
 	case closedByPeer(code: UInt16?, reason: Data)
 	case protocolViolation
+	case invalidPayloadData
 	case messageTooBig
 }
 
@@ -169,7 +159,9 @@ extension ConnectionSocket {
 	 ending it carried, if any.
 
 	 Lines that precede a fault or a close frame are the server's, and are
-	 delivered before the connection acts on what followed them. */
+	 delivered before the connection acts on what followed them. Only the last
+	 ping of a read is answered, as RFC 6455 §5.5.3 allows, so a read packed
+	 with pings costs one pong. */
 	private func deliverFrames(in data: Data, over connection: TransportConnection) async throws -> WebSocketEnding? {
 		guard data.isEmpty == false, var session = webSocket else { return nil }
 
@@ -180,12 +172,17 @@ extension ConnectionSocket {
 			frameEvents = try session.decoder.events(appending: data)
 		} catch {
 			frameEvents = error.completedEvents
-			ending = error.kind == .messageTooBig ? .messageTooBig : .protocolViolation
+			ending = switch error.kind {
+			case .messageTooBig: .messageTooBig
+			case .invalidPayloadData: .invalidPayloadData
+			case .protocolViolation: .protocolViolation
+			}
 		}
 
 		webSocket = session
 
 		var lines: [Data] = []
+		var lastPing: Data?
 
 		eventLoop: for event in frameEvents {
 			switch event {
@@ -203,11 +200,7 @@ extension ConnectionSocket {
 					break eventLoop
 				}
 			case let .ping(payload):
-				try await connection.send(WebSocketFrameEncoder.frame(
-					.pong,
-					payload: payload,
-					maskingKey: .random(in: .min ... .max)
-				))
+				lastPing = payload
 			case .pong:
 				continue
 			case let .close(code, reason):
@@ -215,6 +208,14 @@ extension ConnectionSocket {
 
 				break eventLoop
 			}
+		}
+
+		if let lastPing, webSocketCloseSent == false {
+			try await connection.send(WebSocketFrameEncoder.frame(
+				.pong,
+				payload: lastPing,
+				maskingKey: .random(in: .min ... .max)
+			))
 		}
 
 		if lines.isEmpty == false, disconnecting == false {
@@ -244,6 +245,10 @@ extension ConnectionSocket {
 			throw ConnectionError.webSocketClosed(code: code, reason: reason)
 		case .protocolViolation:
 			await sendCloseFrame(code: WebSocketCloseCode.protocolError, over: connection)
+
+			throw ConnectionError.other(message: String(localized: .ConnectionErrors.webSocketProtocolViolation))
+		case .invalidPayloadData:
+			await sendCloseFrame(code: WebSocketCloseCode.invalidFramePayloadData, over: connection)
 
 			throw ConnectionError.other(message: String(localized: .ConnectionErrors.webSocketProtocolViolation))
 		case .messageTooBig:

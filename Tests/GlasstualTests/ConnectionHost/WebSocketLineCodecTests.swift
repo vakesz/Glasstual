@@ -96,4 +96,15 @@ nonisolated struct WebSocketLineCodecTests {
 		#expect(text.map(\.payload) == [Self.bytes("PRIVMSG #a :\u{FFFD}")])
 		#expect(binary.map(\.payload) == [latin1.dropLast(2)])
 	}
+
+	/// RFC 6455 §5.5.1: once this side has sent its close frame, a line still
+	/// queued behind it must not go out as a data frame.
+	@Test("A queued write puts nothing on the wire after the close frame")
+	func nothingFollowsTheCloseFrame() {
+		let codec = Self.codec(.negotiated(.text))
+		let line = Self.bytes("PRIVMSG #a :late\r\n")
+
+		#expect(codec.frames(fromQueued: line, afterClose: false).isEmpty == false)
+		#expect(codec.frames(fromQueued: line, afterClose: true).isEmpty)
+	}
 }

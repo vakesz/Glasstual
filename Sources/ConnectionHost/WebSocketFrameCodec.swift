@@ -22,7 +22,20 @@ nonisolated enum WebSocketCloseCode {
 	static let normalClosure: UInt16 = 1000
 	static let goingAway: UInt16 = 1001
 	static let protocolError: UInt16 = 1002
+	static let invalidFramePayloadData: UInt16 = 1007
 	static let messageTooBig: UInt16 = 1009
+
+	/** Whether a peer may send `code` in a close frame.
+
+	 RFC 6455 §7.4 reserves 1004, forbids 1005, 1006 and 1015 on the wire, and
+	 leaves the rest below 3000 to the IANA registry, whose assignments stop at
+	 1014. 3000 through 4999 are for libraries and applications. */
+	static func isValidOnTheWire(_ code: UInt16) -> Bool {
+		switch code {
+		case 1000 ... 1003, 1007 ... 1014, 3000 ... 4999: true
+		default: false
+		}
+	}
 
 	/// A control frame carries at most 125 bytes, two of them the code.
 	static let maximumReasonLength = 123
@@ -52,6 +65,8 @@ nonisolated struct WebSocketFrameError: Error, Sendable {
 	nonisolated enum Kind: Error, Sendable, Equatable {
 		/// A message grew past the ceiling.
 		case messageTooBig
+		/// A text message that is not UTF-8, which RFC 6455 §8.1 fails with 1007.
+		case invalidPayloadData
 		/// Anything else RFC 6455 says a client must fail the connection for.
 		case protocolViolation
 	}
@@ -70,7 +85,8 @@ nonisolated struct WebSocketFrameError: Error, Sendable {
  Servers never mask, and a masked frame is a protocol error, as are reserved
  bits, unknown opcodes, a fragmented or oversized control frame, and a
  continuation that continues nothing. No extension is ever negotiated, so no
- reserved bit has a meaning. */
+ reserved bit has a meaning. A close frame must carry a code a peer may send
+ and a UTF-8 reason, and a text message must be UTF-8. */
 nonisolated struct WebSocketFrameDecoder: Sendable {
 	private let maximumMessageSize: Int
 	private var pending = Data()
@@ -169,19 +185,16 @@ nonisolated struct WebSocketFrameDecoder: Sendable {
 	private mutating func assemble(_ frame: Frame) throws(WebSocketFrameError.Kind) -> WebSocketFrameEvent? {
 		switch frame.opcode {
 		case .continuation:
-			guard var message = fragments else { throw .protocolViolation }
+			guard fragments != nil else { throw .protocolViolation }
 
-			message.payload.append(frame.payload)
+			/* Appended where it is held: a copy taken out first shares the
+			 buffer, and the append then copies everything gathered so far,
+			 once per fragment. */
+			fragments?.payload.append(frame.payload)
 
-			guard frame.isFinal else {
-				fragments = message
+			guard frame.isFinal, let message = fragments.take() else { return nil }
 
-				return nil
-			}
-
-			fragments = nil
-
-			return .message(message.payload, message.kind)
+			return try Self.complete(message.payload, kind: message.kind)
 		case .text, .binary:
 			guard fragments == nil else { throw .protocolViolation }
 
@@ -193,7 +206,7 @@ nonisolated struct WebSocketFrameDecoder: Sendable {
 				return nil
 			}
 
-			return .message(frame.payload, kind)
+			return try Self.complete(frame.payload, kind: kind)
 		case .close:
 			return try Self.close(from: frame.payload)
 		case .ping:
@@ -201,6 +214,13 @@ nonisolated struct WebSocketFrameDecoder: Sendable {
 		case .pong:
 			return .pong
 		}
+	}
+
+	/// A whole message, once a text one is known to be UTF-8.
+	private static func complete(_ payload: Data, kind: WebSocketFrameKind) throws(WebSocketFrameError.Kind) -> WebSocketFrameEvent {
+		guard kind == .binary || String(validating: payload, as: UTF8.self) != nil else { throw .invalidPayloadData }
+
+		return .message(payload, kind)
 	}
 
 	private static func close(from payload: Data) throws(WebSocketFrameError.Kind) -> WebSocketFrameEvent {
@@ -212,8 +232,13 @@ nonisolated struct WebSocketFrameDecoder: Sendable {
 
 		let start = payload.startIndex
 		let code = UInt16(payload[start]) << 8 | UInt16(payload[start + 1])
+		let reason = Data(payload[(start + 2)...])
 
-		return .close(code: code, reason: Data(payload[(start + 2)...]))
+		guard WebSocketCloseCode.isValidOnTheWire(code), String(validating: reason, as: UTF8.self) != nil else {
+			throw .protocolViolation
+		}
+
+		return .close(code: code, reason: reason)
 	}
 }
 

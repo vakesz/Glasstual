@@ -118,6 +118,22 @@ nonisolated struct WebSocketLineCodec: Sendable {
 		}
 	}
 
+	/** The client frames one queued write goes out as, each with a fresh mask.
+
+	 None once this side's close frame has been sent: RFC 6455 §5.5.1 allows
+	 no data frame after it. */
+	func frames(fromQueued data: Data, afterClose closeSent: Bool) -> Data {
+		guard closeSent == false else { return Data() }
+
+		return messages(fromQueued: data).reduce(into: Data()) { frames, message in
+			frames.append(WebSocketFrameEncoder.frame(
+				message.kind == .text ? .text : .binary,
+				payload: message.payload,
+				maskingKey: .random(in: .min ... .max)
+			))
+		}
+	}
+
 	/// The messages one queued write becomes, in order.
 	func messages(fromQueued data: Data) -> [WebSocketOutboundMessage] {
 		let kind: WebSocketFrameKind = framing == .negotiated(.binary) ? .binary : .text

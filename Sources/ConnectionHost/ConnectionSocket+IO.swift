@@ -97,7 +97,9 @@ extension ConnectionSocket {
 	func startWriting(_ data: Data, over connection: TransportConnection) async {
 		events.yield(.willSend(data))
 
-		let payload = webSocket.map { WebSocketSession.frames(for: data, framedBy: $0.lines) } ?? data
+		/* RFC 6455 §5.5.1: nothing follows this side's close frame. A line
+		 queued behind it is dropped, and reported sent like any other. */
+		let payload = webSocket.map { $0.lines.frames(fromQueued: data, afterClose: webSocketCloseSent) } ?? data
 
 		do {
 			if payload.isEmpty == false {
