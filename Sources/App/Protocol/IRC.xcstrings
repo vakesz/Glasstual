@@ -17212,6 +17212,1158 @@
           }
         }
       }
+    },
+    "xdcc-pack-label": {
+      "comment": "XDCC messages. Names one pack of an XDCC bot inside other XDCC messages. %@ is the pack number.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pack #%@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%@ csomag"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paket #%@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paquete #%@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pack #%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パック #%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pacote #%@"
+          }
+        }
+      }
+    },
+    "xdcc-pack-label-with-filename": {
+      "comment": "XDCC messages. Names one pack of an XDCC bot and its file inside other XDCC messages. %1$@ is the pack number and %2$@ the file name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pack #%1$@ (%2$@)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%1$@ csomag (%2$@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paket #%1$@ (%2$@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paquete #%1$@ (%2$@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pack #%1$@ (%2$@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パック #%1$@（%2$@）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pacote #%1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "xdcc-list-label": {
+      "comment": "XDCC messages. Names the list of packs an XDCC bot sends as a file, inside other XDCC messages.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the pack list"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a csomaglista"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "die Paketliste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la lista de paquetes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la liste des packs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パック一覧"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a lista de pacotes"
+          }
+        }
+      }
+    },
+    "xdcc-requested": {
+      "comment": "XDCC messages. Printed when this user requests something from an XDCC bot. %1$@ is what was requested, such as pack #5, and %2$@ the bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requested %1$@ from %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérve: %1$@, tőle: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ bei %2$@ angefordert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se solicitó %1$@ a %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ demandé à %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@に%1$@をリクエストしました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ solicitado a %2$@"
+          }
+        }
+      }
+    },
+    "xdcc-asked-for-info": {
+      "comment": "XDCC messages. Printed when this user asks an XDCC bot about a pack. %1$@ is the bot's nickname and %2$@ the pack, such as pack #5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked %1$@ about %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Információ kérve tőle: %1$@, erről: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nach %2$@ gefragt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se preguntó a %1$@ por %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informations sur %2$@ demandées à %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@に%2$@について問い合わせました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ foi consultado sobre %2$@"
+          }
+        }
+      }
+    },
+    "xdcc-queued-at-position": {
+      "comment": "XDCC messages. Printed when an XDCC bot queues a request. %1$@ is the bot's nickname, %2$@ the pack, such as pack #5, and %3$@ the position in the queue.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ queued %2$@ at position %3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sorba állította ezt: %2$@, %3$@. hely"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat %2$@ an Position %3$@ eingereiht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ puso %2$@ en la cola, posición %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a mis %2$@ en file d’attente, position %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@が%2$@をキューの%3$@番目に追加しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ colocou %2$@ na fila, posição %3$@"
+          }
+        }
+      }
+    },
+    "xdcc-queued": {
+      "comment": "XDCC messages. Printed when an XDCC bot queues a request without saying where. %1$@ is the bot's nickname and %2$@ the pack, such as pack #5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ queued %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sorba állította ezt: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat %2$@ eingereiht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ puso %2$@ en la cola"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a mis %2$@ en file d’attente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@が%2$@をキューに追加しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ colocou %2$@ na fila"
+          }
+        }
+      }
+    },
+    "xdcc-invalid-pack": {
+      "comment": "XDCC messages. Printed when an XDCC bot says a requested pack does not exist. %1$@ is the bot's nickname and %2$@ the pack, such as pack #5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ says %2$@ does not exist. The request was dropped."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ szerint ez nem létezik: %2$@. A kérés törölve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut %1$@ gibt es %2$@ nicht. Die Anforderung wurde verworfen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ dice que %2$@ no existe. Se descartó la solicitud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selon %1$@, %2$@ n’existe pas. La demande a été abandonnée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@によると%2$@は存在しません。リクエストを破棄しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ diz que %2$@ não existe. A solicitação foi descartada."
+          }
+        }
+      }
+    },
+    "xdcc-denied": {
+      "comment": "XDCC messages. Printed when an XDCC bot refuses a request. %1$@ is the bot's nickname, %2$@ the pack, such as pack #5, and %3$@ the reason the bot gave.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused the request for %2$@: %3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ elutasította a kérést erre: %2$@: %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat die Anforderung von %2$@ abgelehnt: %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ rechazó la solicitud de %2$@: %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a refusé la demande de %2$@ : %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@が%2$@のリクエストを拒否しました: %3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ recusou a solicitação de %2$@: %3$@"
+          }
+        }
+      }
+    },
+    "xdcc-offer-matched": {
+      "comment": "XDCC messages. Printed when an XDCC bot's file offer answers this user's request. %1$@ is the bot's nickname and %2$@ what was requested, such as pack #5.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is sending %2$@ you requested"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ küldi a kért elemet: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sendet das angeforderte %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ está enviando %2$@, que solicitaste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ envoie %2$@ que vous avez demandé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@がリクエストした%2$@を送信しています"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ está enviando %2$@ que você solicitou"
+          }
+        }
+      }
+    },
+    "xdcc-ignored-by-setting": {
+      "comment": "XDCC messages. Printed when an XDCC bot's offer answers this user's request but file transfer requests are set to Ignore. %1$@ is what was requested, such as pack #5, and %2$@ the bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ from %2$@ was not listed because file transfers are set to Ignore."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ ajánlata (%1$@) nem került a listára, mert a fájlátvitelek Mellőzés értékre vannak állítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von %2$@ wurde nicht aufgeführt, weil Dateiübertragungen auf „Ignorieren“ gesetzt sind."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@ no se mostró porque las transferencias están configuradas para ignorarse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@ n’a pas été listé, car les transferts de fichiers sont réglés sur Ignorer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル転送が「無視」に設定されているため、%2$@の%1$@は一覧に表示されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@ não foi listado porque as transferências estão definidas para Ignorar."
+          }
+        }
+      }
+    },
+    "xdcc-expired": {
+      "comment": "XDCC messages. Printed when a request to an XDCC bot waited too long without an offer. %1$@ is what was requested, such as pack #5, and %2$@ the bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The request for %1$@ from %2$@ expired without an offer."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kérés (%1$@, tőle: %2$@) ajánlat nélkül lejárt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anforderung von %1$@ bei %2$@ ist ohne Angebot abgelaufen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud de %1$@ a %2$@ caducó sin oferta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La demande de %1$@ à %2$@ a expiré sans offre."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@への%1$@のリクエストは、オファーがないまま期限切れになりました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A solicitação de %1$@ a %2$@ expirou sem oferta."
+          }
+        }
+      }
+    },
+    "xdcc-cancelled": {
+      "comment": "XDCC messages. Printed by /xdcc cancel. %@ is the bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled the transfers and requests from %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tőle érkező átvitelek és kérések megszakítva: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übertragungen und Anforderungen von %@ abgebrochen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se cancelaron las transferencias y solicitudes de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferts et demandes de %@ annulés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@からの転送とリクエストをキャンセルしました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferências e solicitações de %@ canceladas"
+          }
+        }
+      }
+    },
+    "xdcc-removed-queue": {
+      "comment": "XDCC messages. Printed by /xdcc remove without a pack, which leaves the bot's queue. %@ is the bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left %@'s queue"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilépve a sorából: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warteschlange von %@ verlassen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se salió de la cola de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File d’attente de %@ quittée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@のキューから外れました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você saiu da fila de %@"
+          }
+        }
+      }
+    },
+    "xdcc-removed-pack": {
+      "comment": "XDCC messages. Printed by /xdcc remove with a pack. %1$@ is the pack, such as pack #5, and %2$@ the bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed %1$@ from %2$@'s queue"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolítva a sorából (%2$@): %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aus der Warteschlange von %2$@ entfernt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se quitó %1$@ de la cola de %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ retiré de la file d’attente de %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@のキューから%1$@を削除しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ removido da fila de %2$@"
+          }
+        }
+      }
+    },
+    "xdcc-batch-too-large": {
+      "comment": "XDCC messages. Printed when /xdcc batch names more packs than it allows. %@ is the limit.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/xdcc batch requests at most %@ packs at a time."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A /xdcc batch egyszerre legfeljebb %@ csomagot kérhet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/xdcc batch fordert höchstens %@ Pakete auf einmal an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/xdcc batch solicita como máximo %@ paquetes a la vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/xdcc batch demande au plus %@ packs à la fois."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/xdcc batch で一度にリクエストできるパックは最大%@個です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/xdcc batch solicita no máximo %@ pacotes por vez."
+          }
+        }
+      }
+    },
+    "xdcc-invalid-pack-list": {
+      "comment": "XDCC messages. Printed when /xdcc batch is given something that is not a list of pack numbers. %@ is what the user typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is not a list of pack numbers, such as 1-5,7."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez nem csomagszámok listája (például 1-5,7): %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist keine Liste von Paketnummern wie 1-5,7."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no es una lista de números de paquete, como 1-5,7."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ n’est pas une liste de numéros de pack, comme 1-5,7."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@は 1-5,7 のようなパック番号の一覧ではありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ não é uma lista de números de pacote, como 1-5,7."
+          }
+        }
+      }
+    },
+    "xdcc-too-many-requests": {
+      "comment": "XDCC messages. Printed when this connection already waits on as many XDCC requests as it keeps.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many XDCC requests are waiting. Cancel some before requesting more."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Túl sok XDCC-kérés vár. Szakíts meg néhányat, mielőtt újakat kérsz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu viele XDCC-Anforderungen warten. Brich einige ab, bevor du weitere anforderst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay demasiadas solicitudes XDCC en espera. Cancela algunas antes de pedir más."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trop de demandes XDCC sont en attente. Annulez-en avant d’en faire d’autres."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待機中のXDCCリクエストが多すぎます。追加する前にいくつかキャンセルしてください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Há solicitações XDCC demais aguardando. Cancele algumas antes de pedir mais."
+          }
+        }
+      }
+    },
+    "xdcc-no-requests": {
+      "comment": "XDCC messages. Printed by /xdcc requests when nothing is waiting.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No XDCC requests are waiting."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs várakozó XDCC-kérés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine XDCC-Anforderungen warten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay solicitudes XDCC en espera."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune demande XDCC n’est en attente."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待機中のXDCCリクエストはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma solicitação XDCC aguardando."
+          }
+        }
+      }
+    },
+    "xdcc-request-row": {
+      "comment": "XDCC messages. One line of /xdcc requests. %1$@ is what was requested, such as pack #5, %2$@ the bot's nickname and %3$@ the request's status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ from %2$@: %3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, tőle: %2$@: %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von %2$@: %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@: %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@ : %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@の%1$@: %3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de %2$@: %3$@"
+          }
+        }
+      }
+    },
+    "xdcc-status-sent": {
+      "comment": "XDCC messages. Status of a request the bot has not answered yet, in /xdcc requests.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waiting for the bot"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "válaszra vár"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wartet auf den Bot"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esperando al bot"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en attente du bot"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ボットの応答待ち"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aguardando o bot"
+          }
+        }
+      }
+    },
+    "xdcc-status-queued-at-position": {
+      "comment": "XDCC messages. Status of a request the bot queued, in /xdcc requests. %@ is the position in the queue.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "position %@ in the queue"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@. hely a sorban"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position %@ in der Warteschlange"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "posición %@ en la cola"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "position %@ dans la file"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キューの%@番目"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "posição %@ na fila"
+          }
+        }
+      }
+    },
+    "xdcc-status-queued": {
+      "comment": "XDCC messages. Status of a request the bot queued without saying where, in /xdcc requests.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in the queue"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sorban áll"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in der Warteschlange"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en la cola"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dans la file"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キュー内"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "na fila"
+          }
+        }
+      }
+    },
+    "xdcc-status-sending": {
+      "comment": "XDCC messages. Status of a request the bot said it is sending, in /xdcc requests.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the bot is sending"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a bot küldi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "der Bot sendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el bot lo está enviando"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le bot l’envoie"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ボットが送信中"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o bot está enviando"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

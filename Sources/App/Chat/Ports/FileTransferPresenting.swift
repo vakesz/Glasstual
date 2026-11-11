@@ -39,6 +39,7 @@ protocol FileTransferPresenting: AnyObject {
 		filesize: UInt64,
 		token: String?,
 		security: DCCOfferSecurity,
+		origin: FileTransferOrigin,
 		peerIsKnown: Bool
 	) -> String?
 
@@ -53,6 +54,10 @@ protocol FileTransferPresenting: AnyObject {
 		secure: Bool,
 		completion: @escaping (String?) -> Void
 	)
+
+	/// Stops the downloads XDCC requests of this session turned into, from
+	/// `bot`, for `/xdcc cancel`.
+	func stopRequestedTransfers(from bot: String, on session: ServerSession)
 
 	/// Whether an offer of this session's is already waiting on `token`.
 	func sentOfferExists(withToken token: String, on session: ServerSession, peerNickname: String, filename: String) -> Bool

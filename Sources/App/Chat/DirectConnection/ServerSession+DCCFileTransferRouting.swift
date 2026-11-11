@@ -57,7 +57,7 @@ extension ServerSession {
 			printInvalidDCCRequest(from: sender)
 			return
 		}
-		processFileTransferRequest(request, sender: sender)
+		processFileTransferRequest(request, sender: sender, hostmask: message.senderHostmask)
 	}
 
 	/// Counts an unsolicited offer from `sender` against the throttle, and says
@@ -102,7 +102,8 @@ extension ServerSession {
 		port: UInt16,
 		filesize totalFilesize: UInt64,
 		token transferToken: String?,
-		security: DCCOfferSecurity = .plain
+		security: DCCOfferSecurity = .plain,
+		hostmask: String? = nil
 	) {
 		guard admitsDCCOffer(from: nickname) else { return }
 		if security == .secure, environment.settings.fileTransferAcceptsSecureOffers == false {
@@ -119,10 +120,30 @@ extension ServerSession {
 			in: nil,
 			as: .dccFileTransfer, command: ChatLineFormat.defaultCommand
 		)
-		guard environment.settings.fileTransferRequestReplyAction != .ignore, let fileTransfers, let identifier = fileTransfers.addReceiver(
+		/* An offer answering one of the user's own XDCC requests is labelled
+		 as such and, when the user said so, counts as coming from someone they
+		 know. It is listed on exactly the terms any other offer is. */
+		let requested = matchXDCCRequest(nickname: nickname, hostmask: hostmask, filename: filename, filesize: totalFilesize)
+		if let requested {
+			print(String(localized: .IRC.xdccOfferMatched(nickname, Self.xdccLabel(for: requested))), by: nil, in: nil,
+			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+		}
+		guard environment.settings.fileTransferRequestReplyAction != .ignore else {
+			if let requested {
+				print(String(localized: .IRC.xdccIgnoredBySetting(Self.xdccLabel(for: requested), nickname)), by: nil, in: nil,
+				      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
+			}
+			return
+		}
+		/* Only a request bound to the bot's host vouches for the sender: one
+		 matched on nickname alone may be answered by whoever took it. */
+		let peerIsKnown = isKnownFileTransferPeer(nickname)
+			|| (requested?.isBoundToHost == true && environment.settings.xdccRequestsAreKnownPeers)
+		guard let fileTransfers, let identifier = fileTransfers.addReceiver(
 			for: self, nickname: nickname, address: address, port: port,
 			filename: filename, filesize: totalFilesize, token: transferToken, security: security,
-			peerIsKnown: isKnownFileTransferPeer(nickname)
+			origin: requested.map { .xdcc(requestID: $0.id, pack: $0.pack) } ?? .offer,
+			peerIsKnown: peerIsKnown
 		)
 		else { return }
 		notifyFileTransfer(
@@ -193,7 +214,7 @@ extension ServerSession {
 		return formattedAddress
 	}
 
-	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String) {
+	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String, hostmask: String?) {
 		switch request {
 		case let .unsupported(verb):
 			/* Each decline is a line in front of the user, so a flood of them is
@@ -214,7 +235,7 @@ extension ServerSession {
 			guard let token else {
 				receivedDCCSend(
 					sender, filename: filename, address: address, port: port, filesize: filesize,
-					token: nil, security: security
+					token: nil, security: security, hostmask: hostmask
 				)
 				return
 			}
@@ -229,7 +250,7 @@ extension ServerSession {
 				}
 				receivedDCCSend(
 					sender, filename: filename, address: address, port: port,
-					filesize: filesize, token: token, security: security
+					filesize: filesize, token: token, security: security, hostmask: hostmask
 				)
 				return
 			}

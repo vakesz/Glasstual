@@ -121,6 +121,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case who
 	case whois
 	case whowas
+	case xdcc
 	case zline
 	case znccert
 }
@@ -151,6 +152,7 @@ extension LocalCommand {
 		case notification
 		case capability
 		case information
+		case xdcc
 	}
 
 	/// Matches the name however the user capitalised it.
@@ -184,6 +186,7 @@ extension LocalCommand {
 	var group: Group? {
 		switch self {
 		case .dcc: .directChat
+		case .xdcc: .xdcc
 		case .msg, .omsg, .smsg, .umsg, .me, .sme, .ume, .notice, .onotice, .unotice: .message
 		case .ame, .amsg: .broadcast
 		case .ctcp, .ctcpreply: .ctcp
@@ -250,6 +253,8 @@ extension LocalCommand {
 		.ctcpreply: "<nickname> <command> [extra]",
 		.dcc: "chat|schat [nickname] | send|ssend <nickname> <path> | accept|decline <id> | trust <id> <answer>"
 			+ " | fingerprint | certificates [nickname] | forget <nickname>",
+		.xdcc: "send|get <bot> <#pack> | batch <bot> <packs> | list <bot> | info <bot> <#pack>"
+			+ " | cancel [bot] | remove <bot> [#pack] | requests",
 		.debug: "<message>",
 		.dehalfop: "[channel] <nickname>",
 		.detach: "[channel]",

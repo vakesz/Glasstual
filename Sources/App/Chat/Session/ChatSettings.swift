@@ -91,6 +91,7 @@ nonisolated struct ChatSettings: Sendable, Equatable {
 	var fileTransferAcceptsSecureOffers = true
 	var fileTransferOffersAreSecure = false
 	var fileTransferRequiresPeerCertificate = false
+	var xdccRequestsAreKnownPeers = false
 
 	init() {}
 }

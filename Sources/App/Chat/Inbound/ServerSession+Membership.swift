@@ -223,6 +223,9 @@ extension ServerSession {
 		let conversationName = layout.conversationName
 		let comment = layout.payload ?? ""
 		let isLocalUser = nicknameIsMyself(sender)
+		if !isLocalUser {
+			noteXDCCQuit(of: sender, message: message)
+		}
 		let user = printOnly ? nil : findUser(sender)
 		if !printOnly, user == nil {
 			return
@@ -335,6 +338,7 @@ extension ServerSession {
 		ServerSessionNicknameChanged(
 			subject: self, oldNickname: oldNickname, newNickname: newNickname
 		).post()
+		noteXDCCNicknameChange(from: oldNickname, to: newNickname, message: message)
 		let user = printOnly ? nil : findUser(oldNickname)
 		if !printOnly, user == nil {
 			return

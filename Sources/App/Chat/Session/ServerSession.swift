@@ -330,6 +330,8 @@ class ServerSession: ChatItem {
 	var dccOfferThrottle = DCCOfferThrottle()
 	/// The questions about DCC connections waiting on the user.
 	var dccDecisions = DCCPendingDecisions()
+	/// The packs this connection asked XDCC bots for and is waiting on.
+	var xdccRequests = XDCCRequestLedger()
 	/// Messages sent without a local print, whose echo is dropped rather than shown.
 	var unprintedEchoes = UnprintedEchoRegistry()
 	/// How far this connection has got with registering.

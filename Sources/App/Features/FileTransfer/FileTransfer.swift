@@ -65,6 +65,8 @@ final class FileTransfer: SessionScoped {
 	private(set) var security: DCCOfferSecurity = .plain
 	/// What TLS negotiated on the current connection of a secure transfer.
 	var secureSession: DCCSecureSessionInfo?
+	/// Whether the offer answered an XDCC request of this user's.
+	var origin: FileTransferOrigin = .offer
 	var transferStatus: FileTransferStatus = .stopped
 	var completion: DCCTransfer.Completion?
 

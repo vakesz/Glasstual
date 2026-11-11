@@ -16,6 +16,8 @@ struct SessionScheduledWork {
 	var confirmations: [UUID: Task<Void, Never>] = [:]
 	/// Channels to join again after a kick, by conversation identifier.
 	var rejoins: [String: SessionTimer] = [:]
+	/// Drops XDCC requests once the oldest has waited too long.
+	var xdccExpiry: Task<Void, Never>?
 
 	mutating func cancelConnection() {
 		connection?.cancel()
@@ -30,6 +32,8 @@ struct SessionScheduledWork {
 		cancelConnection()
 		rejoins.values.forEach { $0.stop() }
 		rejoins.removeAll()
+		xdccExpiry?.cancel()
+		xdccExpiry = nil
 	}
 
 	/// Everything, for a session that is going away.
@@ -38,5 +42,6 @@ struct SessionScheduledWork {
 		connection?.cancel()
 		rejoins.values.forEach { $0.stop() }
 		confirmations.values.forEach { $0.cancel() }
+		xdccExpiry?.cancel()
 	}
 }

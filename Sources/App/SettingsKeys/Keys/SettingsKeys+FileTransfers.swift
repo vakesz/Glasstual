@@ -92,11 +92,17 @@ nonisolated extension SettingsKeys {
 		/// than let in encrypted but unverified.
 		static let requirePeerCertificate = SettingsKey(group + "Require Peer Certificate", default: false)
 
+		/// Whether a file an XDCC bot sends in answer to the user's own request
+		/// counts as coming from a known person for automatic download. The
+		/// automatic-download size limit still applies.
+		static let xdccRequestsAreKnownPeers = SettingsKey(group + "XDCC Requests Are Known Peers", default: false)
+
 		static let all: [any AnySettingsKey] = [
 			requestReplyAction, ipAddressDetectionMethod, portRangeStart, portRangeEnd,
 			requestsAreReversed, manuallyEnteredIPAddress, ipAddressInterfaceName,
 			downloadFolderBookmark, preventIdleSystemSleep,
 			acceptsSecureOffers, offersAreSecure, requirePeerCertificate,
+			xdccRequestsAreKnownPeers,
 		]
 	}
 }

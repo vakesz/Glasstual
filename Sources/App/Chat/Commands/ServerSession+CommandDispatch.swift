@@ -78,6 +78,8 @@ extension ServerSession {
 			dispatchNativeCapabilityCommand(command, parsed: parsed, targetConversation: targetConversation)
 		case .information:
 			dispatchNativeInformationCommand(command, parsed: parsed, targetConversation: targetConversation)
+		case .xdcc:
+			handleXDCCCommand(parsed.arguments, command: parsed.command, targetConversation: targetConversation)
 		}
 	}
 

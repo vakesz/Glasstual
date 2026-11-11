@@ -235,6 +235,9 @@ extension ServerSession {
 		if case let .query(channelName) = channelContextFiling {
 			channelContext = channelName
 		}
+		if !isSelfMessage {
+			noteXDCCBotText(text, from: message)
+		}
 		let textToDeliver = deliveredText
 		// Capture the read state before asynchronous rendering.
 		let alreadySeen = lineArrivedAlreadySeen(message, in: destination)

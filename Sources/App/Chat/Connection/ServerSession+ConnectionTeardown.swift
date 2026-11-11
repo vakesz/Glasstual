@@ -47,6 +47,7 @@ extension ServerSession {
 		away.resetForTeardown()
 		znc = ZNCSession()
 		refuseDCCDecisions()
+		resetXDCCRequests()
 
 		resetChatHistoryState()
 		// Reconnect intent belongs to the pending schedule, which survives this reset.

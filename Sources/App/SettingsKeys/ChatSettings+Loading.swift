@@ -81,6 +81,7 @@ extension ChatSettings {
 		snapshot.fileTransferAcceptsSecureOffers = stores[SettingsKeys.FileTransfers.acceptsSecureOffers]
 		snapshot.fileTransferOffersAreSecure = stores[SettingsKeys.FileTransfers.offersAreSecure]
 		snapshot.fileTransferRequiresPeerCertificate = stores[SettingsKeys.FileTransfers.requirePeerCertificate]
+		snapshot.xdccRequestsAreKnownPeers = stores[SettingsKeys.FileTransfers.xdccRequestsAreKnownPeers]
 
 		return snapshot
 	}

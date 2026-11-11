@@ -8880,6 +8880,150 @@
           }
         }
       }
+    },
+    "description-xdcc": {
+      "comment": "Slash-command discovery. Description of /xdcc, which requests files from XDCC bots.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request packs from XDCC bots and manage the requests"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csomagok kérése XDCC-botoktól és a kérések kezelése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pakete bei XDCC-Bots anfordern und die Anforderungen verwalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita paquetes a bots XDCC y gestiona las solicitudes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demander des packs à des bots XDCC et gérer les demandes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XDCCボットにパックをリクエストし、リクエストを管理する"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita pacotes a bots XDCC e gerencia as solicitações"
+          }
+        }
+      }
+    },
+    "syntax-xdcc-send-batch-list": {
+      "comment": "Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <bot> <#pack> | batch <bot> <packs> | list <bot> | info <bot> <#pack> | cancel [bot] | remove <bot> [#pack] | requests"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <bot> <#csomag> | batch <bot> <csomagok> | list <bot> | info <bot> <#csomag> | cancel [bot] | remove <bot> [#csomag] | requests"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <Bot> <#Paket> | batch <Bot> <Pakete> | list <Bot> | info <Bot> <#Paket> | cancel [Bot] | remove <Bot> [#Paket] | requests"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <bot> <#paquete> | batch <bot> <paquetes> | list <bot> | info <bot> <#paquete> | cancel [bot] | remove <bot> [#paquete] | requests"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <bot> <#pack> | batch <bot> <packs> | list <bot> | info <bot> <#pack> | cancel [bot] | remove <bot> [#pack] | requests"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <ボット> <#パック> | batch <ボット> <パック> | list <ボット> | info <ボット> <#パック> | cancel [ボット] | remove <ボット> [#パック] | requests"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "send|get <bot> <#pacote> | batch <bot> <pacotes> | list <bot> | info <bot> <#pacote> | cancel [bot] | remove <bot> [#pacote] | requests"
+          }
+        }
+      }
+    },
+    "hint-xdcc-packs": {
+      "comment": "Slash-command discovery. Hint for /xdcc arguments.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs are numbers such as #5; batch takes a list such as 1-5,7, at most 20 packs."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A csomagok számok, például #5; a batch listát vár, például 1-5,7, legfeljebb 20 csomaggal."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pakete sind Nummern wie #5; batch nimmt eine Liste wie 1-5,7 mit höchstens 20 Paketen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los paquetes son números como #5; batch admite una lista como 1-5,7, de hasta 20 paquetes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les packs sont des numéros comme #5 ; batch accepte une liste comme 1-5,7, de 20 packs au plus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パックは #5 のような番号です。batch は 1-5,7 のような一覧を受け付けます（最大20個）。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pacotes são números como #5; batch aceita uma lista como 1-5,7, com até 20 pacotes."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -127,6 +127,7 @@ extension FileTransferStore {
 		filesize totalFilesize: UInt64,
 		token transferToken: String?,
 		security: DCCOfferSecurity = .plain,
+		origin: FileTransferOrigin = .offer,
 		peerIsKnown: Bool
 	) -> String? {
 		guard model.receiverCount < FileTransferConstants.receiverHardLimit else {
@@ -155,6 +156,7 @@ extension FileTransferStore {
 		) else {
 			return nil
 		}
+		controller.origin = origin
 
 		/* Not brought forward: the offer arrived unasked, and the window taking
 		 focus for each one is what made a flood of them unusable. The row, the
@@ -238,6 +240,18 @@ extension FileTransferStore {
 		}
 
 		return controller.uniqueIdentifier
+	}
+
+	func stopRequestedTransfers(from bot: String, on session: ServerSession) {
+		let peer = session.supportInfo.casefoldString(bot)
+		for transfer in model.transfers where transfer.sessionId == session.uniqueIdentifier
+			&& transfer.isSender == false
+			&& transfer.origin != .offer
+			&& session.supportInfo.casefoldString(transfer.peerNickname) == peer
+			&& transfer.transferStatus.isRunning
+		{
+			transfer.closeAndPostNotification(false)
+		}
 	}
 
 	func sessionWillBeDestroyed(_ message: ChatSessionWillDestroySession) {

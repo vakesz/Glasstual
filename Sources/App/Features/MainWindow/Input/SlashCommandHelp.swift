@@ -265,6 +265,7 @@ struct SlashCommandHelp {
 			.SlashCommands.hintNicknamePrivateConversation
 		),
 		.init([.whowas], .SlashCommands.descriptionPreviousNickname, .SlashCommands.syntaxNickname, .SlashCommands.hintNickname),
+		.init([.xdcc], .SlashCommands.descriptionXdcc, .SlashCommands.syntaxXdccSendBatchList, .SlashCommands.hintXdccPacks),
 		.init([.znccert], .SlashCommands.descriptionZncCertificate),
 	]
 }
