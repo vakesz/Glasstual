@@ -28,6 +28,8 @@ nonisolated struct User: Identifiable, Hashable, Sendable, CustomStringConvertib
 	var isAway = false
 	var isIRCop = false
 	var isBot = false
+	/// What the person set about themselves through `draft/metadata-2`.
+	var profile = UserProfile()
 
 	init(nickname: String) {
 		id = UUID()

@@ -110,6 +110,7 @@ enum SettingsPaneKeys {
 		.init(SettingsKeys.Messages.showDateChanges, .Settings.styleShowDateChanges),
 		.init(SettingsKeys.Messages.showJoinLeave, .Settings.styleShowJoinLeave),
 		.init(SettingsKeys.Messages.showInlineMedia, .TranscriptTheme.showInlineImages),
+		.init(SettingsKeys.Messages.showServerProfiles, .Settings.styleShowServerProfiles),
 		.init(SettingsKeys.Logging.scrollbackSaveLimit, .Settings.styleScrollbackSaveLimit),
 		.init(SettingsKeys.Messages.disableNicknameColorHashing, .Settings.styleDisableNicknameColors),
 		.init(SettingsKeys.Connection.displayServerMOTD, .Settings.styleShowMotd),

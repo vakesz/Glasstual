@@ -58,12 +58,16 @@ extension TestServerSession {
 		printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
 	}
 
-	/// Offers `capabilities` and acknowledges each one this session asks for.
+	/// Offers `capabilities` and acknowledges each one this session asks for,
+	/// including those it asks for once their dependencies are acknowledged.
 	func negotiate(_ capabilities: String) throws {
 		try receive(":irc.example.net CAP * LS :\(capabilities)")
-		let requested = capabilityLines.filter { $0.hasPrefix("REQ ") }.map { String($0.dropFirst(4)) }
-		for request in requested {
-			try receive(":irc.example.net CAP ada ACK :\(request)")
+		var answered = 0
+		while case let requests = capabilityLines.filter({ $0.hasPrefix("REQ ") }), requests.count > answered {
+			for request in requests[answered...] {
+				try receive(":irc.example.net CAP ada ACK :\(request.dropFirst(4))")
+			}
+			answered = requests.count
 		}
 	}
 }

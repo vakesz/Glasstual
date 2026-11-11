@@ -143,6 +143,9 @@ nonisolated struct ServerConfig: Codable, Equatable, Sendable {
 	var floodControlDelayTimerInterval = ServerConfigDefaults.floodDelay
 	var floodControlMaximumMessages = ServerConfigDefaults.floodMaximum
 	var lastMessageServerTime: TimeInterval = 0
+	/// The profile the user chose for themselves on this server, set again on
+	/// connect where the server's copy differs. `nil` until they chose one.
+	var serverProfile: ServerProfilePreference?
 
 	// MARK: - Owned lists
 

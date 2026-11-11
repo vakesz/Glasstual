@@ -74,6 +74,7 @@ nonisolated extension ServerConfig {
 		case floodControlDelayTimerInterval
 		case floodControlMaximumMessages
 		case lastMessageServerTime
+		case serverProfile
 
 		case conversationList
 		case highlightList
@@ -380,6 +381,7 @@ nonisolated extension ServerConfig {
 			forKey: .lastMessageServerTime,
 			default: Self.codingDefaults.lastMessageServerTime
 		)
+		serverProfile = container.decodeOptional(ServerProfilePreference.self, forKey: .serverProfile)
 	}
 
 	private mutating func decodeLists(from container: DecodingContainer) {
@@ -495,6 +497,7 @@ nonisolated extension ServerConfig {
 		try encode(\.floodControlDelayTimerInterval, forKey: .floodControlDelayTimerInterval, &container)
 		try encode(\.floodControlMaximumMessages, forKey: .floodControlMaximumMessages, &container)
 		try encode(\.lastMessageServerTime, forKey: .lastMessageServerTime, &container)
+		try container.encodeIfPresent(serverProfile, forKey: .serverProfile)
 	}
 
 	private func encodeLists(into container: inout EncodingContainer) throws {

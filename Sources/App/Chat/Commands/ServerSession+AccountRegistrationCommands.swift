@@ -56,6 +56,15 @@ nonisolated enum AccountRegistrationCommandRequest: Equatable {
 }
 
 extension ServerSession {
+	/// `/register`, `/verify` and `/metadata`: the user's account and profile.
+	func dispatchAccountCommand(_ command: LocalCommand, parsed: ParsedUserCommand) {
+		if command == .metadata {
+			dispatchMetadataCommand(parsed)
+		} else {
+			dispatchAccountRegistrationCommand(command, parsed: parsed)
+		}
+	}
+
 	func dispatchAccountRegistrationCommand(_ command: LocalCommand, parsed: ParsedUserCommand) {
 		switch AccountRegistrationCommandRequest(command: command, arguments: parsed.arguments.rest) {
 		case .describe:

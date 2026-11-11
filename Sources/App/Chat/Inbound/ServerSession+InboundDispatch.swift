@@ -79,9 +79,7 @@ extension ServerSession {
 			case .authentication:
 				handleAuthenticationTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint)
 			case .metadata:
-				if shouldPrint {
-					printReply(message)
-				}
+				handleMetadataNumeric(numeric, message: message)
 			}
 
 			return
@@ -201,6 +199,8 @@ private extension ServerSession {
 			receiveRename(message)
 		case .register, .verify:
 			receiveAccountRegistrationReply(message)
+		case .metadata:
+			receiveMetadata(message)
 		default:
 			break
 		}
@@ -232,7 +232,7 @@ extension ServerSession {
 			receiveBouncerFailure(message)
 		}
 
-		if receiveAccountRegistrationFailure(message) {
+		if receiveAccountRegistrationFailure(message) || receiveMetadataFailure(message) {
 			return
 		}
 

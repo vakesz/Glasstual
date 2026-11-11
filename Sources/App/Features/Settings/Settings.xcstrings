@@ -16128,6 +16128,150 @@
           }
         }
       }
+    },
+    "style-show-server-profiles": {
+      "comment": "Switch in the Style pane: show names, pictures and colors people set on the server.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show names, pictures and colors people set on the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerveren beállított nevek, képek és színek megjelenítése"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen, Bilder und Farben anzeigen, die Personen auf dem Server festlegen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar los nombres, las imágenes y los colores que las personas configuran en el servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les noms, images et couleurs définis par les utilisateurs sur le serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバでユーザが設定した名前、画像、色を表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar nomes, imagens e cores que as pessoas definem no servidor"
+          }
+        }
+      }
+    },
+    "style-show-server-profiles-note": {
+      "comment": "Note under the show server profiles switch in the Style pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pictures also need inline images. The nickname is always shown beside a name."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A képekhez a beágyazott képeket is be kell kapcsolni. A név mellett mindig látszik a becenév."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Bilder müssen auch eingebettete Bilder aktiviert sein. Neben einem Namen wird immer der Nickname angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las imágenes también requieren imágenes integradas. El apodo siempre aparece junto al nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les images nécessitent aussi les images intégrées. Le pseudo est toujours affiché à côté d’un nom."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画像を表示するにはインライン画像も必要です。名前の横には常にニックネームが表示されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As imagens também exigem imagens incorporadas. O apelido sempre aparece ao lado do nome."
+          }
+        }
+      }
+    },
+    "ircv3-capability-metadata": {
+      "comment": "Summary of the draft/metadata-2 capability in the IRCv3 settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows the names, pictures and colors people set on the server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjeleníti a szerveren beállított neveket, képeket és színeket."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt Namen, Bilder und Farben, die Personen auf dem Server festlegen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra los nombres, las imágenes y los colores que las personas configuran en el servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche les noms, images et couleurs définis par les utilisateurs sur le serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバでユーザが設定した名前、画像、色を表示します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra os nomes, imagens e cores que as pessoas definem no servidor."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

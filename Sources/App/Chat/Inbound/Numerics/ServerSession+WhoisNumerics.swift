@@ -47,7 +47,17 @@ extension ServerSession {
 		switch numeric {
 		case .whoisbot:
 			handleWhoisBot(message, shouldPrint: shouldPrint, in: selectedConversation)
-		case .channelsmsg, .whoishelpop, .whoishost, .whoiskeyvalue, .whoismodes,
+		case .whoiskeyvalue:
+			// `760 <client> <target> <key> <visibility> :<value>`
+			guard shouldPrint, message.params.count >= 5 else { return }
+			printWhoisLine(
+				String(localized: .Metadata.whoisEntry(
+					ControlCharacterDisposition.singleLine(message.params[1]),
+					Self.formattedMetadataEntry(key: message.params[2], visibility: message.params[3], value: message.params[4])
+				)),
+				message: message, in: selectedConversation
+			)
+		case .channelsmsg, .whoishelpop, .whoishost, .whoismodes,
 		     .whoisoperator, .whoisrealip, .whoisregnick, .whoissecure, .whoisspecial:
 			if shouldPrint, message.params.count > 2 {
 				printReply(message, in: selectedConversation)

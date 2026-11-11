@@ -147,6 +147,11 @@ struct StylePane: View {
 				isOn: model.settings.binding(for: SettingsKeys.Messages.showInlineMedia)
 			)
 			SettingsToggle(
+				title: .Settings.styleShowServerProfiles,
+				note: .Settings.styleShowServerProfilesNote,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.showServerProfiles)
+			)
+			SettingsToggle(
 				title: .Settings.styleDisableNicknameColors,
 				isOn: model.settings.binding(for: SettingsKeys.Messages.disableNicknameColorHashing)
 			)

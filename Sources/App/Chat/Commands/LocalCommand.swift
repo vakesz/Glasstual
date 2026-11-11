@@ -62,6 +62,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	/// `/m`, the shorthand for `/mode`.
 	case modeShortcut = "m"
 	case me
+	case metadata
 	case mode
 	case monitor
 	case msg
@@ -155,6 +156,7 @@ extension LocalCommand {
 		case capability
 		case information
 		case xdcc
+		/// Accounts and profiles on the server: `/register`, `/verify`, `/metadata`.
 		case account
 	}
 
@@ -208,7 +210,7 @@ extension LocalCommand {
 		case .chathistory, .umode, .monitor, .watch, .silence: .capability
 		case .who, .whois, .weights, .myversion, .tage, .lagcheck, .mylag: .information
 		case .attach, .detach, .znccert: .bouncer
-		case .register, .verify: .account
+		case .register, .verify, .metadata: .account
 		default: nil
 		}
 	}
@@ -307,6 +309,7 @@ extension LocalCommand {
 		.locops: "<message>",
 		.modeShortcut: "<target> [flags] [arguments]",
 		.me: "<message>",
+		.metadata: "[target] <get | list | set | clear | sub | unsub | subs | sync> [arguments]",
 		.mode: "<target> [flags] [arguments]",
 		.msg: "<target[,target]]> <message>",
 		.nachat: "<message>",

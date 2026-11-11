@@ -40,6 +40,11 @@ nonisolated extension SettingsKeys {
 			default: false
 		)
 
+		/// Whether the names, pictures and colours people set on the server
+		/// (`draft/metadata-2`) are asked for and shown. Off, nothing is
+		/// subscribed to.
+		static let showServerProfiles = SettingsKey(group + "Show Server Profiles", default: true)
+
 		static let disableNicknameColorHashing = SettingsKey(
 			group + "Disable Nickname Color Hashing",
 			default: false
@@ -53,7 +58,7 @@ nonisolated extension SettingsKeys {
 			showDateChanges, showInlineMedia, showJoinLeave, autoAddUnreadMarker, copyOnSelect,
 			removeAllFormatting, rightToLeftFormatting, replyToCTCPRequests, detectHighlightSpam,
 			filterUnicodeTextSpam, openBrowserInBackground, disableNicknameColorHashing,
-			nicknameColorStyleOverrides, ctcpRevealsClientVersion, ctcpUserInfoReply,
+			nicknameColorStyleOverrides, ctcpRevealsClientVersion, ctcpUserInfoReply, showServerProfiles,
 		]
 	}
 }

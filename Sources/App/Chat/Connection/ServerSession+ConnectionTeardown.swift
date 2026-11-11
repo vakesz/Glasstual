@@ -59,6 +59,7 @@ extension ServerSession {
 
 		resetSASLNegotiation()
 		accountRegistrationConnectionDidReset()
+		metadataConnectionDidReset()
 		resetCapabilityNegotiation()
 		removeAllUsers()
 	}

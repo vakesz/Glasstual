@@ -215,6 +215,8 @@ class ServerSession: ChatItem {
 	var sasl: SASLSession
 	/// An account registration on this connection, beside the SASL exchange.
 	var accountRegistration = AccountRegistrationSession()
+	/// What `draft/metadata-2` keeps for this connection besides the profiles.
+	var metadata = MetadataSession()
 	var sts = STSUpgradeState()
 	var sidebarItemIsExpanded = false {
 		didSet { markConfigurationStaleIfChanged(from: oldValue, to: sidebarItemIsExpanded) }

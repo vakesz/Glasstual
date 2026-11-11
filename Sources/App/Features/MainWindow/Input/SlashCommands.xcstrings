@@ -9312,6 +9312,150 @@
           }
         }
       }
+    },
+    "description-metadata": {
+      "comment": "The /metadata command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or change the profile data people and channels set on the server"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerveren beállított személyes és csatorna-profiladatok megjelenítése vagy módosítása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profildaten von Personen und Kanälen auf dem Server anzeigen oder ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver o cambiar los datos de perfil que personas y canales configuran en el servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher ou modifier les données de profil définies sur le serveur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ユーザやチャンネルがサーバで設定したプロフィールデータを表示または変更"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar ou alterar os dados de perfil que pessoas e canais definem no servidor"
+          }
+        }
+      }
+    },
+    "syntax-metadata": {
+      "comment": "Arguments of the /metadata command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[target] <get|list|set|clear|sub|unsub|subs|sync> [arguments]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[cél] <get|list|set|clear|sub|unsub|subs|sync> [argumentumok]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Ziel] <get|list|set|clear|sub|unsub|subs|sync> [Argumente]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[destino] <get|list|set|clear|sub|unsub|subs|sync> [argumentos]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[cible] <get|list|set|clear|sub|unsub|subs|sync> [arguments]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[対象] <get|list|set|clear|sub|unsub|subs|sync> [引数]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[destino] <get|list|set|clear|sub|unsub|subs|sync> [argumentos]"
+          }
+        }
+      }
+    },
+    "hint-metadata": {
+      "comment": "Help for the /metadata command. Slash-command discovery. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a target the command is about you. set <key> <value> stores a value, set <key> \"\" an empty one, and set <key> alone removes it."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cél nélkül a parancs rád vonatkozik. A set <key> <value> értéket ment, a set <key> \"\" üreset, a set <key> önmagában pedig törli."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Ziel betrifft der Befehl dich. set <key> <value> speichert einen Wert, set <key> \"\" einen leeren, und set <key> allein entfernt ihn."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin destino, el comando se refiere a ti. set <key> <value> guarda un valor, set <key> \"\" uno vacío y set <key> solo lo elimina."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans cible, la commande vous concerne. set <key> <value> enregistre une valeur, set <key> \"\" une valeur vide, et set <key> seul la supprime."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対象を省略すると自分が対象になります。set <key> <value> で値を保存し、set <key> \"\" で空の値、set <key> のみで削除します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem destino, o comando se refere a você. set <key> <value> salva um valor, set <key> \"\" um valor vazio, e set <key> sozinho o remove."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -68,6 +68,8 @@ nonisolated struct ChatSettings: Sendable, Equatable {
 	var displayPublicMessageCountOnDockBadge = false
 	var memberListSortFavorsServerStaff = false
 	var disableNicknameColorHashing = false
+	/// Whether names, pictures and colours set on the server are shown.
+	var showsServerProfiles = true
 	var soundIsMuted = false
 	var notifyAboutMentions = false
 	var postNotificationsWhileInFocus = false

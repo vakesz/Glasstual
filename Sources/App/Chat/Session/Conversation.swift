@@ -55,6 +55,9 @@ class Conversation: ChatItem {
 	var channelModesReceived = false
 	var channelNamesReceived = false
 	var errorOnLastJoinAttempt = false
+	/// What the channel set about itself through `draft/metadata-2`. Runtime
+	/// only: it is never stored in the configuration.
+	var channelProfile = UserProfile()
 	/** When the local user joined, on the server's clock where `server-time`
 	 supplies one and on this Mac's otherwise. `nil` until the channel is joined.
 
@@ -330,6 +333,7 @@ class Conversation: ChatItem {
 
 	func deactivate() {
 		associatedSession?.typingTracker.removeAll(in: self)
+		associatedSession?.metadataChannelDidDeactivate(self)
 		statusChangedByAction = true
 		resetStatus(.parted)
 	}

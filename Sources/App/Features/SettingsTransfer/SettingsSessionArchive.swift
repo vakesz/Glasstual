@@ -97,7 +97,7 @@ nonisolated enum SettingsSessionArchive {
 	}
 
 	private enum Record {
-		case session, server, channel, highlight, ignore, binding
+		case session, server, channel, highlight, ignore, binding, profile
 	}
 
 	private enum Field {
@@ -109,7 +109,7 @@ nonisolated enum SettingsSessionArchive {
 	private static func validate(_ dictionary: [String: PropertyListValue],
 	                             kind: Record) throws -> [String: PropertyListValue]
 	{
-		if kind != .binding {
+		if kind != .binding, kind != .profile {
 			guard let identifier = dictionary["uniqueIdentifier"]?.string, !identifier.isEmpty else {
 				throw SettingsTransferError.invalidValue("uniqueIdentifier")
 			}
@@ -182,6 +182,7 @@ nonisolated enum SettingsSessionArchive {
 		case .binding:
 			values["parentIdentifier"]?.string?.isEmpty == false
 				&& values["networkIdentifier"]?.string?.isEmpty == false
+		case .profile: true
 		}
 		guard valid else { throw SettingsTransferError.invalidValue(SettingsKeys.Sessions.serverSessions.name) }
 	}
@@ -189,12 +190,8 @@ nonisolated enum SettingsSessionArchive {
 	private static func field(named name: String, kind: Record) -> Field? {
 		switch kind {
 		case .session: ServerConfig.CodingKeys(rawValue: name).map(sessionField)
-		case .binding:
-			switch name {
-			case "parentIdentifier", "networkIdentifier": .text
-			case "isRemoved": .flag
-			default: nil
-			}
+		case .binding, .profile:
+			nestedField(name, kind: kind)
 		case .server:
 			switch name {
 			case "uniqueIdentifier", "serverAddress", "transport", "webSocketPath": .text
@@ -219,6 +216,16 @@ nonisolated enum SettingsSessionArchive {
 			     "ignorePublicMessageHighlights", "ignorePublicMessages", "muteMessages", "trackUserActivity": .flag
 			default: nil
 			}
+		}
+	}
+
+	/// A field of a record nested in a session rather than listed in one.
+	private static func nestedField(_ name: String, kind: Record) -> Field? {
+		switch (kind, name) {
+		case (.binding, "parentIdentifier"), (.binding, "networkIdentifier"): .text
+		case (.binding, "isRemoved"): .flag
+		case (.profile, "displayName"), (.profile, "avatar"), (.profile, "color"): .text
+		default: nil
 		}
 	}
 
@@ -262,6 +269,7 @@ nonisolated enum SettingsSessionArchive {
 		     .zncIgnoreConfiguredAutojoin, .zncIgnorePlaybackNotifications, .zncIgnoreUserNotifications,
 		     .zncOnlyPlaybackLatest, .bouncerDiscoversNetworks, .bouncerHidesParent: .flag
 		case .bouncerNetwork: .nested(.binding)
+		case .serverProfile: .nested(.profile)
 		}
 	}
 }

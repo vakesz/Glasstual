@@ -234,6 +234,10 @@ extension ServerSession {
 		if action.contains(.scrollbackVisibleLimit) {
 			transcriptController?.changeScrollbackLimit()
 		}
+
+		if action.contains(.serverProfiles) {
+			serverProfilesSettingDidChange()
+		}
 	}
 
 	/// Called by `ChatSession` before the conversation is torn down, so what the

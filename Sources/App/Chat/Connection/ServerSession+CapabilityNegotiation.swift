@@ -339,6 +339,8 @@ extension ServerSession {
 
 		if identifier == .accountRegistration {
 			noteAccountRegistrationCapability(enabled: enabled)
+		} else if identifier == .metadata {
+			noteMetadataCapability(enabled: enabled)
 		}
 
 		SessionCapabilitiesDidChange(subject: self).post()

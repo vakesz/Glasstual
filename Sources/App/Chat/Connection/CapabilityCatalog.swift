@@ -89,6 +89,17 @@ extension CapabilityRegistry {
 				specification: ircv3Specification("chathistory")
 			),
 
+			/* The answers to metadata queries arrive in batches, which the
+				specification requires to be negotiated. `metadata-notify` is
+				never requested beside it. */
+			Capability(
+				name: MetadataCapabilityValues.capabilityName,
+				identifier: .metadata,
+				requestedByDefault: true,
+				dependencies: ["batch"],
+				specification: ircv3Specification("metadata")
+			),
+
 			Capability(
 				name: "draft/message-redaction",
 				identifier: .messageRedaction,

@@ -26,6 +26,9 @@ extension ServerSession {
 			let text = message.params.count == 4 ? message.sequence(3) : message.sequence
 			print(text, by: nil, in: nil, as: .debug, command: message.command, receivedAt: message.receivedAt)
 		case .motd, .motdstart, .endofmotd, .nomotd:
+			if numeric == .endofmotd || numeric == .nomotd {
+				metadataRegistrationBurstDidEnd()
+			}
 			guard shouldPrint, environment.settings.displayServerMOTD else { return }
 			if numeric == .nomotd {
 				printErrorReply(message)

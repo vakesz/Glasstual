@@ -154,6 +154,7 @@ struct SlashCommandHelp {
 		.init([.list], .SlashCommands.descriptionBrowseChannels),
 		.init([.modeShortcut, .mode], .SlashCommands.descriptionMode, .SlashCommands.syntaxTargetFlagsArguments, .SlashCommands.hintMode),
 		.init([.me, .ume], .SlashCommands.descriptionAction, .SlashCommands.syntaxMessage, .SlashCommands.hintMessage),
+		.init([.metadata], .SlashCommands.descriptionMetadata, .SlashCommands.syntaxMetadata, .SlashCommands.hintMetadata),
 		.init(
 			[.monitor, .watch],
 			.SlashCommands.descriptionOnlineStatusList,

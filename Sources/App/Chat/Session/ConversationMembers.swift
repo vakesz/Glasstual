@@ -234,6 +234,7 @@ final class ConversationMembers {
 		) != .orderedSame
 		if needsResort || oldMember.id != newMember.id ||
 			oldMember.user.nickname != newMember.user.nickname || oldMember.mark != newMember.mark
+			|| oldMember.user.profile != newMember.user.profile
 		{
 			renderRevision &+= 1
 		}

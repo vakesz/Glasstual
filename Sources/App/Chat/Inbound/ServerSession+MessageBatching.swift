@@ -152,6 +152,9 @@ private extension ServerSession {
 			return
 		}
 		batch.batchIsOpen = false
+		if batch.kind == .metadata || batch.kind == .metadataSubs {
+			closeMetadataBatch(batch)
+		}
 		if batch.parentBatchMessage != nil {
 			// Keep closed children admitted until the root replays. Messages retain
 			// their immediate batch, whose parent and label must still be available.

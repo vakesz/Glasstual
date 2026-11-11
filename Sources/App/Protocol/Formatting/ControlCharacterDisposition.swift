@@ -32,6 +32,23 @@ nonisolated enum ControlCharacterDisposition: Equatable {
 		}
 	}
 
+	/** Whether a display name drops `scalar` on top of what ``singleLine(_:)``
+	 removes: the marks that set direction without a visible glyph, characters
+	 that draw nothing, the Hangul fillers that draw as blanks, and tag
+	 characters. A name made only of these would read as empty, or as someone
+	 else's nickname. */
+	static func isInvisibleInDisplayName(_ scalar: Unicode.Scalar) -> Bool {
+		switch scalar.value {
+		case 0x200E, 0x200F, 0x061C,
+		     0x200B ... 0x200D, 0x2060 ... 0x2064, 0xFEFF, 0x180E, 0x034F,
+		     0x115F, 0x1160, 0x3164, 0xFFA0,
+		     0xE0000 ... 0xE007F:
+			true
+		default:
+			false
+		}
+	}
+
 	/// Whether any unit of `text` would be changed.
 	static func needsSanitizing(_ text: String) -> Bool {
 		text.utf16.contains { Self(of: $0) != .keep }

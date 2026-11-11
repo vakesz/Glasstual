@@ -79,7 +79,7 @@ extension ServerSession {
 		case .information:
 			dispatchNativeInformationCommand(command, parsed: parsed, targetConversation: targetConversation)
 		case .account:
-			dispatchAccountRegistrationCommand(command, parsed: parsed)
+			dispatchAccountCommand(command, parsed: parsed)
 		}
 	}
 

@@ -57,6 +57,7 @@ extension ChatSettings {
 		snapshot.displayPublicMessageCountOnDockBadge = stores[SettingsKeys.Notifications.publicMessageCountOnDockBadge]
 		snapshot.memberListSortFavorsServerStaff = stores[SettingsKeys.Appearance.memberListSortFavorsServerStaff]
 		snapshot.disableNicknameColorHashing = stores[SettingsKeys.Messages.disableNicknameColorHashing]
+		snapshot.showsServerProfiles = stores[SettingsKeys.Messages.showServerProfiles]
 		snapshot.soundIsMuted = stores[SettingsKeys.Notifications.soundIsMuted]
 		snapshot.notifyAboutMentions = stores[SettingsKeys.Notifications.notifyAboutMentions]
 		snapshot.postNotificationsWhileInFocus = stores[SettingsKeys.Notifications.postWhileInFocus]

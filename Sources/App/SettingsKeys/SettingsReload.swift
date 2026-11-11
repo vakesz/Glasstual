@@ -33,6 +33,7 @@ nonisolated struct SettingsReloadAction: OptionSet, Sendable {
 	static let textDirection = Self(rawValue: 1 << 15)
 	static let textFieldFontSize = Self(rawValue: 1 << 16)
 	static let transcriptSettings = Self(rawValue: 1 << 17)
+	static let serverProfiles = Self(rawValue: 1 << 18)
 
 	/** What one write does not ask for.
 
@@ -117,6 +118,9 @@ enum SettingsReload {
 			SettingsKeys.Highlights.matchKeywords,
 			SettingsKeys.Highlights.excludeKeywords,
 		])
+		/* Each connection subscribes or unsubscribes, and the names and
+		 pictures already drawn come and go. */
+		reload([.serverProfiles, .style, .memberList], on: [SettingsKeys.Messages.showServerProfiles])
 		reload(.highlightLogging, on: [SettingsKeys.Logging.logHighlights])
 		reload(.textDirection, on: [SettingsKeys.Messages.rightToLeftFormatting])
 		reload(.textFieldFontSize, on: [SettingsKeys.Input.textViewFontSize])

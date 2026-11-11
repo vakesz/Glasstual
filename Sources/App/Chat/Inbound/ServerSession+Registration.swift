@@ -101,6 +101,7 @@ extension ServerSession {
 		flushPreRegistrationISupportEffects()
 
 		accountRegistrationDidReceiveWelcome()
+		metadataDidReceiveWelcome()
 		performAutoJoin()
 		scheduleChatHistoryTargetsSweep()
 

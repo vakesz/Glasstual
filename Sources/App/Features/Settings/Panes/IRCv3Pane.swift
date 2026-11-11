@@ -30,6 +30,7 @@ struct IRCv3Pane: View {
 		"labeled-response": .Settings.ircv3CapabilityLabeledResponse,
 		"draft/extended-isupport": .Settings.ircv3CapabilityExtendedIsupport,
 		"draft/message-redaction": .Settings.ircv3CapabilityMessageRedaction,
+		"draft/metadata-2": .Settings.ircv3CapabilityMetadata,
 		"message-tags": .Settings.ircv3CapabilityMessageTags,
 		"multi-prefix": .Settings.ircv3CapabilityMultiPrefix,
 		"draft/multiline": .Settings.ircv3CapabilityMultiline,
