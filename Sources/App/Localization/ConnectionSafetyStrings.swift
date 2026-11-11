@@ -36,6 +36,10 @@ nonisolated enum ConnectionSafetyStrings {
 		static var lineRefusedByEncoding: String {
 			String(localized: .ConnectionSafety.outgoingLineRefusedEncoding)
 		}
+
+		static var unprintedLinesHeldBack: String {
+			String(localized: .ConnectionSafety.outgoingUnprintedLinesHeldBack)
+		}
 	}
 
 	enum Credentials {

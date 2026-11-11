@@ -434,40 +434,40 @@ extension ServerSession {
 			guard let message = cursor.nextLine(forTarget: wireTarget, on: session, with: policy.lineType)
 			else { return false }
 			let redactedMessage = WireRedaction.redactedServiceMessage(message, sentTo: wireTarget)
-			let deliveryLabel: String?
-			if silentlyConnecting {
-				session.printDebugInformation(
-					toConsole: String(localized: .IRC.connectCommandSent(wireTarget, redactedMessage))
-				)
-				session.noteUnprintedSend(to: destinationName, text: message, lineType: policy.lineType)
-				deliveryLabel = nil
-			} else if let conversation, policy.isSecretMessage == false {
-				deliveryLabel = session.printLocallyIfNeeded(
+			let tags: [String: String]?
+			if silentlyConnecting || policy.isSecretMessage {
+				/* Its echo would print what was meant to stay unprinted, so a
+				 line that cannot be tracked is not sent, nor is the rest. */
+				guard let unprintedTags = session.noteUnprintedSend(
+					to: destinationName,
+					text: message,
+					lineType: policy.lineType
+				) else {
+					session.printDebugInformation(toConsole: ConnectionSafetyStrings.Wire.unprintedLinesHeldBack)
+					return false
+				}
+				tags = unprintedTags
+				if silentlyConnecting {
+					session.printDebugInformation(
+						toConsole: String(localized: .IRC.connectCommandSent(wireTarget, redactedMessage))
+					)
+				}
+			} else if let conversation {
+				tags = session.printLocallyIfNeeded(
 					redactedMessage,
 					in: conversation,
 					policy: policy,
 					localCommand: localCommand,
 					statusMessageTarget: statusMessageTarget
-				)
+				).map { ["label": $0] }
 			} else {
-				if policy.isSecretMessage {
-					session.noteUnprintedSend(to: destinationName, text: message, lineType: policy.lineType)
-				}
-				deliveryLabel = nil
+				tags = nil
 			}
 
 			let wireMessage = policy.lineType == .action
 				? CTCPPayload.action(message)
 				: message
-			if let deliveryLabel {
-				session.sendCommand(
-					policy.remoteCommand,
-					arguments: [wireTarget, wireMessage],
-					tags: ["label": deliveryLabel]
-				)
-			} else {
-				session.send(policy.remoteCommand, arguments: [wireTarget, wireMessage])
-			}
+			session.sendCommand(policy.remoteCommand, arguments: [wireTarget, wireMessage], tags: tags)
 			return true
 		}
 		return policy.isSecretMessage ? nil : conversation

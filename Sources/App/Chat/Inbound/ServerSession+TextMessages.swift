@@ -309,8 +309,7 @@ extension ServerSession {
 		)
 		switch action {
 		case let .sendIdentification(target, text):
-			noteUnprintedSend(to: target, text: text, lineType: .privateMessage)
-			send(.privmsg, arguments: [target, text])
+			sendUnprinted(.privmsg, to: target, text: text)
 			nickServ.isWaiting = true
 			nickServ.isConfirmed = false
 		case .identificationSucceeded:
@@ -350,8 +349,7 @@ extension ServerSession {
 		guard case let .sendIdentification(target, text) = ServiceNoticePolicy.identificationAction(for: nickServContext()) else {
 			return
 		}
-		noteUnprintedSend(to: target, text: text, lineType: .privateMessage)
-		send(.privmsg, arguments: [target, text])
+		sendUnprinted(.privmsg, to: target, text: text)
 		nickServ.isWaiting = true
 		nickServ.isConfirmed = false
 	}

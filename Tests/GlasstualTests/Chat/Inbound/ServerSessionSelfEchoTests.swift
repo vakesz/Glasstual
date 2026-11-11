@@ -90,6 +90,72 @@ struct ServerSessionSelfEchoTests {
 		#expect(session.findConversation("NickServ") == nil)
 	}
 
+	/// The text of each line `/smsg` put on the wire, tags and command stripped.
+	private func secretTexts(of session: TestServerSession, to target: String) -> [String] {
+		sentLines(of: session).compactMap { line in
+			guard let range = line.range(of: "PRIVMSG \(target) :") else { return nil }
+			return String(line[range.upperBound...])
+		}
+	}
+
+	/** More chunks than the registry once held: the first ones were dropped to
+	 make room before their echoes came back, and printed in a query with the
+	 recipient. Every echo stays out, and nothing opens a query. */
+	@Test("Every echo of a long /smsg stays out of the transcript")
+	func longSecretMessageEchoesAreDropped() throws {
+		let session = makeSession()
+		let words = (0 ..< 4000).map { "w\($0)" }.joined(separator: " ")
+
+		session.sendCommand("smsg bob \(words)", completeTarget: false, target: nil)
+		let texts = secretTexts(of: session, to: "bob")
+		#expect(texts.count > 40)
+
+		for text in texts {
+			session.connectionWillSend("PRIVMSG bob :\(text)")
+		}
+		for text in texts {
+			try receive(":me!u@h PRIVMSG bob :\(text)", on: session)
+		}
+
+		#expect(session.printedLines.count == 0)
+		#expect(session.findConversation("bob") == nil)
+	}
+
+	@Test("With labelled responses the echo of /smsg is matched by its label")
+	func secretMessageEchoMatchesByLabel() throws {
+		let session = makeSession()
+		session.enableCapability(.labeledResponse)
+		session.enableCapability(.batch)
+
+		session.sendCommand("smsg bob secret", completeTarget: false, target: nil)
+		let sent = try #require(sentLines(of: session).first)
+		let label = try #require(LabeledResponsePolicy.label(inOutgoingLine: sent))
+
+		/* The server rewrote the text, so only the label can tie it to the send. */
+		try receive("@label=\(label) :me!u@h PRIVMSG bob :secret ", on: session)
+
+		#expect(session.printedLines.count == 0)
+		#expect(session.findConversation("bob") == nil)
+	}
+
+	/** A bouncer or `chathistory` plays the session's own messages back later,
+	 when nothing is waiting for them. The client-only tag the send carried is
+	 what marks them. */
+	@Test("A replayed echo of /smsg carrying the unprinted tag prints nothing")
+	func replayedTaggedSecretMessageIsDropped() throws {
+		let session = makeSession()
+		session.enableCapability(.messageTags)
+
+		session.sendCommand("smsg bob secret", completeTarget: false, target: nil)
+		#expect(sentLines(of: session) == ["@\(ServerSession.unprintedMessageTag) PRIVMSG bob :secret"])
+
+		try receive("@\(ServerSession.unprintedMessageTag) :me!u@h PRIVMSG bob :secret", on: session, replayed: true)
+		try receive("@\(ServerSession.unprintedMessageTag) :me!u@h PRIVMSG bob :secret", on: session)
+
+		#expect(session.printedLines.count == 0)
+		#expect(session.findConversation("bob") == nil)
+	}
+
 	@Test("The echo of the identification sent for a NickServ notice prints nothing")
 	func automaticIdentificationEchoIsDropped() throws {
 		let session = makeSession(nicknamePassword: "hunter2")

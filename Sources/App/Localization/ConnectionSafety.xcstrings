@@ -625,6 +625,54 @@
         }
       }
     },
+    "outgoing-unprinted-lines-held-back" : {
+      "comment" : "Console notice when a /smsg, /sme or silent connect command stops part way: so many of the lines it already sent are still waiting for the server's echo that the client could no longer keep the next one's echo out of the transcript, so it sent nothing more.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The rest of the message was not sent: too many lines sent without being shown are still waiting for the server to echo them."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Az üzenet többi része nem lett elküldve: túl sok megjelenítés nélkül elküldött sor vár még arra, hogy a kiszolgáló visszaküldje."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Rest der Nachricht wurde nicht gesendet: Zu viele ohne Anzeige gesendete Zeilen warten noch darauf, dass der Server sie zurücksendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El resto del mensaje no se envió: demasiadas líneas enviadas sin mostrarse siguen esperando a que el servidor las devuelva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le reste du message n’a pas été envoyé : trop de lignes envoyées sans être affichées attendent encore que le serveur les renvoie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "メッセージの残りは送信されませんでした。表示せずに送信した行のうち、サーバからのエコーを待っているものが多すぎます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O restante da mensagem não foi enviado: linhas demais enviadas sem serem exibidas ainda aguardam que o servidor as devolva."
+          }
+        }
+      }
+    },
     "sasl-authentication-timed-out" : {
       "comment" : "Console notice when the server acknowledged the SASL capability and then never answered the authentication exchange, so the client gave up on it and finished registering.",
       "extractionState" : "manual",

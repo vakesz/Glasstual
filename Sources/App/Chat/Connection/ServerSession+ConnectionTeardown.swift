@@ -197,6 +197,7 @@ extension ServerSession {
 	func connectionWillSend(_ data: String) {
 		guard !isTerminating else { return }
 		noteLabeledLineWritten(data)
+		noteUnprintedLineWritten(data)
 		rawDataLogOutgoingTraffic(data)
 	}
 }
