@@ -192,12 +192,18 @@ extension ServerSession {
 		send(.metadata, arguments: arguments)
 	}
 
+	/** Remembers the user's choice in the configuration.
+
+	 Written in place rather than through `updateConfig(_:for:)`: the change is
+	 the user's own, made live, and announcing it as a reconfiguration would ask
+	 an open Server Properties sheet whether to throw its edits away. The next
+	 save writes it, and that sheet's own save keeps it. */
 	private func rememberProfilePreference(_ change: (inout ServerProfilePreference) -> Void) {
-		var edited = config
-		var preference = edited.serverProfile ?? ServerProfilePreference()
+		var preference = config.serverProfile ?? ServerProfilePreference()
 		change(&preference)
-		edited.serverProfile = preference
-		updateConfig(edited)
+		guard preference != config.serverProfile else { return }
+		config.serverProfile = preference
+		environment.chatSession?.savePeriodically()
 	}
 
 	// MARK: - Failures

@@ -168,13 +168,13 @@ extension ServerSession {
 		guard MetadataKey.profileKeys.contains(key) else { return }
 
 		if metadataTargetKey(target) == "*" {
+			let changed = metadata.ownWireValues[key] != value
 			metadata.ownWireValues[key] = value
 			if let myself {
-				var changed = false
-				modify(myself) { changed = $0.profile.apply(key: key, value: value) }
-				if changed {
-					noteProfileChanged(nickname: myself.nickname)
-				}
+				modify(myself) { $0.profile.apply(key: key, value: value) }
+			}
+			if changed {
+				noteProfileChanged(nickname: userNickname)
 			}
 			return
 		}
@@ -276,6 +276,9 @@ extension ServerSession {
 		guard metadata.ownProfileLoaded == false, isCapabilityEnabled(.metadata) else { return }
 
 		metadata.ownProfileLoaded = true
+		/* What shows the user's own profile can start editing now. */
+		noteProfileChanged(nickname: userNickname)
+		flushProfileChanges()
 
 		guard let preference = config.serverProfile else { return }
 

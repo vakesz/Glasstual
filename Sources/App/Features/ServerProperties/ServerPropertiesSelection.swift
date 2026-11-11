@@ -14,6 +14,7 @@ import Foundation
 enum ServerPropertiesSelection: CaseIterable, Hashable {
 	case general
 	case identity
+	case profile
 	case channelList
 	case highlights
 	case addressBook
@@ -31,6 +32,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		switch self {
 		case .general: .ServerProperties.serverPropertiesNavigationMenuGeneral
 		case .identity: .ServerProperties.serverPropertiesNavigationMenuIdentity
+		case .profile: .ServerProperties.profilePaneTitle
 		case .channelList: .ServerProperties.channelList
 		case .highlights: .ServerProperties.serverPropertiesNavigationMenuHighlights
 		case .addressBook: .ServerProperties.people
@@ -51,6 +53,7 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		switch self {
 		case .general: "network"
 		case .identity: "person.crop.circle"
+		case .profile: "person.text.rectangle"
 		case .channelList: "number"
 		case .highlights: "highlighter"
 		case .addressBook: "person.2"

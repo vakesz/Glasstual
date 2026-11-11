@@ -32,6 +32,7 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			session.updateStoredConfiguration()
 			model = ServerPropertiesModel(config: session.config)
 			model.bouncerNetworks = BouncerNetworksModel(session: session)
+			model.profile = ServerProfileModel(session: session)
 		} else {
 			// A new connection starts from the network list rather than a blank form.
 			var config = ServerConfig()
@@ -82,9 +83,14 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		model.isSaving = true
 		settingsSaves.submit { [self] in
 			await pendingCertificate?.value
-			guard let submitted = model.submittedConfig() else {
+			guard var submitted = model.submittedConfig() else {
 				model.isSaving = false
 				return false
+			}
+			/* The Profile pane changes the server's profile live, outside Save,
+			 so the profile the session holds now is the one to keep. */
+			if let session {
+				submitted.serverProfile = session.config.serverProfile
 			}
 			let write = credentialPersistence.enqueue(submitted.pendingKeychainEdits, retainsFailureForTermination: false)
 			do {

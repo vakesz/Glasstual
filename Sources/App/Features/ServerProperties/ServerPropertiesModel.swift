@@ -84,6 +84,10 @@ final class ServerPropertiesModel {
 	/// connection that does not exist yet.
 	var bouncerNetworks: BouncerNetworksModel?
 
+	/// The live profile of the connection being edited. `nil` for a connection
+	/// that does not exist yet.
+	var profile: ServerProfileModel?
+
 	/// Whether the connection is one network of a bouncer account.
 	var isBouncerNetwork: Bool {
 		config.bouncerNetwork != nil

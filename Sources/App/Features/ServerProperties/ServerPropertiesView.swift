@@ -50,14 +50,21 @@ struct ServerPropertiesView: View {
 						 socket settings from the account. */
 						Section(.ServerProperties.navigationSectionConnection) {
 							navigationRows([.channelList, .highlights, .addressBook, .connectCommands])
+							if model.profile != nil {
+								navigationRows([.profile])
+							}
 						}
 						Section(.ServerProperties.bouncer) {
 							navigationRows([.bouncerNetworks])
 						}
 					} else {
 						Section(.ServerProperties.navigationSectionConnection) {
+							navigationRows([.general, .identity])
+							if model.profile != nil {
+								navigationRows([.profile])
+							}
 							navigationRows([
-								.general, .identity, .channelList, .highlights, .addressBook,
+								.channelList, .highlights, .addressBook,
 								.connectCommands, .disconnectMessages, .encoding,
 							])
 						}
@@ -109,6 +116,10 @@ struct ServerPropertiesView: View {
 		switch model.selection {
 		case .general: ServerPropertiesGeneralPane(model: model, commands: commands)
 		case .identity: ServerPropertiesIdentityPane(model: model)
+		case .profile:
+			if let profile = model.profile {
+				ServerPropertiesProfilePane(profile: profile)
+			}
 		case .channelList: ServerPropertiesChannelListPane(model: model, commands: commands)
 		case .highlights: ServerPropertiesHighlightsPane(model: model, commands: commands)
 		case .addressBook: ServerPropertiesAddressBookPane(model: model, commands: commands)
@@ -128,7 +139,13 @@ struct ServerPropertiesView: View {
 	/// written here; each row's title and symbol belong to the pane itself.
 	private func navigationRows(_ panes: [ServerPropertiesSelection]) -> some View {
 		ForEach(panes, id: \.self) { pane in
-			Label(pane.title, systemImage: pane.symbol).tag(pane)
+			if pane == .profile {
+				Label(pane.title, systemImage: pane.symbol)
+					.tag(pane)
+					.accessibilityIdentifier("server-properties-profile")
+			} else {
+				Label(pane.title, systemImage: pane.symbol).tag(pane)
+			}
 		}
 	}
 }
