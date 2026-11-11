@@ -107,7 +107,7 @@ struct SASLPolicyTests {
 			transport: .verifiedTLS,
 			withholdsAccountCredentials: false,
 			preferred: nil
-		) == [.external, .ecdsaNIST256PChallenge, .scramSHA256, .plain])
+		) == [.external, .ecdsaNIST256PChallenge, .scramSHA512, .scramSHA256, .plain])
 	}
 
 	@Test("A preference moves to the front without dropping the others")
@@ -117,7 +117,7 @@ struct SASLPolicyTests {
 			transport: .verifiedTLS,
 			withholdsAccountCredentials: false,
 			preferred: .plain
-		) == [.plain, .external, .ecdsaNIST256PChallenge, .scramSHA256])
+		) == [.plain, .external, .ecdsaNIST256PChallenge, .scramSHA512, .scramSHA256])
 	}
 
 	@Test("A mechanism waiting for consent stays in the list")
@@ -127,7 +127,7 @@ struct SASLPolicyTests {
 			transport: .unverifiedTLS(consented: false, mayAsk: true),
 			withholdsAccountCredentials: false,
 			preferred: nil
-		) == [.scramSHA256, .plain])
+		) == [.scramSHA512, .scramSHA256, .plain])
 	}
 
 	@Test("An unusable preference is ignored, unless it is the only mechanism allowed")
@@ -138,7 +138,7 @@ struct SASLPolicyTests {
 			transport: .verifiedTLS,
 			withholdsAccountCredentials: false,
 			preferred: .external
-		) == [.scramSHA256, .plain])
+		) == [.scramSHA512, .scramSHA256, .plain])
 		#expect(SASLPolicy.supportedMechanisms(
 			inventory: inventory,
 			transport: .verifiedTLS,
@@ -146,6 +146,23 @@ struct SASLPolicyTests {
 			preferred: .external,
 			onlyPreferred: true
 		).isEmpty)
+	}
+
+	@Test("SCRAM-SHA-512 sorts ahead of SCRAM-SHA-256, and a preference moves SHA-256 back in front")
+	func scramSHA512SortsFirst() {
+		let inventory = SASLCredentialInventory(hasPassword: true)
+		#expect(SASLPolicy.supportedMechanisms(
+			inventory: inventory,
+			transport: .verifiedTLS,
+			withholdsAccountCredentials: false,
+			preferred: nil
+		).prefix(2) == [.scramSHA512, .scramSHA256])
+		#expect(SASLPolicy.supportedMechanisms(
+			inventory: inventory,
+			transport: .verifiedTLS,
+			withholdsAccountCredentials: false,
+			preferred: .scramSHA256
+		) == [.scramSHA256, .scramSHA512, .plain])
 	}
 
 	@Test("Use Only This Mechanism leaves nothing to fall back to")

@@ -11,6 +11,7 @@ import Foundation
 nonisolated enum SASLMechanism: String, CaseIterable, Codable, Sendable {
 	case external = "EXTERNAL"
 	case ecdsaNIST256PChallenge = "ECDSA-NIST256P-CHALLENGE"
+	case scramSHA512 = "SCRAM-SHA-512"
 	case scramSHA256 = "SCRAM-SHA-256"
 	case plain = "PLAIN"
 
@@ -28,14 +29,20 @@ nonisolated enum SASLMechanism: String, CaseIterable, Codable, Sendable {
 	 Strongest proof first: a certificate or a key proves possession without
 	 sending a secret, SCRAM proves knowledge of the password without sending
 	 it, and PLAIN sends the password as typed. */
-	static let defaultOrder: [SASLMechanism] = [.external, .ecdsaNIST256PChallenge, .scramSHA256, .plain]
+	static let defaultOrder: [SASLMechanism] = [
+		.external,
+		.ecdsaNIST256PChallenge,
+		.scramSHA512,
+		.scramSHA256,
+		.plain,
+	]
 
 	/// What the mechanism signs in with.
 	var credential: SASLCredentialKind {
 		switch self {
 		case .external: .clientCertificate
 		case .ecdsaNIST256PChallenge: .signingKey
-		case .scramSHA256: .passwordProof
+		case .scramSHA512, .scramSHA256: .passwordProof
 		case .plain: .passwordInClear
 		}
 	}

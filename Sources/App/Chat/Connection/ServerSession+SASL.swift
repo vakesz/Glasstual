@@ -136,7 +136,7 @@ extension ServerSession {
 			sendSASLPayloadInChunks("\(username)\0\(username)\0\(password)")
 		case .external:
 			sendCapabilityAuthenticate("+")
-		case .scramSHA256:
+		case .scramSHA512, .scramSHA256:
 			sendSASLScramInformation(forServerData: serverData)
 		case .ecdsaNIST256PChallenge:
 			sendSASLECDSAInformation(forServerData: serverData)
@@ -200,7 +200,11 @@ extension ServerSession {
 		let username = config.username.nonEmpty ?? config.nickname
 
 		guard let scramSession = sasl.scramSession else {
-			let scram = SCRAMClient(username: username, password: sessionNicknamePassword ?? "")
+			guard let hash = sasl.mechanism.flatMap(SCRAMHash.init(mechanism:)) else {
+				abortSASLNegotiation(reason: String(localized: .IRC.saslScramAuthenticationFailedTheServer))
+				return
+			}
+			let scram = SCRAMClient(hash: hash, username: username, password: sessionNicknamePassword ?? "")
 			sasl.scramSession = scram
 			sendSASLPayloadInChunks(scram.clientFirstMessage)
 			return

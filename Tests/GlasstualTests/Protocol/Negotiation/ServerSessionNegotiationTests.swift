@@ -134,7 +134,7 @@ struct ServerSessionNegotiationTests {
 		let session = makeSession(configuration: [:], nicknamePassword: "secret")
 
 		try session.handleCapabilityOrAuthenticationRequest(message(
-			":irc.example.net CAP * LS :sasl=SCRAM-SHA-512,GSSAPI",
+			":irc.example.net CAP * LS :sasl=SCRAM-SHA-1,GSSAPI",
 			on: session
 		))
 
@@ -541,6 +541,28 @@ struct ServerSessionNegotiationTests {
 
 		#expect(session.isCapabilityEnabled(.isInSASLNegotiation) == false)
 		#expect(capabilityCommands(of: session).last == "END")
+	}
+
+	@Test("SCRAM-SHA-512 is tried first and a refusal falls back to SCRAM-SHA-256")
+	func scramSHA512FallsBackToSHA256() throws {
+		let session = makeSession(configuration: ["usesSASL": true], nicknamePassword: "secret")
+		defer { session.stopAllTimers() }
+		session.setConnectionTransportForTesting(.connected)
+		try session.handleCapabilityOrAuthenticationRequest(message(
+			":irc.example.net CAP * LS :sasl=SCRAM-SHA-512,SCRAM-SHA-256,PLAIN",
+			on: session
+		))
+		try session.handleCapabilityOrAuthenticationRequest(message(":irc.example.net CAP * ACK :sasl", on: session))
+
+		#expect(sentLines(of: session).last == "AUTHENTICATE SCRAM-SHA-512")
+
+		try session.handleCapabilityOrAuthenticationRequest(message(":irc.example.net AUTHENTICATE +", on: session))
+		#expect(session.sasl.scramSession?.hash == .sha512)
+
+		try receiveAuthenticationNumeric(":irc.example.net 904 me :SASL authentication failed", on: session)
+
+		#expect(session.sasl.mechanism == .scramSHA256)
+		#expect(sentLines(of: session).last == "AUTHENTICATE SCRAM-SHA-256")
 	}
 
 	/** Once SASL has finished, a 900 answers something else — a NickServ

@@ -76,7 +76,7 @@ extension SASLMechanism {
 		switch self {
 		case .external: String(localized: .ServerProperties.saslMechanismExternalTitle)
 		case .ecdsaNIST256PChallenge: String(localized: .ServerProperties.saslMechanismEcdsaTitle)
-		case .scramSHA256: String(localized: .ServerProperties.saslMechanismScramTitle)
+		case .scramSHA512, .scramSHA256: String(localized: .ServerProperties.saslMechanismScramTitle)
 		case .plain: String(localized: .ServerProperties.saslMechanismPlainTitle)
 		}
 	}

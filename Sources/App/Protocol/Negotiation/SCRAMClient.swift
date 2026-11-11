@@ -16,6 +16,61 @@ nonisolated enum SCRAMClientErrorCode: Int, Sendable {
 	case serverSignatureMismatch
 	case keyDerivationFailed
 	case iterationCountTooHigh
+	/// RFC 5802 §5.1: the server sent `m=`, a mandatory extension this
+	/// client does not understand, which must fail the exchange.
+	case unsupportedMandatoryExtension
+}
+
+/// The hash a SCRAM mechanism is built on. RFC 5802 is the construction;
+/// RFC 7677 names SHA-256 and draft-melnikov-scram-sha-512 names SHA-512.
+nonisolated enum SCRAMHash: Sendable, CaseIterable {
+	case sha256
+	case sha512
+
+	var mechanism: SASLMechanism {
+		switch self {
+		case .sha256: .scramSHA256
+		case .sha512: .scramSHA512
+		}
+	}
+
+	init?(mechanism: SASLMechanism) {
+		switch mechanism {
+		case .scramSHA256: self = .sha256
+		case .scramSHA512: self = .sha512
+		default: return nil
+		}
+	}
+
+	/// The digest length, which is also the length of the salted password.
+	var keyLength: Int {
+		switch self {
+		case .sha256: Int(CC_SHA256_DIGEST_LENGTH)
+		case .sha512: Int(CC_SHA512_DIGEST_LENGTH)
+		}
+	}
+
+	var pbkdf2Algorithm: CCPseudoRandomAlgorithm {
+		switch self {
+		case .sha256: CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
+		case .sha512: CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
+		}
+	}
+
+	func hmac(key: Data, message: Data) -> Data {
+		let key = SymmetricKey(data: key)
+		switch self {
+		case .sha256: return Data(HMAC<SHA256>.authenticationCode(for: message, using: key))
+		case .sha512: return Data(HMAC<SHA512>.authenticationCode(for: message, using: key))
+		}
+	}
+
+	func hash(_ data: Data) -> Data {
+		switch self {
+		case .sha256: Data(SHA256.hash(data: data))
+		case .sha512: Data(SHA512.hash(data: data))
+		}
+	}
 }
 
 /// A failed SCRAM exchange. It bridges to an `NSError` in
@@ -37,7 +92,8 @@ nonisolated struct SCRAMClientError: LocalizedError, CustomNSError {
 	}
 }
 
-/// Client side of SASL SCRAM-SHA-256 (RFC 5802, RFC 7677).
+/// Client side of SASL SCRAM-SHA-256 and SCRAM-SHA-512 (RFC 5802, RFC 7677,
+/// draft-melnikov-scram-sha-512).
 ///
 /// The caller drives the exchange: send `clientFirstMessage`, pass the
 /// server's first message to `clientFinalMessage(forServerFirstMessage:)`
@@ -72,6 +128,7 @@ final class SCRAMClient {
 
 	private(set) var state: State = .initial
 
+	let hash: SCRAMHash
 	private let username: String
 	private let password: String
 	private let clientNonce: String
@@ -83,22 +140,26 @@ final class SCRAMClient {
 	private var serverSignature = Data()
 
 	/// Creates an exchange with a fresh random nonce.
-	convenience init(username: String, password: String) {
-		self.init(username: username, password: password, clientNonce: SCRAMClient.makeNonce())
+	convenience init(hash: SCRAMHash = .sha256, username: String, password: String) {
+		self.init(hash: hash, username: username, password: password, clientNonce: SCRAMClient.makeNonce())
 	}
 
 	/// Creates an exchange with a caller supplied nonce. Only tests should
 	/// pick their own nonce.
-	convenience init(username: String, password: String, clientNonce: String) {
-		self.init(username: username, password: password, clientNonce: clientNonce, deriveKey: Self.pbkdf2Offloaded)
+	convenience init(hash: SCRAMHash = .sha256, username: String, password: String, clientNonce: String) {
+		self.init(hash: hash, username: username, password: password, clientNonce: clientNonce) { password, salt, iterations in
+			await Self.pbkdf2Offloaded(password: password, salt: salt, iterations: iterations, hash: hash)
+		}
 	}
 
 	init(
+		hash: SCRAMHash = .sha256,
 		username: String,
 		password: String,
 		clientNonce: String,
 		deriveKey: @escaping @Sendable (String, Data, Int) async -> Data?
 	) {
+		self.hash = hash
 		self.username = username
 		self.password = password
 		self.clientNonce = clientNonce
@@ -165,6 +226,10 @@ final class SCRAMClient {
 			throw fail(.serverRejected, serverError)
 		}
 
+		guard attributes["m"] == nil else {
+			throw fail(.unsupportedMandatoryExtension, "Server first message requires an extension (m=)")
+		}
+
 		guard let combinedNonce = attributes["r"],
 		      let saltBase64 = attributes["s"],
 		      let salt = Data(base64Encoded: saltBase64),
@@ -194,9 +259,9 @@ final class SCRAMClient {
 		challenge: ServerFirstChallenge,
 		saltedPassword: Data
 	) -> String {
-		let clientKey = SCRAMClient.hmac(key: saltedPassword, message: Data("Client Key".utf8))
-		let storedKey = Data(SHA256.hash(data: clientKey))
-		let serverKey = SCRAMClient.hmac(key: saltedPassword, message: Data("Server Key".utf8))
+		let clientKey = hash.hmac(key: saltedPassword, message: Data("Client Key".utf8))
+		let storedKey = hash.hash(clientKey)
+		let serverKey = hash.hmac(key: saltedPassword, message: Data("Server Key".utf8))
 
 		let channelBinding = Data(SCRAMClient.gs2Header.utf8).base64EncodedString()
 		let clientFinalWithoutProof = "c=\(channelBinding),r=\(challenge.combinedNonce)"
@@ -204,10 +269,10 @@ final class SCRAMClient {
 		let authMessage = [clientFirstMessageBare, serverFirst, clientFinalWithoutProof].joined(separator: ",")
 		let authMessageData = Data(authMessage.utf8)
 
-		let clientSignature = SCRAMClient.hmac(key: storedKey, message: authMessageData)
+		let clientSignature = hash.hmac(key: storedKey, message: authMessageData)
 		let clientProof = Data(zip(clientKey, clientSignature).map { $0 ^ $1 })
 
-		serverSignature = SCRAMClient.hmac(key: serverKey, message: authMessageData)
+		serverSignature = hash.hmac(key: serverKey, message: authMessageData)
 
 		state = .sentClientFinal
 
@@ -301,19 +366,20 @@ final class SCRAMClient {
 		return Data(bytes).base64EncodedString()
 	}
 
-	static func hmac(key: Data, message: Data) -> Data {
-		Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: key)))
-	}
-
-	/// `pbkdf2(password:salt:iterations:)` on a background executor.
+	/// `pbkdf2(password:salt:iterations:hash:)` on a background executor.
 	@concurrent
-	static func pbkdf2Offloaded(password: String, salt: Data, iterations: Int) async -> Data? {
-		pbkdf2(password: password, salt: salt, iterations: iterations)
+	static func pbkdf2Offloaded(password: String, salt: Data, iterations: Int, hash: SCRAMHash = .sha256) async -> Data? {
+		pbkdf2(password: password, salt: salt, iterations: iterations, hash: hash)
 	}
 
-	/// PBKDF2-HMAC-SHA256 producing a 32 byte key. Pure, so the offloaded
-	/// wrapper above can call it from the cooperative pool.
-	nonisolated static func pbkdf2(password: String, salt: Data, iterations: Int) -> Data? { // nonisolated: pure
+	/// PBKDF2 over the hash's HMAC, producing a key as long as its digest.
+	/// Pure, so the offloaded wrapper above can call it from the cooperative pool.
+	nonisolated static func pbkdf2( // nonisolated: pure
+		password: String,
+		salt: Data,
+		iterations: Int,
+		hash: SCRAMHash = .sha256
+	) -> Data? {
 		guard let roundCount = UInt32(exactly: iterations) else {
 			return nil
 		}
@@ -321,7 +387,7 @@ final class SCRAMClient {
 		let passwordBytes = password.utf8.map { CChar(bitPattern: $0) }
 		let saltBytes = [UInt8](salt)
 
-		var derived = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+		var derived = [UInt8](repeating: 0, count: hash.keyLength)
 
 		let status = passwordBytes.withUnsafeBufferPointer { passwordPointer in
 			CCKeyDerivationPBKDF(
@@ -330,7 +396,7 @@ final class SCRAMClient {
 				passwordBytes.count,
 				saltBytes,
 				saltBytes.count,
-				CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
+				hash.pbkdf2Algorithm,
 				roundCount,
 				&derived,
 				derived.count

@@ -620,7 +620,7 @@ struct IRCSpecCapabilityNegotiationTests {
 				transport: anyTransport,
 				withholdsAccountCredentials: false,
 				preferred: nil
-			) == [.external, .scramSHA256, .plain]
+			) == [.external, .scramSHA512, .scramSHA256, .plain]
 		)
 		#expect(
 			SASLPolicy.supportedMechanisms(
@@ -640,7 +640,7 @@ struct IRCSpecCapabilityNegotiationTests {
 				transport: anyTransport,
 				withholdsAccountCredentials: false,
 				preferred: .plain
-			) == [.plain, .scramSHA256]
+			) == [.plain, .scramSHA512, .scramSHA256]
 		)
 	}
 
