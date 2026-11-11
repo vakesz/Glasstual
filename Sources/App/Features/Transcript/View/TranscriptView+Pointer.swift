@@ -63,9 +63,14 @@ extension TranscriptView {
 	func textViewClicked(_ click: TranscriptClick) {
 		/* A click that left a selection behind was a drag over the text, and a
 		 drag over a name selects the name rather than asking about its owner. */
-		guard click.clickCount == 1, click.dragged == false, click.modifiers.isEmpty,
-		      textView.selectedRange().length == 0
-		else { return }
+		guard click.clickCount == 1, click.dragged == false, click.modifiers.isEmpty else { return }
+		/* Checked before the selection: a click on an attachment may leave the
+		 attachment itself selected. */
+		if let placeholder = clickedInlineImagePlaceholder(at: click.point) {
+			activateInlineImagePlaceholder(placeholder)
+			return
+		}
+		guard textView.selectedRange().length == 0 else { return }
 		if let reaction = clickedReaction(at: click.point) {
 			commands.reactionChipClicked(reaction)
 			return
@@ -84,6 +89,23 @@ extension TranscriptView {
 			? NSRect(origin: point, size: .zero).insetBy(dx: -1, dy: -1)
 			: textView.convert(window.convertFromScreen(screenRect), from: nil)
 		showMemberInformation(for: nickname, relativeTo: rect, of: textView)
+	}
+
+	/** The image placeholder under a point. The insertion index a point names
+	 is past a character once the point is over that character's trailing
+	 half, so the character before it is a candidate too, and whichever one is
+	 a placeholder has to be drawn under the point. */
+	private func clickedInlineImagePlaceholder(at point: NSPoint) -> TranscriptInlineImagePlaceholder.Key? {
+		guard let index = characterIndex(at: point), let window else { return nil }
+		let screenPoint = window.convertPoint(toScreen: textView.convert(point, to: nil))
+		for candidate in [index, index - 1] {
+			guard let key = inlineImagePlaceholderKey(atCharacterIndex: candidate) else { continue }
+			let frame = textView.firstRect(forCharacterRange: NSRange(location: candidate, length: 1), actualRange: nil)
+			if frame.contains(screenPoint) {
+				return key
+			}
+		}
+		return nil
 	}
 
 	/// The reaction chip under a point, or nil where there is none.

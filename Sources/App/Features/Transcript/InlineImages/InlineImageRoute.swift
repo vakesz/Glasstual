@@ -12,11 +12,16 @@ import Network
  advertises, must not undo that. The route follows the session's configuration,
  not its live connection: an image is fetched through the configured proxy even
  while disconnected, or after the user connected once without it. A configured
- proxy is never bypassed; a fetch it cannot carry fails. */
+ proxy is never bypassed; a fetch it cannot carry fails.
+
+ The route also decides when a fetch may start at all, in ``inlineImageFetch``
+ and ``networkIconFetch``. */
 nonisolated enum InlineImageRoute: Sendable, Hashable {
 	/// The system's own proxy settings, which URLSession applies by itself.
 	case system
-	/// The proxy the session is configured to use.
+	/// The local Tor listener a Tor session connects through.
+	case tor
+	/// The SOCKS5 or HTTP proxy the reader configured for the session.
 	case proxy(Proxy)
 	/// A proxy is configured but has no address, so nothing may be fetched.
 	case unavailable
@@ -46,7 +51,7 @@ nonisolated enum InlineImageRoute: Sendable, Hashable {
 			return .system
 		case .tor:
 			// Tor separates circuits by credential; the connection host sends none either.
-			return .proxy(torProxy)
+			return .tor
 		case .socks5:
 			kind = .socks5
 		case .HTTP:
@@ -84,19 +89,67 @@ nonisolated enum InlineImageRoute: Sendable, Hashable {
 		self = Self.forConfig(config, proxyPassword: password)
 	}
 
+	/// When a fetch on a route may start.
+	enum FetchPolicy: Sendable, Hashable {
+		/// As soon as the link or the icon is seen.
+		case automatic
+		/// Only when the reader asks for that one image.
+		case onRequest
+		/// Not at all.
+		case never
+	}
+
+	/** When an image a line links to is fetched.
+
+	 A reader's own SOCKS5 or HTTP proxy resolves the host name itself, so this
+	 Mac can check only how the name is spelled, and a name that the proxy
+	 resolves to an address on its own network passes that check. Whoever
+	 posted the link chose that name, so the fetch waits for the reader to ask
+	 for the image. A Tor exit refuses private addresses itself, and the system
+	 route checks resolved addresses here, so both fetch on sight. A route that
+	 cannot carry a fetch offers none. */
+	var inlineImageFetch: FetchPolicy {
+		switch self {
+		case .system, .tor: .automatic
+		case .proxy: .onRequest
+		case .unavailable: .never
+		}
+	}
+
+	/** When the icon a network advertises is fetched.
+
+	 The address comes from the server, and nothing in the sidebar asks the
+	 reader before fetching it, so a route where only the name's spelling can
+	 be checked fetches no icon and the row keeps its glyph. */
+	var networkIconFetch: FetchPolicy {
+		switch self {
+		case .system, .tor: .automatic
+		case .proxy, .unavailable: .never
+		}
+	}
+
 	/// Whether a host name may be looked up on this Mac. Through a proxy it may
 	/// not: the lookup itself would tell the resolver what is being fetched.
 	var resolvesNamesLocally: Bool {
 		switch self {
 		case .system, .unavailable: true
-		case .proxy: false
+		case .tor, .proxy: false
+		}
+	}
+
+	/// The proxy every fetch on this route goes through, if any.
+	private var proxy: Proxy? {
+		switch self {
+		case .tor: Self.torProxy
+		case let .proxy(proxy): proxy
+		case .system, .unavailable: nil
 		}
 	}
 
 	/// The Network proxy a URLSession on this route must use, with no failover
 	/// to a direct connection.
 	var proxyConfigurations: [ProxyConfiguration] {
-		guard case let .proxy(proxy) = self else { return [] }
+		guard let proxy else { return [] }
 
 		let endpoint = NWEndpoint.hostPort(
 			host: NWEndpoint.Host(proxy.host),

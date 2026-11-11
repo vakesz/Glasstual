@@ -63,10 +63,11 @@ struct TranscriptDocument {
 	/// The ordinal of `lines[0]`.
 	private(set) var firstLineOrdinal = 0
 
-	/// The decoded images each line drew, keyed by line number. Written only
-	/// from here, beside the lines the keys name: a table a caller could edit
-	/// on its own is a table that can outlive the line it belongs to.
-	private(set) var inlineImages: [String: [CachedTranscriptImage]] = [:]
+	/// The decoded images, and the placeholders still waiting for the reader,
+	/// each line drew, keyed by line number. Written only from here, beside the
+	/// lines the keys name: a table a caller could edit on its own is a table
+	/// that can outlive the line it belongs to.
+	private(set) var inlineMedia: [String: [TranscriptInlineMedia]] = [:]
 
 	/// How many lines the reader asked to keep.
 	var bufferLimit = TranscriptBufferLimits.defaultHardLimit
@@ -183,7 +184,7 @@ struct TranscriptDocument {
 		lineOrdinals.removeAll()
 		messageLineOrdinals.removeAll()
 		firstLineOrdinal = 0
-		inlineImages.removeAll()
+		inlineMedia.removeAll()
 		scrollbackAllowance = 0
 		checkInvariant()
 	}
@@ -264,7 +265,7 @@ struct TranscriptDocument {
 			if let messageIdentifier = line.messageIdentifier, messageLineOrdinals[MessageIdentifierKey(messageIdentifier)] == nil {
 				retiredMessageIdentifiers.append(messageIdentifier)
 			}
-			inlineImages.removeValue(forKey: line.lineNumber)
+			inlineMedia.removeValue(forKey: line.lineNumber)
 			for marker in line.markers {
 				retiredMarkers[marker.selectionSegment] = marker
 			}
@@ -323,7 +324,7 @@ struct TranscriptDocument {
 		highlightedLineCount += lines[index].body.isHighlight ? 1 : 0
 		indexMessage(of: lines[index], ordinal: firstLineOrdinal + index)
 		if update.replacement != nil {
-			inlineImages.removeValue(forKey: update.lineNumber)
+			inlineMedia.removeValue(forKey: update.lineNumber)
 		}
 		return index
 	}
@@ -340,7 +341,7 @@ struct TranscriptDocument {
 			else { continue }
 			highlightedLineCount -= lines[index].body.isHighlight ? 1 : 0
 			lines[index].redact(placeholder: placeholder)
-			inlineImages.removeValue(forKey: lines[index].lineNumber)
+			inlineMedia.removeValue(forKey: lines[index].lineNumber)
 			changed.append(index)
 		}
 		return changed
@@ -388,14 +389,63 @@ struct TranscriptDocument {
 		return changed.sorted()
 	}
 
-	/// Records a decoded image against the line that asked for it. `nil` when
-	/// the line has already been trimmed, or already carries this image.
+	/// Records a decoded image against the line that asked for it, in place of
+	/// the placeholder that stood for it. `nil` when the line has already been
+	/// trimmed, or already carries this image.
 	mutating func addInlineImage(_ image: CachedTranscriptImage, to lineNumber: String) -> Int? {
 		guard let index = index(ofLine: lineNumber), lines[index].lineNumber == lineNumber else { return nil }
-		var images = inlineImages[lineNumber] ?? []
-		guard images.contains(where: { $0.linkIdentifier == image.linkIdentifier }) == false else { return nil }
-		images.append(image)
-		inlineImages[lineNumber] = images
+		var media = inlineMedia[lineNumber] ?? []
+		if let existing = media.firstIndex(where: { $0.linkIdentifier == image.linkIdentifier }) {
+			guard media[existing].placeholder != nil else { return nil }
+			media[existing] = .image(image)
+		} else {
+			media.append(.image(image))
+		}
+		inlineMedia[lineNumber] = media
+		return index
+	}
+
+	/// Records a placeholder for a link whose image waits for the reader. `nil`
+	/// when the line has been trimmed, or already draws something for the link.
+	mutating func addInlineImagePlaceholder(_ placeholder: TranscriptInlineImagePlaceholder) -> Int? {
+		let lineNumber = placeholder.key.lineNumber
+		guard let index = index(ofLine: lineNumber), lines[index].lineNumber == lineNumber else { return nil }
+		var media = inlineMedia[lineNumber] ?? []
+		guard media.contains(where: { $0.linkIdentifier == placeholder.key.linkIdentifier }) == false else { return nil }
+		media.append(.placeholder(placeholder))
+		inlineMedia[lineNumber] = media
+		return index
+	}
+
+	/// The placeholder `key` names, while the line still draws one there.
+	func inlineImagePlaceholder(_ key: TranscriptInlineImagePlaceholder.Key) -> TranscriptInlineImagePlaceholder? {
+		inlineMedia[key.lineNumber]?.lazy.compactMap(\.placeholder).first { $0.key == key }
+	}
+
+	/// Moves a placeholder to `state`, and answers with the index of the line
+	/// to redraw; `nil` when there is no such placeholder or nothing changed.
+	mutating func setInlineImagePlaceholderState(
+		_ state: TranscriptInlineImagePlaceholder.State,
+		for key: TranscriptInlineImagePlaceholder.Key
+	) -> Int? {
+		guard let index = index(ofLine: key.lineNumber), var media = inlineMedia[key.lineNumber],
+		      let position = media.firstIndex(where: { $0.placeholder?.key == key }),
+		      var placeholder = media[position].placeholder, placeholder.state != state
+		else { return nil }
+		placeholder.state = state
+		media[position] = .placeholder(placeholder)
+		inlineMedia[key.lineNumber] = media
+		return index
+	}
+
+	/// Takes a placeholder away, and answers with the index of the line to
+	/// redraw; `nil` when there is no such placeholder.
+	mutating func removeInlineImagePlaceholder(_ key: TranscriptInlineImagePlaceholder.Key) -> Int? {
+		guard let index = index(ofLine: key.lineNumber), var media = inlineMedia[key.lineNumber],
+		      let position = media.firstIndex(where: { $0.placeholder?.key == key })
+		else { return nil }
+		media.remove(at: position)
+		inlineMedia[key.lineNumber] = media.isEmpty ? nil : media
 		return index
 	}
 

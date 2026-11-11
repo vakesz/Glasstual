@@ -100,8 +100,11 @@ extension TranscriptView {
 		                    range: NSRange(location: bodyStart, length: result.length - bodyStart))
 		let detailsStart = result.length
 		appendDeliveryAndReactions(for: line, to: result, paragraph: paragraph)
-		for image in document.inlineImages[line.lineNumber] ?? [] {
-			append(image, to: result, paragraph: paragraph)
+		for media in document.inlineMedia[line.lineNumber] ?? [] {
+			switch media {
+			case let .image(image): append(image, to: result, paragraph: paragraph)
+			case let .placeholder(placeholder): append(placeholder, to: result, paragraph: paragraph)
+			}
 		}
 		result.append(NSAttributedString(string: "\n", attributes: metadata))
 		result.addAttribute(.transcriptSelectionSegment, value: "details",

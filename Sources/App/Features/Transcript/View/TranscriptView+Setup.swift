@@ -204,12 +204,12 @@ extension TranscriptView {
 	 change in the widest size an image may take redraws at all, so a window
 	 wider than the box costs nothing. */
 	func reflowInlineImages() {
-		guard inLiveResize == false, editDepth == 0, document.inlineImages.isEmpty == false else { return }
+		guard inLiveResize == false, editDepth == 0, document.inlineMedia.isEmpty == false else { return }
 		scrollView.layoutSubtreeIfNeeded()
 		let width = TranscriptMetrics.inlineImageMaximumWidth(forTextViewWidth: textView.bounds.width)
 		guard width != renderedInlineImageWidth else { return }
 		performEditingBatch {
-			for lineNumber in document.inlineImages.keys {
+			for lineNumber in document.inlineMedia.keys {
 				if let index = document.index(ofLine: lineNumber) {
 					refresh(at: index)
 				}

@@ -188,11 +188,12 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	}
 
 	init(conversation: Conversation, in window: MainWindow,
+	     inlineImageLoader: InlineImageLoader = .shared,
 	     highlightExpressions: TranscriptHighlightExpressions = .shared,
 	     settings: TranscriptSettingsStore = AppServices.transcriptSettings,
 	     scrollback: Scrollback = .shared, commands: TranscriptCommandSink = .menuController())
 	{
-		inlineImageLoader = .shared
+		self.inlineImageLoader = inlineImageLoader
 		self.highlightExpressions = highlightExpressions
 		self.settings = settings
 		self.scrollback = scrollback

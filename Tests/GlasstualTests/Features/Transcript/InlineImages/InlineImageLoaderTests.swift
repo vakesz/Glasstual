@@ -500,6 +500,7 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 		var repetitions = 1
 		var hold = false
 		var started = false
+		var startCount = 0
 		var stopped = false
 	}
 
@@ -519,6 +520,11 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 		fixtures.withLock { $0[url]?.started == true }
 	}
 
+	/// How many requests for `url` reached the stub.
+	static func startCount(_ url: URL) -> Int {
+		fixtures.withLock { $0[url]?.startCount ?? 0 }
+	}
+
 	static func stopped(_ url: URL) -> Bool {
 		fixtures.withLock { $0[url]?.stopped == true }
 	}
@@ -532,6 +538,9 @@ final nonisolated class InlineImageTestProtocol: URLProtocol { // nonisolated: i
 	}
 
 	override func startLoading() {
+		if let url = request.url {
+			Self.fixtures.withLock { $0[url]?.startCount += 1 }
+		}
 		guard let url = request.url,
 		      let fixture = Self.fixtures.withLock({ fixtures in
 		      	fixtures[url]?.started = true

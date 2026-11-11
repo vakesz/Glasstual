@@ -137,8 +137,10 @@ nonisolated struct InlineImageHostResolver: Sendable {
  not this Mac, resolves the name: looking it up here would reveal it to the
  local resolver. Only the spelling is checked then, so literal private
  addresses and local names are still refused, but a public-looking name the
- proxy resolves to an address on its own network is reached. Tor exits refuse
- private addresses themselves. */
+ proxy resolves to an address on its own network would be reached. A reader's
+ own SOCKS5 or HTTP proxy therefore fetches an image only when the reader asks
+ for it, and never a network icon (`InlineImageRoute.inlineImageFetch`). Tor
+ exits refuse private addresses themselves. */
 nonisolated enum InlineImageHostPolicy {
 	enum Verdict: Equatable {
 		case refused

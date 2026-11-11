@@ -45,6 +45,14 @@ enum TranscriptMetrics {
 	/// The largest an inline image is drawn.
 	static let inlineImageBox = CGSize(width: 480, height: 320)
 
+	/** The box a placeholder for an image that waits for the reader is drawn
+	 in, at most. It is far shorter than most pictures, so the image that
+	 replaces it moves the lines below by less than an image added outright. */
+	static let inlineImagePlaceholderBox = CGSize(width: 320, height: 44)
+	static let inlineImagePlaceholderPadding: CGFloat = 12
+	static let inlineImagePlaceholderSpacing: CGFloat = 8
+	static let inlineImagePlaceholderCornerRadius: CGFloat = 8
+
 	/// What an inline image keeps clear of the column's trailing edge, so a
 	/// picture never runs under the scroller.
 	static let inlineImageSideInset: CGFloat = 40

@@ -50,7 +50,36 @@ struct NetworkIconStoreTests {
 		#expect(InlineImageTestProtocol.started(url) == false)
 	}
 
-	@Test("An icon fetched through a proxy is not looked up on this Mac", .timeLimit(.minutes(1)))
+	@Test("A session on the reader's own SOCKS5 or HTTP proxy requests no icon", arguments: [
+		InlineImageRoute.ProxyKind.socks5, .httpConnect,
+	])
+	func proxiedRouteRequestsNoIcon(kind: InlineImageRoute.ProxyKind) {
+		let url = InlineImageTestProtocol.register(.init(chunk: Data("GIF89a".utf8)))
+		defer { InlineImageTestProtocol.remove(url) }
+		let store = NetworkIconStore(protocolClasses: [InlineImageTestProtocol.self])
+		let route = InlineImageRoute.proxy(.init(kind: kind, host: "proxy.example.org", port: 1080))
+
+		store.request(url, route: route)
+
+		#expect(store.isFetching(url, route: route) == false)
+		#expect(InlineImageTestProtocol.startCount(url) == 0)
+	}
+
+	@Test("Tor and the system route request the icon", arguments: [InlineImageRoute.tor, .system])
+	func automaticRouteRequestsIcon(route: InlineImageRoute) async throws {
+		let url = InlineImageTestProtocol.register(.init(hold: true))
+		defer { InlineImageTestProtocol.remove(url) }
+		let store = NetworkIconStore(protocolClasses: [InlineImageTestProtocol.self])
+
+		store.request(url, route: route)
+
+		#expect(store.isFetching(url, route: route))
+		try await Eventually.until(timeout: .seconds(10), "the request to reach the network") {
+			InlineImageTestProtocol.startCount(url) == 1
+		}
+	}
+
+	@Test("An icon fetched over Tor is not looked up on this Mac", .timeLimit(.minutes(1)))
 	func proxiedIconIsNotResolved() async throws {
 		let url = try InlineImageTestProtocol.register(.init(
 			headers: ["Content-Type": "image/png"],
@@ -62,7 +91,7 @@ struct NetworkIconStoreTests {
 			protocolClasses: [InlineImageTestProtocol.self],
 			hostResolver: InlineImageHostResolver { host in await counter.lookup(host) }
 		)
-		let route = InlineImageRoute.proxy(.init(kind: .socks5, host: "127.0.0.1", port: 9150))
+		let route = InlineImageRoute.tor
 		var changes = 0
 		store.onChange = { changes += 1 }
 

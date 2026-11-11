@@ -170,6 +170,15 @@ final class TranscriptTextView: NSTextView {
 		return actions.isEmpty ? nil : actions
 	}
 
+	/// The native text and its links, plus a button for each image placeholder
+	/// on screen, which the text alone would read as a picture.
+	override func accessibilityChildren() -> [Any]? {
+		let native = super.accessibilityChildren() ?? []
+		let placeholders = owner?.inlineImagePlaceholderAccessibilityElements() ?? []
+		let children = native + placeholders
+		return children.isEmpty ? nil : children
+	}
+
 	func selectionContextMenu() -> NSMenu? {
 		guard let owner else { return nil }
 		owner.contextMenuTarget = owner.selectedContextTarget()

@@ -33,6 +33,9 @@ nonisolated extension NSAttributedString.Key {
 	/// The address an inline image was fetched from, on the character that
 	/// draws it.
 	static let transcriptInlineImage = NSAttributedString.Key("GlasstualTranscriptInlineImage")
+	/// A `TranscriptInlineImagePlaceholder.Key`, on the character that draws a
+	/// placeholder for an image that waits for the reader.
+	static let transcriptInlineImagePlaceholder = NSAttributedString.Key("GlasstualTranscriptInlineImagePlaceholder")
 	static let transcriptSelectionSegment = NSAttributedString.Key("GlasstualTranscriptSelectionSegment")
 	/** Characters the transcript drew for its own layout rather than for the
 	 text: the thin spaces that pad a reaction chip, the zero-width space an

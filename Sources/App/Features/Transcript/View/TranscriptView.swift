@@ -72,6 +72,9 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// The widest an inline image was last drawn, so a layout that finds the
 	/// column wider or narrower than that can draw the pictures again.
 	var renderedInlineImageWidth: CGFloat?
+	/// The VoiceOver buttons for the image placeholders on screen, kept while
+	/// they stay there.
+	var inlineImagePlaceholderElements: [TranscriptInlineImagePlaceholder.Key: TranscriptInlineImagePlaceholderElement] = [:]
 	/// The clip view's last observed top, so a bounds change can say whether
 	/// the reader moved towards the start of the transcript.
 	var lastVisibleTop: CGFloat = 0
@@ -171,7 +174,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	func keyDown(_ event: NSEvent, in _: NSView) -> Bool {
 		let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 		if modifiers.isEmpty, [" ", "\r", "\n"].contains(event.charactersIgnoringModifiers ?? ""),
-		   activateSelectedFold()
+		   activateSelectedFold() || activateSelectedInlineImagePlaceholder()
 		{
 			return true
 		}

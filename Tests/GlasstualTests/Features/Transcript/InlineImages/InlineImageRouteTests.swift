@@ -45,8 +45,9 @@ struct InlineImageRouteTests {
 			proxyPassword: "secret"
 		)
 
-		#expect(route == .proxy(.init(kind: .socks5, host: "127.0.0.1", port: 9150)))
+		#expect(route == .tor)
 		#expect(route.resolvesNamesLocally == false)
+		#expect(route.proxyConfigurations.count == 1)
 	}
 
 	@Test("SOCKS and HTTP proxies carry their address, port and credential", arguments: [
@@ -107,6 +108,48 @@ struct InlineImageRouteTests {
 		#expect(proxy.allowFailover == false)
 		#expect(configuration.urlCache == nil)
 		#expect(configuration.httpCookieStorage == nil)
+	}
+
+	private nonisolated static let socks = InlineImageRoute.proxy(.init(kind: .socks5, host: "proxy.example.org", port: 1080))
+	private nonisolated static let http = InlineImageRoute.proxy(.init(kind: .httpConnect, host: "proxy.example.org", port: 3128))
+	/// A proxy at Tor's own address is still the reader's proxy, not Tor.
+	private nonisolated static let socksAtTorAddress = InlineImageRoute.proxy(.init(kind: .socks5, host: "127.0.0.1", port: 9150))
+
+	@Test("Each route decides when an inline image is fetched", arguments: [
+		(InlineImageRoute.system, InlineImageRoute.FetchPolicy.automatic),
+		(.tor, .automatic),
+		(socks, .onRequest),
+		(http, .onRequest),
+		(socksAtTorAddress, .onRequest),
+		(.unavailable, .never),
+	])
+	func inlineImageFetchDecision(route: InlineImageRoute, policy: InlineImageRoute.FetchPolicy) {
+		#expect(route.inlineImageFetch == policy)
+	}
+
+	@Test("Each route decides whether a network icon is fetched", arguments: [
+		(InlineImageRoute.system, InlineImageRoute.FetchPolicy.automatic),
+		(.tor, .automatic),
+		(socks, .never),
+		(http, .never),
+		(socksAtTorAddress, .never),
+		(.unavailable, .never),
+	])
+	func networkIconFetchDecision(route: InlineImageRoute, policy: InlineImageRoute.FetchPolicy) {
+		#expect(route.networkIconFetch == policy)
+	}
+
+	@Test("A session's proxy setting decides when its images are fetched", arguments: [
+		(ConnectionProxyKind.none, InlineImageRoute.FetchPolicy.automatic),
+		(.automatic, .automatic),
+		(.tor, .automatic),
+		(.socks5, .onRequest),
+		(.HTTP, .onRequest),
+	])
+	func configuredFetchDecision(type: ConnectionProxyKind, image: InlineImageRoute.FetchPolicy) {
+		let route = InlineImageRoute.forConfig(Self.config(type), proxyPassword: nil)
+
+		#expect(route.inlineImageFetch == image)
 	}
 
 	@Test("A system route configures no proxy of its own")
