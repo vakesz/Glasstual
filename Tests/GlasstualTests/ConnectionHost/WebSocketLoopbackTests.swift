@@ -47,7 +47,11 @@ private final class WebSocketHostShim: NSObject, RemoteConnectionClientProtocol 
 		events.yield(.didConnect(host: host))
 	}
 
-	func didSecureConnection(withProtocolType protocolType: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t) {
+	func didSecureConnection(
+		withProtocolType protocolType: tls_protocol_version_t,
+		cipherSuite: tls_ciphersuite_t,
+		leafCertificate _: Data?
+	) {
 		events.yield(.didSecure(protocolVersion: protocolType, cipherSuite: cipherSuite))
 	}
 

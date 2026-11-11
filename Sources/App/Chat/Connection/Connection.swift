@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import CocoaExtensions
+import CryptoKit
 import Foundation
 import os
 import Security
@@ -24,6 +25,8 @@ final class Connection {
 	private(set) var isDisconnecting = false
 	private(set) var isSecured = false
 	private(set) var certificateTrustWasOverridden = false
+	/// SHA-256 of the DER of the certificate the server presented, once TLS is up.
+	private(set) var peerCertificateFingerprint: Data?
 
 	/// Whether TLS is established *and* the server's chain validated on its own.
 	///
@@ -253,9 +256,10 @@ final class Connection {
 			isConnecting = false
 			isConnected = true
 			session?.connectionDidConnect()
-		case let .didSecure(protocolType, cipherSuite):
+		case let .didSecure(protocolType, cipherSuite, leafCertificate):
 			guard admitConnectionProgress() else { return }
 			isSecured = true
+			peerCertificateFingerprint = leafCertificate.map { Data(SHA256.hash(data: $0)) }
 			isConnectedWithClientSideCertificate = config.identityClientSideCertificate != nil
 			session?.connectionDidSecure(protocolType: protocolType, cipherSuite: cipherSuite)
 		case .didCloseReadStream:

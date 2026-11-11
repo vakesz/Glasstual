@@ -22,7 +22,7 @@ struct ConnectionTerminationTests {
 		                            recordTermination: recorder.record)
 		session.socket = connection
 		let receiver = connection.callbackReceiver
-		receiver.didSecureConnection(withProtocolType: .TLSv12, cipherSuite: tlsCipherSuiteUnknown)
+		receiver.didSecureConnection(withProtocolType: .TLSv12, cipherSuite: tlsCipherSuiteUnknown, leafCertificate: nil)
 		receiver.didCloseReadStream()
 		let error = NSError(domain: NSPOSIXErrorDomain, code: Int(ECONNRESET),
 		                    userInfo: [NSLocalizedDescriptionKey: "private message text"])
@@ -123,7 +123,7 @@ struct ConnectionTerminationTests {
 		let receiver = connection.callbackReceiver
 
 		if secured {
-			receiver.didSecureConnection(withProtocolType: .TLSv13, cipherSuite: tlsCipherSuiteUnknown)
+			receiver.didSecureConnection(withProtocolType: .TLSv13, cipherSuite: tlsCipherSuiteUnknown, leafCertificate: nil)
 		} else {
 			receiver.didConnect(toHost: "127.0.0.1")
 		}

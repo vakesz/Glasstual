@@ -367,7 +367,7 @@ private final class FallbackSessionShim: NSObject, RemoteConnectionClientProtoco
 	func willConnect(toProxy _: String, port _: UInt16) {}
 	func didConnect(toHost _: String?) {}
 
-	func didSecureConnection(withProtocolType _: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t) {
+	func didSecureConnection(withProtocolType _: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t, leafCertificate _: Data?) {
 		events.yield(.didSecure(cipherSuite))
 	}
 

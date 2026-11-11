@@ -86,7 +86,8 @@ extension ServerSession {
 	 the network is set not to check the chain, so anyone answering at the
 	 address would receive the password. A chain the system accepted, and one
 	 the user was shown failing and chose to continue with, both count. For one
-	 that was not checked, the user has to have allowed this host and port. */
+	 that was not checked, the user has to have allowed this host and port with
+	 the certificate it presents now. */
 	var permitsCredentialsInClear: Bool {
 		if isSecured {
 			guard socket?.certificateAssurance == .unverified else { return true }
@@ -99,12 +100,17 @@ extension ServerSession {
 		return endpointWantsTLS == false && endpoints.current?.prefersSecuredConnection != true
 	}
 
-	/// Whether the user allowed the host and port this connection is open to
-	/// to receive the account password without its certificate being checked.
+	/// Whether the user allowed the host and port this connection is open to,
+	/// presenting the certificate it presents now, to receive the account
+	/// password without that certificate being checked.
 	var hasCredentialConsent: Bool {
 		guard let socket else { return false }
 
-		return credentialConsent?.covers(host: socket.config.serverAddress, port: socket.config.serverPort) == true
+		return credentialConsent?.covers(
+			host: socket.config.serverAddress,
+			port: socket.config.serverPort,
+			certificateFingerprint: socket.peerCertificateFingerprint
+		) == true
 	}
 
 	/// Whether the password is held back only for want of an answer the user
@@ -134,9 +140,11 @@ extension ServerSession {
 	 certificate was not checked. The button Return and Escape press keeps it
 	 from being sent, and the alert offers no way to stop asking.
 
-	 `sent` runs when the user allows it, after the host and port are recorded;
-	 `declined` runs for any other answer. Neither runs for an answer that
-	 arrives after the connection it was about is gone. */
+	 `sent` runs when the user allows it, after the host, port and certificate
+	 are recorded; `declined` runs for any other answer. Neither runs for an
+	 answer that arrives after the connection it was about is gone. When the
+	 host and port were allowed before with another certificate, the question
+	 says so. */
 	func askToSendCredentials(
 		sent: @escaping @MainActor (ServerSession) -> Void,
 		declined: @escaping @MainActor (ServerSession) -> Void = { _ in }
@@ -144,15 +152,20 @@ extension ServerSession {
 		guard let socket else { return }
 		let host = socket.config.serverAddress
 		let port = socket.config.serverPort
+		let fingerprint = socket.peerCertificateFingerprint
+		let certificateChanged = credentialConsent?.covers(host: host, port: port) == true
 		requestResponse(
-			Self.credentialConsentAlert(host: host),
-			isCurrent: { $0.socket?.config.serverAddress == host && $0.socket?.config.serverPort == port },
+			Self.credentialConsentAlert(host: host, certificateChanged: certificateChanged),
+			isCurrent: {
+				$0.socket?.config.serverAddress == host && $0.socket?.config.serverPort == port
+					&& $0.socket?.peerCertificateFingerprint == fingerprint
+			},
 			answer: { session, response in
 				guard response == .alternate else {
 					declined(session)
 					return
 				}
-				session.credentialConsent = CredentialConsent(host: host, port: port)
+				session.credentialConsent = CredentialConsent(host: host, port: port, certificateFingerprint: fingerprint)
 				sent(session)
 			}
 		)
@@ -160,10 +173,13 @@ extension ServerSession {
 
 	/// The question about sending the password to a server whose certificate
 	/// nobody checked. "Don't Send" is the default and the Escape button.
-	static func credentialConsentAlert(host: String) -> AlertRequest {
+	/// `certificateChanged` says the host was allowed before with another certificate.
+	static func credentialConsentAlert(host: String, certificateChanged: Bool = false) -> AlertRequest {
 		AlertRequest(
 			title: ConnectionSafetyStrings.Credentials.unverifiedCertificateTitle,
-			body: ConnectionSafetyStrings.Credentials.unverifiedCertificateBody(host: host),
+			body: certificateChanged
+				? ConnectionSafetyStrings.Credentials.changedCertificateBody(host: host)
+				: ConnectionSafetyStrings.Credentials.unverifiedCertificateBody(host: host),
 			defaultButton: ConnectionSafetyStrings.Credentials.dontSend,
 			alternateButton: ConnectionSafetyStrings.Credentials.send,
 			cancelButton: .default,
@@ -172,13 +188,29 @@ extension ServerSession {
 	}
 }
 
-/// A host and port the user allowed to receive the account password although
-/// its certificate was not checked.
+/** A host and port the user allowed to receive the account password although
+ its certificate was not checked, bound to the certificate it presented then.
+
+ The certificate is the one thing an impostor at the same address cannot
+ present, so a consent covers a connection only while the server shows the
+ same one. A consent recorded without a certificate covers nothing beyond the
+ answer it came with. */
 struct CredentialConsent: Equatable {
 	let host: String
 	let port: UInt16
+	/// SHA-256 of the DER of the server's certificate when the user answered.
+	let certificateFingerprint: Data?
 
+	/// Whether this consent was given for the host and port, whatever certificate it showed.
 	func covers(host: String, port: UInt16) -> Bool {
 		self.port == port && self.host.caseInsensitiveCompare(host) == .orderedSame
+	}
+
+	/// Whether this consent lets the password go to the host and port while it
+	/// presents the certificate with this fingerprint.
+	func covers(host: String, port: UInt16, certificateFingerprint: Data?) -> Bool {
+		guard let recorded = self.certificateFingerprint, recorded == certificateFingerprint else { return false }
+
+		return covers(host: host, port: port)
 	}
 }

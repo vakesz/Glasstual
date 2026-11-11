@@ -13,7 +13,7 @@ import Security
 enum ConnectionEvent: Sendable {
 	case willConnectToProxy(host: String, port: UInt16)
 	case didConnect(host: String?)
-	case didSecure(protocolType: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+	case didSecure(protocolType: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t, leafCertificate: Data?)
 	case didCloseReadStream
 	case didDisconnect(error: Error?)
 	/// One read's lines, and the reply that lets the host read the next.

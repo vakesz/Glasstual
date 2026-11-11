@@ -171,7 +171,7 @@ private actor LoopbackTLSServer {
 /// Everything the connection host reports back, in the order it sent it.
 private enum HostEvent: Sendable {
 	case didConnect
-	case didSecure(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+	case didSecure(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t, leafCertificate: Data?)
 	case didReceive(Data)
 	case didDisconnect(Error?)
 	case requestInsecureCertificateTrust(TrustDecisionHandler)
@@ -199,9 +199,10 @@ private final class HostSessionShim: NSObject, RemoteConnectionClientProtocol {
 
 	func didSecureConnection(
 		withProtocolType protocolType: tls_protocol_version_t,
-		cipherSuite: tls_ciphersuite_t
+		cipherSuite: tls_ciphersuite_t,
+		leafCertificate: Data?
 	) {
-		events.yield(.didSecure(protocolVersion: protocolType, cipherSuite: cipherSuite))
+		events.yield(.didSecure(protocolVersion: protocolType, cipherSuite: cipherSuite, leafCertificate: leafCertificate))
 	}
 
 	func didCloseReadStream() {}
@@ -282,6 +283,19 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		#expect(SecureTransportSupport.description(forCipherSuite: secured.cipherSuite) != "Unknown")
 	}
 
+	/// Consent to send a password over an unchecked chain is bound to this
+	/// certificate, so the application has to be told which one it was.
+	@Test("The secured report carries the certificate the server presented")
+	@concurrent
+	func securedReportCarriesTheLeafCertificate() async throws {
+		let outcome = try await Self.driveHandshake(answering: true)
+
+		let secured = try #require(outcome.secured, "the connection never reported itself secured")
+		let leaf = try #require(secured.leafCertificate, "the secured report named no certificate")
+
+		#expect(leaf == outcome.exportedLeafCertificate)
+	}
+
 	@Test("TLS 1.2 and 1.3 both report the negotiated version", arguments: [tls_protocol_version_t.TLSv12, .TLSv13])
 	@concurrent
 	func supportedProtocolVersions(protocolVersion: tls_protocol_version_t) async throws {
@@ -352,6 +366,7 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 	struct Secured: Sendable {
 		var protocolVersion: tls_protocol_version_t
 		var cipherSuite: tls_ciphersuite_t
+		var leafCertificate: Data?
 	}
 
 	struct Outcome {
@@ -359,6 +374,7 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 		var secured: Secured?
 		var disconnectError: Error?
 		var exportedCertificate = false
+		var exportedLeafCertificate: Data?
 		var connectedBeforeTrust = false
 		var registration: [String] = []
 		var disconnected = false
@@ -431,6 +447,7 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 					}
 				case let .exportedTrust(information, answer):
 					outcome.exportedCertificate = information.certificateChain.isEmpty == false
+					outcome.exportedLeafCertificate = information.certificateChain.first
 					outcome.policyName = information.policyName
 					if closeDuringTrust {
 						host.close()
@@ -450,8 +467,12 @@ nonisolated struct AsyncCertificateValidationLoopbackTests {
 					if trusted, outcome.received.count == testLines.count {
 						continuation.finish()
 					}
-				case let .didSecure(protocolVersion, cipherSuite):
-					outcome.secured = Secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite)
+				case let .didSecure(protocolVersion, cipherSuite, leafCertificate):
+					outcome.secured = Secured(
+						protocolVersion: protocolVersion,
+						cipherSuite: cipherSuite,
+						leafCertificate: leafCertificate
+					)
 				case let .didDisconnect(error):
 					outcome.disconnected = true
 					outcome.disconnectError = error

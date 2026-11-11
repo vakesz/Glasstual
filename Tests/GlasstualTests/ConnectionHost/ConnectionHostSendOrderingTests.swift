@@ -155,7 +155,8 @@ private final class SendOrderingSessionShim: NSObject, RemoteConnectionClientPro
 	}
 
 	func didSecureConnection(withProtocolType _: tls_protocol_version_t,
-	                         cipherSuite _: tls_ciphersuite_t) {}
+	                         cipherSuite _: tls_ciphersuite_t,
+	                         leafCertificate _: Data?) {}
 
 	func didCloseReadStream() {
 		events.yield(.closedReadStream)

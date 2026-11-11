@@ -404,8 +404,12 @@ actor ConnectionHost {
 			ready = true
 			client?.didConnect(toHost: host)
 			startWriterIfNeeded()
-		case let .secured(protocolVersion, cipherSuite):
-			client?.didSecureConnection(withProtocolType: protocolVersion, cipherSuite: cipherSuite)
+		case let .secured(protocolVersion, cipherSuite, leafCertificate):
+			client?.didSecureConnection(
+				withProtocolType: protocolVersion,
+				cipherSuite: cipherSuite,
+				leafCertificate: leafCertificate
+			)
 		case let .negotiatedSubprotocol(subprotocol):
 			client?.didNegotiateWebSocketSubprotocol(subprotocol)
 		case let .received(lines, acknowledged):

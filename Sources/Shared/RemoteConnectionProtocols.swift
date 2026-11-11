@@ -64,10 +64,13 @@ nonisolated protocol RemoteConnectionClientProtocol: AnyObject, Sendable { // no
 	@objc(remoteConnectionDidConnectToHost:)
 	func didConnect(toHost host: String?)
 
-	@objc(remoteConnectionDidSecureConnectionWithProtocolType:cipherSuite:)
+	/// `leafCertificate` is the DER of the certificate the server presented,
+	/// or nil when the handshake exposed none.
+	@objc(remoteConnectionDidSecureConnectionWithProtocolType:cipherSuite:leafCertificate:)
 	func didSecureConnection(
 		withProtocolType protocolType: tls_protocol_version_t,
-		cipherSuite: tls_ciphersuite_t
+		cipherSuite: tls_ciphersuite_t,
+		leafCertificate: Data?
 	)
 
 	@objc(remoteConnectionDidCloseReadStream)

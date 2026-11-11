@@ -28,7 +28,8 @@ struct ConnectionInboundDeliveryTests {
 		let (session, connection) = connectedSession()
 		connection.callbackReceiver.didSecureConnection(
 			withProtocolType: tlsProtocolVersionUnknown,
-			cipherSuite: tlsCipherSuiteUnknown
+			cipherSuite: tlsCipherSuiteUnknown,
+			leafCertificate: nil
 		)
 		try await Eventually.until("the sidebar reload") { !session.recordedOutput.reloadedItems.isEmpty }
 		#expect(connection.isSecured)
@@ -267,7 +268,7 @@ struct ConnectionInboundDeliveryTests {
 			secured.callbackReceiver.didConnect(toHost: endpoint.serverAddress)
 		}
 		#expect(session.sentLines.compactMap { $0 as? String }.contains { $0.hasPrefix("PASS ") } == false)
-		secured.callbackReceiver.didSecureConnection(withProtocolType: .TLSv13, cipherSuite: tlsCipherSuiteUnknown)
+		secured.callbackReceiver.didSecureConnection(withProtocolType: .TLSv13, cipherSuite: tlsCipherSuiteUnknown, leafCertificate: nil)
 		try await Eventually.until("TLS to come up") { secured.isSecured }
 		let passwords = session.sentLines.compactMap { $0 as? String }.filter { $0.hasPrefix("PASS ") }
 		let expectedPassword = try SendingMessage.string(command: .pass, arguments: ["endpoint-secret"])

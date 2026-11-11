@@ -124,7 +124,7 @@ private final class RetryOfferSessionShim: NSObject, RemoteConnectionClientProto
 	func willConnect(toProxy _: String, port _: UInt16) {}
 	func didConnect(toHost _: String?) {}
 
-	func didSecureConnection(withProtocolType _: tls_protocol_version_t, cipherSuite _: tls_ciphersuite_t) {
+	func didSecureConnection(withProtocolType _: tls_protocol_version_t, cipherSuite _: tls_ciphersuite_t, leafCertificate _: Data?) {
 		events.yield(.didSecure)
 	}
 

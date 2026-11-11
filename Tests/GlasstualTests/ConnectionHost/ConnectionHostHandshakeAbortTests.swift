@@ -63,7 +63,8 @@ private final class AbortSessionShim: NSObject, RemoteConnectionClientProtocol {
 	}
 
 	func didSecureConnection(withProtocolType _: tls_protocol_version_t,
-	                         cipherSuite _: tls_ciphersuite_t) {}
+	                         cipherSuite _: tls_ciphersuite_t,
+	                         leafCertificate _: Data?) {}
 	func didCloseReadStream() {}
 	func didDisconnect(withError error: Error?) {
 		events.yield(.didDisconnect(error))

@@ -1,6 +1,54 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "credentials-changed-certificate-body" : {
+      "comment" : "Body of the alert asking whether to send the account password to a server whose certificate is not checked, shown instead of the usual body when the user allowed this host before and it now presents a different certificate. %1$@ is the server's host name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is presenting a different certificate from the one it had when you allowed your password to be sent. Its certificate is still not checked, because certificate checking is turned off for this network. Someone else may be answering at this address."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A(z) %1$@ más tanúsítványt mutat be, mint amikor engedélyezte a jelszava elküldését. A tanúsítványa továbbra sincs ellenőrizve, mert a tanúsítványellenőrzés ki van kapcsolva ennél a hálózatnál. Lehet, hogy valaki más válaszol ezen a címen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ zeigt ein anderes Zertifikat als damals, als Sie das Senden Ihres Passworts erlaubt haben. Das Zertifikat wird weiterhin nicht geprüft, weil die Zertifikatsprüfung für dieses Netzwerk ausgeschaltet ist. Möglicherweise antwortet jemand anderes unter dieser Adresse."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ presenta un certificado distinto del que tenía cuando permitió enviar su contraseña. Su certificado sigue sin comprobarse porque la comprobación de certificados está desactivada para esta red. Es posible que otra persona esté respondiendo en esta dirección."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ présente un certificat différent de celui qu’il avait lorsque vous avez autorisé l’envoi de votre mot de passe. Son certificat n’est toujours pas vérifié, car la vérification des certificats est désactivée pour ce réseau. Quelqu’un d’autre répond peut-être à cette adresse."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@は、パスワードの送信を許可したときとは異なる証明書を提示しています。このネットワークでは証明書の検証がオフになっているため、この証明書も検証されていません。別の誰かがこのアドレスで応答している可能性があります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ está apresentando um certificado diferente daquele que tinha quando você permitiu o envio da sua senha. O certificado continua sem verificação, porque a verificação de certificados está desativada para esta rede. Outra pessoa pode estar respondendo neste endereço."
+          }
+        }
+      }
+    },
     "credentials-unverified-certificate-body" : {
       "comment" : "Body of the alert asking whether to send the account password (SASL PLAIN or a NickServ IDENTIFY) to a server whose certificate was not checked because certificate checking is turned off for the network. %1$@ is the server's host name.",
       "extractionState" : "manual",

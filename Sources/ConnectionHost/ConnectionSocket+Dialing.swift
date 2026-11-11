@@ -234,7 +234,11 @@ extension ConnectionSocket {
 
 		secured = true
 
-		events.yield(.secured(protocolVersion: protocolVersion, cipherSuite: cipherSuite))
+		events.yield(.secured(
+			protocolVersion: protocolVersion,
+			cipherSuite: cipherSuite,
+			leafCertificate: trustExport.certificateChain.first
+		))
 	}
 
 	/// Reports the transport gone, with the reason the dials it ran settled on.

@@ -11,7 +11,8 @@ import Security
 enum SocketEvent: Sendable {
 	case willConnectToProxy(host: String, port: UInt16)
 	case connected(host: String?)
-	case secured(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+	/// TLS is up. `leafCertificate` is the DER of the server's certificate.
+	case secured(protocolVersion: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t, leafCertificate: Data?)
 	/// The WebSocket upgrade finished, with the subprotocol the server chose.
 	case negotiatedSubprotocol(String?)
 	/// The complete lines of one read. The transport reads no further until

@@ -19,7 +19,11 @@ struct ConnectionCertificateAssuranceTests {
 		let connection = Connection(config: config, onSession: session)
 		session.socket = connection
 		if secured {
-			connection.callbackReceiver.didSecureConnection(withProtocolType: .TLSv12, cipherSuite: tlsCipherSuiteUnknown)
+			connection.callbackReceiver.didSecureConnection(
+				withProtocolType: .TLSv12,
+				cipherSuite: tlsCipherSuiteUnknown,
+				leafCertificate: nil
+			)
 			try await Eventually.until("TLS to come up") { connection.isSecured }
 		}
 		return connection

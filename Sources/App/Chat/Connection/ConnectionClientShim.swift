@@ -36,9 +36,10 @@ final class ConnectionClientShim: NSObject, RemoteConnectionClientProtocol {
 
 	func didSecureConnection(
 		withProtocolType protocolType: tls_protocol_version_t,
-		cipherSuite: tls_ciphersuite_t
+		cipherSuite: tls_ciphersuite_t,
+		leafCertificate: Data?
 	) {
-		events.yield(.didSecure(protocolType: protocolType, cipherSuite: cipherSuite))
+		events.yield(.didSecure(protocolType: protocolType, cipherSuite: cipherSuite, leafCertificate: leafCertificate))
 	}
 
 	func didCloseReadStream() {

@@ -59,6 +59,10 @@ nonisolated enum ConnectionSafetyStrings {
 			String(localized: .ConnectionSafety.credentialsUnverifiedCertificateBody(host))
 		}
 
+		static func changedCertificateBody(host: String) -> String {
+			String(localized: .ConnectionSafety.credentialsChangedCertificateBody(host))
+		}
+
 		static var send: String {
 			String(localized: .ConnectionSafety.credentialsUnverifiedCertificateSend)
 		}
