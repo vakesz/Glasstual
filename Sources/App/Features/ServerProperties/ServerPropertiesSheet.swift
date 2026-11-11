@@ -144,6 +144,10 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		let sheet = ChannelPropertiesSheet(
 			config: config,
 			onSession: session,
+			siblingNames: ChannelPropertiesSheet.siblingNames(
+				in: model.config.conversationList,
+				excluding: config?.uniqueIdentifier
+			),
 			savesCredentials: false
 		) { [weak self] channelConfig in
 			self?.applyChannel(channelConfig)

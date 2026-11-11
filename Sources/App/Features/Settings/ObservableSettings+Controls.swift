@@ -44,6 +44,28 @@ extension ObservableSettings {
 		)
 	}
 
+	/// A committed identity field. The rule decides what an entry is worth: an
+	/// empty one restores the key's default, and one a connection would refuse
+	/// is rejected rather than stored.
+	func identityField(for key: SettingsKey<String>, rule: IdentityFieldRule) -> SettingsFieldValue {
+		SettingsFieldValue(
+			text: { self[key] },
+			write: { newValue in
+				switch rule.outcome(for: newValue) {
+				case .reset:
+					self.reset(key)
+					return true
+				case let .store(value):
+					guard key.accepts(value) else { return false }
+					self[key] = value
+					return true
+				case .reject:
+					return false
+				}
+			}
+		)
+	}
+
 	/// A colour well over a key that always has a colour.
 	func colorBinding(for key: SettingsKey<SettingsColor>) -> Binding<Color> {
 		Binding(

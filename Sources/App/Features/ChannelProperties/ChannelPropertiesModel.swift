@@ -35,14 +35,31 @@ final class ChannelPropertiesModel {
 		isChannelName(config.name.firstToken)
 	}
 
+	/** Whether another channel of the same server already has this name, as the
+	 server's case mapping compares names. The channel being edited is not among
+	 the siblings. */
+	var channelNameIsDuplicate: Bool {
+		let name = foldedName(config.name.firstToken)
+		guard name.isEmpty == false else { return false }
+		return siblingNames.contains { foldedName($0) == name }
+	}
+
 	/// Why the name cannot be saved, once saving has been tried.
 	var channelNameValidationMessage: String? {
-		submission.shown(channelNameIsValid
-			? nil
-			: String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel))
+		submission.shown(channelNameFault)
+	}
+
+	private var channelNameFault: String? {
+		if channelNameIsValid == false {
+			return String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel)
+		}
+		return channelNameIsDuplicate ? String(localized: .ChannelProperties.channelNameAlreadyExists) : nil
 	}
 
 	private var submission = SubmissionGate()
+
+	/// The names of the server's other channels.
+	private let siblingNames: [String]
 
 	/** The connection whose ISUPPORT decides what a channel name looks like.
 
@@ -74,9 +91,10 @@ final class ChannelPropertiesModel {
 	/// keys its loading task on.
 	private(set) var secretKeyLoadGeneration = 0
 
-	init(config: ConversationConfig, session: ServerSession? = nil) {
+	init(config: ConversationConfig, session: ServerSession? = nil, siblingNames: [String] = []) {
 		self.config = config
 		self.session = session
+		self.siblingNames = siblingNames
 		channelNameIsEditable = config.name.isEmpty
 		secretKeyText = config.pendingSecretKey.value(orStored: nil) ?? ""
 	}
@@ -124,7 +142,7 @@ final class ChannelPropertiesModel {
 	@discardableResult
 	func validateForSubmission() -> Bool {
 		submission.attempt()
-		guard channelNameIsValid else {
+		guard channelNameIsValid, channelNameIsDuplicate == false else {
 			selection = .general
 			return false
 		}
@@ -223,6 +241,12 @@ final class ChannelPropertiesModel {
 		}
 
 		return candidate.isChannelName(on: session)
+	}
+
+	/// A name folded the way the server compares channel names. A sheet with no
+	/// connection assumes the RFC 1459 mapping, the widest the protocol defines.
+	private func foldedName(_ name: String) -> String {
+		session?.casefoldNickname(name) ?? IRCCaseFolding.fold(name, using: .rfc1459)
 	}
 
 	/// What an edited optional field is worth once it is saved: its text without

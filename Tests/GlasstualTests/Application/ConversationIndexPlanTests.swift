@@ -74,4 +74,22 @@ struct ConversationIndexPlanTests {
 		let cleared = ConversationIndexPlan.changes(from: previous, to: [])
 		#expect(cleared.deletions == ["c1", "c2", "s1", "s2"])
 	}
+
+	@Test("Suggested conversations are none with indexing off")
+	func suggestionsOffSuggestNothing() {
+		let options = ConversationIndexOptions(indexesConversations: false, indexesDirectMessages: true)
+		#expect(ConversationIndexPlan.suggestedConversations(conversations, options: options).isEmpty)
+	}
+
+	@Test("Suggested conversations leave out direct conversations by default")
+	func suggestionsKeepPeopleOut() {
+		let options = ConversationIndexOptions(indexesConversations: true, indexesDirectMessages: false)
+		#expect(ConversationIndexPlan.suggestedConversations(conversations, options: options).map(\.id) == ["c1"])
+	}
+
+	@Test("Suggested conversations include direct conversations when opted in")
+	func suggestionsIncludePeopleWhenAsked() {
+		let options = ConversationIndexOptions(indexesConversations: true, indexesDirectMessages: true)
+		#expect(ConversationIndexPlan.suggestedConversations(conversations, options: options).map(\.id) == ["c1", "c2"])
+	}
 }

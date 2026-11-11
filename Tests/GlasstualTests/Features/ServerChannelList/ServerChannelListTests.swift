@@ -34,6 +34,11 @@ private final class RecordingChannelListPresentation: ChannelListPresenting {
 @MainActor
 @Suite("Server channel list", .timeLimit(.minutes(1)))
 struct ServerChannelListTests {
+	@Test("The channel list window is not restored on the next launch")
+	func windowIsNotRestored() {
+		#expect(ServerChannelListScene.restoresOnLaunch == false)
+	}
+
 	private func receive(_ line: String, on session: TestServerSession) throws {
 		try session.receiveNumericReply(#require(Message(line: line, on: session)))
 	}

@@ -73,7 +73,7 @@ enum MenuSheetPresenter {
 		let save: (ConversationConfig) -> Void = { [weak session, weak channel] config in
 			guard let directory = AppServices.chatSession, let session else { return }
 			guard let channel else {
-				_ = directory.createConversation(with: config, on: session)
+				directory.addConversation(with: config, on: session)
 				window?.expandSession(session)
 				return
 			}
@@ -81,7 +81,15 @@ enum MenuSheetPresenter {
 			directory.save()
 		}
 		present(channel.map { ChannelPropertiesSheet(channel: $0, onSave: save) }
-			?? ChannelPropertiesSheet(config: nil, onSession: session, onSave: save)) { $0.startSheet() }
+			?? ChannelPropertiesSheet(
+				config: nil,
+				onSession: session,
+				siblingNames: ChannelPropertiesSheet.siblingNames(
+					in: session?.config.conversationList ?? [],
+					excluding: nil
+				),
+				onSave: save
+			)) { $0.startSheet() }
 	}
 
 	static func presentChannelTopic(for channel: Conversation) {

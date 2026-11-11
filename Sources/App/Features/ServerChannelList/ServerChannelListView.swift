@@ -6,6 +6,10 @@ import CocoaExtensions
 import SwiftUI
 
 struct ServerChannelListScene: Scene {
+	/** The list is read from a live session, so an empty window restored on the
+	 next launch is not the list anybody left open. */
+	static let restoresOnLaunch = false
+
 	let windows: ServerChannelListWindowSessions
 
 	var body: some Scene {
@@ -23,6 +27,7 @@ struct ServerChannelListScene: Scene {
 		/* A table of a whole network's channels: the window has a floor, not a
 		 ceiling, and the reader is the one who decides how much of it to see. */
 		.windowResizability(.contentMinSize)
+		.restorationBehavior(Self.restoresOnLaunch ? .automatic : .disabled)
 	}
 }
 

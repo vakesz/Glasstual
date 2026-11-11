@@ -64,6 +64,75 @@ struct ChatSessionTests {
 		#expect(reached.away.message == nil)
 	}
 
+	@Test("A channel added to a server is saved at once, not at the next periodic save")
+	func addedConversationIsSaved() throws {
+		let key = SettingsKeys.Sessions.serverSessions
+		let original = key.propertyListValue
+		defer { key.propertyListValue = original }
+		key.propertyListValue = nil
+
+		let fixture = ChatEnvironmentFixture(settings: ChatSettings())
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		let chatSession = ChatSession(environment: fixture.environment)
+		chatSession.sessions = [session]
+
+		chatSession.addConversation(with: ConversationConfig(name: "#added"), on: session)
+
+		let stored = try #require(key.propertyListValue)
+		let configs = try SettingsSessionArchive.decode(stored)
+		#expect(configs.count == 1)
+		#expect(configs.first?.conversationList.map(\.name) == ["#added"])
+	}
+
+	@Test("A restored Focus filter is ignored when the system delivered one after it was read")
+	func staleFocusRestoreIsIgnored() {
+		let fixture = ChatEnvironmentFixture(settings: ChatSettings())
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		session.isLoggedIn = true
+		let chatSession = ChatSession(environment: fixture.environment)
+		chatSession.sessions = [session]
+
+		let generation = chatSession.focusFilterGeneration
+		chatSession.setFocusFilter(nil)
+
+		let applied = chatSession.restoreFocusFilter(
+			FocusFilterState(mode: .muteAndSetAway),
+			readAtGeneration: generation
+		)
+
+		#expect(applied == false)
+		#expect(chatSession.focusFilter == nil)
+		#expect(session.away.autoReason == nil)
+	}
+
+	@Test("A restored Focus filter applies when nothing was delivered while it was read")
+	func currentFocusRestoreApplies() {
+		let fixture = ChatEnvironmentFixture(settings: ChatSettings())
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		session.isLoggedIn = true
+		let chatSession = ChatSession(environment: fixture.environment)
+		chatSession.sessions = [session]
+
+		let filter = FocusFilterState(mode: .muteAndSetAway)
+		let applied = chatSession.restoreFocusFilter(filter, readAtGeneration: chatSession.focusFilterGeneration)
+
+		#expect(applied)
+		#expect(chatSession.focusFilter == filter)
+		#expect(session.away.autoReason == .focus)
+	}
+
+	@Test("Removing a Focus filter counts as a delivery too")
+	func clearingTheFocusFilterBumpsTheGeneration() {
+		let chatSession = ChatSession(environment: ChatEnvironmentFixture(settings: ChatSettings()).environment)
+		let before = chatSession.focusFilterGeneration
+
+		chatSession.setFocusFilter(nil)
+		#expect(chatSession.focusFilterGeneration == before + 1)
+
+		chatSession.setFocusFilter(FocusFilterState())
+		#expect(chatSession.focusFilterGeneration == before + 2)
+	}
+
 	@Test("The higher-priority reason takes over and the away ends with the last one")
 	func overlappingReasonsShareOneAway() {
 		let fixture = ChatEnvironmentFixture(settings: ChatSettings())

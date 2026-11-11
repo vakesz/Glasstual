@@ -98,6 +98,44 @@ struct RuleEditorModelTests {
 		#expect(editor.normalizedCommands(from: String(tooLong.dropLast())) == [String(tooLong.dropLast())])
 	}
 
+	@Test("Typing a command list leaves the field's text exactly as typed")
+	func commandsTextIsNotRewritten() throws {
+		let editor = model()
+
+		editor.commandsText = "JOIN,"
+		#expect(editor.commandsText == "JOIN,")
+		#expect(editor.commandsError == nil)
+
+		editor.commandsText = "JOIN, PART"
+		#expect(editor.commandsText == "JOIN, PART")
+		#expect(editor.rule.additionalCommands.isEmpty)
+
+		let saved = try #require(editor.ruleForSubmission())
+		#expect(saved.additionalCommands == ["JOIN", "PART"])
+		#expect(editor.commandsText == "JOIN, PART")
+	}
+
+	@Test("An entry that is not a command is reported while typing and blocks saving")
+	func invalidCommandsTextIsReported() {
+		let editor = model()
+
+		editor.commandsText = "JOIN, no!"
+
+		#expect(editor.commandsError == String(localized: .Rules.commandsInvalid))
+		#expect(editor.canSave == false)
+		#expect(editor.ruleForSubmission() == nil)
+	}
+
+	@Test("The field starts from the rule's own command list")
+	func commandsTextIsSeededFromTheRule() throws {
+		let editor = model { $0.additionalCommands = ["001", "PRIVMSG"] }
+
+		#expect(editor.commandsText == "001, PRIVMSG")
+		#expect(editor.commandsError == nil)
+		let saved = try #require(editor.ruleForSubmission())
+		#expect(saved.additionalCommands == ["001", "PRIVMSG"])
+	}
+
 	@Test("A saved rule keeps its trimmed text, its normalised commands, and drops an operator rule it cannot apply")
 	func submissionNormalisesTheRule() throws {
 		let editor = model {

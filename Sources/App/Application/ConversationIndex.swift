@@ -1,43 +1,75 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import AppIntents
 import CocoaExtensions
-import CoreSpotlight
 import Foundation
 import os
 
-/** Owns the Spotlight index and what this process has put in it.
+/** Owns what this process has put in the Spotlight index.
 
- The index is constructed here and nothing else holds it. Callers hand over
- `Sendable` entries; the actor works out what changed and writes only that.
+ Callers hand over `Sendable` entries; the actor works out what changed and
+ writes only that. An actor does not serialize calls across suspension points,
+ so every operation runs after the previous one has finished: each reads its
+ bookkeeping only once the earlier write has landed.
  A failed write leaves the remembered state alone, so the next call retries. */
 actor ConversationIndex {
 	private static let logger = Logger(subsystem: LogSubsystem.current, category: "ConversationIndex")
-	private static let domain = "conversations"
 
-	private let index = CSSearchableIndex.default()
+	private let writer: any ConversationIndexWriting
 	private var indexed: [String: ConversationIndexEntry] = [:]
 	/// Whether this launch has reconciled with what an earlier launch left behind.
 	private var hasReplacedStaleItems = false
+	/// Whether the index is known to hold nothing of ours, so another delete would do nothing.
+	private var isKnownEmpty = false
+	/// The most recently queued operation, which the next one waits for.
+	private var tail: Task<Void, Never>?
+
+	init(writer: some ConversationIndexWriting = CoreSpotlightIndexWriter()) {
+		self.writer = writer
+	}
 
 	/// Brings the index to exactly `entries`.
 	func apply(_ entries: [ConversationIndexEntry]) async {
+		await serialized { await self.performApply(entries) }
+	}
+
+	/// Deletes everything this app has indexed, for when the setting is turned off.
+	func removeAll() async {
+		await serialized { await self.performRemoveAll() }
+	}
+
+	private func serialized(_ work: @escaping @Sendable () async -> Void) async {
+		let previous = tail
+		let task = Task {
+			await previous?.value
+			await work()
+		}
+		tail = task
+		await task.value
+		if tail == task {
+			tail = nil
+		}
+	}
+
+	private func performApply(_ entries: [ConversationIndexEntry]) async {
 		do {
 			if hasReplacedStaleItems == false {
-				try await index.deleteSearchableItems(withDomainIdentifiers: [Self.domain])
+				try await writer.deleteAll()
 				indexed = [:]
 				hasReplacedStaleItems = true
+				isKnownEmpty = true
 			}
 
 			let changes = ConversationIndexPlan.changes(from: indexed, to: entries)
 			guard changes.isEmpty == false else { return }
 
 			if changes.deletions.isEmpty == false {
-				try await index.deleteSearchableItems(withIdentifiers: changes.deletions)
+				try await writer.delete(ids: changes.deletions)
 			}
 			if changes.upserts.isEmpty == false {
-				try await index.indexSearchableItems(changes.upserts.map(Self.item(for:)))
+				// A failed upsert may still have landed in part.
+				isKnownEmpty = false
+				try await writer.upsert(changes.upserts)
 			}
 			indexed = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
 		} catch {
@@ -45,34 +77,15 @@ actor ConversationIndex {
 		}
 	}
 
-	/// Deletes everything this app has indexed, for when the setting is turned off.
-	func removeAll() async {
+	private func performRemoveAll() async {
+		guard isKnownEmpty == false else { return }
 		do {
-			try await index.deleteSearchableItems(withDomainIdentifiers: [Self.domain])
+			try await writer.deleteAll()
 			indexed = [:]
 			hasReplacedStaleItems = true
+			isKnownEmpty = true
 		} catch {
 			Self.logger.error("Spotlight index removal failed: \(error.localizedDescription, privacy: .public)")
 		}
-	}
-
-	private static func item(for entry: ConversationIndexEntry) -> CSSearchableItem {
-		let attributes: CSSearchableItemAttributeSet
-		switch entry.kind {
-		case .server:
-			attributes = CSSearchableItemAttributeSet(contentType: .item)
-			attributes.contentDescription = String(localized: .ShortcutIntents.indexServerDescription)
-		case .channel, .directMessage:
-			let entity = ConversationEntity(entry: entry)
-			attributes = entity.attributeSet
-			attributes.associateAppEntity(entity)
-		}
-		attributes.title = entry.title
-		attributes.displayName = entry.title
-		attributes.keywords = [entry.serverName]
-
-		let item = CSSearchableItem(uniqueIdentifier: entry.id, domainIdentifier: domain, attributeSet: attributes)
-		item.expirationDate = .distantFuture
-		return item
 	}
 }

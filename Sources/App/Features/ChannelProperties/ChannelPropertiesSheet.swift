@@ -28,7 +28,14 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 		sessionId = channel.associatedSession?.uniqueIdentifier
 		self.channel = channel
 		channelId = channel.uniqueIdentifier
-		model = ChannelPropertiesModel(config: channel.config, session: channel.associatedSession)
+		model = ChannelPropertiesModel(
+			config: channel.config,
+			session: channel.associatedSession,
+			siblingNames: Self.siblingNames(
+				in: channel.associatedSession?.config.conversationList ?? [],
+				excluding: channel.uniqueIdentifier
+			)
+		)
 		self.onSave = onSave
 		savesCredentials = true
 		super.init(window: nil)
@@ -39,16 +46,23 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 	init(
 		config: ConversationConfig?,
 		onSession session: ServerSession?,
+		siblingNames: [String] = [],
 		savesCredentials: Bool = true,
 		onSave: @escaping (ConversationConfig) -> Void
 	) {
 		self.session = session
 		sessionId = session?.uniqueIdentifier
-		model = ChannelPropertiesModel(config: config ?? ConversationConfig(), session: session)
+		model = ChannelPropertiesModel(config: config ?? ConversationConfig(), session: session, siblingNames: siblingNames)
 		self.onSave = onSave
 		self.savesCredentials = savesCredentials
 		super.init(window: nil)
 		installSheet()
+	}
+
+	/// The names of the other channels in `list`, which a channel's own name
+	/// must not repeat.
+	static func siblingNames(in list: [ConversationConfig], excluding uniqueIdentifier: String?) -> [String] {
+		list.filter { $0.uniqueIdentifier != uniqueIdentifier }.map(\.name)
 	}
 
 	private func installSheet() {

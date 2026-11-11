@@ -48,6 +48,10 @@ final class ChatSession {
 	/// The filter the active Focus delivered, or `nil` when none applies.
 	var focusFilter: FocusFilterState?
 
+	/// Counts the filters installed or removed through `setFocusFilter`, so a
+	/// read that began earlier can tell the system has spoken since.
+	var focusFilterGeneration = 0
+
 	/** The application's chat session takes `ChatServices.shared`, so the window
 	 and menus only have to be installed once for both it and the protocol-layer
 	 entry points that have no session to ask. A chat session built with a
@@ -349,6 +353,13 @@ final class ChatSession {
 		}
 
 		return conversation
+	}
+
+	/// Adds a channel the person configured and saves it, so a quit before the
+	/// next periodic save does not lose it.
+	func addConversation(with config: ConversationConfig, on session: ServerSession) {
+		_ = createConversation(with: config, on: session)
+		save()
 	}
 
 	func createDirectConversation(

@@ -87,7 +87,7 @@ nonisolated struct ConversationEntityQuery: EntityStringQuery {
 	}
 
 	func suggestedEntities() async throws -> [ConversationEntity] {
-		await IntentCatalog.conversations()
+		await IntentCatalog.suggestedConversations()
 	}
 }
 
@@ -101,6 +101,17 @@ nonisolated enum IntentCatalog {
 	@MainActor
 	static func conversations() -> [ConversationEntity] {
 		actions().conversations().map(ConversationEntity.init(snapshot:))
+	}
+
+	/// The conversations offered as suggestions, which follow the Spotlight
+	/// settings. Lookups by identifier or text stay unfiltered, so the Shortcuts
+	/// editor and explicit intents still reach every conversation.
+	@MainActor
+	static func suggestedConversations() -> [ConversationEntity] {
+		ConversationIndexPlan.suggestedConversations(
+			actions().conversations(),
+			options: ConversationIndexCoordinator.storedOptions()
+		).map(ConversationEntity.init(snapshot:))
 	}
 
 	@MainActor

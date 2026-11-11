@@ -20,7 +20,19 @@ extension ChatSession {
 	/// Installs or removes the Focus filter, then brings every network in line.
 	func setFocusFilter(_ filter: FocusFilterState?) {
 		focusFilter = filter
+		focusFilterGeneration += 1
 		applyAutoAway()
+	}
+
+	/** Installs a filter that was read from the system, unless the system has
+	 installed or removed one since `generation` was noted. That read is older
+	 than the delivery and would put back a filter the Focus has since ended.
+	 Returns whether the filter was installed. */
+	@discardableResult
+	func restoreFocusFilter(_ filter: FocusFilterState, readAtGeneration generation: Int) -> Bool {
+		guard generation == focusFilterGeneration else { return false }
+		setFocusFilter(filter)
+		return true
 	}
 
 	/// Whether the idle reason currently holds.

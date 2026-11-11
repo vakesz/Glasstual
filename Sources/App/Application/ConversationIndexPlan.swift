@@ -72,6 +72,17 @@ nonisolated enum ConversationIndexPlan {
 		return entries.filter { $0.title.isEmpty == false && seen.insert($0.id).inserted }
 	}
 
+	/// The conversations Siri and Spotlight may offer by name as App Shortcut
+	/// parameters. They follow the index settings: none with indexing off, and
+	/// direct conversations, which name people, only when opted in.
+	static func suggestedConversations(
+		_ conversations: [IntentConversationSnapshot],
+		options: ConversationIndexOptions
+	) -> [IntentConversationSnapshot] {
+		guard options.indexesConversations else { return [] }
+		return conversations.filter { $0.kind == .channel || options.indexesDirectMessages }
+	}
+
 	static func changes(
 		from previous: [String: ConversationIndexEntry],
 		to current: [ConversationIndexEntry]

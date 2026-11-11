@@ -46,11 +46,19 @@ struct SettingsCommittedField: View {
 	let value: SettingsFieldValue
 	/// Shown when validation rejects the last entry.
 	var rejectionMessage: LocalizedStringResource?
+	/// Shown while the field is empty.
+	var prompt: LocalizedStringResource?
 
 	@State private var draft = SettingsFieldDraft()
 
 	var body: some View {
-		SettingsCommittedInput(title: title, value: value, rejectionMessage: rejectionMessage, draft: $draft)
+		SettingsCommittedInput(
+			title: title,
+			value: value,
+			rejectionMessage: rejectionMessage,
+			prompt: prompt,
+			draft: $draft
+		)
 	}
 }
 
@@ -60,12 +68,13 @@ private struct SettingsCommittedInput: View {
 	let title: LocalizedStringResource
 	let value: SettingsFieldValue
 	let rejectionMessage: LocalizedStringResource?
+	var prompt: LocalizedStringResource?
 	@Binding var draft: SettingsFieldDraft
 	@FocusState private var isFocused: Bool
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
-			TextField("", text: Binding(get: { draft.displayed(value.text()) }, set: edit))
+			TextField("", text: Binding(get: { draft.displayed(value.text()) }, set: edit), prompt: prompt.map { Text($0) })
 				.labelsHidden()
 				.accessibilityLabel(Text(title))
 				.focused($isFocused)

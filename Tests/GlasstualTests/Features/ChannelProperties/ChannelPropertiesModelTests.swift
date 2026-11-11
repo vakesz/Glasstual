@@ -95,6 +95,90 @@ struct ChannelPropertiesModelTests {
 		#expect(model.channelNameValidationMessage == nil)
 	}
 
+	@Test("A name another channel on the server already has is refused once saving is tried")
+	func duplicateNameIsRefused() {
+		let model = ChannelPropertiesModel(config: ConversationConfig(name: "#swift"), siblingNames: ["#macos", "#swift"])
+
+		#expect(model.channelNameIsDuplicate)
+		#expect(model.channelNameValidationMessage == nil)
+
+		#expect(model.validateForSubmission() == false)
+		#expect(model.channelNameValidationMessage == String(localized: .ChannelProperties.channelNameAlreadyExists))
+	}
+
+	@Test("A name that differs only in letter case is a duplicate")
+	func caseVariantIsADuplicate() {
+		let model = ChannelPropertiesModel(config: ConversationConfig(name: "#Swift"), siblingNames: ["#swift"])
+
+		#expect(model.channelNameIsDuplicate)
+		#expect(model.validateForSubmission() == false)
+	}
+
+	@Test("A name no other channel has passes, and so does a sheet with no siblings")
+	func uniqueNamePasses() {
+		let unique = ChannelPropertiesModel(config: ConversationConfig(name: "#new"), siblingNames: ["#swift"])
+		#expect(unique.channelNameIsDuplicate == false)
+		#expect(unique.validateForSubmission())
+
+		let alone = ChannelPropertiesModel(config: ConversationConfig(name: "#swift"))
+		#expect(alone.channelNameIsDuplicate == false)
+		#expect(alone.validateForSubmission())
+	}
+
+	@Test("Only the name's first token is compared, as it is the one saved")
+	func firstTokenIsCompared() {
+		let model = ChannelPropertiesModel(config: ConversationConfig(name: "#swift extra"), siblingNames: ["#SWIFT"])
+
+		#expect(model.channelNameIsDuplicate)
+	}
+
+	@Test("A badly formatted name reports its format, not a duplicate")
+	func formatComesBeforeDuplicate() {
+		let model = ChannelPropertiesModel(config: ConversationConfig(name: "swift"), siblingNames: ["swift"])
+
+		#expect(model.validateForSubmission() == false)
+		#expect(model.channelNameValidationMessage == String(localized: .ChannelProperties.pleaseEnterAProperlyFormattedChannel))
+	}
+
+	@Test("The sibling list leaves out the channel being edited")
+	func editedChannelIsNotItsOwnSibling() {
+		var edited = ConversationConfig(name: "#swift")
+		let other = ConversationConfig(name: "#macos")
+		let names = ChannelPropertiesSheet.siblingNames(in: [edited, other], excluding: edited.uniqueIdentifier)
+		#expect(names == ["#macos"])
+
+		edited.name = "#swift"
+		let model = ChannelPropertiesModel(config: edited, siblingNames: names)
+		#expect(model.channelNameIsDuplicate == false)
+		#expect(model.validateForSubmission())
+
+		let added = ChannelPropertiesSheet.siblingNames(in: [edited, other], excluding: nil)
+		#expect(added == ["#swift", "#macos"])
+	}
+
+	/** Two names are the same channel when the server's `CASEMAPPING` says so:
+	 under `rfc1459` the brackets are the capitals of the braces. */
+	@Test("The server's case mapping decides which names collide")
+	func caseMappingDecidesDuplicates() {
+		let rfc1459 = TestServerSession()
+		rfc1459.supportInfo.processConfigurationData("CASEMAPPING=rfc1459")
+		let folded = ChannelPropertiesModel(
+			config: ConversationConfig(name: "#a[b"),
+			session: rfc1459,
+			siblingNames: ["#A{B"]
+		)
+		#expect(folded.channelNameIsDuplicate)
+
+		let ascii = TestServerSession()
+		ascii.supportInfo.processConfigurationData("CASEMAPPING=ascii")
+		let distinct = ChannelPropertiesModel(
+			config: ConversationConfig(name: "#a[b"),
+			session: ascii,
+			siblingNames: ["#A{B"]
+		)
+		#expect(distinct.channelNameIsDuplicate == false)
+	}
+
 	/// A sheet opened without a connection still has to validate something, so
 	/// it keeps the syntactic check.
 	@Test("Validation falls back to the syntactic check with no connection")

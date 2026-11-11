@@ -647,6 +647,54 @@
         }
       }
     },
+    "channel-name-already-exists": {
+      "comment": "Validation error shown when another channel on the same server already has this name, ignoring letter case.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A channel with this name already exists on this server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezen a szerveren már van ilyen nevű csatorna."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Server gibt es bereits einen Kanal mit diesem Namen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya existe un canal con este nombre en este servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un canal portant ce nom existe déjà sur ce serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この名前のチャンネルは、このサーバにすでに存在します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já existe um canal com este nome neste servidor."
+          }
+        }
+      }
+    },
     "channel-name-placeholder": {
       "comment": "Placeholder showing the shape of a channel name.",
       "extractionState": "manual",

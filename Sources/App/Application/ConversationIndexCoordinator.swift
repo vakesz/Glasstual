@@ -1,27 +1,43 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppIntents
 import Foundation
 
-/** Keeps the Spotlight index in step with the sidebar and the settings.
+/** Keeps the Spotlight index and the App Shortcut suggestions in step with the
+ sidebar and the settings.
 
  It observes the chat session, waits for a burst of changes to settle and then
- hands the index a snapshot. Turning the setting off deletes the entries. */
+ hands the index a snapshot. Turning the setting off deletes the entries and
+ withdraws the suggested conversation names. Server names are always suggested. */
 @MainActor
 final class ConversationIndexCoordinator: ChatSessionPresenting {
 	private static let settleDelay = Duration.seconds(2)
 
-	private let index = ConversationIndex()
+	/// One name the system may offer as a parameter of an App Shortcut phrase.
+	private struct Suggestion: Hashable {
+		let id: String
+		let name: String
+	}
+
+	private let index: ConversationIndex
 	private let actions: any IntentActions
 	private let options: @MainActor () -> ConversationIndexOptions
+	private let refreshShortcuts: @MainActor () -> Void
 	private var pending: Task<Void, Never>?
+	/// What the system was last told, so an unchanged sidebar costs no system call.
+	private var publishedSuggestions: Set<Suggestion>?
 
 	init(
 		actions: any IntentActions,
-		options: @escaping @MainActor () -> ConversationIndexOptions = ConversationIndexCoordinator.storedOptions
+		writer: some ConversationIndexWriting = CoreSpotlightIndexWriter(),
+		options: @escaping @MainActor () -> ConversationIndexOptions = ConversationIndexCoordinator.storedOptions,
+		refreshShortcuts: @escaping @MainActor () -> Void = { GlasstualShortcuts.updateAppShortcutParameters() }
 	) {
+		index = ConversationIndex(writer: writer)
 		self.actions = actions
 		self.options = options
+		self.refreshShortcuts = refreshShortcuts
 	}
 
 	isolated deinit {
@@ -44,17 +60,33 @@ final class ConversationIndexCoordinator: ChatSessionPresenting {
 		}
 	}
 
-	private func reconcile() async {
+	func reconcile() async {
 		let options = options()
-		guard options.indexesConversations else {
+		let servers = actions.servers()
+		let conversations = actions.conversations()
+		if options.indexesConversations {
+			await index.apply(ConversationIndexPlan.entries(servers: servers, conversations: conversations, options: options))
+		} else {
 			await index.removeAll()
-			return
 		}
-		await index.apply(ConversationIndexPlan.entries(
-			servers: actions.servers(),
-			conversations: actions.conversations(),
-			options: options
-		))
+		publishSuggestions(servers: servers, conversations: conversations, options: options)
+	}
+
+	/// Tells the system the parameter values for the App Shortcut phrases, but
+	/// only when they changed. The options filter comes first, so turning the
+	/// setting off also withdraws the conversation names.
+	private func publishSuggestions(
+		servers: [IntentServerSnapshot],
+		conversations: [IntentConversationSnapshot],
+		options: ConversationIndexOptions
+	) {
+		let suggested = ConversationIndexPlan.suggestedConversations(conversations, options: options)
+		let suggestions = Set(
+			servers.map { Suggestion(id: $0.id, name: $0.name) } + suggested.map { Suggestion(id: $0.id, name: $0.name) }
+		)
+		guard suggestions != publishedSuggestions else { return }
+		publishedSuggestions = suggestions
+		refreshShortcuts()
 	}
 
 	// MARK: ChatSessionPresenting

@@ -55,11 +55,19 @@ final class RuleEditorModel {
 		}
 	}
 
+	/** The command list as typed.
+
+	 It is seeded from the rule once and edited as text, so the field never
+	 rewrites what the person is typing. `normalizedCommands(from:)` is the only
+	 parser, and the rule's own list is set from it on submission. */
+	var commandsText: String
+
 	private var matchValidation: RulePatternValidation
 	private var senderValidation: RulePatternValidation
 
 	init(rule: MessageRule) {
 		self.rule = rule
+		commandsText = rule.additionalCommands.joined(separator: ", ")
 		matchValidation = RulePatternValidation(pattern: rule.match)
 		senderValidation = RulePatternValidation(pattern: rule.senderMatch)
 	}
@@ -89,7 +97,7 @@ final class RuleEditorModel {
 	}
 
 	var commandsError: String? {
-		normalizedCommands(from: rule.additionalCommands.joined(separator: ", ")) == nil
+		normalizedCommands(from: commandsText) == nil
 			? String(localized: .Rules.commandsInvalid)
 			: nil
 	}
@@ -124,9 +132,7 @@ final class RuleEditorModel {
 		submitted.title = rule.title.trimmingCharacters(in: .whitespacesAndNewlines)
 		submitted.action = rule.action.trimmingCharacters(in: .whitespacesAndNewlines)
 		submitted.forwardDestination = rule.forwardDestination.trimmingCharacters(in: .whitespacesAndNewlines)
-		submitted.additionalCommands = normalizedCommands(
-			from: rule.additionalCommands.joined(separator: ", ")
-		) ?? []
+		submitted.additionalCommands = normalizedCommands(from: commandsText) ?? []
 		if hasMessageEvent == false {
 			submitted.ignoresOperators = false
 		}

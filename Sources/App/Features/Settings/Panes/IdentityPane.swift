@@ -11,10 +11,30 @@ struct IdentityPane: View {
 	var body: some View {
 		Section {
 			SettingsNote(.Settings.defaultIdentityNote)
-			identityField(.Settings.defaultIdentityNickname, key: SettingsKeys.Identity.nickname)
-			identityField(.Settings.defaultIdentityAwayNickname, key: SettingsKeys.Identity.awayNickname)
-			identityField(.Settings.defaultIdentityUsername, key: SettingsKeys.Identity.username)
-			identityField(.Settings.defaultIdentityRealname, key: SettingsKeys.Identity.realName)
+			identityField(
+				.Settings.defaultIdentityNickname,
+				key: SettingsKeys.Identity.nickname,
+				rule: .nickname,
+				rejection: .CommonErrors.nicknameInvalid
+			)
+			identityField(
+				.Settings.defaultIdentityAwayNickname,
+				key: SettingsKeys.Identity.awayNickname,
+				rule: .optionalNickname,
+				rejection: .CommonErrors.nicknameInvalid
+			)
+			identityField(
+				.Settings.defaultIdentityUsername,
+				key: SettingsKeys.Identity.username,
+				rule: .username,
+				rejection: nil
+			)
+			identityField(
+				.Settings.defaultIdentityRealname,
+				key: SettingsKeys.Identity.realName,
+				rule: .realName,
+				rejection: .CommonErrors.realNameInvalid
+			)
 			SettingsNote(.Settings.defaultIdentityAllOptional)
 		} header: {
 			Text(SettingsPane.defaultIdentity.title)
@@ -39,15 +59,20 @@ struct IdentityPane: View {
 
 	private func identityField(
 		_ label: LocalizedStringResource,
-		key: SettingsKey<String>
+		key: SettingsKey<String>,
+		rule: IdentityFieldRule,
+		rejection: LocalizedStringResource?
 	) -> some View {
-		TextField(
-			text: model.settings.binding(for: key),
-			prompt: Text(.Settings.defaultIdentityOptional)
-		) {
+		LabeledContent {
+			SettingsCommittedField(
+				title: label,
+				value: model.settings.identityField(for: key, rule: rule),
+				rejectionMessage: rejection,
+				prompt: .Settings.defaultIdentityOptional
+			)
+		} label: {
 			Text(label)
 		}
-		.accessibilityLabel(Text(label))
 	}
 
 	private func irCopField(

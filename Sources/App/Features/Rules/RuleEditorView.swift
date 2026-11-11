@@ -224,7 +224,7 @@ struct RuleEditorView: View {
 			Section(String(localized: .Rules.additionalCommandsSection)) {
 				TextField(
 					String(localized: .Rules.additionalCommandsPlaceholder),
-					text: additionalCommands
+					text: $model.commandsText
 				)
 				validationMessage(model.commandsError)
 				Text(String(localized: .Rules.additionalCommandsExplanation))
@@ -322,13 +322,6 @@ struct RuleEditorView: View {
 			}
 		}
 		.formStyle(.grouped)
-	}
-
-	private var additionalCommands: Binding<String> {
-		Binding(
-			get: { model.rule.additionalCommands.joined(separator: ", ") },
-			set: { model.rule.additionalCommands = $0.components(separatedBy: ",") }
-		)
 	}
 
 	private func eventBinding(_ event: MessageRuleEvent) -> Binding<Bool> {
