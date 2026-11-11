@@ -30,18 +30,7 @@ final class ConversationMembers {
 	private weak var session: ServerSession?
 	private weak var conversation: Conversation?
 	private var presentation: ConversationMembersPresenting?
-	private var memberContainer: [Member] = []
-	/// Position in `memberContainer` by the member's identity.
-	private var indexByUserID: [User.ID: Int] = [:]
-	/** Positions in `memberContainer` of members removed inside an update batch.
-
-	 Removing at a position shifts every later member, which costs a reindex per
-	 removal; k departures in one batch (a netsplit's QUITs) would cost k of them.
-	 Inside a batch a removal instead drops the identity from the index and
-	 leaves its slot behind, so every other position stays valid. The slots are
-	 compacted once by `compactRemovedMembers()`, which every reader of the whole
-	 container calls first. */
-	private var removedPositions: Set<Int> = []
+	private var storage = SortedMemberStorage()
 	private var presentationUpdateDepth = 0
 	private var presentationUpdatePending = false
 	/// Set while an update batch has appended members out of order; the batch
@@ -66,8 +55,8 @@ final class ConversationMembers {
 	}
 
 	func assign(_ presentation: ConversationMembersPresenting?) {
-		compactRemovedMembers()
-		presentation?.membersDidChange(memberContainer)
+		storage.compactRemoved()
+		presentation?.membersDidChange(storage.members)
 		self.presentation = presentation
 	}
 
@@ -88,7 +77,7 @@ final class ConversationMembers {
 		precondition(presentationUpdateDepth > 0)
 		presentationUpdateDepth -= 1
 		guard presentationUpdateDepth == 0 else { return }
-		compactRemovedMembers()
+		storage.compactRemoved()
 		if orderingPending {
 			orderingPending = false
 			sortStoredMembers()
@@ -108,22 +97,8 @@ final class ConversationMembers {
 			presentationUpdatePending = true
 			return
 		}
-		compactRemovedMembers()
-		presentation?.membersDidChange(memberContainer)
-	}
-
-	/// Drops the slots of members removed in this batch and renumbers the rest,
-	/// once, whatever the number of removals.
-	private func compactRemovedMembers() {
-		guard removedPositions.isEmpty == false else { return }
-		let removed = removedPositions
-		removedPositions = []
-		var position = -1
-		memberContainer.removeAll { _ in
-			position += 1
-			return removed.contains(position)
-		}
-		reindexMembers()
+		storage.compactRemoved()
+		presentation?.membersDidChange(storage.members)
 	}
 
 	private func deferInboundPresentationIfNeeded() {
@@ -131,32 +106,11 @@ final class ConversationMembers {
 		session?.deferMemberPresentation(self)
 	}
 
-	private func sortedIndex(for member: Member) -> Int {
-		compactRemovedMembers()
-		var lowerBound = 0
-		var upperBound = memberContainer.count
-		/* Read once rather than on every comparison, and fold every nickname in
-		 the search under one table so the binary search cannot walk past the
-		 slot it is looking for. */
-		let favorIRCop = settings.memberListSortFavorsServerStaff
-		let prefixes = currentPrefixes
-
-		while lowerBound < upperBound {
-			let index = lowerBound + (upperBound - lowerBound) / 2
-			let comparison = memberContainer[index].compareRank(
-				to: member,
-				favoringServerStaff: favorIRCop,
-				casefoldingWith: prefixes
-			)
-
-			if comparison == .orderedAscending {
-				lowerBound = index + 1
-			} else {
-				upperBound = index
-			}
-		}
-
-		return lowerBound
+	/** Read once per pass rather than on every comparison, and fold every
+	 nickname under one table so a binary search cannot walk past the slot it
+	 is looking for. */
+	private var ordering: MemberOrdering {
+		MemberOrdering(favorsServerStaff: settings.memberListSortFavorsServerStaff, prefixes: currentPrefixes)
 	}
 
 	/// Inserts `member` at its rank, or appends it for the enclosing update batch
@@ -164,93 +118,17 @@ final class ConversationMembers {
 	private func sortedInsert(_ member: Member) {
 		deferInboundPresentationIfNeeded()
 		guard presentationUpdateDepth == 0 else {
-			indexByUserID[member.id] = memberContainer.count
-			memberContainer.append(member)
+			storage.append(member)
 			orderingPending = true
 			return
 		}
 
-		let index = sortedIndex(for: member)
-		memberContainer.insert(member, at: index)
-		reindexMembers(from: index)
-	}
-
-	/// `false` when this conversation holds no member for `oldMember`'s person.
-	@discardableResult
-	private func replaceStoredMember(_ oldMember: Member, with newMember: Member) -> Bool {
-		guard let index = indexByUserID[oldMember.id] else {
-			return false
-		}
-
-		memberContainer[index] = newMember
-		if oldMember.id != newMember.id {
-			indexByUserID.removeValue(forKey: oldMember.id)
-			indexByUserID[newMember.id] = index
-		}
-		return true
-	}
-
-	/// `false` when this conversation holds no member for that person.
-	@discardableResult
-	private func removeStoredMember(_ member: Member) -> Bool {
-		guard let index = indexByUserID[member.id] else {
-			return false
-		}
-
-		indexByUserID.removeValue(forKey: member.id)
-
-		if presentationUpdateDepth > 0 {
-			removedPositions.insert(index)
-			return true
-		}
-
-		compactRemovedMembers()
-		memberContainer.remove(at: index)
-		reindexMembers(from: index)
-		return true
-	}
-
-	/// Points the identity index at the positions from `start` on, which an
-	/// insert or a removal there has shifted by one.
-	private func reindexMembers(from start: Int) {
-		for index in start ..< memberContainer.count {
-			indexByUserID[memberContainer[index].id] = index
-		}
-	}
-
-	/** Rebuilds the identity index after a sort.
-
-	 A member is a value now, so the list cannot be searched by object identity;
-	 a member's identity is the person's, and one conversation holds one member per
-	 person. An insert or a removal patches the positions it shifted instead.
-
-	 A repeat is dropped rather than indexed away: every lookup, replacement and
-	 removal goes through this index, so a second entry for the same person is a
-	 row no PART, QUIT or KICK could ever reach again. */
-	private func reindexMembers() {
-		assert(removedPositions.isEmpty, "Removed members must be compacted before a full reindex")
-		var indexes: [User.ID: Int] = [:]
-		indexes.reserveCapacity(memberContainer.count)
-		var uniqueMembers: [Member] = []
-		uniqueMembers.reserveCapacity(memberContainer.count)
-
-		for member in memberContainer {
-			guard indexes[member.id] == nil else {
-				assertionFailure("Conversation member \(member.user.nickname) is listed twice")
-				continue
-			}
-
-			indexes[member.id] = uniqueMembers.count
-			uniqueMembers.append(member)
-		}
-
-		memberContainer = uniqueMembers
-		indexByUserID = indexes
+		storage.insert(member, ordering: ordering)
 	}
 
 	/// The member for `id`, or `nil` when that person is not in this conversation.
 	func findMember(withUserID id: User.ID) -> Member? {
-		indexByUserID[id].map { memberContainer[$0] }
+		storage.member(withUserID: id)
 	}
 
 	/** Edits the stored member for `id` in place.
@@ -258,11 +136,10 @@ final class ConversationMembers {
 	 A caller that read a member and mutated its copy would throw the change
 	 away; this is where an edit to a member lands. */
 	func updateMember(withUserID id: User.ID, _ block: (inout Member) -> Void) {
-		guard let index = indexByUserID[id] else {
+		guard let oldMember = storage.member(withUserID: id) else {
 			return
 		}
 
-		let oldMember = memberContainer[index]
 		var editedMember = oldMember
 		block(&editedMember)
 		performReplacement(oldMember, with: editedMember, resort: true)
@@ -278,11 +155,8 @@ final class ConversationMembers {
 	}
 
 	func decayConversations() {
-		compactRemovedMembers()
 		// No array snapshot or presentation copy on this completion hot path.
-		for index in memberContainer.indices {
-			memberContainer[index].decayConversation()
-		}
+		storage.decayConversations()
 	}
 
 	/// The session's ISUPPORT `PREFIX` table as it stands now. Members are
@@ -334,7 +208,7 @@ final class ConversationMembers {
 
 		session?.disassociate(member.user, from: conversation)
 
-		guard removeStoredMember(member) else {
+		guard storage.remove(member, deferringCompaction: presentationUpdateDepth > 0) else {
 			return
 		}
 
@@ -375,15 +249,15 @@ final class ConversationMembers {
 				/* Moving a member is a removal and an insertion, each of which
 				 shifts every index after it. Inside a batch the new value takes
 				 the old slot and the batch's one sort puts it in place. */
-				guard replaceStoredMember(oldMember, with: newMember) else {
+				guard storage.replace(oldMember, with: newMember) else {
 					return
 				}
 				orderingPending = true
 			} else {
-				removeStoredMember(oldMember)
+				storage.remove(oldMember, deferringCompaction: false)
 				sortedInsert(newMember)
 			}
-		} else if replaceStoredMember(oldMember, with: newMember) == false {
+		} else if storage.replace(oldMember, with: newMember) == false {
 			return
 		}
 
@@ -466,69 +340,54 @@ final class ConversationMembers {
 	}
 
 	func sortMembers() {
-		compactRemovedMembers()
-		let previousOrder = memberContainer.map { ($0.id, $0.mark) }
+		storage.compactRemoved()
+		let previousOrder = storage.members.map { ($0.id, $0.mark) }
 		/* Snapshot the setting so the comparator stays pure for the whole sort. */
-		let favorIRCop = settings.memberListSortFavorsServerStaff
+		let ordering = ordering
 
 		/* Restamp first: ranking reads the prefix table the member carries, and
 		 a PREFIX that arrived after the member did has to reach it. */
-		let prefixes = currentPrefixes
-		for index in memberContainer.indices {
-			memberContainer[index].prefixes = prefixes
-		}
+		storage.restamp(ordering.prefixes)
 
-		sortStoredMembers(favoringServerStaff: favorIRCop, casefoldingWith: prefixes)
-		if zip(previousOrder, memberContainer).contains(where: { $0.0 != $1.id || $0.1 != $1.mark }) {
+		sortStoredMembers(ordering)
+		if zip(previousOrder, storage.members).contains(where: { $0.0 != $1.id || $0.1 != $1.mark }) {
 			renderRevision &+= 1
 		}
 		publishMembers()
 	}
 
 	private func sortStoredMembers() {
-		sortStoredMembers(
-			favoringServerStaff: settings.memberListSortFavorsServerStaff,
-			casefoldingWith: currentPrefixes
-		)
+		sortStoredMembers(ordering)
 	}
 
-	private func sortStoredMembers(favoringServerStaff favorIRCop: Bool, casefoldingWith prefixes: UserPrefixTable) {
-		compactRemovedMembers()
-		memberContainer.sort {
-			$0.compareRank(
-				to: $1,
-				favoringServerStaff: favorIRCop,
-				casefoldingWith: prefixes
-			) == .orderedAscending
-		}
-		reindexMembers()
+	private func sortStoredMembers(_ ordering: MemberOrdering) {
+		storage.sort(ordering: ordering)
 		orderingPending = false
 	}
 
 	func clearMembers() {
-		compactRemovedMembers()
-		guard memberContainer.isEmpty == false else { return }
+		storage.compactRemoved()
+		guard storage.members.isEmpty == false else { return }
 		let conversation = conversation
 
 		if let conversation {
-			for member in memberContainer {
+			for member in storage.members {
 				session?.disassociate(member.user, from: conversation)
 			}
 		}
-		memberContainer.removeAll()
-		indexByUserID.removeAll()
+		storage.removeAll()
 		renderRevision &+= 1
 		publishMembers()
 	}
 
 	var numberOfMembers: UInt {
-		compactRemovedMembers()
-		return UInt(memberContainer.count)
+		storage.compactRemoved()
+		return UInt(storage.members.count)
 	}
 
 	var memberList: [Member] {
-		compactRemovedMembers()
-		return memberContainer
+		storage.compactRemoved()
+		return storage.members
 	}
 
 	func memberExists(_ nickname: String) -> Bool {
