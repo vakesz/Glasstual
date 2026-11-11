@@ -86,9 +86,18 @@ struct XDCCAnnouncementParserTests {
 		#expect(XDCCAnnouncementParser.parse("#1 1x [1K] file.bin", sender: "#bots") == nil)
 	}
 
+	/// The bot an instruction names is whoever posted the line's choice, and a
+	/// pack request would go to it: a look-alike name is not read as a bot.
+	@Test("An instruction naming a look-alike bot is not read as one")
+	func lookAlikeInstructionBot() {
+		#expect(XDCCAnnouncementParser.parse("/msg Babot xdcc send #5", sender: "someone") != nil)
+		#expect(XDCCAnnouncementParser.parse("/msg \u{0412}\u{0430}bot xdcc send #5", sender: "someone") == nil)
+	}
+
 	@Test("Bot names have to be plausible nicknames", arguments: [
 		("Bot", true), ("[Bot]", true), ("Music|Bot", true), ("_bot", true),
 		("-bot", false), ("#bot", false), ("1bot", false), ("", false), ("bot!x", false), ("bot name", false),
+		("Bot-2", true), ("\u{0412}\u{0430}bot", false), ("B\u{0430}t", false), ("Bötchen", false), ("Bot\u{200B}", false),
 	])
 	func botNames(name: String, plausible: Bool) {
 		#expect(XDCCAnnouncementParser.isPlausibleBotName(name) == plausible)

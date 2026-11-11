@@ -64,15 +64,22 @@ nonisolated enum XDCCAnnouncementParser {
 
 	/** Whether `name` could be a bot to message.
 
-	 It must be a valid nickname, and also not start with a character no
-	 network allows to start one, which keeps `/msg -flag` and `/msg #channel`
-	 from being read as bots. */
+	 It must be a nickname in RFC 2812's ASCII grammar: a letter or one of
+	 `[]\\`_^{|}` first, then those, digits and `-`. That keeps `/msg -flag`
+	 and `/msg #channel` from being read as bots, and keeps a name in someone's
+	 line from passing for a bot it only looks like: `Ваbot` with a Cyrillic
+	 `В` and `а` is another nickname, and a pack request would go to it. */
 	static func isPlausibleBotName(_ name: String) -> Bool {
 		guard let first = name.unicodeScalars.first,
 		      Hostmask.isValidNickname(name),
-		      name.unicodeScalars.count <= 64
+		      name.unicodeScalars.count <= 64,
+		      isNicknameLead(first)
 		else { return false }
-		return first.properties.isAlphabetic || "[]\\`_^{|}".unicodeScalars.contains(first)
+		return name.unicodeScalars.allSatisfy { isNicknameLead($0) || $0.isASCIIDigitScalar || $0 == "-" }
+	}
+
+	private static func isNicknameLead(_ scalar: Unicode.Scalar) -> Bool {
+		("a" ... "z").contains(scalar) || ("A" ... "Z").contains(scalar) || "[]\\`_^{|}".unicodeScalars.contains(scalar)
 	}
 
 	// MARK: - Listing lines
