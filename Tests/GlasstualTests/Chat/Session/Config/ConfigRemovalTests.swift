@@ -67,15 +67,15 @@ struct ConfigRemovalTests {
 		/* Parked on a stream nothing feeds, so the task has no timer to outlive the test. */
 		let (idle, idleContinuation) = AsyncStream<Void>.makeStream()
 		defer { idleContinuation.finish() }
-		session.pendingConnectionTask = Task { for await _ in idle {} }
-		let scheduledConnection = try #require(session.pendingConnectionTask)
+		session.scheduled.connection = Task { for await _ in idle {} }
+		let scheduledConnection = try #require(session.scheduled.connection)
 
 		fixture.chatSession.destroySession(session, preservingLocalData: true)
 
 		#expect(fixture.chatSession.sessions.isEmpty)
 		#expect(session.isTerminating)
 		#expect(!session.liveness.pongTimer.isActive)
-		#expect(session.pendingConnectionTask == nil)
+		#expect(session.scheduled.connection == nil)
 		#expect(scheduledConnection.isCancelled)
 		#expect(session.config.pendingNicknamePassword == .set("fixture-nickname"))
 		#expect(session.config.pendingProxyPassword == .set("fixture-proxy"))

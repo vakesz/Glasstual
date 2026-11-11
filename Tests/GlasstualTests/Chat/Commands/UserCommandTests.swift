@@ -24,12 +24,12 @@ struct UserCommandTests {
 		session.socket = connection
 		session.setConnectionTransportForTesting(.connecting)
 		session.autoConnect(withDelay: 60, afterWakeUp: false)
-		let scheduled = session.pendingConnectionTask
+		let scheduled = session.scheduled.connection
 
 		session.sendCommand(command, completeTarget: false, target: nil)
 
 		#expect(scheduled?.isCancelled == true)
-		#expect(session.pendingConnectionTask == nil)
+		#expect(session.scheduled.connection == nil)
 		#expect(session.sentLines.count == 0)
 		/* The connection reported the disconnect back, so the session is over
 		 rather than stuck mid-quit: `isQuitting` is cleared with the rest. */

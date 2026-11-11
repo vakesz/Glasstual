@@ -22,14 +22,14 @@ struct ServerSessionConfirmationTests {
 			return false
 		}
 		session.inputText(String(repeating: "private ", count: 300), destination: channel)
-		let pending = try #require(session.pendingConfirmationTasks.values.first)
+		let pending = try #require(session.scheduled.confirmations.values.first)
 		channel.name = "bob"
 		try #require(channel.name == "bob")
 		answer.yield(true)
 		answer.finish()
 		await pending.value
 		#expect(session.sentLines.count == 0)
-		#expect(session.pendingConfirmationTasks.isEmpty)
+		#expect(session.scheduled.confirmations.isEmpty)
 	}
 
 	@Test("An answer only acts on its original session and destination", arguments: ["accept", "cancel", "session", "channel"])
@@ -51,7 +51,7 @@ struct ServerSessionConfirmationTests {
 			},
 			perform: { _ in acted = true }
 		)
-		let pending = try #require(session.pendingConfirmationTasks.values.first)
+		let pending = try #require(session.scheduled.confirmations.values.first)
 		switch change {
 		case "session": session.cancelPendingSessionTasks()
 		case "channel": session.conversationList = []
@@ -61,6 +61,6 @@ struct ServerSessionConfirmationTests {
 		answer.finish()
 		await pending.value
 		#expect(acted == (change == "accept"))
-		#expect(session.pendingConfirmationTasks.isEmpty)
+		#expect(session.scheduled.confirmations.isEmpty)
 	}
 }

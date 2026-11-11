@@ -75,7 +75,7 @@ struct ServerSessionMultiTargetSendTests {
 		}
 		let expected = (0 ..< 80).map { "line-\($0)" }
 		session.inputText(expected.joined(separator: "\n"), destination: channel)
-		let confirmation = try #require(session.pendingConfirmationTasks.values.first)
+		let confirmation = try #require(session.scheduled.confirmations.values.first)
 		await confirmation.value
 		#expect(session.sentLines.count == 0)
 		#expect(session.outboundTextProducer?.pendingProducerCount == 1)

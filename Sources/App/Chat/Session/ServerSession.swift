@@ -151,10 +151,8 @@ class ServerSession: ChatItem {
 	 STS upgrade, server redirect). A single slot meant whichever installed last silently
 	 replaced the others; every registered action now runs. */
 	var disconnectCallbacks: [() -> Void] = []
-	/** Both delays are cancellable so that a reconnect inside the delay window
-	 cannot have a stale block act on the new session. */
-	var pendingDisconnectTask: SessionTimer?
-	var pendingConnectionTask: Task<Void, Never>?
+	/// Delayed work the session started and must be able to cancel.
+	var scheduled = SessionScheduledWork()
 	var credentialLoader: @Sendable ([KeychainItem]) async -> [KeychainItem: String] = {
 		await KeychainSecretLoader.passwords(for: $0)
 	}
@@ -167,8 +165,6 @@ class ServerSession: ChatItem {
 	var userRemovalClock = TimerClock.continuous
 	/// The scripts this session started that are still running.
 	let scriptTasks = ScriptTaskBag()
-	var rejoinTasks: [String: SessionTimer] = [:]
-	var pendingConfirmationTasks: [UUID: Task<Void, Never>] = [:]
 	var renderAdmission = RenderAdmission()
 	/// Member ordering and native-list presentation for one bounded inbound read
 	/// turn. Lists enroll only when they change; protocol lookups remain immediate.
@@ -286,10 +282,7 @@ class ServerSession: ChatItem {
 	 verifies its hit. A miss is only trusted while the index was folded under
 	 the CASEMAPPING now in force; names change only through paths that
 	 rebuild it. */
-	var conversationIndex = CasefoldedIndex<Conversation>()
-	/// The CASEMAPPING the index was folded under, or `nil` before the first
-	/// rebuild. A different one means every key in the index is stale.
-	var conversationIndexCaseMapping: ISupportCaseMapping?
+	var conversationIndex = ConversationNameIndex()
 	weak var lastSelectedConversation: Conversation?
 	let addressBookMatchCache = AddressBookMatchCache()
 	/// The netsplit or netjoin batch being collapsed into one summary line, and
@@ -388,8 +381,7 @@ class ServerSession: ChatItem {
 
 	isolated deinit {
 		sasl.scramTask?.cancel()
-		pendingDisconnectTask?.stop()
-		pendingConnectionTask?.cancel()
+		scheduled.cancelAll()
 		outboundTextProducer?.cancel()
 		notifications.cancelAll()
 		[
@@ -400,8 +392,6 @@ class ServerSession: ChatItem {
 		startup.cancel()
 		scriptTasks.cancelAll()
 		presencePolling.populationTask?.stop()
-		rejoinTasks.values.forEach { $0.stop() }
-		pendingConfirmationTasks.values.forEach { $0.cancel() }
 		labeledResponses.deadlineTask?.cancel()
 	}
 

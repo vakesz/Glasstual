@@ -330,22 +330,21 @@ extension ServerSession {
 
 		/* Held so that a reconnect inside the two-second window cannot have this
 		 stale block tear down the *new* session. */
-		pendingDisconnectTask = SessionTimer.once(after: 2) { [weak self, weak socket] in
+		scheduled.delayedDisconnect = SessionTimer.once(after: 2) { [weak self, weak socket] in
 			guard let self, self.socket === socket else { return }
 
-			pendingDisconnectTask = nil
+			scheduled.delayedDisconnect = nil
 			disconnect()
 		}
 	}
 
 	func cancelDelayedDisconnect() {
-		pendingDisconnectTask?.stop()
-		pendingDisconnectTask = nil
+		scheduled.delayedDisconnect?.stop()
+		scheduled.delayedDisconnect = nil
 	}
 
 	func cancelScheduledConnection() {
-		pendingConnectionTask?.cancel()
-		pendingConnectionTask = nil
+		scheduled.cancelConnection()
 	}
 
 	func cancelPendingSessionTasks() {
@@ -354,17 +353,13 @@ extension ServerSession {
 			connectionState.cancelPreparation()
 			output?.updateTitle(for: self)
 		}
-		pendingConfirmationTasks.values.forEach { $0.cancel() }
-		pendingConfirmationTasks.removeAll()
+		scheduled.cancelPending()
 		readMarkers.timer.stop()
 		readMarkers.pendingConversations.removeAll()
 		resetSASLNegotiation()
 		sessionCredentials.forget()
-		cancelScheduledConnection()
 		cancelConnectCommandSettling()
 		presencePolling.cancelPopulation()
-		rejoinTasks.values.forEach { $0.stop() }
-		rejoinTasks.removeAll()
 		typingSender.removeAll()
 	}
 
@@ -390,12 +385,12 @@ extension ServerSession {
 			return
 		}
 
-		pendingConnectionTask = Task { [weak self] in
+		scheduled.connection = Task { [weak self] in
 			try? await Task.sleep(for: .seconds(delay))
 
 			guard Task.isCancelled == false, let self else { return }
 
-			pendingConnectionTask = nil
+			scheduled.connection = nil
 			action()
 		}
 	}

@@ -559,16 +559,16 @@ struct ConnectionInboundDeliveryTests {
 		let session = TestServerSession()
 		session.autoConnect(withDelay: 20, afterWakeUp: false)
 		session.startReconnectTimer()
-		let scheduled = session.pendingConnectionTask
+		let scheduled = session.scheduled.connection
 		let rejoin = SessionTimer.once(after: 60) {}
-		session.rejoinTasks["#test"] = rejoin
+		session.scheduled.rejoins["#test"] = rejoin
 		session.isTerminating = true
 		#expect(scheduled?.isCancelled == true)
 		#expect(rejoin.isActive == false)
-		#expect(session.rejoinTasks.isEmpty)
+		#expect(session.scheduled.rejoins.isEmpty)
 		session.autoConnect(withDelay: 20, afterWakeUp: false)
 		session.startReconnectTimer()
-		#expect(session.pendingConnectionTask == nil)
+		#expect(session.scheduled.connection == nil)
 		#expect(session.reconnect.timer.isActive == false)
 		session.cancelScheduledConnection()
 		session.stopAllTimers()

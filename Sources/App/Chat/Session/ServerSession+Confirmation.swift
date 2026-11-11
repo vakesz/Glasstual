@@ -22,14 +22,14 @@ extension ServerSession {
 		let identifier = UUID()
 		let startupIdentifier = startup.identifier
 		let connection = socket?.uniqueIdentifier
-		pendingConfirmationTasks[identifier] = Task { [weak self, weak output] in
+		scheduled.confirmations[identifier] = Task { [weak self, weak output] in
 			guard let output else {
-				self?.pendingConfirmationTasks.removeValue(forKey: identifier)
+				self?.scheduled.confirmations.removeValue(forKey: identifier)
 				return
 			}
 			let accepted = await output.confirm(request)
 			guard let self else { return }
-			defer { pendingConfirmationTasks.removeValue(forKey: identifier) }
+			defer { scheduled.confirmations.removeValue(forKey: identifier) }
 			guard accepted, !Task.isCancelled, !isTerminating,
 			      startup.identifier == startupIdentifier, socket?.uniqueIdentifier == connection,
 			      isCurrent(self) else { return }
@@ -56,14 +56,14 @@ extension ServerSession {
 		let identifier = UUID()
 		let startupIdentifier = startup.identifier
 		let connection = socket?.uniqueIdentifier
-		pendingConfirmationTasks[identifier] = Task { [weak self, weak output] in
+		scheduled.confirmations[identifier] = Task { [weak self, weak output] in
 			guard let output else {
-				self?.pendingConfirmationTasks.removeValue(forKey: identifier)
+				self?.scheduled.confirmations.removeValue(forKey: identifier)
 				return
 			}
 			let response = await output.respond(to: request)
 			guard let self else { return }
-			defer { pendingConfirmationTasks.removeValue(forKey: identifier) }
+			defer { scheduled.confirmations.removeValue(forKey: identifier) }
 			guard !Task.isCancelled, !isTerminating,
 			      startup.identifier == startupIdentifier, socket?.uniqueIdentifier == connection,
 			      isCurrent(self) else { return }

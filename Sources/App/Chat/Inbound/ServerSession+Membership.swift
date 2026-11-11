@@ -188,11 +188,11 @@ extension ServerSession {
 				if environment.settings.rejoinOnKick, !channel.errorOnLastJoinAttempt {
 					printDebugInformation(String(localized: .IRC.attemptingToRejoinChannelInThree), in: channel)
 					let key = channel.uniqueIdentifier
-					rejoinTasks[key]?.stop()
-					rejoinTasks[key] = SessionTimer.once(after: 3) { [weak self, weak channel] in
+					scheduled.rejoins[key]?.stop()
+					scheduled.rejoins[key] = SessionTimer.once(after: 3) { [weak self, weak channel] in
 						guard let self, let channel else { return }
 
-						rejoinTasks[key] = nil
+						scheduled.rejoins[key] = nil
 						join(channel)
 					}
 				}

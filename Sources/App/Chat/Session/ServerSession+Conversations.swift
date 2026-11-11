@@ -96,13 +96,13 @@ extension ServerSession {
 	func findConversation(_ name: String) -> Conversation? {
 		/* A new CASEMAPPING re-folds every name, and nothing rebuilds the index
 		 when a 005 arrives, so it is compared here rather than at its source. */
-		if conversationIndexCaseMapping != supportInfo.caseMapping {
+		if conversationIndex.caseMapping != supportInfo.caseMapping {
 			rebuildConversationIndex()
 		}
 
 		let foldedName = casefoldNickname(name)
 
-		guard let hit = conversationIndex[foldedName: foldedName] else {
+		guard let hit = conversationIndex.entries[foldedName: foldedName] else {
 			// The list and every name in it go through a rebuild when they
 			// change, so an index under the current mapping has no stale miss.
 			return nil
@@ -120,8 +120,7 @@ extension ServerSession {
 
 	/// Rebuilds the casefolded mirror of the conversation list.
 	func rebuildConversationIndex() {
-		conversationIndex.rebuild(from: conversationList, by: casefoldNickname, naming: \.name)
-		conversationIndexCaseMapping = supportInfo.caseMapping
+		conversationIndex.rebuild(from: conversationList, by: casefoldNickname, caseMapping: supportInfo.caseMapping)
 	}
 
 	func findConversationOrCreate(_ name: String, isDirect: Bool = false) -> Conversation? {
@@ -152,5 +151,23 @@ extension ServerSession {
 		}
 
 		return chatSession.createDirectConversation(name, on: self, as: type)
+	}
+}
+
+/// The conversation list mirrored by casefolded name, and the CASEMAPPING it
+/// was folded under.
+struct ConversationNameIndex {
+	private(set) var entries = CasefoldedIndex<Conversation>()
+	/// `nil` before the first rebuild. A different one means every key in the
+	/// index is stale.
+	private(set) var caseMapping: ISupportCaseMapping?
+
+	mutating func rebuild(
+		from conversations: [Conversation],
+		by fold: (String) -> String,
+		caseMapping: ISupportCaseMapping
+	) {
+		entries.rebuild(from: conversations, by: fold, naming: \.name)
+		self.caseMapping = caseMapping
 	}
 }

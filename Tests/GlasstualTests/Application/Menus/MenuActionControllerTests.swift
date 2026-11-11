@@ -110,7 +110,7 @@ struct MenuActionControllerTests {
 		#expect(session.isQuitting)
 		#expect(controller.validator.validateServerCommand(item) == false)
 		#expect(item.isHidden == false)
-		let delayedDisconnect = try #require(session.pendingDisconnectTask)
+		let delayedDisconnect = try #require(session.scheduled.delayedDisconnect)
 		#expect(session.sentLines.count == 1)
 		#expect((session.sentLines.firstObject as? String)?.hasPrefix("QUIT ") == true)
 		let titleUpdateCount = session.recordedOutput.titleUpdates.count
