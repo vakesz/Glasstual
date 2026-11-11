@@ -39,6 +39,8 @@ final class ISupport {
 	private(set) var safeListSupported = false
 	private(set) var whoxSupported = false
 	private(set) var utf8Only = false
+	/// `draft/ACCOUNTREQUIRED`: only users signed in to an account may connect.
+	private(set) var requiresAccount = false
 	private(set) var channelNamePrefixes: [String] = ["#"]
 	private(set) var statusMessagePrefixCharacters: [String] = []
 	private(set) var extendedBanTypes: [String] = []
@@ -198,7 +200,7 @@ final class ISupport {
 		case .accountextban, .chanlimit, .clienttagdeny, .elist, .extban, .icon, .maxlist, .msgreftypes,
 		     .network, .targmax:
 			resetCollection(token)
-		case .monitor, .namesx, .safelist, .uhnames, .utf8only, .watch, .whox:
+		case .accountrequired, .monitor, .namesx, .safelist, .uhnames, .utf8only, .watch, .whox:
 			resetAnnouncement(token, into: &effects)
 		}
 	}
@@ -310,6 +312,8 @@ final class ISupport {
 			effects.withdrawnCapabilities.insert(.multiPrefix)
 		case .uhnames:
 			effects.withdrawnCapabilities.insert(.userhostInNames)
+		case .accountrequired:
+			requiresAccount = false
 		case .safelist:
 			safeListSupported = false
 		case .utf8only:
@@ -502,6 +506,7 @@ private extension ISupport {
 
 	func enable(_ feature: ISupportChange.Feature) {
 		switch feature {
+		case .accountRequired: requiresAccount = true
 		case .safeList: safeListSupported = true
 		case .utf8Only: utf8Only = true
 		case .whox: whoxSupported = true

@@ -33,7 +33,8 @@ extension ServerSession {
 		guard message.remoteCommand != .batch,
 		      let batchToken = message.batchToken,
 		      let batch = batchMessages.queuedEntry(withBatchToken: batchToken),
-		      batch.batchIsOpen
+		      batch.batchIsOpen,
+		      batch.kind?.queuesContents != false
 		else { return false }
 
 		let rootBatch = batch.rootBatch

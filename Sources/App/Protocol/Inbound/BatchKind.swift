@@ -31,6 +31,10 @@ nonisolated enum BatchKind: Sendable, Equatable {
 	case isupport
 	/// The list of conversations a `CHATHISTORY TARGETS` request returns.
 	case chatHistoryTargets
+	/// `draft/metadata-2`: the answer to a metadata query, or a sync burst.
+	case metadata
+	/// `draft/metadata-2`: the answer to `METADATA * SUBS`.
+	case metadataSubs
 	case other(String)
 
 	init(wireType: String) {
@@ -45,6 +49,8 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		case "znc.in/tlsinfo": self = .zncTLSInfo
 		case "draft/isupport", "isupport": self = .isupport
 		case "draft/chathistory-targets", "chathistory-targets": self = .chatHistoryTargets
+		case "metadata": self = .metadata
+		case "metadata-subs": self = .metadataSubs
 		default: self = .other(wireType)
 		}
 	}
@@ -63,6 +69,8 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		case .zncTLSInfo: "znc.in/tlsinfo"
 		case .isupport: "draft/isupport"
 		case .chatHistoryTargets: "draft/chathistory-targets"
+		case .metadata: "metadata"
+		case .metadataSubs: "metadata-subs"
 		case let .other(type): type
 		}
 	}
@@ -73,6 +81,19 @@ nonisolated enum BatchKind: Sendable, Equatable {
 		switch self {
 		case .chatHistory, .playback, .zncPlayback: true
 		default: false
+		}
+	}
+
+	/** Whether the lines inside are held back until the batch closes.
+
+	 A metadata batch is processed as it arrives: the specification asks
+	 clients not to pause other messages while one is open, and a sync burst
+	 for a large channel would otherwise sit in the queue. The batch is still
+	 registered, so its close is observed. */
+	var queuesContents: Bool {
+		switch self {
+		case .metadata, .metadataSubs: false
+		default: true
 		}
 	}
 }

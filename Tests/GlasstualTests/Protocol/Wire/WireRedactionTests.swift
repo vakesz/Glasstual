@@ -218,4 +218,20 @@ struct WireRedactionTests {
 				== "IDENTIFY hunter2"
 		)
 	}
+
+	@Test("REGISTER keeps its account and masks the email and password")
+	func accountRegistrationIsMasked() {
+		#expect(
+			WireRedaction.redactedRawChatLine("REGISTER mara mara@example.org :correct horse battery")
+				== "REGISTER mara \(mask) \(mask)"
+		)
+		#expect(WireRedaction.redactedRawChatLine("REGISTER * * hunter2") == "REGISTER * * \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("REGISTER mara").contains("mara"))
+	}
+
+	@Test("VERIFY keeps its account and masks the code")
+	func accountVerificationIsMasked() {
+		#expect(WireRedaction.redactedRawChatLine("VERIFY mara 3a8b9c") == "VERIFY mara \(mask)")
+		#expect(WireRedaction.redactedRawChatLine("VERIFY * :39 41") == "VERIFY * \(mask)")
+	}
 }

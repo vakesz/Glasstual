@@ -78,6 +78,10 @@ extension ServerSession {
 				handlePresenceTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint)
 			case .authentication:
 				handleAuthenticationTrackingNumeric(numeric, message: message, shouldPrint: shouldPrint)
+			case .metadata:
+				if shouldPrint {
+					printReply(message)
+				}
 			}
 
 			return

@@ -84,4 +84,30 @@ struct SendingMessageTests {
 			) == "@label=history-1 CHATHISTORY BEFORE #swift timestamp=2026-08-26T12:00:00.000Z 50"
 		)
 	}
+
+	/// An empty metadata value is a value; a missing one is a removal.
+	@Test("METADATA SET with an empty value keeps a trailing parameter, and removal has none")
+	func metadataEmptyValueAndRemoval() throws {
+		#expect(
+			try SendingMessage.string(command: .metadata, arguments: ["*", "SET", "display-name", ""])
+				== "METADATA * SET display-name :"
+		)
+		#expect(
+			try SendingMessage.string(command: .metadata, arguments: ["*", "SET", "display-name"])
+				== "METADATA * SET display-name"
+		)
+		#expect(
+			try SendingMessage.string(command: .metadata, arguments: ["*", "SET", "display-name", "Ada Lovelace"])
+				== "METADATA * SET display-name :Ada Lovelace"
+		)
+	}
+
+	@Test("A REGISTER password with spaces travels as the trailing parameter")
+	func registerPasswordWithSpaces() throws {
+		#expect(
+			try SendingMessage.string(command: .register, arguments: ["*", "*", "a b c"])
+				== "REGISTER * * :a b c"
+		)
+		#expect(try SendingMessage.string(command: .verify, arguments: ["mara", "123"]) == "VERIFY mara 123")
+	}
 }

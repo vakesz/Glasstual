@@ -73,6 +73,13 @@ struct ServerNumericReplyCorpusTests {
 		#expect(ServerNumeric.namereply.group == .channel)
 		#expect(ServerNumeric.mononline.group == .presence)
 		#expect(ServerNumeric.saslsuccess.group == .authentication)
+		#expect(ServerNumeric.whoiskeyvalue.group == .whois)
+		for numeric in [ServerNumeric.keyvalue, .keynotset, .metadatasubok, .metadataunsubok, .metadatasubs,
+		                .metadatasynclater]
+		{
+			#expect(numeric.group == .metadata)
+			#expect(numeric.isErrorReply == false)
+		}
 
 		/* A numeric no handler claims takes the generic reply path. */
 		#expect(ServerNumeric.whoiscertfp.group == nil)

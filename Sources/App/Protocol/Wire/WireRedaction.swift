@@ -55,6 +55,8 @@ nonisolated enum WireRedaction {
 		case "OPER":
 			guard parameters.count >= 3 else { return line }
 			parameters[2] = credentialMask
+		case "REGISTER", "VERIFY":
+			guard maskAccountRegistration(&parameters, hasTrailing: &hasTrailing) else { return line }
 		case "JOIN":
 			// The second parameter is the comma list of channel keys, one per
 			// channel in the order of the first. Empty slots stay empty.
@@ -91,6 +93,27 @@ nonisolated enum WireRedaction {
 		return prefix + parameters.enumerated().map { index, value in
 			index == lastIndex && hasTrailing ? ":\(value)" : value
 		}.joined(separator: " ")
+	}
+
+	/** Masks what `REGISTER` and `VERIFY` carry. Reports whether anything was.
+
+	 `REGISTER <account> <email> <password>` keeps the account legible; the
+	 email address is personal data and the password a secret.
+	 `VERIFY <account> <code>` loses the code, which proves the address. A
+	 trailing parameter with spaces is one parameter here. */
+	private static func maskAccountRegistration(_ parameters: inout [String], hasTrailing: inout Bool) -> Bool {
+		let isRegister = parameters[0].uppercased() == "REGISTER"
+		let secretIndex = isRegister ? 3 : 2
+
+		guard parameters.count > secretIndex else { return false }
+
+		if isRegister, parameters[2] != "*" {
+			parameters[2] = credentialMask
+		}
+		parameters[secretIndex] = credentialMask
+		hasTrailing = hasTrailing && parameters.count > secretIndex + 1
+
+		return true
 	}
 
 	/// Mode letters that take an argument whether they are set or unset.

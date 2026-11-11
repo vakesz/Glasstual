@@ -140,6 +140,17 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 	case monlistfull = 734
 	/// ircd-seven's nonstandard `ERR_TOOMANYMATCHES` alias.
 	case legacyTooManyMatches = 736
+	/// `draft/metadata-2` `RPL_WHOISKEYVALUE`: one metadata entry in a WHOIS reply.
+	case whoiskeyvalue = 760
+	/// `draft/metadata-2` `RPL_KEYVALUE`: a key's value, or the answer to a SET.
+	case keyvalue = 761
+	/// `draft/metadata-2` `RPL_KEYNOTSET`: a key has no value. Not an error.
+	case keynotset = 766
+	case metadatasubok = 770
+	case metadataunsubok = 771
+	case metadatasubs = 772
+	/// `draft/metadata-2` `RPL_METADATASYNCLATER`: ask for the target again later.
+	case metadatasynclater = 774
 	case loggedin = 900
 	case loggedout = 901
 	case nicklocked = 902
@@ -164,7 +175,8 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 			.connection
 		case .whoisregnick, .whoishelpop, .whoisuser, .whoisserver, .whoisoperator, .whowasuser,
 		     .whoisidle, .endofwhois, .whoischannels, .whoisspecial, .whoisaccount, .whoisbot,
-		     .whoisactually, .endofwhowas, .whoishost, .whoismodes, .channelsmsg, .whoissecure, .whoisrealip:
+		     .whoisactually, .endofwhowas, .whoishost, .whoismodes, .channelsmsg, .whoissecure, .whoisrealip,
+		     .whoiskeyvalue:
 			.whois
 		case .ison, .liststart, .list, .listend, .channelmodeis, .creationtime, .topic, .topicwhotime,
 		     .inviting, .invitelist, .endofinvitelist, .exceptlist, .endofexceptlist, .whoreply,
@@ -178,6 +190,8 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 		case .targnotify, .umodegmsg, .loggedin, .loggedout, .saslsuccess, .saslmechs,
 		     .nicklocked, .saslfail, .sasltoolong, .saslaborted, .saslalready:
 			.authentication
+		case .keyvalue, .keynotset, .metadatasubok, .metadataunsubok, .metadatasubs, .metadatasynclater:
+			.metadata
 		default:
 			nil
 		}
@@ -249,6 +263,8 @@ enum ServerNumeric: UInt, CaseIterable, Sendable {
 		case channel
 		case presence
 		case authentication
+		/// `draft/metadata-2` replies other than the WHOIS entry.
+		case metadata
 	}
 
 	/// The kind of failure an error numeric reports.

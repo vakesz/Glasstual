@@ -47,7 +47,7 @@ extension ServerSession {
 		switch numeric {
 		case .whoisbot:
 			handleWhoisBot(message, shouldPrint: shouldPrint, in: selectedConversation)
-		case .channelsmsg, .whoishelpop, .whoishost, .whoismodes,
+		case .channelsmsg, .whoishelpop, .whoishost, .whoiskeyvalue, .whoismodes,
 		     .whoisoperator, .whoisrealip, .whoisregnick, .whoissecure, .whoisspecial:
 			if shouldPrint, message.params.count > 2 {
 				printReply(message, in: selectedConversation)

@@ -13,6 +13,9 @@ import Foundation
  */
 nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	case accountextban = "ACCOUNTEXTBAN"
+	/// `draft/account-registration`: the server only lets in users who are
+	/// signed in to an account.
+	case accountrequired = "ACCOUNTREQUIRED"
 	case awaylen = "AWAYLEN"
 	case bot = "BOT"
 	case callerid = "CALLERID"
@@ -80,6 +83,7 @@ nonisolated enum ISupportToken: String, CaseIterable, Sendable {
 	/// The names a token goes by while its specification is a draft, which a
 	/// server advertises in place of the bare name.
 	private static let draftAliases: [String: ISupportToken] = [
+		"DRAFT/ACCOUNTREQUIRED": .accountrequired,
 		"DRAFT/CHATHISTORY": .chathistory,
 		"DRAFT/ICON": .icon,
 	]

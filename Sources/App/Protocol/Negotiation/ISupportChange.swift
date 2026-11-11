@@ -24,7 +24,7 @@ nonisolated enum ISupportChange: Sendable, Equatable {
 
 	/// What a token announces by being present at all.
 	nonisolated enum Feature: Sendable, Equatable {
-		case safeList, utf8Only, whox
+		case accountRequired, safeList, utf8Only, whox
 	}
 
 	/// A list of words a token's value sets.
@@ -253,6 +253,8 @@ private nonisolated extension ISupportChange {
 				ISupportEffects.LegacyCapability(capability: .userhostInNames, command: "PROTOCTL UHNAMES")
 			)]
 		// Plain announcements.
+		case .accountrequired:
+			return [.feature(.accountRequired)]
 		case .safelist:
 			return [.feature(.safeList)]
 		case .silence:

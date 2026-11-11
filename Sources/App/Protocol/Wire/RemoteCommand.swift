@@ -39,6 +39,9 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case list
 	case markread
 	case locops
+	/// IRCv3 `draft/metadata-2`: `METADATA <target> <subcommand> [<params>]`,
+	/// and the server's `METADATA <target> <key> <visibility> :<value>`.
+	case metadata
 	case mode
 	case monitor
 	case nachat
@@ -59,6 +62,8 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case privmsgAction = "privmsg action"
 	case quit
 	case redact
+	/// IRCv3 `draft/account-registration`: `REGISTER <account> <email> <password>`.
+	case register
 	/// IRCv3 `draft/channel-rename`: `RENAME <old> <new> [:reason]`.
 	case rename
 	case setname
@@ -68,6 +73,8 @@ nonisolated enum RemoteCommand: String, Sendable, CaseIterable {
 	case tempshun
 	case topic
 	case user
+	/// IRCv3 `draft/account-registration`: `VERIFY <account> <code>`.
+	case verify
 	case wallops
 	case warn
 	case watch
@@ -138,6 +145,10 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.list: .never,
 		.markread: .never,
 		.locops: .startsAtArgument(0),
+		/* A value with a space, an empty value or one starting with `:` travels
+			as the trailing parameter on its own; `METADATA * SET key` without a
+			value is a removal and must not grow an empty trailing one. */
+		.metadata: .never,
 		.mode: .never,
 		.monitor: .never,
 		.nachat: .startsAtArgument(0),
@@ -153,6 +164,8 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.quit: .startsAtArgument(0),
 		/* `REDACT <target> <msgid> [:reason]`: the reason is the only free text. */
 		.redact: .startsAtArgument(2),
+		/* A password with a space travels as the trailing parameter on its own. */
+		.register: .never,
 		/* `RENAME <old> <new> [:reason]`: the reason is the only free text. */
 		.rename: .startsAtArgument(2),
 		.setname: .startsAtArgument(0),
@@ -162,6 +175,7 @@ nonisolated extension RemoteCommand { // nonisolated: pure
 		.tempshun: .startsAtArgument(1),
 		.topic: .startsAtArgument(1),
 		.user: .startsAtArgument(3),
+		.verify: .never,
 		.wallops: .startsAtArgument(0),
 		.warn: .startsAtArgument(2),
 		.watch: .never,

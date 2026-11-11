@@ -16,10 +16,24 @@ struct BatchKindTests {
 			("playback", .playback), ("znc.in/playback", .zncPlayback), ("znc.in/tlsinfo", .zncTLSInfo),
 			("draft/isupport", .isupport), ("isupport", .isupport),
 			("draft/chathistory-targets", .chatHistoryTargets), ("chathistory-targets", .chatHistoryTargets),
+			("metadata", .metadata), ("metadata-subs", .metadataSubs),
 		]
 	)
 	func knownSpellingsAreRecognised(_ testCase: (type: String, kind: BatchKind)) {
 		#expect(BatchKind(wireType: testCase.type) == testCase.kind)
+	}
+
+	/// The metadata specification asks clients not to pause other messages
+	/// while a metadata batch is open.
+	@Test("Only metadata batches let their lines through as they arrive")
+	func metadataBatchesAreNotQueued() {
+		#expect(BatchKind.metadata.wireType == "metadata")
+		#expect(BatchKind.metadataSubs.wireType == "metadata-subs")
+		#expect(BatchKind.metadata.queuesContents == false)
+		#expect(BatchKind.metadataSubs.queuesContents == false)
+		#expect(BatchKind.chatHistory.queuesContents)
+		#expect(BatchKind.netsplit.queuesContents)
+		#expect(BatchKind.other("x").queuesContents)
 	}
 
 	@Test("A type this client does not know keeps its text")
