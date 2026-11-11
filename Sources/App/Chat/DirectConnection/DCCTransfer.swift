@@ -55,6 +55,15 @@ nonisolated enum DCCTransferError: Error, Equatable, Sendable {
 	case fileUnwritable
 	case storageFull
 	case network(String)
+	/// The decision about a secure peer's certificate went against it, or was
+	/// not made in time.
+	case peerCertificateRejected
+	/// A secure peer presented no certificate and one is required.
+	case peerCertificateRequired
+	/// A secure peer's certificate has a key below the accepted strength.
+	case weakPeerCertificate
+	/// TLS could not agree with the peer, with the reason Security gave.
+	case tlsHandshakeFailed(String)
 
 	/// How a failure reaches the feature driving a DCC connection: one of the
 	/// cases above passes through, and anything else the network raised is
@@ -72,7 +81,9 @@ nonisolated enum DCCTransferError: Error, Equatable, Sendable {
 /// transfer ends the stream without a terminal event.
 nonisolated enum DCCTransferEvent: Sendable {
 	case listening(port: UInt16)
-	case connected
+	/// The connection is ready to carry the file. A secure transfer reports
+	/// what TLS negotiated; its peer has already been decided on.
+	case connected(DCCSecureSessionInfo?)
 	case progress(processedBytes: UInt64)
 	case completion(DCCTransfer.Completion)
 	case finished
@@ -105,6 +116,9 @@ actor DCCTransfer {
 	struct Config: Sendable {
 		var role: Role
 		var endpoint: DCCEndpoint
+		/// Plain DCC, or TLS with this side as the server when it listens and
+		/// the client when it dials.
+		var security: DCCSecurity
 		/// The file to read from, or the file to write into. The caller
 		/// reserves it: the actor only ever uses the descriptor it is handed,
 		/// so nothing here can open a second file under the same name.
@@ -138,6 +152,7 @@ actor DCCTransfer {
 		init(
 			role: Role,
 			endpoint: DCCEndpoint,
+			security: DCCSecurity = .plain,
 			file: DCCTransferFile,
 			fileSize: UInt64,
 			resumeOffset: UInt64 = 0,
@@ -148,6 +163,7 @@ actor DCCTransfer {
 		) {
 			self.role = role
 			self.endpoint = endpoint
+			self.security = security
 			self.file = file
 			self.fileSize = fileSize
 			self.resumeOffset = resumeOffset
@@ -176,7 +192,7 @@ actor DCCTransfer {
 	private let eventContinuation: AsyncStream<DCCTransferEvent>.Continuation
 
 	private var runTask: Task<Void, Never>?
-	private var connection: NetworkConnection<TCP>?
+	private var connection: DCCConnection?
 	private var file: DCCTransferFile?
 	private var bytesStarted = false
 	private var submittedBytes: UInt64 = 0
@@ -242,7 +258,7 @@ actor DCCTransfer {
 			try Task.checkCancellation()
 			bytesStarted = true
 			submittedBytes = config.resumeOffset
-			emit(.connected)
+			emit(.connected(connection.secureSession))
 
 			switch config.role {
 			case .sender:
@@ -308,8 +324,8 @@ actor DCCTransfer {
 
 	// MARK: - Establishing the connection
 
-	private func establishConnection() async throws -> NetworkConnection<TCP> {
-		let connection: NetworkConnection<TCP>
+	private func establishConnection() async throws -> DCCConnection {
+		let connection: DCCConnection
 
 		switch config.endpoint {
 		case let .connect(host, port, interfaceName, timeout):
@@ -317,11 +333,16 @@ actor DCCTransfer {
 				toHost: host,
 				port: port,
 				interfaceName: interfaceName,
-				timeout: timeout
+				timeout: timeout,
+				handshake: handshake(as: .client)
 			)
 		case let .listen(portRange):
 			let deadline = config.acceptanceTimeout.map { ContinuousClock.now + $0 }
-			let session = try await DCCConnectionEndpoint.bind(portRange: portRange, deadline: deadline)
+			let session = try await DCCConnectionEndpoint.bind(
+				portRange: portRange,
+				deadline: deadline,
+				handshake: handshake(as: .server)
+			)
 
 			emit(.listening(port: session.port))
 
@@ -339,6 +360,11 @@ actor DCCTransfer {
 		return connection
 	}
 
+	private func handshake(as role: DCCTLSHandshake.Role) -> DCCTLSHandshake? {
+		guard case let .tls(configuration) = config.security else { return nil }
+		return DCCTLSHandshake(configuration: configuration, role: role)
+	}
+
 	// MARK: - Sending
 
 	private nonisolated enum SendResult: Sendable {
@@ -346,7 +372,7 @@ actor DCCTransfer {
 		case peer(Completion)
 	}
 
-	private func sendFile(over connection: NetworkConnection<TCP>) async throws {
+	private func sendFile(over connection: DCCConnection) async throws {
 		guard let file else { throw DCCTransferError.fileUnreadable }
 		try await withThrowingTaskGroup(of: SendResult.self) { group in
 			defer { group.cancelAll() }
@@ -380,13 +406,13 @@ actor DCCTransfer {
 		}
 	}
 
-	private func readAcknowledgements(over connection: NetworkConnection<TCP>) async throws -> Completion {
+	private func readAcknowledgements(over connection: DCCConnection) async throws -> Completion {
 		var acknowledgements = DCCAcknowledgements(
 			offset: config.resumeOffset,
 			offeredSize: config.fileSize
 		)
 		while true {
-			let (payload, complete) = try await DCCConnectionEndpoint.receive(on: connection)
+			let (payload, complete) = try await connection.receive()
 			if let payload {
 				try acknowledgements.append(payload)
 			}
@@ -403,7 +429,7 @@ actor DCCTransfer {
 		}
 	}
 
-	private func sendBlocks(from file: DCCTransferFile, over connection: NetworkConnection<TCP>) async throws {
+	private func sendBlocks(from file: DCCTransferFile, over connection: DCCConnection) async throws {
 		var processedBytes = config.resumeOffset
 		var windowStart = ContinuousClock.now
 		var windowBytes: UInt64 = 0
@@ -447,7 +473,7 @@ actor DCCTransfer {
 
 	// MARK: - Receiving
 
-	private func receiveFile(over connection: NetworkConnection<TCP>) async throws {
+	private func receiveFile(over connection: DCCConnection) async throws {
 		guard let file, try await file.size() == config.resumeOffset else {
 			throw DCCTransferError.fileUnwritable
 		}
@@ -458,6 +484,9 @@ actor DCCTransfer {
 			try await DCCTransport.withTimeout(config.sendTimeout, failingWith: .stalled) {
 				try await connection.send(acknowledgement)
 			}
+			if connection.secureSession != nil {
+				await awaitSenderClose(over: connection)
+			}
 		}
 
 		while processedBytes < config.fileSize {
@@ -467,7 +496,7 @@ actor DCCTransfer {
 				config.inactivityTimeout,
 				failingWith: .stalled
 			) {
-				try await DCCConnectionEndpoint.receive(on: connection)
+				try await connection.receive()
 			}
 
 			if let payload, payload.isEmpty == false {
@@ -493,6 +522,21 @@ actor DCCTransfer {
 			if isComplete, processedBytes < config.fileSize {
 				throw DCCTransferError.closedByPeer
 			}
+		}
+	}
+
+	/** Holds a secure connection open until the sender closes it.
+
+	 Under TLS 1.3 the dialling side finishes its handshake before the
+	 listening side has read its certificate. A receiver with nothing left to
+	 receive acknowledges at once, and closing straight after reaches a
+	 listening sender mid-handshake, which fails a transfer that succeeded.
+	 Every other receiver has waited for file bytes, which a sender only writes
+	 once its handshake is done. The file is complete either way, so a sender
+	 that never closes only delays the verdict by the grace period. */
+	private func awaitSenderClose(over connection: DCCConnection) async {
+		_ = try? await DCCTransport.withTimeout(Self.gracefulCloseTimeout, failingWith: .stalled) {
+			while try await connection.receive().1 == false {}
 		}
 	}
 

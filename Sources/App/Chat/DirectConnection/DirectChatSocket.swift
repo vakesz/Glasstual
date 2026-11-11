@@ -13,7 +13,9 @@ import Network
 /// stream without a `closed`.
 nonisolated enum DirectChatEvent: Sendable {
 	case listening(port: UInt16)
-	case connected
+	/// The connection is ready to carry lines. A secure chat reports what TLS
+	/// negotiated; its peer has already been decided on.
+	case connected(DCCSecureSessionInfo?)
 	/// The complete lines in one bounded read, without their newlines, in the
 	/// peer's encoding. Finish the acknowledgement after consuming the batch;
 	/// the connection waits for it before reading again.
@@ -35,6 +37,9 @@ nonisolated enum DirectChatEvent: Sendable {
 actor DirectChatSocket {
 	nonisolated struct Config: Sendable {
 		var endpoint: DCCEndpoint
+		/// Plain DCC, or TLS with this side as the server when it listens and
+		/// the client when it dials.
+		var security: DCCSecurity
 		/// A peer that never sends a newline must not be able to grow the
 		/// buffer without bound; the session fails once it passes this.
 		var maximumLineLength: Int
@@ -52,12 +57,14 @@ actor DirectChatSocket {
 
 		init(
 			endpoint: DCCEndpoint,
+			security: DCCSecurity = .plain,
 			maximumLineLength: Int = 16 * 1024,
 			sendTimeout: Duration? = nil,
 			expectedPeerAddress: String = "",
 			acceptanceTimeout: Duration? = nil
 		) {
 			self.endpoint = endpoint
+			self.security = security
 			self.maximumLineLength = maximumLineLength
 			self.sendTimeout = sendTimeout
 			self.expectedPeerAddress = expectedPeerAddress
@@ -74,7 +81,7 @@ actor DirectChatSocket {
 	private var runTask: Task<Void, Never>?
 	/// Set once the connection is carrying bytes, which is when ``send(_:)``
 	/// has somewhere to write.
-	private var readyConnection: NetworkConnection<TCP>?
+	private var readyConnection: DCCConnection?
 	private var framer: LineFramer
 	private var isCancelled = false
 	private var hasFinished = false
@@ -148,7 +155,7 @@ actor DirectChatSocket {
 		do {
 			let connection = try await establishConnection()
 			readyConnection = connection
-			emit(.connected)
+			emit(.connected(connection.secureSession))
 
 			try await readLines(over: connection)
 
@@ -192,18 +199,23 @@ actor DirectChatSocket {
 
 	// MARK: - Establishing the connection
 
-	private func establishConnection() async throws -> NetworkConnection<TCP> {
+	private func establishConnection() async throws -> DCCConnection {
 		switch config.endpoint {
 		case let .connect(host, port, interfaceName, timeout):
 			return try await DCCConnectionEndpoint.connect(
 				toHost: host,
 				port: port,
 				interfaceName: interfaceName,
-				timeout: timeout
+				timeout: timeout,
+				handshake: handshake(as: .client)
 			)
 		case let .listen(portRange):
 			let deadline = config.acceptanceTimeout.map { ContinuousClock.now + $0 }
-			let session = try await DCCConnectionEndpoint.bind(portRange: portRange, deadline: deadline)
+			let session = try await DCCConnectionEndpoint.bind(
+				portRange: portRange,
+				deadline: deadline,
+				handshake: handshake(as: .server)
+			)
 
 			emit(.listening(port: session.port))
 
@@ -220,13 +232,18 @@ actor DirectChatSocket {
 		}
 	}
 
+	private func handshake(as role: DCCTLSHandshake.Role) -> DCCTLSHandshake? {
+		guard case let .tls(configuration) = config.security else { return nil }
+		return DCCTLSHandshake(configuration: configuration, role: role)
+	}
+
 	// MARK: - Reading
 
-	private func readLines(over connection: NetworkConnection<TCP>) async throws {
+	private func readLines(over connection: DCCConnection) async throws {
 		while true {
 			try Task.checkCancellation()
 
-			let (payload, isComplete) = try await DCCConnectionEndpoint.receive(on: connection)
+			let (payload, isComplete) = try await connection.receive()
 
 			if let payload, payload.isEmpty == false {
 				let lines: [Data]

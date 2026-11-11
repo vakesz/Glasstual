@@ -23,9 +23,9 @@ nonisolated enum DCCTransport {
 	 `task` is the listener: it owns the only reference to it, so cancelling the
 	 task finishes `connections` and gives the port back. Nothing else can reach
 	 the listener, which is why there is only one way to close one. */
-	struct ListeningSession: Sendable {
+	struct ListeningSession<ApplicationProtocol: NetworkProtocolOptions>: Sendable {
 		let port: UInt16
-		let connections: AsyncStream<NetworkConnection<TCP>>
+		let connections: AsyncStream<NetworkConnection<ApplicationProtocol>>
 		let task: Task<Void, Never>
 	}
 
@@ -39,7 +39,28 @@ nonisolated enum DCCTransport {
 	/// returns only after Network.framework confirms the selected port.
 	static func startListener(
 		portRange: ClosedRange<UInt16>
-	) async throws -> ListeningSession {
+	) async throws -> ListeningSession<TCP> {
+		try await startListener(portRange: portRange) { port in
+			try NetworkListener<TCP>(using: .parameters { TCP() }.localPort(port))
+		}
+	}
+
+	/// Starts a TLS listener the same way, presenting the handshake's identity
+	/// to whoever connects.
+	static func startListener(
+		portRange: ClosedRange<UInt16>,
+		handshake: DCCTLSHandshake
+	) async throws -> ListeningSession<TLS> {
+		try await startListener(portRange: portRange) { port in
+			let tls = try handshake.options()
+			return try NetworkListener<TLS>(using: .parameters { tls }.localPort(port))
+		}
+	}
+
+	private static func startListener<ApplicationProtocol: OneToOneProtocol & SendableMetatype>(
+		portRange: ClosedRange<UInt16>,
+		makeListener: (NWEndpoint.Port) throws -> NetworkListener<ApplicationProtocol>
+	) async throws -> ListeningSession<ApplicationProtocol> {
 		guard portRange.lowerBound > 0 else {
 			throw DCCTransferError.noOpenPort
 		}
@@ -47,16 +68,16 @@ nonisolated enum DCCTransport {
 		for port in portRange {
 			try Task.checkCancellation()
 
-			guard let networkPort = NWEndpoint.Port(rawValue: port), let listener = try? NetworkListener<TCP>(
-				using: .parameters { TCP() }.localPort(networkPort)
-			) else {
+			guard let networkPort = NWEndpoint.Port(rawValue: port),
+			      let listener = try? makeListener(networkPort)
+			else {
 				continue
 			}
 
 			/* Bounded, but oldest-first: `bufferingNewest(1)` dropped the peer's
 			 connection the moment anything else reached the port, which is the
 			 one arrival that matters and the one a racing connector displaced. */
-			let (connections, connectionContinuation) = AsyncStream<NetworkConnection<TCP>>
+			let (connections, connectionContinuation) = AsyncStream<NetworkConnection<ApplicationProtocol>>
 				.makeStream(bufferingPolicy: .bufferingOldest(8))
 			let (readiness, readinessContinuation) = AsyncStream<Bool>.makeStream()
 
@@ -168,19 +189,26 @@ nonisolated enum DCCTransport {
 			options.connectionTimeout = Int(connectTimeout.components.seconds)
 		}
 
+		parameters.requiredLocalEndpoint = localEndpoint(interfaceName: interfaceName)
+
+		return parameters
+	}
+
+	/// Where to dial from when the user named an interface, or `nil` for the
+	/// default route.
+	static func localEndpoint(interfaceName: String?) -> NWEndpoint? {
 		guard let interfaceName, interfaceName.isEmpty == false else {
-			return parameters
+			return nil
 		}
 
-		if let localAddress = address(ofInterfaceNamed: interfaceName) {
-			parameters.requiredLocalEndpoint = .hostPort(host: NWEndpoint.Host(localAddress), port: .any)
-		} else {
+		guard let localAddress = address(ofInterfaceNamed: interfaceName) else {
 			DirectConnectionLog.transport.error(
 				"Interface '\(interfaceName, privacy: .public)' has no usable address. Using the default interface."
 			)
+			return nil
 		}
 
-		return parameters
+		return .hostPort(host: NWEndpoint.Host(localAddress), port: .any)
 	}
 
 	/** Whether an inbound connection came from the peer the transfer was
@@ -196,7 +224,7 @@ nonisolated enum DCCTransport {
 	 host, and `Network` renders what it resolved rather than what the offer
 	 wrote, so comparing the text refused the very peer the offer named. */
 	static func connection(
-		_ connection: NetworkConnection<TCP>,
+		_ connection: NetworkConnection<some NetworkProtocolOptions>,
 		isFrom expectedPeerAddress: String
 	) -> Bool {
 		guard expectedPeerAddress.isEmpty == false else {

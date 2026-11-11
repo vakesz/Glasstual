@@ -129,7 +129,8 @@ nonisolated enum FileTransferFailure: Equatable, Sendable {
 
 	init(_ error: DCCTransferError) {
 		switch error {
-		case .badParameter, .rejectedPeerAddress:
+		case .badParameter, .rejectedPeerAddress, .peerCertificateRejected, .peerCertificateRequired,
+		     .weakPeerCertificate, .tlsHandshakeFailed:
 			self = .connectionUnavailable
 		case .closedByPeer:
 			self = .peerClosedConnection

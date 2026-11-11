@@ -26,30 +26,63 @@ nonisolated enum DCCEndpoint: Sendable {
  cancels it when the peer arrives, when the deadline passes and when the caller
  gives up, so no caller has to hold the listener in order to close a port. */
 nonisolated enum DCCConnectionEndpoint {
+	/// A bound port waiting for the peer, plain or TLS.
+	enum ListeningSession: Sendable {
+		case plain(DCCTransport.ListeningSession<TCP>)
+		case secure(DCCTransport.ListeningSession<TLS>, DCCTLSHandshake)
+
+		var port: UInt16 {
+			switch self {
+			case let .plain(session): session.port
+			case let .secure(session, _): session.port
+			}
+		}
+	}
+
 	/// Dials a peer that is already listening.
+	///
+	/// With a handshake the connection is TLS with this side as the client,
+	/// and it is not returned until the peer has been decided on. The timeout
+	/// then also covers that decision, which may be a person's.
 	static func connect(
 		toHost host: String,
 		port: UInt16,
 		interfaceName: String?,
-		timeout: Duration?
-	) async throws -> NetworkConnection<TCP> {
+		timeout: Duration?,
+		handshake: DCCTLSHandshake? = nil
+	) async throws -> DCCConnection {
 		guard host.isEmpty == false, let networkPort = NWEndpoint.Port(rawValue: port) else {
 			throw DCCTransferError.badParameter
 		}
 
-		let parameters = DCCTransport.parameters(interfaceName: interfaceName, connectTimeout: timeout)
-		let connection = NetworkConnection<TCP>(
-			to: .hostPort(host: NWEndpoint.Host(host), port: networkPort),
-			using: .parameters(initialParameters: parameters) { TCP() }
-		)
+		let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: networkPort)
 
-		try await DCCTransport.withTimeout(timeout, failingWith: .connectTimeout) {
-			/* Typed Network connections establish on first I/O. Empty data puts no
-			 bytes on the stream but makes the connected event truthful. */
-			try await connection.send(Data())
+		guard let handshake else {
+			let parameters = DCCTransport.parameters(interfaceName: interfaceName, connectTimeout: timeout)
+			let connection = NetworkConnection<TCP>(
+				to: endpoint,
+				using: .parameters(initialParameters: parameters) { TCP() }
+			)
+
+			try await DCCTransport.withTimeout(timeout, failingWith: .connectTimeout) {
+				/* Typed Network connections establish on first I/O. Empty data puts
+				 no bytes on the stream but makes the connected event truthful. */
+				try await connection.send(Data())
+			}
+
+			return .plain(connection)
 		}
 
-		return connection
+		let tls = try handshake.options(connectTimeout: timeout)
+		let connection = NetworkConnection<TLS>(
+			to: endpoint,
+			using: .parameters { tls }.localEndpoint(DCCTransport.localEndpoint(interfaceName: interfaceName))
+		)
+		let establishment = (timeout ?? handshake.configuration.handshakeTimeout) + handshake.configuration.decisionTimeout
+
+		let session = try await establish(connection, handshake: handshake, timeout: establishment)
+
+		return .secure(connection, session)
 	}
 
 	/** Binds the first port in `portRange` that a listener actually reaches.
@@ -57,13 +90,18 @@ nonisolated enum DCCConnectionEndpoint {
 	 `deadline` is the whole window binding and waiting for the peer share, not a
 	 budget for each of them in turn: applying the timeout to each gave a slow
 	 bind twice what the caller asked for. Pass the same instant to
-	 ``accept(on:expectedPeerAddress:sendTimeout:deadline:log:)``. */
+	 ``accept(on:expectedPeerAddress:sendTimeout:deadline:log:)``. With a
+	 handshake the listener is TLS, with this side as the server. */
 	static func bind(
 		portRange: ClosedRange<UInt16>,
-		deadline: ContinuousClock.Instant?
-	) async throws -> DCCTransport.ListeningSession {
+		deadline: ContinuousClock.Instant?,
+		handshake: DCCTLSHandshake? = nil
+	) async throws -> ListeningSession {
 		try await DCCTransport.withDeadline(deadline, failingWith: .connectTimeout) {
-			try await DCCTransport.startListener(portRange: portRange)
+			guard let handshake else {
+				return try await .plain(DCCTransport.startListener(portRange: portRange))
+			}
+			return try await .secure(DCCTransport.startListener(portRange: portRange, handshake: handshake), handshake)
 		}
 	}
 
@@ -73,14 +111,70 @@ nonisolated enum DCCConnectionEndpoint {
 	 the wait goes on; an empty expectation accepts the first arrival, which is
 	 what is left whenever the offer named no address. One listener serves one
 	 connection, so the port closes the moment a peer is accepted rather than
-	 leaving somebody else a window to reach it. */
+	 leaving somebody else a window to reach it.
+
+	 `deadline` bounds the wait for the peer. A TLS peer's handshake, and the
+	 decision about it, run after the port has closed and are bounded by the
+	 handshake's own timeouts instead, so a person deciding does not keep the
+	 port open. */
 	static func accept(
-		on session: DCCTransport.ListeningSession,
+		on session: ListeningSession,
 		expectedPeerAddress: String,
 		sendTimeout: Duration?,
 		deadline: ContinuousClock.Instant?,
 		log: Logger
-	) async throws -> NetworkConnection<TCP> {
+	) async throws -> DCCConnection {
+		switch session {
+		case let .plain(listener):
+			let connection = try await arrival(
+				on: listener,
+				expectedPeerAddress: expectedPeerAddress,
+				deadline: deadline,
+				log: log
+			) { candidate in
+				/* Typed Network connections establish on first I/O. Empty data
+				 puts no bytes on the stream but makes the connected event
+				 truthful. */
+				try await DCCTransport.withTimeout(sendTimeout, failingWith: .connectTimeout) {
+					try await candidate.send(Data())
+				}
+			} reject: { candidate in
+				/* Half-closing tells whoever dialled that the port is not going to
+				 answer, rather than leaving them holding a socket that never
+				 carries anything. */
+				try? await candidate.send(Data(), endOfStream: true)
+			}
+			return .plain(connection)
+		case let .secure(listener, handshake):
+			/* A refused TLS candidate is never started: starting it would run its
+			 handshake, and with it the decision about a peer nobody accepted.
+			 Releasing it is what closes it. */
+			let connection = try await arrival(
+				on: listener,
+				expectedPeerAddress: expectedPeerAddress,
+				deadline: deadline,
+				log: log,
+				establish: { _ in },
+				reject: { _ in }
+			)
+			let establishment = (sendTimeout ?? handshake.configuration.handshakeTimeout)
+				+ handshake.configuration.decisionTimeout
+			let session = try await establish(connection, handshake: handshake, timeout: establishment)
+			return .secure(connection, session)
+		}
+	}
+
+	/// Waits within `deadline` for the first acceptable arrival, closes the
+	/// listener, and establishes the arrival with `establish` before the
+	/// deadline is released.
+	private static func arrival<ApplicationProtocol: NetworkProtocolOptions & SendableMetatype>(
+		on session: DCCTransport.ListeningSession<ApplicationProtocol>,
+		expectedPeerAddress: String,
+		deadline: ContinuousClock.Instant?,
+		log: Logger,
+		establish: @escaping @Sendable (NetworkConnection<ApplicationProtocol>) async throws -> Void,
+		reject: @escaping @Sendable (NetworkConnection<ApplicationProtocol>) async -> Void
+	) async throws -> NetworkConnection<ApplicationProtocol> {
 		/* Cancelling the listener's task is what finishes the stream of arrivals,
 		 and therefore what ends the wait below. It is done on every way out,
 		 including the caller giving up while the peer is still absent: nothing
@@ -103,13 +197,7 @@ nonisolated enum DCCConnectionEndpoint {
 					}
 
 					session.task.cancel()
-
-					/* Typed Network connections establish on first I/O. Empty data
-					 puts no bytes on the stream but makes the connected event
-					 truthful. */
-					try await DCCTransport.withTimeout(sendTimeout, failingWith: .connectTimeout) {
-						try await candidate.send(Data())
-					}
+					try await establish(candidate)
 
 					return candidate
 				}
@@ -125,19 +213,25 @@ nonisolated enum DCCConnectionEndpoint {
 		}
 	}
 
-	/// Reads whatever the peer has sent, and reports whether the peer is done.
-	static func receive(on connection: NetworkConnection<TCP>) async throws -> (Data?, Bool) {
-		let message = try await connection.receive(atLeast: 1, atMost: DCCTransport.bufferSize)
+	/** Runs a TLS connection's handshake, including the decision about the
+	 peer, and fails unless both complete within `timeout`.
 
-		return (message.content, message.metadata.endOfStream)
-	}
-
-	/** Refuses one inbound connection.
-
-	 Half-closing tells whoever dialled that the port is not going to answer,
-	 rather than leaving them holding a socket that never carries anything, and
-	 releasing the last reference lets the stack finish tearing it down. */
-	private static func reject(_ connection: NetworkConnection<TCP>) async {
-		try? await connection.send(Data(), endOfStream: true)
+	 Empty data puts no bytes on the stream but starts the connection, and the
+	 send does not return until the handshake has finished. A peer that
+	 presented no certificate is decided on after that, still before any byte
+	 moves. The failure names the validator's refusal when there was one. */
+	private static func establish(
+		_ connection: NetworkConnection<TLS>,
+		handshake: DCCTLSHandshake,
+		timeout: Duration
+	) async throws -> DCCSecureSessionInfo {
+		do {
+			return try await DCCTransport.withTimeout(timeout, failingWith: .connectTimeout) {
+				try await connection.send(Data())
+				return try await handshake.establishedSession(of: connection)
+			}
+		} catch {
+			throw await handshake.failure(for: error)
+		}
 	}
 }
