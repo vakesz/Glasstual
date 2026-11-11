@@ -203,6 +203,7 @@ extension ServerSession {
 				config.ownedKeychainItems.map { ($0, PendingKeychainSecret.cleared) },
 				uniquingKeysWith: { _, newest in newest }
 			))
+			config.forgetDCCPeerCertificates()
 			output?.destroyInputHistory(for: self)
 		}
 		conversationList.forEach { $0.prepareForRemoval(preservingLocalData: preservingLocalData) }

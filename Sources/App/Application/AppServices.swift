@@ -84,6 +84,15 @@ extension ChatServices {
 	)
 }
 
+extension DCCPeerCertificateStore {
+	/// The certificates the user trusts for secure DCC peers, kept beside the
+	/// application's other support files.
+	static let shared = DCCPeerCertificateStore(
+		fileURL: ApplicationPaths.groupContainerApplicationSupportURL?
+			.appendingPathComponent("DCC Peer Certificates.plist", isDirectory: false)
+	)
+}
+
 extension STSPolicyStore {
 	static let applicationStore = STSPolicyStore(userDefaults: GlasstualUserDefaults.container)
 }

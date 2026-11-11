@@ -22,14 +22,16 @@ extension ChatSession {
 
 	 The networks go the way a deleted network does: their logs and history stay
 	 on disk and come back, read-only, if the bouncer lists them again. Only the
-	 keychain items they own are removed — their channels' keys — never the
-	 account's secrets, which the account's own deletion clears. */
+	 keychain items they own are removed — their channels' keys and secure DCC
+	 identity — never the account's secrets, which the account's own deletion
+	 clears. The DCC certificates they trusted go with them. */
 	func destroySessionWithBouncerNetworks(_ session: ServerSession) {
 		for network in bouncerChildren(of: session) {
 			KeychainPersistence.shared.persist(Dictionary(
 				network.config.ownedKeychainItems.map { ($0, PendingKeychainSecret.cleared) },
 				uniquingKeysWith: { _, newest in newest }
 			))
+			network.config.forgetDCCPeerCertificates()
 			destroySession(network, preservingLocalData: true)
 		}
 		destroySession(session)
