@@ -64,10 +64,14 @@ final class Sidebar {
 	@ObservationIgnored private var updateIsPending = false
 	@ObservationIgnored private var refreshTask: Task<Void, Never>?
 	/// The icons networks advertise, drawn on their server rows.
-	let networkIcons = NetworkIconStore()
+	let networkIcons: RemoteImageStore
+	@ObservationIgnored private let notifications = NotificationSubscriptions()
 
-	init() {
-		networkIcons.onChange = { [weak self] in self?.setNeedsRefresh() }
+	init(networkIcons: RemoteImageStore = .networkIcons) {
+		self.networkIcons = networkIcons
+		notifications.observe(RemoteImageStoreDidChange.self, of: networkIcons) { [weak self] _ in
+			self?.setNeedsRefresh()
+		}
 	}
 
 	/** No rows are built here: the window attaches before the chat session
@@ -91,7 +95,7 @@ final class Sidebar {
 		)
 		for session in sessions {
 			guard let url = session.supportInfo.networkIconURL else { continue }
-			networkIcons.request(url, route: InlineImageRoute(session: session))
+			networkIcons.request(url, route: InlineImageRoute(session: session), owner: session.uniqueIdentifier)
 		}
 	}
 

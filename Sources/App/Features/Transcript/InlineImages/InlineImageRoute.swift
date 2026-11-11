@@ -14,8 +14,8 @@ import Network
  while disconnected, or after the user connected once without it. A configured
  proxy is never bypassed; a fetch it cannot carry fails.
 
- The route also decides when a fetch may start at all, in ``inlineImageFetch``
- and ``networkIconFetch``. */
+ The route also decides when a fetch may start at all, in ``inlineImageFetch``,
+ ``networkIconFetch`` and ``avatarFetch``. */
 nonisolated enum InlineImageRoute: Sendable, Hashable {
 	/// The system's own proxy settings, which URLSession applies by itself.
 	case system
@@ -140,6 +140,16 @@ nonisolated enum InlineImageRoute: Sendable, Hashable {
 		case .system, .tor, .unavailable: true
 		case .proxy: false
 		}
+	}
+
+	/** When a profile picture someone set on the server is fetched.
+
+	 The address comes from another user, and nothing asks the reader before
+	 a member row or a transcript header shows it, so it follows the network
+	 icon: a route where only the name's spelling can be checked fetches none
+	 and the initial stands in. */
+	var avatarFetch: FetchPolicy {
+		networkIconFetch
 	}
 
 	/// Whether a host name may be looked up on this Mac. Through a proxy it may

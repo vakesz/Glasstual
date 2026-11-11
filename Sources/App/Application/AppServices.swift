@@ -123,6 +123,14 @@ extension InlineImageBudget {
 	static let shared = InlineImageBudget()
 }
 
+extension RemoteImageStore {
+	/// The icons networks advertise, shared by every server row.
+	static let networkIcons = RemoteImageStore(configuration: .networkIcons)
+	/// The profile pictures people set on the server, shared by member rows and
+	/// transcript headers.
+	static let avatars = RemoteImageStore(configuration: .avatars)
+}
+
 extension SettingsTransferSession {
 	static let shared = SettingsTransferSession()
 }
