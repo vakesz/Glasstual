@@ -1,0 +1,254 @@
+{
+  "about": "Lines a channel or an XDCC bot might send, written for these tests in the shapes iroffer, iroffer-dinoex and common channel announcers use. None is copied from a real channel. An empty sender stands for a line with none. Each expect is what XDCCAnnouncementParser returns after formatting is stripped, or null.",
+  "cases": [
+    {
+      "name": "iroffer listing line",
+      "sender": "ListBot",
+      "text": "#1   12x [1.2G] Some.Show.S01E01.mkv",
+      "expect": {
+        "kind": "pack",
+        "bot": "ListBot",
+        "pack": 1,
+        "filename": "Some.Show.S01E01.mkv",
+        "size": "1.2G",
+        "gets": 12
+      }
+    },
+    {
+      "name": "dinoex padded size",
+      "sender": "ListBot",
+      "text": "#12  0x [ 700M] file name with spaces.avi",
+      "expect": {
+        "kind": "pack",
+        "bot": "ListBot",
+        "pack": 12,
+        "filename": "file name with spaces.avi",
+        "size": "700M",
+        "gets": 0
+      }
+    },
+    {
+      "name": "size below a kilobyte",
+      "sender": "ListBot",
+      "text": "#3 1x [<1K] readme.txt",
+      "expect": {
+        "kind": "pack",
+        "bot": "ListBot",
+        "pack": 3,
+        "filename": "readme.txt",
+        "size": "<1K",
+        "gets": 1
+      }
+    },
+    {
+      "name": "grouped size with a binary unit",
+      "sender": "ListBot",
+      "text": "#5 3x [1,024 KiB] archive.zip",
+      "expect": {
+        "kind": "pack",
+        "bot": "ListBot",
+        "pack": 5,
+        "filename": "archive.zip",
+        "size": "1,024KiB",
+        "gets": 3
+      }
+    },
+    {
+      "name": "largest pack number",
+      "sender": "ListBot",
+      "text": "#999999 1x [1K] last.bin",
+      "expect": {
+        "kind": "pack",
+        "bot": "ListBot",
+        "pack": 999999,
+        "filename": "last.bin",
+        "size": "1K",
+        "gets": 1
+      }
+    },
+    {
+      "name": "mIRC colours and bold, stripped first",
+      "sender": "ListBot",
+      "text": "\u0002#7\u0002 \u000304 2x\u0003 [\u000312650M\u0003] colored.mkv",
+      "expect": {
+        "kind": "pack",
+        "bot": "ListBot",
+        "pack": 7,
+        "filename": "colored.mkv",
+        "size": "650M",
+        "gets": 2
+      }
+    },
+    {
+      "name": "announcer with a quoted name",
+      "sender": "Announcer",
+      "text": "[NEW] \"Cool.Movie.2026.mkv\" - /msg CoolBot xdcc send #42",
+      "expect": {
+        "kind": "pack",
+        "bot": "CoolBot",
+        "pack": 42,
+        "filename": "Cool.Movie.2026.mkv",
+        "size": null,
+        "gets": null
+      }
+    },
+    {
+      "name": "announcer with typographic quotes",
+      "sender": "Announcer",
+      "text": "Added “Album - Track.flac” /msg Music|Bot XDCC SEND 8",
+      "expect": {
+        "kind": "pack",
+        "bot": "Music|Bot",
+        "pack": 8,
+        "filename": "Album - Track.flac",
+        "size": null,
+        "gets": null
+      }
+    },
+    {
+      "name": "get spelling without a hash",
+      "sender": "Announcer",
+      "text": "Added: /MSG Bot XDCC GET 7",
+      "expect": {
+        "kind": "pack",
+        "bot": "Bot",
+        "pack": 7,
+        "filename": null,
+        "size": null,
+        "gets": null
+      }
+    },
+    {
+      "name": "instruction with a placeholder",
+      "sender": "Announcer",
+      "text": "To request a file, type /msg Bot xdcc send #n",
+      "expect": {
+        "kind": "instruction",
+        "bot": "Bot"
+      }
+    },
+    {
+      "name": "listing header with slots",
+      "sender": "ListBot",
+      "text": "** 3 packs **  1 of 2 slots open, Record: 1.2MB/s",
+      "expect": {
+        "kind": "header",
+        "packs": 3,
+        "open": 1,
+        "total": 2
+      }
+    },
+    {
+      "name": "singular header",
+      "sender": "ListBot",
+      "text": "**  1 pack  ** 0 of 1 slot open",
+      "expect": {
+        "kind": "header",
+        "packs": 1,
+        "open": 0,
+        "total": 1
+      }
+    },
+    {
+      "name": "slots line alone",
+      "sender": "ListBot",
+      "text": "Bandwidth Usage ** Current: 0.0KB/s, 2 of 4 slots open",
+      "expect": {
+        "kind": "header",
+        "packs": null,
+        "open": 2,
+        "total": 4
+      }
+    },
+    {
+      "name": "channel mention",
+      "sender": "Person",
+      "text": "#channel is great",
+      "expect": null
+    },
+    {
+      "name": "ranking, not a pack",
+      "sender": "Person",
+      "text": "#1 deal of the day",
+      "expect": null
+    },
+    {
+      "name": "bracketed word is not a size",
+      "sender": "Person",
+      "text": "#1 2x [cheap] stuff",
+      "expect": null
+    },
+    {
+      "name": "pack zero",
+      "sender": "ListBot",
+      "text": "#0 1x [1K] nothing.bin",
+      "expect": null
+    },
+    {
+      "name": "seven digit pack",
+      "sender": "ListBot",
+      "text": "#1000000 1x [1K] too.big",
+      "expect": null
+    },
+    {
+      "name": "listing line without its name",
+      "sender": "ListBot",
+      "text": "#4 1x [1K]   ",
+      "expect": null
+    },
+    {
+      "name": "bot name starting with a dash",
+      "sender": "Person",
+      "text": "/msg -foo xdcc send #1",
+      "expect": null
+    },
+    {
+      "name": "channel as a bot",
+      "sender": "Person",
+      "text": "/msg #chan xdcc send #1",
+      "expect": null
+    },
+    {
+      "name": "instruction to pack zero",
+      "sender": "Person",
+      "text": "/msg Bot xdcc send #0",
+      "expect": null
+    },
+    {
+      "name": "instruction past the largest pack",
+      "sender": "Person",
+      "text": "/msg Bot xdcc send #1000000",
+      "expect": null
+    },
+    {
+      "name": "pack number running into letters",
+      "sender": "Person",
+      "text": "/msg Bot xdcc send #12abc",
+      "expect": null
+    },
+    {
+      "name": "a longer command word",
+      "sender": "Person",
+      "text": "/msg Bot xdcc sendall",
+      "expect": null
+    },
+    {
+      "name": "other scripts' digits",
+      "sender": "ListBot",
+      "text": "#１ 1x [1K] wide.bin",
+      "expect": null
+    },
+    {
+      "name": "listing line with no sender",
+      "sender": "",
+      "text": "#1 1x [1K] orphan.bin",
+      "expect": null
+    },
+    {
+      "name": "ordinary chat",
+      "sender": "Person",
+      "text": "anyone know a good xdcc bot?",
+      "expect": null
+    }
+  ]
+}
