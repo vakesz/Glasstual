@@ -68,6 +68,8 @@ final class LoopbackPeer {
 	private(set) var evidence = PeerEvidence()
 	private(set) var failure: (any Error)?
 	private(set) var port: UInt16 = 0
+	private var listeningSince = ContinuousClock.now
+	private var acceptedAt = ContinuousClock.now
 
 	init(mode: FixtureMode, corpora: URL, passiveDCC: Bool = false) throws {
 		self.mode = mode
@@ -118,12 +120,14 @@ final class LoopbackPeer {
 			_ = try await dcc.start()
 		}
 		listener.newConnectionHandler = { [weak self] connection in
-			Task { @MainActor in self?.accept(connection) }
+			let arrival = ContinuousClock.now
+			Task { @MainActor in self?.accept(connection, arrival: arrival) }
 		}
 		listener.start(queue: .main)
 		try await Wait.until("loopback listener ready", timeout: .seconds(10)) { self.listener.state == .ready }
 		guard let port = listener.port?.rawValue else { throw HarnessFailure.setup("Loopback port missing") }
 		self.port = port
+		listeningSince = .now
 		return port
 	}
 
@@ -132,6 +136,11 @@ final class LoopbackPeer {
 		dcc?.stop()
 		connection?.cancel()
 		listener.cancel()
+	}
+
+	/// The state of the connection the peer holds, for a diagnostic.
+	var connectionState: String {
+		connection.map { "its connection is \($0.state)" } ?? "which it no longer holds"
 	}
 
 	/// Throws the first protocol violation the peer or its DCC side recorded.
@@ -144,13 +153,15 @@ final class LoopbackPeer {
 		}
 	}
 
-	private func accept(_ peer: NWConnection) {
+	private func accept(_ peer: NWConnection, arrival: ContinuousClock.Instant) {
 		guard connection == nil, !evidence.complete else {
+			let stranger = strangerDescription(peer, arrival: arrival)
 			peer.cancel()
-			record(HarnessFailure.assertion("Unexpected concurrent or extra connection"))
+			record(HarnessFailure.assertion(stranger))
 			return
 		}
 		evidence.connections += 1
+		acceptedAt = arrival
 		connection = peer
 		pending = Data()
 		webSocket = mode.webSocket ? WebSocketFixture() : nil
@@ -171,6 +182,36 @@ final class LoopbackPeer {
 		}
 		peer.start(queue: .main)
 		receive(peer)
+	}
+
+	/** What is known about a connection the fixture did not expect.
+
+	 The port is the kernel's choice and loopback is open to every process, so
+	 the question a failure leaves is who dialled: the address and the owning
+	 process answer it, and the times say what the fixture was doing. Nothing
+	 the stranger sent is read. */
+	private func strangerDescription(_ peer: NWConnection, arrival: ContinuousClock.Instant) -> String {
+		var remote = "an unknown address"
+		var owner = "its process could not be identified"
+		if case let .hostPort(host, remotePort) = peer.endpoint {
+			remote = "\(host):\(remotePort.rawValue)"
+			if let process = SocketOwner.process(localPort: remotePort.rawValue, remotePort: port) {
+				let ours = process.identifier == ProcessInfo.processInfo.processIdentifier
+				owner = "opened by \(ours ? "this harness" : "another process"), \(process.name) pid \(process.identifier)"
+			} else {
+				owner = "no process of this user still holds it"
+			}
+		}
+		let kind = connection == nil ? "extra connection after the fixture completed" : "concurrent connection"
+		let current = connection == nil ? "" : String(
+			format: ", %.1fs after connection %d was accepted", (arrival - acceptedAt).inSeconds, evidence.connections
+		)
+		return String(
+			format: "Unexpected %@ from %@ to port %d (%@), %.1fs after the listener started%@; "
+				+ "%d lines received, burst batches %d, handled %.3fs after it arrived",
+			kind, remote, Int(port), owner, (arrival - listeningSince).inSeconds, current,
+			evidence.linesReceived, evidence.burstBatches, (ContinuousClock.now - arrival).inSeconds
+		)
 	}
 
 	private func receive(_ peer: NWConnection) {

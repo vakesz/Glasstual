@@ -57,7 +57,7 @@ enum FixtureSelfTests {
 				guard client.received.isEmpty else { throw HarnessFailure.assertion("Rejected TLS emitted IRC") }
 				continue
 			}
-			try await wait(peer, "client connected") { client.connection.state == .ready }
+			try await connected(client, to: peer, attempt: "\(attempt) of \(attempts)")
 			if mode.webSocket {
 				try await FixtureExtensionChecks.webSocket(peer: peer, client: client)
 				client.connection.cancel()
@@ -123,6 +123,23 @@ enum FixtureSelfTests {
 		// Every path out of the loop ends here, including the TLS stall break and
 		// the rejection continues, so one wait covers the peer's observed end.
 		try await wait(peer, "peer complete") { peer.evidence.complete }
+	}
+
+	/** Waits for the client's connection to come up.
+
+	 A connection that is refused waits rather than failing, so a wait that
+	 runs out says which states the connection went through and what the peer
+	 saw of it. */
+	private static func connected(_ client: Client, to peer: LoopbackPeer, attempt: String) async throws {
+		do {
+			try await wait(peer, "client connected") { client.connection.state == .ready }
+		} catch let HarnessFailure.timeout(step) {
+			throw HarnessFailure.timeout(
+				"\(step); attempt \(attempt) is \(client.connection.state) after "
+					+ "[\(client.states.joined(separator: ", "))] and the peer has accepted "
+					+ "\(peer.evidence.connections) on port \(peer.port), \(peer.connectionState)"
+			)
+		}
 	}
 
 	/// `Wait.until` that fails at once when the peer recorded a violation.
@@ -450,7 +467,20 @@ enum FixtureSelfTests {
 			connection = NWConnection(host: "127.0.0.1", port: port, using: NWParameters(tls: options))
 		}
 
+		/// Every state the connection has been in, with the seconds since it
+		/// started: what a connection that never became ready was doing.
+		private(set) var states: [String] = []
+		private var started = ContinuousClock.now
+
 		func start() {
+			started = .now
+			connection.stateUpdateHandler = { [weak self] state in
+				let moment = ContinuousClock.now
+				Task { @MainActor in
+					guard let self else { return }
+					self.states.append(String(format: "%.1fs %@", (moment - self.started).inSeconds, "\(state)"))
+				}
+			}
 			connection.start(queue: .main)
 			receive()
 		}
