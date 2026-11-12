@@ -22,21 +22,15 @@ struct ChannelPropertiesView: View {
 					: Text(verbatim: model.config.name)
 			)
 
-			Picker(.ChannelProperties.sectionPickerLabel, selection: $model.selection) {
+			TabView(selection: $model.selection) {
 				ForEach(ChannelPropertiesSection.allCases) { section in
-					Text(section.title)
+					pane(section)
+						.tabItem { Text(section.title) }
 						.tag(section)
 				}
 			}
-			.labelsHidden()
-			.pickerStyle(.segmented)
-			.accessibilityLabel(.ChannelProperties.sectionPickerLabel)
 			.padding(.horizontal, SheetMetrics.margin)
-
-			switch model.selection {
-			case .general: generalPane
-			case .defaults: defaultsPane
-			}
+			.padding(.top, UISpacing.regular)
 
 			SheetActions(
 				confirmTitle: Text(PromptStrings.Action.save),
@@ -47,37 +41,38 @@ struct ChannelPropertiesView: View {
 		}
 		.disabled(model.isSaving)
 		.interactiveDismissDisabled(model.isSaving)
-		.frame(
-			minWidth: 560,
-			idealWidth: 620,
-			maxWidth: .infinity,
-			minHeight: 450,
-			idealHeight: 500,
-			maxHeight: .infinity
-		)
+		.sheetFrame(.regular, minHeight: 480, idealHeight: 540)
 		.onAppear { channelNameIsFocused = model.channelNameIsEditable }
 		.task(id: model.secretKeyLoadGeneration) { await model.loadSecretKey() }
+	}
+
+	@ViewBuilder
+	private func pane(_ section: ChannelPropertiesSection) -> some View {
+		switch section {
+		case .general: generalPane
+		case .defaults: defaultsPane
+		}
 	}
 
 	private var generalPane: some View {
 		Form {
 			Section {
-				LabeledContent(.ChannelProperties.nameLabel) {
-					TextField(.ChannelProperties.channelNamePlaceholder, text: $model.config.name)
-						.labelsHidden()
-						.disabled(model.channelNameIsEditable == false)
-						.focused($channelNameIsFocused)
-						.accessibilityLabel(.ChannelProperties.nameLabel)
-				}
+				TextField(
+					String(localized: .ChannelProperties.nameLabel),
+					text: $model.config.name,
+					prompt: Text(.ChannelProperties.channelNamePlaceholder)
+				)
+				.disabled(model.channelNameIsEditable == false)
+				.focused($channelNameIsFocused)
 				if let message = model.channelNameValidationMessage {
 					ValidationMessageLabel(message)
 				}
 
-				LabeledContent(.ChannelProperties.passwordLabel) {
-					SecureField(.ChannelProperties.optional, text: $model.secretKey)
-						.labelsHidden()
-						.accessibilityLabel(.ChannelProperties.passwordLabel)
-				}
+				SecureField(
+					String(localized: .ChannelProperties.passwordLabel),
+					text: $model.secretKey,
+					prompt: Text(.ChannelProperties.optional)
+				)
 				if let caption = model.secretKeyLengthCaption {
 					if model.secretKeyIsTooLong {
 						ValidationMessageLabel(caption)
@@ -93,11 +88,11 @@ struct ChannelPropertiesView: View {
 			}
 
 			Section {
-				LabeledContent(.ChannelProperties.labelLabel) {
-					TextField(.ChannelProperties.optional, text: $model.config.label.orEmpty)
-						.labelsHidden()
-						.accessibilityLabel(.ChannelProperties.labelLabel)
-				}
+				TextField(
+					String(localized: .ChannelProperties.labelLabel),
+					text: $model.config.label.orEmpty,
+					prompt: Text(.ChannelProperties.optional)
+				)
 			} footer: {
 				Text(.ChannelProperties.labelHelp)
 			}
@@ -143,16 +138,16 @@ struct ChannelPropertiesView: View {
 	private var defaultsPane: some View {
 		Form {
 			Section {
-				LabeledContent(.ChannelProperties.topicLabel) {
-					TextField(.ChannelProperties.optional, text: $model.config.defaultTopic.orEmpty)
-						.labelsHidden()
-						.accessibilityLabel(.ChannelProperties.topicLabel)
-				}
-				LabeledContent(.ChannelProperties.modesLabel) {
-					TextField(.ChannelProperties.optional, text: $model.config.defaultModes.orEmpty)
-						.labelsHidden()
-						.accessibilityLabel(.ChannelProperties.modesLabel)
-				}
+				TextField(
+					String(localized: .ChannelProperties.topicLabel),
+					text: $model.config.defaultTopic.orEmpty,
+					prompt: Text(.ChannelProperties.optional)
+				)
+				TextField(
+					String(localized: .ChannelProperties.modesLabel),
+					text: $model.config.defaultModes.orEmpty,
+					prompt: Text(.ChannelProperties.optional)
+				)
 			} footer: {
 				Text(.ChannelProperties.defaultsHelp)
 			}

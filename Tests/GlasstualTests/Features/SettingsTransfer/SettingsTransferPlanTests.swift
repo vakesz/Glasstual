@@ -355,4 +355,39 @@ struct SettingsTransferPlanTests {
 		#expect(try newDestinations(in: makePlan(importing: narrowed, over: [existing])).isEmpty)
 		#expect(try newDestinations(in: makePlan(importing: widened, over: [existing], source: .localRecovery)).isEmpty)
 	}
+
+	private func preview(merge: SettingsTransferPlan?, restore: SettingsTransferPlan?) -> SettingsTransferPreview {
+		let empty = SettingsArchive(values: [:], unset: [], sessions: [])
+		var plans: [SettingsTransferMode: SettingsTransferPlan] = [:]
+		plans[.merge] = merge
+		plans[.restore] = restore
+		return SettingsTransferPreview(filename: "settings.plist", archive: empty, current: empty, plans: plans)
+	}
+
+	@Test("Return applies a Merge with nothing to review")
+	func returnMergesQuietFile() throws {
+		let existing = existingSession()
+		var imported = existing
+		imported.nickname = "Renamed"
+		let plan = try makePlan(importing: imported, over: [existing])
+
+		#expect(preview(merge: plan, restore: nil).commitIsDefaultAction)
+	}
+
+	@Test("Return never applies a Restore, a file with changes to review, or a file that cannot be applied")
+	func returnLeavesDecisionsToThePerson() throws {
+		let existing = existingSession()
+		var imported = existing
+		imported.nickname = "Renamed"
+		let quiet = try makePlan(importing: imported, over: [existing])
+		let risky = try makePlan(importing: moved(existing, to: "irc.other.test"), over: [existing])
+		let restore = try makePlan(importing: imported, over: [existing], mode: .restore)
+
+		var restoring = preview(merge: quiet, restore: restore)
+		restoring.mode = .restore
+		#expect(restoring.commitIsDefaultAction == false)
+		#expect(risky.riskyChanges.isEmpty == false)
+		#expect(preview(merge: risky, restore: nil).commitIsDefaultAction == false)
+		#expect(preview(merge: nil, restore: nil).commitIsDefaultAction == false)
+	}
 }

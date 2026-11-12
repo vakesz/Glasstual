@@ -121,6 +121,6 @@ struct ChannelInviteView: View {
 				cancel: cancel
 			)
 		}
-		.frame(minWidth: 380, idealWidth: 420, maxWidth: .infinity)
+		.sheetFrame(.compact)
 	}
 }

@@ -36,7 +36,7 @@ struct AccountRegistrationView: View {
 
 			actionStrip
 		}
-		.frame(minWidth: 440, idealWidth: 460, maxWidth: .infinity)
+		.sheetFrame(.compact)
 		.accessibilityIdentifier("account-registration-sheet")
 		.onAppear {
 			focusedField = model.accountIsEditable ? .account : .email
@@ -264,14 +264,19 @@ struct AccountRegistrationView: View {
 		}
 	}
 
-	/** The sheet's own action strip.
-
-	 It keeps the layout of ``SheetActions`` but Cancel reads Stop while a
-	 request is out, and the status sits on the leading side. */
+	/** The sheet's buttons: Cancel reads Stop while a request is out, the
+	 status sits on the leading side, and a finished registration closes with
+	 the one button that accepts it. */
 	private var actionStrip: some View {
-		VStack(spacing: 0) {
-			Divider()
-			HStack(spacing: UISpacing.regular) {
+		SheetActions(
+			confirmTitle: Text(model.confirmTitle),
+			confirmIsDisabled: model.confirmIsDisabled,
+			confirmIdentifier: "account-registration-submit",
+			cancelTitle: Text(isWaiting ? String(localized: .AccountRegistrationSheet.stopButton) : PromptStrings.Action.cancel),
+			cancelIdentifier: "account-registration-cancel",
+			confirm: model.confirm,
+			cancel: model.phase.isSucceeded ? nil : (isWaiting ? stop : cancel),
+			leading: {
 				if let status = progressStatus {
 					ProgressView()
 						.controlSize(.small)
@@ -279,23 +284,8 @@ struct AccountRegistrationView: View {
 						.foregroundStyle(.secondary)
 						.accessibilityIdentifier("account-registration-status")
 				}
-				Spacer()
-				if model.phase.isSucceeded == false {
-					Button(action: isWaiting ? stop : cancel) {
-						Text(isWaiting ? String(localized: .AccountRegistrationSheet.stopButton) : PromptStrings.Action.cancel)
-					}
-					.keyboardShortcut(.cancelAction)
-					.accessibilityIdentifier("account-registration-cancel")
-				}
-				Button(action: model.confirm) {
-					Text(model.confirmTitle)
-				}
-				.keyboardShortcut(.defaultAction)
-				.disabled(model.confirmIsDisabled)
-				.accessibilityIdentifier("account-registration-submit")
 			}
-			.padding(UISpacing.wide)
-		}
+		)
 	}
 
 	private var isWaiting: Bool {

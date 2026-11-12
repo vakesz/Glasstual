@@ -142,25 +142,34 @@ struct DCCKnownCertificatesSheet: View {
 	@Environment(\.dismiss) private var dismiss
 
 	var body: some View {
+		/* The stack is only what hosts the system search field in the sheet's
+		 toolbar; the title, margins and buttons are the ones every sheet has. */
 		NavigationStack {
-			VStack(alignment: .leading, spacing: UISpacing.comfortable) {
-				ownCertificates
-				Text(.Settings.knownCertificatesTrusted)
-					.font(.headline)
-				trustedTable
-			}
-			.padding(UISpacing.wide)
-			.navigationTitle(Text(.Settings.knownCertificatesTitle))
-			.searchable(text: $model.searchText)
-			.toolbar {
-				ToolbarItem(placement: .confirmationAction) {
-					Button(.Settings.knownCertificatesDone) { dismiss() }
-						.keyboardShortcut(.defaultAction)
-						.accessibilityIdentifier("known-certificates-done")
+			VStack(spacing: 0) {
+				SheetHeading(.Settings.knownCertificatesTitle)
+
+				VStack(alignment: .leading, spacing: UISpacing.comfortable) {
+					ownCertificates
+					Text(.Settings.knownCertificatesTrusted)
+						.font(.headline)
+						.accessibilityAddTraits(.isHeader)
+					trustedTable
 				}
+				.padding(.horizontal, SheetMetrics.margin)
+				.padding(.top, UISpacing.regular)
+
+				SheetActions(
+					confirmTitle: Text(.Settings.knownCertificatesDone),
+					confirmIdentifier: "known-certificates-done",
+					confirm: { dismiss() },
+					cancel: nil,
+					leading: { trustedActions }
+				)
 			}
+			.toolbar(removing: .title)
+			.searchable(text: $model.searchText)
 		}
-		.frame(minWidth: 680, minHeight: 520)
+		.sheetFrame(.wide, minHeight: 520)
 		.task { await model.load() }
 		.alert(
 			Text(verbatim: model.failure ?? ""),
@@ -230,7 +239,7 @@ struct DCCKnownCertificatesSheet: View {
 	}
 
 	private var trustedTable: some View {
-		VStack(alignment: .leading, spacing: UISpacing.comfortable) {
+		VStack(alignment: .leading, spacing: 0) {
 			Table(model.visibleTrusted, selection: $model.selection) {
 				TableColumn(Text(.Settings.knownCertificatesColumnNetwork)) { Text(verbatim: $0.networkName) }
 				TableColumn(Text(.Settings.knownCertificatesColumnNickname)) { Text(verbatim: $0.nickname) }
@@ -265,15 +274,19 @@ struct DCCKnownCertificatesSheet: View {
 				}
 			}
 			.accessibilityIdentifier("known-certificates-table")
+		}
+	}
 
-			HStack {
-				Button(.Settings.knownCertificatesRemove) { Task { await model.removeSelected() } }
-					.disabled(model.selection.isEmpty)
-					.accessibilityIdentifier("known-certificates-remove")
-				Button(.Settings.knownCertificatesRemoveAll) { model.confirmsRemoveAll = true }
-					.disabled(model.trusted.isEmpty)
-					.accessibilityIdentifier("known-certificates-remove-all")
-			}
+	/// What can be done to the trusted list, on the leading side of the
+	/// sheet's buttons as in a list-managing sheet.
+	private var trustedActions: some View {
+		HStack(spacing: UISpacing.regular) {
+			Button(.Settings.knownCertificatesRemove) { Task { await model.removeSelected() } }
+				.disabled(model.selection.isEmpty)
+				.accessibilityIdentifier("known-certificates-remove")
+			Button(.Settings.knownCertificatesRemoveAll) { model.confirmsRemoveAll = true }
+				.disabled(model.trusted.isEmpty)
+				.accessibilityIdentifier("known-certificates-remove-all")
 		}
 		.confirmationDialog(Text(.Settings.knownCertificatesRemoveAllConfirmationTitle), isPresented: $model.confirmsRemoveAll) {
 			Button(.Settings.knownCertificatesRemoveAllAction, role: .destructive) {

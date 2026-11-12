@@ -159,7 +159,7 @@ struct ServerNicknameChangeView: View {
 				cancel: cancel
 			)
 		}
-		.frame(minWidth: 400, idealWidth: 440, maxWidth: .infinity)
+		.sheetFrame(.compact)
 		.onAppear {
 			nicknameFieldIsFocused = true
 		}

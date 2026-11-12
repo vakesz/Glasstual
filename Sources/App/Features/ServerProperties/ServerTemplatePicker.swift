@@ -22,7 +22,7 @@ struct ServerTemplatePickerView: View {
 		VStack(spacing: 0) {
 			HStack(spacing: 0) {
 				NetworkPickerListView(model: picker) { commands?.applyTemplate() }
-					.frame(width: 280)
+					.frame(minWidth: 220, idealWidth: 280, maxWidth: 360)
 
 				Divider()
 
@@ -112,16 +112,13 @@ private struct ServerTemplateDetailView: View {
 
 	private var header: some View {
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
-			HStack(spacing: UISpacing.regular) {
-				Text(verbatim: network.networkName)
-					.font(.title2.weight(.semibold))
-				if network.registration == .required {
-					Text(.ServerProperties.templateRegistrationRequired)
-						.font(.caption.weight(.medium))
-						.padding(.horizontal, 6)
-						.padding(.vertical, 2)
-						.background(.quaternary, in: Capsule())
-				}
+			Text(verbatim: network.networkName)
+				.font(.headline)
+				.foregroundStyle(.primary)
+			if network.registration == .required {
+				Label(.ServerProperties.templateRegistrationRequired, systemImage: "exclamationmark.circle")
+					.font(.callout)
+					.foregroundStyle(.secondary)
 			}
 			if network.networkDescription.isEmpty == false {
 				Text(verbatim: network.networkDescription)
@@ -131,7 +128,7 @@ private struct ServerTemplateDetailView: View {
 			}
 		}
 		.textCase(nil)
-		.padding(.bottom, 6)
+		.padding(.bottom, UISpacing.snug)
 	}
 
 	private var websiteURL: URL? {

@@ -113,45 +113,46 @@ struct NicknameColorView: View {
 	}
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: UISpacing.loose) {
-			Text(.MemberList.windowTitle(model.nickname))
-				.font(.headline)
+		VStack(spacing: 0) {
+			SheetHeading(.MemberList.windowTitle(model.nickname))
 
-			/* The nickname as the transcript will draw it, in the colour being
-			 chosen: a swatch in a picker says nothing about whether the name is
-			 legible where it is read. */
-			Text(verbatim: model.nickname)
-				.font(.body.weight(.semibold))
-				.foregroundStyle(Color(nsColor: model.previewColor))
-				.lineLimit(1)
-				.truncationMode(.tail)
-				.frame(maxWidth: .infinity, alignment: .leading)
-				.padding(.vertical, UISpacing.regular)
-				.padding(.horizontal, UISpacing.wide)
-				.background(.quaternary, in: .rect(cornerRadius: 6))
-				.accessibilityLabel(.MemberList.previewAccessibilityLabel(model.nickname))
+			VStack(alignment: .leading, spacing: UISpacing.loose) {
+				/* The nickname as the transcript will draw it, in the colour
+				 being chosen, on the ground it is read on: a swatch in a picker
+				 says nothing about whether the name is legible there. */
+				Text(verbatim: model.nickname)
+					.font(.body.weight(.semibold))
+					.foregroundStyle(Color(nsColor: model.previewColor))
+					.lineLimit(1)
+					.truncationMode(.tail)
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.padding(.vertical, UISpacing.regular)
+					.padding(.horizontal, UISpacing.wide)
+					.background(Color(nsColor: AppServices.theme.backgroundColor), in: .rect(cornerRadius: UISpacing.snug))
+					.overlay {
+						RoundedRectangle(cornerRadius: UISpacing.snug)
+							.strokeBorder(.separator)
+					}
+					.accessibilityLabel(.MemberList.previewAccessibilityLabel(model.nickname))
 
-			HStack(spacing: UISpacing.wide) {
-				ColorPicker(.MemberList.colorPickerLabel, selection: selectedColor)
-					.disabled(model.usesDefaultColor)
-					.accessibilityHint(.MemberList.colorPickerAccessibilityHint)
+				HStack(spacing: UISpacing.wide) {
+					ColorPicker(.MemberList.colorPickerLabel, selection: selectedColor)
+						.disabled(model.usesDefaultColor)
+						.accessibilityHint(.MemberList.colorPickerAccessibilityHint)
 
-				Toggle(.MemberList.useDefaultColor, isOn: usesDefaultColor)
-					.accessibilityHint(.MemberList.useDefaultColorAccessibilityHint)
+					Toggle(.MemberList.useDefaultColor, isOn: usesDefaultColor)
+						.accessibilityHint(.MemberList.useDefaultColorAccessibilityHint)
+				}
 			}
+			.padding(.horizontal, SheetMetrics.margin)
+			.padding(.vertical, UISpacing.regular)
 
-			HStack(spacing: UISpacing.regular) {
-				Spacer()
-
-				Button(PromptStrings.Action.cancel, action: cancel)
-					.keyboardShortcut(.cancelAction)
-
-				Button(.MemberList.changeColor, action: changeColor)
-					.keyboardShortcut(.defaultAction)
-			}
+			SheetActions(
+				confirmTitle: Text(.MemberList.changeColor),
+				confirm: changeColor,
+				cancel: cancel
+			)
 		}
-		.padding(UISpacing.loose + UISpacing.tight)
-		.frame(width: 390)
-		.onExitCommand(perform: cancel)
+		.sheetFrame(.compact)
 	}
 }

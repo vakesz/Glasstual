@@ -68,21 +68,29 @@ private struct SettingsExportOptionsView: View {
 	@State private var includeConnectCommands = false
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: UISpacing.loose) {
-			Text(.SettingsTransfer.exportOptions).font(.title2)
-			Toggle(.SettingsTransfer.includeConnectCommands, isOn: $includeConnectCommands)
-				.accessibilityIdentifier(AccessibilityIdentifier.settingsExportIncludeCommands)
-			Text(.SettingsTransfer.connectCommandsWarning).font(.callout).foregroundStyle(.secondary)
-			HStack {
-				Spacer()
-				Button(PromptStrings.Action.cancel) { dismiss() }.keyboardShortcut(.cancelAction)
-				Button(PromptStrings.Action.saveFile) { confirm(includeConnectCommands) }
-					.keyboardShortcut(.defaultAction)
-					.accessibilityIdentifier(AccessibilityIdentifier.settingsExportSave)
+		VStack(spacing: 0) {
+			SheetHeading(.SettingsTransfer.exportOptions)
+
+			Form {
+				Section {
+					Toggle(.SettingsTransfer.includeConnectCommands, isOn: $includeConnectCommands)
+						.accessibilityIdentifier(AccessibilityIdentifier.settingsExportIncludeCommands)
+				} footer: {
+					Text(.SettingsTransfer.connectCommandsWarning)
+				}
 			}
+			.formStyle(.grouped)
+			.scrollDisabled(true)
+			.fixedSize(horizontal: false, vertical: true)
+
+			SheetActions(
+				confirmTitle: Text(PromptStrings.Action.saveFile),
+				confirmIdentifier: AccessibilityIdentifier.settingsExportSave,
+				confirm: { confirm(includeConnectCommands) },
+				cancel: { dismiss() }
+			)
 		}
-		.padding(SettingsWindowMetrics.sheetInset)
-		.frame(width: 460)
+		.sheetFrame(.compact)
 		.onAppear { includeConnectCommands = false }
 	}
 }

@@ -84,7 +84,7 @@ struct SettingsFontPicker: View {
 				Divider()
 
 				sizeRow
-					.padding(.horizontal, SettingsWindowMetrics.sheetInset)
+					.padding(.horizontal, SheetMetrics.margin)
 					.padding(.vertical, UISpacing.loose)
 
 				SheetActions(

@@ -46,6 +46,18 @@ struct SettingsTransferPreview: Identifiable {
 	var plan: SettingsTransferPlan? {
 		plans[mode]
 	}
+
+	/** Whether Return applies the file.
+
+	 Restore replaces the whole configuration -- it resets every setting the
+	 file leaves out and removes every server it does not list -- and a file
+	 that adds commands or trusted schemes needs reading before it is
+	 accepted, so Return does neither. Only a Merge with nothing to review,
+	 which writes just the settings and servers the file carries, is bound to
+	 the default action. */
+	var commitIsDefaultAction: Bool {
+		mode == .merge && plan?.riskyChanges.isEmpty == true
+	}
 }
 
 enum SettingsTransferHost {

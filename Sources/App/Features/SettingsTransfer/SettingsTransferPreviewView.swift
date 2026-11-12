@@ -55,65 +55,66 @@ struct SettingsTransferPreviewView: View {
 
 	var body: some View {
 		let plan = preview.plan
-		return VStack(alignment: .leading, spacing: UISpacing.loose) {
-			Text(.SettingsTransfer.previewTitle).font(.title2)
-			Text(verbatim: preview.filename).foregroundStyle(.secondary)
-			Picker(selection: $session.previewMode) {
-				Text(.SettingsTransfer.merge).tag(SettingsTransferMode.merge)
-					.disabled(preview.supports(.merge) == false)
-				Text(.SettingsTransfer.restore).tag(SettingsTransferMode.restore)
-					.disabled(preview.supports(.restore) == false)
-			} label: { Text(.SettingsTransfer.mode) }
-				.pickerStyle(.segmented)
-			Text(preview.mode == .restore ? .SettingsTransfer.restoreNotice : .SettingsTransfer
-				.applySettingsAndAddOrUpdateServers)
-			Text(preview.archive.source == .localRecovery ? .SettingsTransfer.localRecoveryNotice
-				: .SettingsTransfer.passwordsAndCertificatesStayOnThisMac)
-				.font(.callout).foregroundStyle(.secondary)
-			ScrollView {
-				VStack(alignment: .leading, spacing: UISpacing.regular) {
-					if let plan {
-						riskyChanges(in: plan)
-						changedSettings(in: plan)
-						sessions(plan.addedSessions, title: String(localized: .SettingsTransfer.serversToAdd))
-						sessions(plan.updatedSessions, title: String(localized: .SettingsTransfer.serversToUpdate))
-						sessions(plan.removedSessions, title: String(localized: .SettingsTransfer.serversToRemove))
-						if preview.archive.ignoredKeys.isEmpty == false {
-							Text(.SettingsTransfer.keysNotImported(preview.archive.ignoredKeys.count))
+		return VStack(spacing: 0) {
+			SheetHeading(.SettingsTransfer.previewTitle, subtitle: Text(verbatim: preview.filename))
+
+			VStack(alignment: .leading, spacing: UISpacing.wide) {
+				Picker(selection: $session.previewMode) {
+					Text(.SettingsTransfer.merge).tag(SettingsTransferMode.merge)
+						.disabled(preview.supports(.merge) == false)
+					Text(.SettingsTransfer.restore).tag(SettingsTransferMode.restore)
+						.disabled(preview.supports(.restore) == false)
+				} label: { Text(.SettingsTransfer.mode) }
+					.pickerStyle(.segmented)
+					.fixedSize()
+				Text(preview.mode == .restore ? .SettingsTransfer.restoreNotice : .SettingsTransfer
+					.applySettingsAndAddOrUpdateServers)
+					.fixedSize(horizontal: false, vertical: true)
+				Text(preview.archive.source == .localRecovery ? .SettingsTransfer.localRecoveryNotice
+					: .SettingsTransfer.passwordsAndCertificatesStayOnThisMac)
+					.font(.callout).foregroundStyle(.secondary)
+					.fixedSize(horizontal: false, vertical: true)
+				GroupBox {
+					ScrollView {
+						VStack(alignment: .leading, spacing: UISpacing.regular) {
+							if let plan {
+								riskyChanges(in: plan)
+								changedSettings(in: plan)
+								sessions(plan.addedSessions, title: String(localized: .SettingsTransfer.serversToAdd))
+								sessions(plan.updatedSessions, title: String(localized: .SettingsTransfer.serversToUpdate))
+								sessions(plan.removedSessions, title: String(localized: .SettingsTransfer.serversToRemove))
+								if preview.archive.ignoredKeys.isEmpty == false {
+									Text(.SettingsTransfer.keysNotImported(preview.archive.ignoredKeys.count))
+								}
+							} else {
+								ValidationMessageLabel(String(localized: .SettingsTransfer.fileIsNotAValidConfigurationSnapshot))
+							}
 						}
-					} else {
-						ValidationMessageLabel(String(localized: .SettingsTransfer.fileIsNotAValidConfigurationSnapshot))
+						.frame(maxWidth: .infinity, alignment: .leading)
+						.padding(UISpacing.tight)
 					}
 				}
-				.frame(maxWidth: .infinity, alignment: .leading)
+				.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferPreview)
 			}
-			.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferPreview)
-			HStack {
-				if session.isBusy {
-					ProgressView().controlSize(.small)
+			.padding(.horizontal, SheetMetrics.margin)
+			.padding(.top, UISpacing.regular)
+
+			SheetActions(
+				confirmTitle: Text(preview.mode == .restore ? .SettingsTransfer.restore : .SettingsTransfer.merge),
+				confirmIsDisabled: plan == nil,
+				confirmShortcut: preview.commitIsDefaultAction ? .defaultAction : nil,
+				confirmIdentifier: AccessibilityIdentifier.settingsTransferCommit,
+				cancelIdentifier: AccessibilityIdentifier.settingsTransferCancel,
+				confirm: { Task { await session.commitPreview() } },
+				cancel: { session.cancelPreview(); dismiss() },
+				leading: {
+					if session.isBusy {
+						ProgressView().controlSize(.small)
+					}
 				}
-				Spacer()
-				Button(PromptStrings.Action.cancel) { session.cancelPreview(); dismiss() }
-					.keyboardShortcut(.cancelAction)
-					.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferCancel)
-				/* Restore replaces the whole configuration — it resets every
-				 setting the file leaves out and removes every server it does not
-				 list — and a file that adds commands or trusted schemes needs
-				 reading before it is accepted, so Return does neither. Only a
-				 Merge with nothing to review, which writes just the settings and
-				 servers the file carries, is bound to the default action. */
-				Button(preview.mode == .restore ? .SettingsTransfer.restore : .SettingsTransfer.merge) {
-					Task { await session.commitPreview() }
-				}
-				.keyboardShortcut(
-					preview.mode == .merge && plan?.riskyChanges.isEmpty == true ? .defaultAction : nil
-				)
-				.disabled(plan == nil)
-				.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferCommit)
-			}
+			)
 		}
-		.padding(SettingsWindowMetrics.sheetInset)
-		.frame(width: 580, height: 560)
+		.sheetFrame(.wide, minHeight: 480, idealHeight: 560)
 		.disabled(session.isBusy)
 		.interactiveDismissDisabled(session.isBusy)
 		.modifier(SettingsTransferAlert(
@@ -175,9 +176,13 @@ struct SettingsTransferPreviewView: View {
 	private func riskyChanges(in plan: SettingsTransferPlan) -> some View {
 		if plan.riskyChanges.isEmpty == false {
 			VStack(alignment: .leading, spacing: UISpacing.tight) {
-				Label(.SettingsTransfer.reviewBeforeImporting, systemImage: "exclamationmark.triangle.fill")
-					.font(.headline)
-					.foregroundStyle(.orange)
+				Label {
+					Text(.SettingsTransfer.reviewBeforeImporting)
+				} icon: {
+					Image(systemName: "exclamationmark.triangle.fill")
+						.symbolRenderingMode(.multicolor)
+				}
+				.font(.headline)
 				Text(.SettingsTransfer.riskyChangesNotice)
 					.font(.callout)
 				ForEach(plan.riskyChanges, id: \.self) { change in
@@ -186,9 +191,8 @@ struct SettingsTransferPreviewView: View {
 						.textSelection(.enabled)
 				}
 			}
-			.padding(UISpacing.regular)
 			.frame(maxWidth: .infinity, alignment: .leading)
-			.background(.orange.opacity(0.12), in: .rect(cornerRadius: UISpacing.regular))
+			.padding(.bottom, UISpacing.regular)
 		}
 	}
 

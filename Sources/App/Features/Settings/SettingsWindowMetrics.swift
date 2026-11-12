@@ -5,14 +5,11 @@ import CoreGraphics
 
 /** The measurements the Settings window is built to.
 
- Row gaps come from `UISpacing`, which the whole application shares; what is
- left here is what only this window has an opinion about -- the inset a sheet
- keeps from its own edges, and the sizes the sidebar and the widest form are
- chosen against. */
+ Row gaps come from `UISpacing` and sheet margins from `SheetMetrics`, which
+ the whole application shares; what is left here is what only this window has
+ an opinion about: the sizes the sidebar and the widest form are chosen
+ against. */
 enum SettingsWindowMetrics {
-	/// The inset around a sheet's own content, which is a window edge rather
-	/// than a row gap.
-	static let sheetInset = 24.0
 	/// Wide enough for the longest sidebar title without leaving the detail
 	/// column short of the forms it has to draw.
 	static let sidebarWidth = 200.0

@@ -71,7 +71,7 @@ struct HighlightRuleView: View {
 				cancel: cancel
 			)
 		}
-		.frame(minWidth: 460, idealWidth: 520, maxWidth: .infinity)
+		.sheetFrame(.regular)
 		.onAppear {
 			keywordFieldIsFocused = true
 		}

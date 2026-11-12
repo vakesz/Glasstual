@@ -92,7 +92,7 @@ struct SASLSignInView: View {
 				cancel: cancel
 			)
 		}
-		.frame(minWidth: 420, idealWidth: 460, maxWidth: .infinity)
+		.sheetFrame(.compact)
 		.onAppear {
 			pickerIsFocused = true
 		}
