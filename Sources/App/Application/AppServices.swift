@@ -29,6 +29,8 @@ enum AppServices {
 	/// asked, as alerts or in the conversation.
 	static let promptRegistry = PendingPromptRegistry()
 	static let prompts = PromptRouter(registry: promptRegistry)
+	/// `/serverconfig`, `/channelconfig` and `/setcolor` with a colour.
+	static let configurationCommands = ConfigurationCommands()
 
 	static let theme = ThemeStore()
 	static let fileTransfers = FileTransferStore()

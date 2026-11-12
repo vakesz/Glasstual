@@ -131,6 +131,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		let services = ChatServices.shared
 		services.output = mainWindow
 		services.prompts = AppServices.prompts
+		services.configurationCommands = AppServices.configurationCommands
 		installPromptRouting()
 		services.menu = menuController
 		services.channelList = AppServices.serverChannelLists

@@ -209,6 +209,18 @@ struct SlashCommandHelp {
 		),
 		.init([.redact], .SlashCommands.descriptionRedact, .SlashCommands.syntaxMessageIdentifierReason, .SlashCommands.hintRedact),
 		.init([.register], .SlashCommands.descriptionRegister, .SlashCommands.syntaxRegister, .SlashCommands.hintRegister),
+		.init(
+			[.serverconfig],
+			.SlashCommands.descriptionServerconfig,
+			.SlashCommands.syntaxServerconfig,
+			.SlashCommands.hintServerconfig
+		),
+		.init(
+			[.channelconfig],
+			.SlashCommands.descriptionChannelconfig,
+			.SlashCommands.syntaxChannelconfig,
+			.SlashCommands.hintChannelconfig
+		),
 		.init([.answer], .SlashCommands.descriptionAnswer, .SlashCommands.syntaxAnswer, .SlashCommands.hintAnswer),
 		.init([.yes], .SlashCommands.descriptionYes, .SlashCommands.syntaxYes, .SlashCommands.hintYes),
 		.init([.no], .SlashCommands.descriptionNo, .SlashCommands.syntaxNo, .SlashCommands.hintNo),

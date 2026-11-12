@@ -18700,6 +18700,1014 @@
           }
         }
       }
+    },
+    "config-list-header": {
+      "comment": "First line of the settings list printed by /serverconfig list or /channelconfig list. %@ is the server or channel name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings for %@:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen für %@:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes de %@:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages de %@ :"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ beállításai:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の設定："
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes de %@:"
+          }
+        }
+      }
+    },
+    "config-setting-value": {
+      "comment": "One setting in the list printed by /serverconfig or /channelconfig. %1$@ is the setting name (a command token, untranslated), %2$@ its value.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ : %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@：%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "config-setting-changed": {
+      "comment": "Printed after /serverconfig or /channelconfig changed a setting. %1$@ is the setting name (untranslated token), %2$@ the new value.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is now %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist jetzt %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ahora es %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ vaut désormais %2$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ új értéke: %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ を %2$@ にしました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ agora é %2$@."
+          }
+        }
+      }
+    },
+    "config-setting-updated": {
+      "comment": "Printed after /serverconfig or /channelconfig changed a secret setting, or cleared one. %@ is the setting name (untranslated token).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ was updated."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wurde aktualisiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se actualizó %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a été mis à jour."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ frissítve."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ を更新しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ foi atualizado."
+          }
+        }
+      }
+    },
+    "config-unknown-setting": {
+      "comment": "Printed when /serverconfig or /channelconfig names an unknown setting. %1$@ is what was typed, %2$@ the command that lists them, such as /serverconfig list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no setting “%1$@”. Type %2$@ to see them all."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es gibt keine Einstellung „%1$@“. Tippe %2$@, um alle zu sehen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay ningún ajuste «%1$@». Escribe %2$@ para verlos todos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il n’existe aucun réglage « %1$@ ». Tapez %2$@ pour tous les voir."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs „%1$@” nevű beállítás. Az összes megtekintéséhez írd be: %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」という設定はありません。%2$@ と入力すると一覧を表示します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não existe o ajuste “%1$@”. Digite %2$@ para ver todos."
+          }
+        }
+      }
+    },
+    "config-invalid-value": {
+      "comment": "Printed when /serverconfig or /channelconfig gets an invalid value for a setting. %1$@ is the setting name, %2$@ what was typed, %3$@ what it accepts, such as “on | off”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ does not take “%2$@”. It takes %3$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ akzeptiert „%2$@“ nicht. Erlaubt ist %3$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no admite «%2$@». Admite %3$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n’accepte pas « %2$@ ». Valeurs possibles : %3$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nem fogadja el ezt: „%2$@”. Elfogadott: %3$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ に「%2$@」は指定できません。指定できる値：%3$@。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não aceita “%2$@”. Aceita %3$@."
+          }
+        }
+      }
+    },
+    "config-secret-on-command-line": {
+      "comment": "Printed when a secret is typed after a /serverconfig or /channelconfig secret setting. %@ is the command to type alone, such as /serverconfig server-password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type %@ alone and enter the secret in the secure field. Nothing was saved."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe nur %@ und gib das Geheimnis in das gesicherte Feld ein. Es wurde nichts gesichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe solo %@ e introduce el secreto en el campo seguro. No se guardó nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tapez seulement %@ et saisissez le secret dans le champ sécurisé. Rien n’a été enregistré."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak ennyit írj be: %@, a titkot pedig a biztonságos mezőbe add meg. Semmi sem lett mentve."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ だけを入力し、秘密情報はセキュアフィールドに入力してください。何も保存されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digite apenas %@ e informe o segredo no campo seguro. Nada foi salvo."
+          }
+        }
+      }
+    },
+    "config-secret-prompt-body": {
+      "comment": "Explanation in the question asking for a secret setting after /serverconfig or /channelconfig. %@ is the server name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is saved in your keychain for %@ and never shown in the conversation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wird für %@ in deinem Schlüsselbund gesichert und nie in der Unterhaltung angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guarda en tu llavero para %@ y nunca se muestra en la conversación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il est enregistré dans votre trousseau pour %@ et n’apparaît jamais dans la conversation."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kulcskarikádba kerül ehhez: %@, és soha nem jelenik meg a beszélgetésben."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 用にキーチェーンに保存され、会話に表示されることはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ele é guardado nas suas chaves para %@ e nunca aparece na conversa."
+          }
+        }
+      }
+    },
+    "config-proxy-password-title": {
+      "comment": "Title of the question asking for the proxy password after /serverconfig proxy-password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxy Password"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxy-Passwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña del proxy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe du proxy"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxyjelszó"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロキシのパスワード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senha do proxy"
+          }
+        }
+      }
+    },
+    "channel-config-needs-channel": {
+      "comment": "Printed when /channelconfig names no saved channel and was not typed in one. The example is a command and stays untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name a channel saved on this server, such as /channelconfig #channel list."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenne einen auf diesem Server gespeicherten Kanal, zum Beispiel /channelconfig #channel list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indica un canal guardado en este servidor, por ejemplo /channelconfig #channel list."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indiquez un salon enregistré sur ce serveur, par exemple /channelconfig #channel list."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy ezen a szerveren mentett csatornát, például: /channelconfig #channel list."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバに保存されたチャンネルを指定してください（例：/channelconfig #channel list）。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indique um canal salvo neste servidor, por exemplo /channelconfig #channel list."
+          }
+        }
+      }
+    },
+    "nickname-color-pinned": {
+      "comment": "Printed after /setcolor pinned a nickname to a colour. %1$@ is the nickname, %2$@ the colour as #rrggbb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is now drawn in %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ wird jetzt in %2$@ dargestellt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ahora se muestra en %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est désormais affiché en %2$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mostantól ezzel a színnel jelenik meg: %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ を %2$@ で表示します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ agora aparece em %2$@."
+          }
+        }
+      }
+    },
+    "nickname-color-reset": {
+      "comment": "Printed after /setcolor nickname reset. %@ is the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is drawn in its own colour again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird wieder in der eigenen Farbe dargestellt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ vuelve a mostrarse en su propio color."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ retrouve sa propre couleur."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ismét a saját színével jelenik meg."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ を元の色で表示します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ volta a aparecer na própria cor."
+          }
+        }
+      }
+    },
+    "nickname-color-invalid": {
+      "comment": "Printed when /setcolor gets something that is not a colour. %@ is what was typed; #rrggbb and reset are command tokens.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is not a colour. Use #rrggbb or reset."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ ist keine Farbe. Verwende #rrggbb oder reset."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«%@» no es un color. Usa #rrggbb o reset."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %@ » n’est pas une couleur. Utilisez #rrggbb ou reset."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@” nem szín. Használd a #rrggbb formát vagy a reset szót."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」は色ではありません。#rrggbb または reset を使ってください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” não é uma cor. Use #rrggbb ou reset."
+          }
+        }
+      }
+    },
+    "ignore-list-header": {
+      "comment": "First line of /ignore list. %@ is the server name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignored on %@:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignoriert auf %@:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorados en %@:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorés sur %@ :"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Figyelmen kívül hagyva itt: %@:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ で無視中："
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorados em %@:"
+          }
+        }
+      }
+    },
+    "ignore-list-empty": {
+      "comment": "Printed by /ignore list when nothing is ignored. %@ is the server name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is ignored on %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf %@ wird nichts ignoriert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ignora nada en %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien n’est ignoré sur %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Itt semmi sincs figyelmen kívül hagyva: %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ で無視しているものはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada é ignorado em %@."
+          }
+        }
+      }
+    },
+    "ignore-list-entry": {
+      "comment": "One entry of /ignore list. %1$lld is its number, %2$@ the mask, %3$@ what it ignores as flag tokens (untranslated).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@ (%3$@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@ (%3$@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@ (%3$@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@ (%3$@)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@ (%3$@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@（%3$@）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld. %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "ignore-unknown-flag": {
+      "comment": "Printed when /ignore gets an unknown flag. %1$@ is what was typed, %2$@ the flags it takes (untranslated tokens).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown ignore flag “%1$@”. Use %2$@, or the same with a minus sign."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannte Ignorieren-Option „%1$@“. Verwende %2$@ oder dieselben mit Minuszeichen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opción de ignorar desconocida «%1$@». Usa %2$@, o las mismas con un signo menos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Option d’ignorance inconnue « %1$@ ». Utilisez %2$@, ou les mêmes avec un signe moins."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen figyelmenkívül-hagyási kapcsoló: „%1$@”. Használd ezeket: %2$@, vagy ugyanezeket mínuszjellel."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明な無視フラグ「%1$@」です。%2$@ か、それにマイナス記号を付けたものを使ってください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opção de ignorar desconhecida “%1$@”. Use %2$@, ou as mesmas com sinal de menos."
+          }
+        }
+      }
+    },
+    "ignore-saved": {
+      "comment": "Printed after /ignore added or changed an ignore. %@ is the mask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved the ignore for %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorieren für %@ gesichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardó el filtro para %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Règle d’ignorance enregistrée pour %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A figyelmen kívül hagyás mentve ehhez: %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の無視設定を保存しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O filtro para %@ foi salvo."
+          }
+        }
+      }
+    },
+    "ignore-removed": {
+      "comment": "Printed after /unignore removed an ignore. %@ is the mask.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed the ignore for %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorieren für %@ entfernt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminó el filtro para %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Règle d’ignorance supprimée pour %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A figyelmen kívül hagyás eltávolítva innen: %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の無視設定を削除しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O filtro para %@ foi removido."
+          }
+        }
+      }
+    },
+    "ignore-not-found": {
+      "comment": "Printed when /unignore names a mask or number that is not ignored. %@ is what was typed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ignore matches %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Ignorieren passt zu %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún filtro coincide con %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune règle d’ignorance ne correspond à %@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy figyelmen kívül hagyás sem egyezik ezzel: %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ に一致する無視設定はありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum filtro corresponde a %@."
+          }
+        }
+      }
+    },
+    "config-not-resettable": {
+      "comment": "Printed when /serverconfig reset names a setting with no default, such as the address or TLS. %1$@ is the setting name (untranslated token), %2$@ the command to set it instead.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ has no default to go back to. Set it with %2$@ followed by the value."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat keinen Standardwert. Lege den Wert mit %2$@ fest."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no tiene un valor predeterminado. Establécelo con %2$@ seguido del valor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n’a pas de valeur par défaut. Définissez-le avec %2$@ suivi de la valeur."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ beállításnak nincs alapértéke. Add meg így: %2$@, utána az értékkel."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ には既定値がありません。%2$@ に続けて値を指定してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não tem um valor padrão. Defina-o com %2$@ seguido do valor."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

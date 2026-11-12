@@ -89,6 +89,14 @@ extension ServerSession {
 			dispatchDefaultsCommand(parsed)
 		case .transport:
 			dispatchTransportCommand(parsed.arguments)
+		case .serverconfig:
+			printConfigurationLines(
+				environment.services.configurationCommands?.performServerConfiguration(parsed.arguments.rest, on: self)
+			)
+		case .channelconfig:
+			printConfigurationLines(environment.services.configurationCommands?.performChannelConfiguration(
+				parsed.arguments.rest, on: self, target: targetConversation
+			))
 		default:
 			dispatchIgnoreCommand(command, parsed: parsed, targetConversation: targetConversation)
 		}
@@ -126,15 +134,37 @@ extension ServerSession {
 		chatSession?.save()
 	}
 
+	/// Prints what a configuration command had to say where it was typed.
+	private func printConfigurationLines(_ lines: [String]?) {
+		for line in lines ?? [] {
+			printDebugInformation(line)
+		}
+	}
+
 	private func dispatchIgnoreCommand(
 		_ command: LocalCommand,
 		parsed: ParsedUserCommand,
 		targetConversation: Conversation?
 	) {
 		let isIgnore = command == .ignore
+		if let request = IgnoreCommandRequest(command: command, arguments: parsed.arguments.rest) {
+			performIgnoreCommand(request)
+			return
+		}
 		var arguments = parsed.arguments
 		let nickname = arguments.next()
 		guard nickname.isEmpty == false, targetConversation != nil, let member = findUser(nickname) else {
+			/* In the conversation style the address book is edited here rather
+			 than opened: a nickname nobody here uses is ignored by its mask. */
+			if SettingsKeys.Interaction.style.value == .conversation {
+				switch (nickname.isEmpty, isIgnore) {
+				case (true, true): performIgnoreCommand(.list)
+				case (true, false): printInvalidSyntaxMessage(for: parsed.command)
+				case (false, true): performIgnoreCommand(.ignore(mask: "\(nickname)!*@*", flags: [:]))
+				case (false, false): performIgnoreCommand(.unignoreMask("\(nickname)!*@*"))
+				}
+				return
+			}
 			menu?.showServerPropertiesSheet(
 				for: self,
 				selection: isIgnore ? .newIgnoreEntry(hostmask: nickname) : .addressBook

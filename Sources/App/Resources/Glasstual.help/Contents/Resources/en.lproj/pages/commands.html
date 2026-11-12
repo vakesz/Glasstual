@@ -101,6 +101,8 @@
 	<tr id="command-metadata"><th scope="row"><code>/metadata [target] &lt;get|list|set|clear|sub|unsub|subs|sync&gt; [arguments]</code></th><td>Show or change the profile data people and channels set on the server<span class="hint">Without a target the command is about you. set &lt;key&gt; &lt;value&gt; stores a value, set &lt;key&gt; &quot;&quot; an empty one, and set &lt;key&gt; alone removes it.</span></td></tr>
 	<tr id="command-transport"><th scope="row"><code>/transport [irc | websocket [path]]</code></th><td>Show or change how the first server is reached<span class="hint">Without arguments, shows the current transport. Changes apply on the next connect.</span></td></tr>
 	<tr id="command-sslcontext"><th scope="row"><code>/sslcontext</code></th><td>Inspect this connection’s TLS certificate</td></tr>
+	<tr id="command-serverconfig"><th scope="row"><code>/serverconfig [list | &lt;setting&gt; [value] | reset &lt;setting&gt;]</code></th><td>Show or change this server’s settings<span class="hint">The same settings as Server Properties, checked the same way. Passwords and tokens are asked for in a secure field: type the setting alone.</span></td></tr>
+	<tr id="command-channelconfig"><th scope="row"><code>/channelconfig [channel] [list | &lt;setting&gt; [value] | reset &lt;setting&gt;]</code></th><td>Show or change a saved channel’s settings<span class="hint">The same settings as Channel Properties. Without a channel, the one you are in. The key is asked for in a secure field.</span></td></tr>
 </table>
 
 <h2>History and display</h2>

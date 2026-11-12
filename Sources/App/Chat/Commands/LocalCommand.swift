@@ -25,6 +25,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case caps
 	case chathistory
 	case chatops
+	case channelconfig
 	case clear
 	case clearall
 	case close
@@ -95,6 +96,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case remove
 	case sasl
 	case server
+	case serverconfig
 	case setcolor
 	case setname
 	case setqueryname
@@ -202,7 +204,7 @@ extension LocalCommand {
 		case .msg, .omsg, .smsg, .umsg, .me, .sme, .ume, .notice, .onotice, .unotice: .message
 		case .ame, .amsg: .broadcast
 		case .ctcp, .ctcpreply: .ctcp
-		case .defaults, .ignore, .unignore, .transport: .configuration
+		case .defaults, .ignore, .unignore, .transport, .serverconfig, .channelconfig: .configuration
 		case .timer: .timer
 		case .ban, .banaccount, .kb, .kick, .kickban, .quiet, .unban, .unquiet: .moderation
 		case .j, .join, .joinRandom, .cycle, .hop, .rejoin, .leave, .part, .invite: .lifecycle
@@ -285,6 +287,7 @@ extension LocalCommand {
 		.ban: "[channel] <nickname>",
 		.banaccount: "[channel] <nickname>",
 		.chathistory: "<latest | before | after | around | between | targets | fill> [target] [arguments]",
+		.channelconfig: "[channel] [list | <setting> [value] | reset <setting>]",
 		.close: "[target]",
 		.conn: "[server]",
 		.ctcp: "<nickname> <command> [extra]",
@@ -304,7 +307,7 @@ extension LocalCommand {
 		.goto: "<needle>",
 		.gzline: "<+ | -><hostmask | nickname> [duration] [comment]",
 		.halfop: "[channel] <nickname>",
-		.ignore: "<nickname>",
+		.ignore: "[list | <nickname | mask> [+flag | -flag ...]]",
 		.invite: "<nickname> [channel]",
 		.ison: "<nickname>",
 		.j: "<channel[,channel]]> [key[,key]]",
@@ -344,8 +347,9 @@ extension LocalCommand {
 		.remove: "[target]",
 		.sasl: "[status | auth [mechanism] | mechanism <name | automatic> [only] | token <token | clear>]",
 		.server: "<address> [[+] port] [password]",
+		.serverconfig: "[list | <setting> [value] | reset <setting>]",
 		.transport: "[irc | websocket [path]]",
-		.setcolor: "<nickname>",
+		.setcolor: "<nickname> [#rrggbb | reset]",
 		.setname: "<real name>",
 		.setqueryname: "<nickname>",
 		.shun: "<+ | -><hostmask | nickname> [duration] [comment]",
@@ -360,7 +364,7 @@ extension LocalCommand {
 		.umode: "[flags] [arguments]",
 		.umsg: "<target> <message>",
 		.unban: "[channel] <nickname>",
-		.unignore: "<nickname>",
+		.unignore: "<nickname | mask | number>",
 		.unotice: "<target> <message>",
 		.unquiet: "[channel] <nickname>",
 		.verify: "[account | *] <code>",
@@ -388,6 +392,12 @@ extension LocalCommand {
 			return true
 		case .sasl:
 			return arguments.next().lowercased() == "token"
+		case .serverconfig:
+			return ConfigurationSecrets.serverFields.contains(arguments.next().lowercased())
+		case .channelconfig:
+			let first = arguments.next().lowercased()
+			return ConfigurationSecrets.channelFields.contains(first)
+				|| ConfigurationSecrets.channelFields.contains(arguments.next().lowercased())
 		default:
 			return false
 		}
@@ -420,4 +430,13 @@ enum CommandIndex {
 	private static func isValidScriptName(_ name: String) -> Bool {
 		!name.isEmpty && !name.contains("/") && !name.contains(where: \.isWhitespace)
 	}
+}
+
+/** The `/serverconfig` and `/channelconfig` settings that hold a secret.
+
+ Such a setting is asked for in a secure field; a line that names one is kept
+ out of input history in case the secret was typed after it anyway. */
+nonisolated enum ConfigurationSecrets {
+	static let serverFields: Set<String> = ["server-password", "nickname-password", "proxy-password", "sasl-token"]
+	static let channelFields: Set<String> = ["key"]
 }

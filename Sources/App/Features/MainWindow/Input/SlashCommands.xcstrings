@@ -9936,6 +9936,294 @@
           }
         }
       }
+    },
+    "description-serverconfig": {
+      "comment": "Slash-command discovery: /serverconfig. Translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or change this server’s settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Einstellungen dieses Servers anzeigen oder ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar o cambiar los ajustes de este servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher ou modifier les réglages de ce serveur"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver beállításainak megjelenítése vagy módosítása"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバの設定を表示・変更"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar ou alterar os ajustes deste servidor"
+          }
+        }
+      }
+    },
+    "syntax-serverconfig": {
+      "comment": "Slash-command discovery: arguments of /serverconfig. Literal subcommands (list, reset) stay unchanged; translate placeholder names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <setting> [value] | reset <setting>]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <Einstellung> [Wert] | reset <Einstellung>]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <ajuste> [valor] | reset <ajuste>]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <réglage> [valeur] | reset <réglage>]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <beállítás> [érték] | reset <beállítás>]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <設定> [値] | reset <設定>]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[list | <ajuste> [valor] | reset <ajuste>]"
+          }
+        }
+      }
+    },
+    "hint-serverconfig": {
+      "comment": "Slash-command discovery: help for /serverconfig. Command tokens stay unchanged; translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The same settings as Server Properties, checked the same way. Passwords and tokens are asked for in a secure field: type the setting alone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieselben Einstellungen wie in den Servereigenschaften, gleich geprüft. Passwörter und Tokens werden in einem gesicherten Feld abgefragt: Tippe nur die Einstellung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los mismos ajustes que en Propiedades del servidor, comprobados igual. Las contraseñas y tokens se piden en un campo seguro: escribe solo el ajuste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mêmes réglages que dans Propriétés du serveur, vérifiés de la même façon. Les mots de passe et jetons sont demandés dans un champ sécurisé : tapez seulement le réglage."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ugyanazok a beállítások, mint a Szerver tulajdonságaiban, ugyanúgy ellenőrizve. A jelszavakat és tokeneket biztonságos mezőben kéri az app: csak a beállítást írd be."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバのプロパティと同じ設定を同じ方法で確認します。パスワードとトークンはセキュアフィールドで尋ねます：設定名だけを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os mesmos ajustes de Propriedades do servidor, verificados da mesma forma. Senhas e tokens são pedidos num campo seguro: digite só o ajuste."
+          }
+        }
+      }
+    },
+    "description-channelconfig": {
+      "comment": "Slash-command discovery: /channelconfig. Translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or change a saved channel’s settings"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Einstellungen eines gespeicherten Kanals anzeigen oder ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar o cambiar los ajustes de un canal guardado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher ou modifier les réglages d’un salon enregistré"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy mentett csatorna beállításainak megjelenítése vagy módosítása"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したチャンネルの設定を表示・変更"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar ou alterar os ajustes de um canal salvo"
+          }
+        }
+      }
+    },
+    "syntax-channelconfig": {
+      "comment": "Slash-command discovery: arguments of /channelconfig. Literal subcommands stay unchanged; translate placeholder names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[channel] [list | <setting> [value] | reset <setting>]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Kanal] [list | <Einstellung> [Wert] | reset <Einstellung>]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[canal] [list | <ajuste> [valor] | reset <ajuste>]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[salon] [list | <réglage> [valeur] | reset <réglage>]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[csatorna] [list | <beállítás> [érték] | reset <beállítás>]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[チャンネル] [list | <設定> [値] | reset <設定>]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[canal] [list | <ajuste> [valor] | reset <ajuste>]"
+          }
+        }
+      }
+    },
+    "hint-channelconfig": {
+      "comment": "Slash-command discovery: help for /channelconfig. Command tokens stay unchanged; translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The same settings as Channel Properties. Without a channel, the one you are in. The key is asked for in a secure field."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieselben Einstellungen wie in den Kanaleigenschaften. Ohne Kanal der, in dem du bist. Der Schlüssel wird in einem gesicherten Feld abgefragt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los mismos ajustes que en Propiedades del canal. Sin canal, el canal en el que estás. La clave se pide en un campo seguro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mêmes réglages que dans Propriétés du salon. Sans salon, celui où vous êtes. La clé est demandée dans un champ sécurisé."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ugyanazok a beállítások, mint a Csatorna tulajdonságaiban. Csatorna nélkül az, amelyikben vagy. A kulcsot biztonságos mezőben kéri az app."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チャンネルのプロパティと同じ設定です。チャンネルを省略すると現在のチャンネルです。キーはセキュアフィールドで尋ねます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os mesmos ajustes de Propriedades do canal. Sem canal, o canal em que você está. A chave é pedida num campo seguro."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

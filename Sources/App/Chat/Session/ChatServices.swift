@@ -12,6 +12,8 @@ final class ChatServices {
 	/// Where questions are asked: as alerts, or in the conversation.
 	weak var prompts: (any PromptPresenting)?
 	weak var menu: (any MenuPresenting)?
+	/// `/serverconfig`, `/channelconfig` and `/setcolor` with a colour.
+	weak var configurationCommands: (any ConfigurationCommanding)?
 	weak var channelList: (any ChannelListPresenting)?
 	weak var applicationState: (any ApplicationStatePresenting)?
 	weak var notifications: (any UserNotificationPresenting)?

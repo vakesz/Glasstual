@@ -339,6 +339,13 @@ extension ServerSession {
 			printDebugInformation(String(localized: .IRC.cannotSetColorForBecause(nickname)))
 			return
 		}
+		let value = arguments.rest.trimmingCharacters(in: .whitespaces)
+		guard value.isEmpty else {
+			for line in environment.services.configurationCommands?.setNicknameColor(value, for: nickname) ?? [] {
+				printDebugInformation(line)
+			}
+			return
+		}
 		menu?.showNicknameColorSheet(forNickname: nickname)
 	}
 

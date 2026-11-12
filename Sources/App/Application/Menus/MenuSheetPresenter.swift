@@ -63,6 +63,9 @@ enum MenuSheetPresenter {
 		if session == nil, case .default = destination, opensAsCommand(.newServer) {
 			return
 		}
+		if let session, opensServerPropertiesAsCommand(for: session, at: destination) {
+			return
+		}
 		present(ServerPropertiesSheet(session: session) { [weak session] config in
 			guard let directory = AppServices.chatSession else { return }
 			guard let session else {
@@ -71,14 +74,56 @@ enum MenuSheetPresenter {
 				directory.save()
 				return
 			}
-			let encodingChanged = config.primaryEncoding != session.config.primaryEncoding
-			session.updateConfig(config)
-			if encodingChanged {
-				window?.reloadTheme()
-			}
-			window?.reloadChatItemGroup(session)
-			directory.save()
+			applyServerConfiguration(config, to: session)
 		}) { $0.start(at: destination) }
+	}
+
+	/// The conversation's way into the connection sheet: `/serverconfig`, or
+	/// `/ignore` for the address book.
+	private static func opensServerPropertiesAsCommand(
+		for _: ServerSession,
+		at destination: ServerPropertiesDestination
+	) -> Bool {
+		switch destination {
+		case .default:
+			opensAsCommand(.serverProperties)
+		case let .newIgnoreEntry(hostmask):
+			opensAsCommand(.ignore(mask: hostmask?.isEmpty == false ? hostmask : nil))
+		case .addressBook:
+			opensAsCommand(.ignore(mask: nil))
+		case let .editIgnoreEntry(entry):
+			opensAsCommand(.ignore(mask: entry.hostmask))
+		}
+	}
+
+	/** Saves an edited connection the way the sheet does: the transcript is
+	 redrawn only where the encoding changed, because that is what decides how
+	 the lines already on screen are decoded. `/serverconfig` saves through here
+	 too. */
+	static func applyServerConfiguration(_ config: ServerConfig, to session: ServerSession) {
+		let encodingChanged = config.primaryEncoding != session.config.primaryEncoding
+		session.updateConfig(config)
+		if encodingChanged {
+			window?.reloadTheme()
+		}
+		window?.reloadChatItemGroup(session)
+		session.chatSession?.save()
+	}
+
+	/// Saves an edited channel the way the sheet does; `/channelconfig` too.
+	static func applyChannelConfiguration(_ config: ConversationConfig, to channel: Conversation) {
+		channel.updateConfig(config)
+		channel.associatedSession?.chatSession?.save()
+	}
+
+	/// Redraws whatever draws nicknames after a pinned colour changed.
+	static func nicknameColorsChanged() {
+		window?.reloadTheme()
+		/* The transcript is redrawn by the theme reload; the member list's
+		 avatars take their pinned colours from a snapshot the list reads
+		 when its presentation is invalidated, and nothing else invalidates
+		 it here. */
+		window?.memberList.invalidatePresentation()
 	}
 
 	/// Opens the channel sheet, on an existing channel or on a new one for
@@ -95,8 +140,10 @@ enum MenuSheetPresenter {
 				window?.expandSession(session)
 				return
 			}
-			channel.updateConfig(config)
-			directory.save()
+			applyChannelConfiguration(config, to: channel)
+		}
+		if let channel, opensAsCommand(.channelProperties(channel: channel.name)) {
+			return
 		}
 		present(channel.map { ChannelPropertiesSheet(channel: $0, onSave: save) }
 			?? ChannelPropertiesSheet(
@@ -178,13 +225,11 @@ enum MenuSheetPresenter {
 	}
 
 	static func presentNicknameColor(for nickname: String) {
+		if opensAsCommand(.nicknameColor(nickname: nickname)) {
+			return
+		}
 		present(NicknameColorSheet(nickname: nickname) {
-			window?.reloadTheme()
-			/* The transcript is redrawn by the theme reload; the member list's
-			 avatars take their pinned colours from a snapshot the list reads
-			 when its presentation is invalidated, and nothing else invalidates
-			 it here. */
-			window?.memberList.invalidatePresentation()
+			nicknameColorsChanged()
 		}) { $0.startSheet() }
 	}
 }
