@@ -11,6 +11,8 @@ import SwiftUI
  by looking rather than by reading a description of it. */
 struct OnboardingInteractionView: View {
 	@Bindable var settings: OnboardingSettings
+	/// The height the window gives a step, between the heading and the buttons.
+	var availableHeight: CGFloat = 0
 	@State private var systemAppearance = SystemAppearanceSnapshot()
 	@Environment(\.colorSchemeContrast) private var contrast
 
@@ -37,6 +39,7 @@ struct OnboardingInteractionView: View {
 						isSelected: settings.interaction == style,
 						colorScheme: previewColorScheme,
 						background: palette.background,
+						previewHeight: Self.previewHeight(forAvailableHeight: availableHeight),
 						select: { settings.interaction = style },
 						preview: { OnboardingInteractionPreview(style: style, palette: palette) }
 					)
@@ -52,8 +55,25 @@ struct OnboardingInteractionView: View {
 				.multilineTextAlignment(.center)
 				.frame(maxWidth: 440)
 		}
-		.frame(maxWidth: .infinity, alignment: .center)
+		/* The two previews are all this step has, so they take the room the
+		 window offers and what is left is shared above and below them, rather
+		 than left empty under a step that stops halfway down. */
+		.frame(maxWidth: .infinity, minHeight: availableHeight, alignment: .center)
 	}
+
+	/** How tall a preview is drawn for the room a step has.
+
+	 A preview is a miniature of a conversation, so it grows with the window
+	 up to the proportions of one and never shrinks below the size the
+	 appearance step draws its own at. */
+	static func previewHeight(forAvailableHeight height: CGFloat) -> CGFloat {
+		min(maximumPreviewHeight, max(OnboardingPreviewMetrics.minimumHeight, (height * previewShare).rounded()))
+	}
+
+	private static let maximumPreviewHeight: CGFloat = 280
+	/// The part of a step's height its previews take; the rest is their
+	/// names, their captions and the note beneath.
+	private static let previewShare: CGFloat = 0.6
 }
 
 extension InteractionStyle {

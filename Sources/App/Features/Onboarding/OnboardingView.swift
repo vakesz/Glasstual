@@ -46,6 +46,9 @@ struct OnboardingView: View {
 	/// Sliding a full panel across the window is exactly the motion Reduce
 	/// Motion asks applications to stop making.
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
+	/// The height between the heading and the buttons, which every step is
+	/// shown in. The window's height is the same for all of them.
+	@State private var stepAreaHeight: CGFloat = 0
 
 	var body: some View {
 		VStack(spacing: 0) {
@@ -58,7 +61,7 @@ struct OnboardingView: View {
 					ScrollView {
 						stepContent
 							.padding(.horizontal, UISpacing.loose * 2)
-							.padding(.bottom, UISpacing.loose)
+							.padding(.bottom, Self.stepBottomPadding)
 					}
 					.scrollBounceBehavior(.basedOnSize)
 					/* No page dots: a Mac setup flow does not draw them. Where the
@@ -75,6 +78,7 @@ struct OnboardingView: View {
 				}
 			}
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
+			.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { stepAreaHeight = $0 }
 
 			Divider()
 
@@ -94,6 +98,9 @@ struct OnboardingView: View {
 			Text(.Onboarding.connectionUnavailableRecovery)
 		}
 	}
+
+	/// What a step keeps clear beneath itself, above the buttons' divider.
+	private static let stepBottomPadding = UISpacing.loose
 
 	/// The icon and large title welcome the reader on the first step only;
 	/// the steps after it carry a plain title, as a setup assistant's do.
@@ -130,7 +137,10 @@ struct OnboardingView: View {
 		case .appearance:
 			OnboardingAppearanceView(settings: model.settings)
 		case .interaction:
-			OnboardingInteractionView(settings: model.settings)
+			OnboardingInteractionView(
+				settings: model.settings,
+				availableHeight: max(0, stepAreaHeight - Self.stepBottomPadding)
+			)
 		case .notifications:
 			OnboardingNotificationsView(model: model, settings: model.settings)
 		case .network:

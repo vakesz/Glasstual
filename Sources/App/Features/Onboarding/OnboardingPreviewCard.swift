@@ -53,6 +53,11 @@ struct OnboardingPreviewPalette {
 	}
 }
 
+enum OnboardingPreviewMetrics {
+	/// The least height a preview is drawn at.
+	static let minimumHeight: CGFloat = 150
+}
+
 /// One choice of an onboarding step: a preview the reader picks by clicking,
 /// with its name and what it means beneath.
 struct OnboardingPreviewCard<Preview: View>: View {
@@ -61,6 +66,10 @@ struct OnboardingPreviewCard<Preview: View>: View {
 	let isSelected: Bool
 	let colorScheme: ColorScheme
 	let background: Color
+	/// The height the preview is drawn at, where the step decides it. Without
+	/// one the preview is as tall as its content, and never less than the
+	/// minimum.
+	var previewHeight: CGFloat?
 	let select: () -> Void
 	@ViewBuilder let preview: Preview
 
@@ -79,7 +88,12 @@ struct OnboardingPreviewCard<Preview: View>: View {
 			VStack(spacing: UISpacing.regular) {
 				preview
 					.padding(UISpacing.wide)
-					.frame(maxWidth: .infinity, minHeight: 150, alignment: .top)
+					.frame(
+						maxWidth: .infinity,
+						minHeight: previewHeight ?? OnboardingPreviewMetrics.minimumHeight,
+						maxHeight: previewHeight,
+						alignment: .top
+					)
 					.background(background, in: shape)
 					.overlay {
 						shape.stroke(

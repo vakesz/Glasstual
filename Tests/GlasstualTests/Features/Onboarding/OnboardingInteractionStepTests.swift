@@ -34,6 +34,15 @@ struct OnboardingInteractionStepTests {
 		#expect(OnboardingStep.interaction.isSkippable)
 	}
 
+	/// The step is two previews and a note, so the previews take the room the
+	/// shared window height leaves rather than stopping halfway down it.
+	@Test("A preview takes its share of the step's height, between the smallest and largest it is drawn at")
+	func previewHeightFollowsTheStepHeight() {
+		#expect(OnboardingInteractionView.previewHeight(forAvailableHeight: 0) == OnboardingPreviewMetrics.minimumHeight)
+		#expect(OnboardingInteractionView.previewHeight(forAvailableHeight: 400) == 240)
+		#expect(OnboardingInteractionView.previewHeight(forAvailableHeight: 900) == 280)
+	}
+
 	@Test("Continuing accepts the choice; skipping drops it")
 	func acceptAndSkip() {
 		let model = model()
