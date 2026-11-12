@@ -214,12 +214,15 @@ struct FixtureProtocol {
 			guard messaging || interaction?.mode.usesChannel == true, pongSeen,
 			      !joined else { throw HarnessFailure.assertion("Unexpected JOIN") }
 			joined = true
-			return [
-				":e2euser!e2euser@localhost JOIN :#e2e",
+			/* The burst is this JOIN's NAMES reply: its last batch lists the
+			 two of us and ends the list. A client ignores names that arrive
+			 after the end of the list it joined with. */
+			let names = interaction?.mode == .burstResponsiveness ? [] : [
 				":e2e.local 353 e2euser = #e2e :e2euser fixture",
 				":e2e.local 366 e2euser #e2e :End of NAMES",
-				":fixture!fixture@localhost PRIVMSG #e2e :E2E_CHANNEL_READY",
 			]
+			return [":e2euser!e2euser@localhost JOIN :#e2e"] + names
+				+ [":fixture!fixture@localhost PRIVMSG #e2e :E2E_CHANNEL_READY"]
 		case "MODE #e2e", "MODE #e2e +b", "WHO #e2e":
 			guard joined else { throw HarnessFailure.assertion("Channel query before JOIN") }
 			if line == "WHO #e2e" {
