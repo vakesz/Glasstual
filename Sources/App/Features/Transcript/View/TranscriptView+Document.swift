@@ -141,7 +141,9 @@ extension TranscriptView {
 	/// edits and before the selection and the viewport are put back.
 	func trimOverflow() {
 		let overflow = document.overflow(followsBottom: followsBottom)
-		guard overflow > 0 else { return }
+		guard overflow > 0, let storage = textView.textStorage else { return }
+		storage.beginEditing()
+		defer { storage.endEditing() }
 		remove(0 ..< overflow)
 	}
 

@@ -221,6 +221,38 @@ struct TranscriptViewStorageTests {
 		#expect(try document(of: transcriptView) == rebuiltDocument(of: (1 ..< 3).map(message)))
 	}
 
+	/** What a busy channel at its buffer limit costs TextKit per line.
+
+	 The trim at the top and the lines appended at the bottom are separate
+	 storage edits: TextKit processes an edit as the span from its first changed
+	 character to its last, so one edit holding both fixed attributes over, and
+	 invalidated the layout of, the whole document. And the trim runs in steps:
+	 a deletion at the top shifts the range of every paragraph TextKit holds, so
+	 trimming one line per batch cost a pass over the transcript per batch.
+	 During a burst those two were most of the main thread. */
+	@Test("Appending past the buffer limit trims in steps and processes only the characters it changed")
+	func appendingAtTheLimitBoundsTextKitWork() throws {
+		let transcriptView = makeTranscriptView(bufferLimit: 200)
+		transcriptView.appendLines((0 ..< 200).map(message))
+		let storage = try #require(textView(of: transcriptView).textStorage)
+		let lineLength = storage.length / 200
+		let recorder = StorageEditRecorder()
+		storage.delegate = recorder
+		defer { storage.delegate = nil }
+
+		for index in 200 ..< 300 {
+			transcriptView.appendLines([message(index)])
+		}
+
+		let trims = recorder.edits.filter { $0.changeInLength < 0 }
+		#expect(trims.count <= 4)
+		#expect(trims.isEmpty == false)
+		#expect(recorder.edits.count == 100 + trims.count)
+		#expect(recorder.edits.allSatisfy { $0.range.length <= 2 * lineLength })
+		#expect(transcriptView.displayedLines.count <= 200 + 200 / 8)
+		#expect(transcriptView.displayedBounds.newest == "message 299")
+	}
+
 	@Test("A batch that repeats a line within itself draws it once")
 	func appendingRefusesRepeatsWithinOneBatch() {
 		let transcriptView = makeTranscriptView(bufferLimit: 20)
@@ -612,5 +644,26 @@ struct TranscriptViewStorageTests {
 
 		#expect(try document(of: transcriptView) == before)
 		#expect(try document(of: transcriptView) == rebuiltDocument(of: (2 ..< 4).map(message)))
+	}
+}
+
+/// Records each edit the text storage processes, as TextKit sees it.
+@MainActor
+private final class StorageEditRecorder: NSObject, NSTextStorageDelegate {
+	struct Edit {
+		let range: NSRange
+		let changeInLength: Int
+	}
+
+	private(set) var edits: [Edit] = []
+
+	func textStorage(
+		_: NSTextStorage,
+		didProcessEditing editedMask: NSTextStorageEditActions,
+		range editedRange: NSRange,
+		changeInLength delta: Int
+	) {
+		guard editedMask.contains(.editedCharacters) else { return }
+		edits.append(Edit(range: editedRange, changeInLength: delta))
 	}
 }

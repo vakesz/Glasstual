@@ -161,9 +161,16 @@ struct TranscriptDocument {
 		return followsBottom ? min(bufferLimit + scrollbackAllowance, ceiling) : ceiling
 	}
 
-	/// How many of the oldest lines no longer fit, or zero.
+	/** How many of the oldest lines to drop now, or zero.
+
+	 The buffer may run over its ceiling by an eighth of the reader's setting
+	 before it is cut back to the ceiling. Removing characters from the top makes TextKit shift the range of every
+	 paragraph it holds, so trimming one line per batch cost a pass over the
+	 whole transcript for every batch a busy channel received; trimming in steps
+	 spreads that pass over many lines. */
 	func overflow(followsBottom: Bool) -> Int {
-		max(0, lines.count - effectiveBufferLimit(followsBottom: followsBottom))
+		let excess = lines.count - effectiveBufferLimit(followsBottom: followsBottom)
+		return excess > bufferLimit / 8 ? excess : 0
 	}
 
 	/// How many more lines the document may hold at all, whatever the reader's

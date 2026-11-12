@@ -171,18 +171,24 @@ extension TranscriptView {
 	}
 
 	/** Closes the outermost batch. Everything the batch's edits left to settle is
-	 settled here, once: the overflow is trimmed while the storage is still
-	 open, then the selection and the viewport taken at `beginEditing` are put
-	 back against the new text, and a reader who follows the bottom is scrolled
-	 to it. The edits inside a batch therefore leave all of that alone. */
+	 settled here, once: the overflow is trimmed, then the selection and the
+	 viewport taken at `beginEditing` are put back against the new text, and a
+	 reader who follows the bottom is scrolled to it. The edits inside a batch
+	 therefore leave all of that alone.
+
+	 The trim is its own storage edit, after the batch's. TextKit processes one
+	 edit as the span from its first changed character to its last, so a trim
+	 at the top in the same edit as lines appended at the bottom made every
+	 batch fix attributes over, and invalidate the layout of, the whole
+	 document. */
 	func endEditing() {
 		precondition(editDepth > 0)
 		if editDepth > 1 {
 			editDepth -= 1
 			return
 		}
-		trimOverflow()
 		textView.textStorage?.endEditing()
+		trimOverflow()
 		editDepth = 0
 		isAdjustingSelection = false
 		restoreSelection(batchSelection)
