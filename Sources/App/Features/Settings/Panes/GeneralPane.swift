@@ -3,8 +3,9 @@
 
 import SwiftUI
 
-/// The General row: the language the application runs in, the questions it
-/// asks on quit and on sleep, and what it does on launch.
+/// The General row: the language the application runs in, how it asks
+/// questions and opens editors, the questions it asks on quit and on sleep,
+/// and what it does on launch.
 struct GeneralPane: View {
 	@Bindable var model: SettingsModel
 
@@ -20,6 +21,21 @@ struct GeneralPane: View {
 			.accessibilityIdentifier("settings-app-language")
 		} footer: {
 			Text(.Settings.languageRestartHelp)
+		}
+
+		Section {
+			Picker(selection: model.settings.binding(for: SettingsKeys.Interaction.style)) {
+				ForEach(InteractionStyle.allCases, id: \.self) { style in
+					Text(style.displayName).tag(style)
+				}
+			} label: {
+				Text(.Settings.generalShowQuestions)
+			}
+			.accessibilityIdentifier("settings-interaction-style")
+		} header: {
+			Text(.Settings.generalHeadingQuestions)
+		} footer: {
+			Text(.Settings.generalQuestionsNote)
 		}
 
 		Section {

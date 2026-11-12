@@ -288,7 +288,7 @@ struct SettingsKeyNamingTests {
 		"Identity", "Connection", "Sessions", "Commands", "Messages", "Logging",
 		"Appearance", "Theme", "Badges", "Main Window", "Notifications", "Input",
 		"Highlights", "Reactions", "File Transfers", "Rules", "Internals",
-		"Link Schemes", "Alerts", "Spotlight",
+		"Link Schemes", "Alerts", "Spotlight", "Interaction",
 	]
 
 	/// Names Foundation and AppKit read out of the application's own domain

@@ -16272,6 +16272,150 @@
           }
         }
       }
+    },
+    "general-heading-questions": {
+      "comment": "Section heading in Settings ▸ General for how the app asks questions and opens editors.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions and Editors"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen und Editoren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preguntas y editores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions et éditeurs"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérdések és szerkesztők"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問とエディタ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perguntas e editores"
+          }
+        }
+      }
+    },
+    "general-show-questions": {
+      "comment": "Label of the picker in Settings ▸ General that chooses whether questions open as dialogs or appear in the conversation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show questions"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar preguntas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les questions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérdések megjelenítése"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問の表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar perguntas"
+          }
+        }
+      }
+    },
+    "general-questions-note": {
+      "comment": "Footer under the Show questions picker in Settings ▸ General. /yes is a command name and stays untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the conversation, questions appear above the message field. Answer with a button or by typing a command such as /yes. Editors such as Edit Topic open as a command in the message field. Questions about passwords, certificates and links still need their answer spelled out."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In der Unterhaltung erscheinen Fragen über dem Nachrichtenfeld. Antworte mit einer Taste oder mit einem Befehl wie /yes. Editoren wie „Thema bearbeiten“ öffnen sich als Befehl im Nachrichtenfeld. Fragen zu Passwörtern, Zertifikaten und Links müssen weiterhin ausgeschrieben beantwortet werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la conversación, las preguntas aparecen sobre el campo de mensaje. Responde con un botón o escribiendo un comando como /yes. Los editores como Editar tema se abren como un comando en el campo de mensaje. Las preguntas sobre contraseñas, certificados y enlaces siguen necesitando la respuesta escrita completa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans la conversation, les questions apparaissent au-dessus du champ de message. Répondez avec un bouton ou en tapant une commande comme /yes. Les éditeurs comme Modifier le sujet s’ouvrent sous forme de commande dans le champ de message. Les questions sur les mots de passe, les certificats et les liens exigent toujours une réponse écrite en toutes lettres."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beszélgetésben a kérdések az üzenetmező fölött jelennek meg. Válaszolj egy gombbal vagy egy parancs, például a /yes begépelésével. Az olyan szerkesztők, mint a Téma szerkesztése, parancsként nyílnak meg az üzenetmezőben. A jelszavakra, tanúsítványokra és hivatkozásokra vonatkozó kérdésekre továbbra is ki kell írni a választ."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会話内では、質問はメッセージ欄の上に表示されます。ボタンか /yes などのコマンドで答えます。「トピックを編集」などのエディタは、メッセージ欄のコマンドとして開きます。パスワード、証明書、リンクに関する質問には、引き続き答えを省略せずに入力する必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na conversa, as perguntas aparecem acima do campo de mensagem. Responda com um botão ou digitando um comando como /yes. Editores como Editar tópico abrem como um comando no campo de mensagem. Perguntas sobre senhas, certificados e links ainda precisam da resposta escrita por extenso."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

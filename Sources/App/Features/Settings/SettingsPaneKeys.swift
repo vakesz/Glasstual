@@ -52,6 +52,7 @@ enum SettingsPaneKeys {
 
 	private static let generalKeys: [SettingsBoundKey] = [
 		.init(SettingsKeys.Internals.appLanguages, .Settings.appLanguage),
+		.init(SettingsKeys.Interaction.style, .Settings.generalShowQuestions),
 		.init(SettingsKeys.Connection.confirmQuit, .Settings.generalConfirmQuit),
 		.init(SettingsKeys.Connection.awayOnScreenSleep, .Settings.generalAwayOnScreenSleep),
 		.init(SettingsKeys.Connection.awayOnIdle, .Settings.generalAwayOnIdle),
