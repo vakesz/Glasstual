@@ -10,8 +10,22 @@ extension ServerSession {
 		supportInfo.networkNameFormatted
 	}
 
+	/** The name this connection is shown under, wherever it is named.
+
+	 The reader named the connection, and that name is what the sidebar lists
+	 it as, so every title, subtitle, menu and notification says the same. The
+	 name the server announces stands in only for a connection without one. */
 	var networkNameAlt: String {
-		networkName ?? config.connectionName
+		Self.displayName(connectionName: config.connectionName, announcedNetworkName: networkName)
+	}
+
+	nonisolated static func displayName( // nonisolated: pure
+		connectionName: String,
+		announcedNetworkName: String?
+	) -> String {
+		connectionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+			? announcedNetworkName ?? ""
+			: connectionName
 	}
 
 	var serverAddress: String? {
