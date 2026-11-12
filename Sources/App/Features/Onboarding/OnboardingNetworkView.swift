@@ -13,17 +13,17 @@ struct OnboardingNetworkView: View {
 	let confirm: () -> Void
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 10) {
+		VStack(alignment: .leading, spacing: UISpacing.comfortable) {
 			HStack(spacing: 0) {
 				NetworkPickerListView(model: picker.networks, confirm: confirm)
-					.frame(width: 250)
+					.frame(width: 220)
 
 				Divider()
 
 				ScrollView {
 					if picker.hasSelection {
 						OnboardingNetworkDetailView(picker: picker)
-							.padding(.horizontal, 14)
+							.padding(.horizontal, UISpacing.loose)
 					} else {
 						ContentUnavailableView(
 							String(localized: .Onboarding.chooseANetworkOrEnter),
@@ -36,7 +36,7 @@ struct OnboardingNetworkView: View {
 			}
 			.frame(minHeight: 300)
 
-			VStack(alignment: .leading, spacing: 6) {
+			VStack(alignment: .leading, spacing: UISpacing.snug) {
 				Text(.Onboarding.suggestedChannels)
 				if picker.suggestedChannels.isEmpty {
 					Text(.Onboarding.chooseANetworkToSeeSuggested)
@@ -52,7 +52,7 @@ struct OnboardingNetworkView: View {
 			Toggle(.Onboarding.connectWhenFinished, isOn: $settings.network.connectWhenFinished)
 				.accessibilityIdentifier(AccessibilityIdentifier.onboardingConnectWhenFinished)
 		}
-		.padding(.bottom, 10)
+		.padding(.bottom, UISpacing.comfortable)
 	}
 }
 
@@ -61,7 +61,7 @@ private struct OnboardingNetworkDetailView: View {
 	@Bindable var picker: OnboardingNetworkPickerModel
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 10) {
+		VStack(alignment: .leading, spacing: UISpacing.comfortable) {
 			header
 			if let network = picker.selectedNetwork {
 				Text(verbatim: network.networkDescription)
@@ -114,10 +114,8 @@ private struct OnboardingNetworkDetailView: View {
 			Text(verbatim: picker.networks.selectedTitle).font(.headline)
 			if picker.selectedNetworkRequiresRegistration {
 				Text(.Onboarding.registrationRequired)
-					.font(.caption.weight(.medium))
-					.padding(.horizontal, 6)
-					.padding(.vertical, 2)
-					.background(.quaternary, in: Capsule())
+					.font(.caption)
+					.foregroundStyle(.secondary)
 			}
 			Spacer()
 			if let websiteURL = picker.websiteURL {

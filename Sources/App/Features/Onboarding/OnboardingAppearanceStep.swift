@@ -6,6 +6,7 @@ import SwiftUI
 struct OnboardingAppearanceView: View {
 	@Bindable var settings: OnboardingSettings
 	@State private var systemAppearance = SystemAppearanceSnapshot()
+	@Environment(\.colorSchemeContrast) private var contrast
 
 	private var previewColorScheme: ColorScheme {
 		switch settings.appearance.previewMode(systemMode: systemAppearance.mode) {
@@ -15,15 +16,24 @@ struct OnboardingAppearanceView: View {
 	}
 
 	var body: some View {
-		VStack(spacing: 18) {
-			HStack(spacing: 18) {
+		VStack(spacing: UISpacing.spacious) {
+			HStack(spacing: UISpacing.spacious) {
 				ForEach(OnboardingTranscriptStyle.allCases) { style in
-					OnboardingStylePreview(
-						style: style,
-						colorScheme: previewColorScheme,
+					let palette = OnboardingPreviewPalette(
+						theme: style.theme,
 						fontSize: settings.appearance.textSize.fontSize,
-						isSelected: settings.appearance.transcriptStyle == style
-					) { settings.appearance.transcriptStyle = style }
+						isDark: previewColorScheme == .dark,
+						increasesContrast: contrast == .increased
+					)
+					OnboardingPreviewCard(
+						title: style.title,
+						caption: style.summary,
+						isSelected: settings.appearance.transcriptStyle == style,
+						colorScheme: previewColorScheme,
+						background: palette.background,
+						select: { settings.appearance.transcriptStyle = style },
+						preview: { OnboardingStylePreview(style: style, palette: palette, isDark: previewColorScheme == .dark) }
+					)
 				}
 			}
 			.accessibilityElement(children: .contain)
@@ -67,14 +77,12 @@ private struct OnboardingAppearancePreviewMessage {
 	let message: LocalizedStringResource
 }
 
+/// The same short exchange under each style, drawn as the transcript draws
+/// it: the theme's font, its palette roles and the nickname colours.
 private struct OnboardingStylePreview: View {
 	let style: OnboardingTranscriptStyle
-	let colorScheme: ColorScheme
-	let fontSize: CGFloat
-	let isSelected: Bool
-	let select: () -> Void
-
-	@Environment(\.colorSchemeContrast) private var contrast
+	let palette: OnboardingPreviewPalette
+	let isDark: Bool
 
 	/// The same short exchange under both styles, so the preview shows the
 	/// layout rather than a difference in what was said.
@@ -93,94 +101,64 @@ private struct OnboardingStylePreview: View {
 		),
 	]
 
-	private var usesBubbles: Bool {
-		style == .bubbles
-	}
+	/// A miniature bubble's corners, rounded as far as its short height allows.
+	private static let bubbleCornerRadius: CGFloat = 10
 
 	var body: some View {
-		let messages = Array(Self.previewMessages.enumerated())
-
-		Button(action: select) {
-			VStack(spacing: UISpacing.regular) {
-				ZStack(alignment: .topTrailing) {
-					VStack(spacing: 6) {
-						ForEach(messages, id: \.offset) { index, message in
-							previewRow(message, outgoing: index == 2)
-						}
-					}
-					.padding(UISpacing.wide)
-					.frame(maxWidth: .infinity, minHeight: 150, alignment: .top)
-					.background(.background, in: RoundedRectangle(cornerRadius: 10))
-					.overlay {
-						RoundedRectangle(cornerRadius: 10)
-							.stroke(
-								isSelected ? Color.accentColor : Color.secondary.opacity(contrast == .increased ? 1 : 0.3),
-								lineWidth: isSelected ? 2 : 1
-							)
-					}
-
-					if isSelected {
-						Image(systemName: "checkmark.circle.fill")
-							.foregroundStyle(.tint)
-							.padding(UISpacing.regular)
-					}
-				}
-				.environment(\.colorScheme, colorScheme)
-
-				Text(style.title).font(.headline)
-				Text(style.summary)
-					.font(.caption)
-					.foregroundStyle(.secondary)
+		VStack(spacing: UISpacing.snug) {
+			ForEach(Array(Self.previewMessages.enumerated()), id: \.offset) { index, message in
+				row(message, outgoing: index == Self.previewMessages.count - 1)
 			}
 		}
-		.buttonStyle(.plain)
-		.frame(maxWidth: .infinity)
-		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(.Onboarding.appearanceStyleAccessibilityLabel(
-			String(localized: style.title),
-			String(localized: style.summary)
-		)))
-		.accessibilityAddTraits(.isButton)
-		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
+	}
+
+	private func nicknameColor(_ message: OnboardingAppearancePreviewMessage, outgoing: Bool) -> Color {
+		outgoing
+			? palette.localNickname
+			: Color(nsColor: NicknameColors.color(for: String(localized: message.nickname), isDark: isDark))
 	}
 
 	@ViewBuilder
-	private func previewRow(_ message: OnboardingAppearancePreviewMessage, outgoing: Bool) -> some View {
-		if usesBubbles {
+	private func row(_ message: OnboardingAppearancePreviewMessage, outgoing: Bool) -> some View {
+		switch style {
+		case .bubbles:
 			HStack {
 				if outgoing {
-					Spacer(minLength: 30)
+					Spacer(minLength: UISpacing.spacious)
 				}
 				VStack(alignment: .leading, spacing: 1) {
 					if outgoing == false {
 						Text(message.nickname)
-							.font(.system(size: max(9, fontSize - 2), weight: .semibold))
-							.foregroundStyle(.secondary)
+							.font(palette.smallFont.weight(.semibold))
+							.foregroundStyle(nicknameColor(message, outgoing: outgoing))
 					}
 					Text(message.message)
-						.font(.system(size: fontSize))
-						.foregroundStyle(outgoing ? Color.white : Color.primary)
+						.font(palette.font)
+						.foregroundStyle(palette.text)
 				}
-				.padding(.horizontal, 9)
-				.padding(.vertical, 5)
-				.background(outgoing ? Color.accentColor : Color.secondary.opacity(0.16))
-				.clipShape(RoundedRectangle(cornerRadius: 11))
+				.padding(.horizontal, UISpacing.regular)
+				.padding(.vertical, UISpacing.tight)
+				.background(
+					outgoing ? palette.bubbleOutgoing : palette.bubbleIncoming,
+					in: .rect(cornerRadius: Self.bubbleCornerRadius)
+				)
 				if outgoing == false {
-					Spacer(minLength: 30)
+					Spacer(minLength: UISpacing.spacious)
 				}
 			}
-		} else {
-			HStack(alignment: .firstTextBaseline, spacing: 5) {
+		case .lines:
+			HStack(alignment: .firstTextBaseline, spacing: UISpacing.tight) {
 				Text(.Onboarding.stepLookAndFeel)
-					.font(.system(size: max(9, fontSize - 2), design: .monospaced))
-					.foregroundStyle(.tertiary)
+					.font(palette.smallFont.monospacedDigit())
+					.foregroundStyle(palette.timestamp)
 				/* The angle brackets are how the lines style marks a nickname,
 				 so they are punctuation around the name rather than copy. */
 				Text(verbatim: "<\(String(localized: message.nickname))>")
-					.font(.system(size: fontSize, weight: .semibold))
-					.foregroundStyle(outgoing ? Color.accentColor : Color.primary)
+					.font(palette.font.weight(.semibold))
+					.foregroundStyle(nicknameColor(message, outgoing: outgoing))
 				Text(message.message)
-					.font(.system(size: fontSize))
+					.font(palette.font)
+					.foregroundStyle(palette.text)
 					.lineLimit(1)
 				Spacer(minLength: 0)
 			}

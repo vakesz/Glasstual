@@ -12,6 +12,7 @@ import SwiftUI
 struct OnboardingInteractionView: View {
 	@Bindable var settings: OnboardingSettings
 	@State private var systemAppearance = SystemAppearanceSnapshot()
+	@Environment(\.colorSchemeContrast) private var contrast
 
 	private var previewColorScheme: ColorScheme {
 		switch settings.appearance.previewMode(systemMode: systemAppearance.mode) {
@@ -21,14 +22,25 @@ struct OnboardingInteractionView: View {
 	}
 
 	var body: some View {
-		VStack(spacing: 18) {
-			HStack(spacing: 18) {
+		let palette = OnboardingPreviewPalette(
+			theme: settings.appearance.transcriptStyle.theme,
+			fontSize: settings.appearance.textSize.fontSize,
+			isDark: previewColorScheme == .dark,
+			increasesContrast: contrast == .increased
+		)
+		VStack(spacing: UISpacing.spacious) {
+			HStack(spacing: UISpacing.spacious) {
 				ForEach(InteractionStyle.allCases, id: \.self) { style in
-					OnboardingInteractionPreview(
-						style: style,
+					OnboardingPreviewCard(
+						title: style.displayName,
+						caption: style.onboardingCaption,
+						isSelected: settings.interaction == style,
 						colorScheme: previewColorScheme,
-						isSelected: settings.interaction == style
-					) { settings.interaction = style }
+						background: palette.background,
+						select: { settings.interaction = style },
+						preview: { OnboardingInteractionPreview(style: style, palette: palette) }
+					)
+					.accessibilityIdentifier(style.onboardingIdentifier)
 				}
 			}
 			.accessibilityElement(children: .contain)
@@ -61,60 +73,18 @@ extension InteractionStyle {
 	}
 }
 
+/** A miniature of the conversation with the same question asked each way,
+ drawn from the transcript the reader chose and with real controls, so the
+ alert and the card look as they will. */
 private struct OnboardingInteractionPreview: View {
 	let style: InteractionStyle
-	let colorScheme: ColorScheme
-	let isSelected: Bool
-	let select: () -> Void
+	let palette: OnboardingPreviewPalette
 
-	@Environment(\.colorSchemeContrast) private var contrast
+	/// The miniature alert's and question card's corners, scaled down with them.
+	private static let alertCornerRadius: CGFloat = 10
+	private static let questionCornerRadius: CGFloat = 8
 
 	var body: some View {
-		Button(action: select) {
-			VStack(spacing: UISpacing.regular) {
-				ZStack(alignment: .topTrailing) {
-					preview
-						.padding(UISpacing.wide)
-						.frame(maxWidth: .infinity, minHeight: 170, alignment: .top)
-						.background(.background, in: RoundedRectangle(cornerRadius: 10))
-						.overlay {
-							RoundedRectangle(cornerRadius: 10)
-								.stroke(
-									isSelected ? Color.accentColor : Color.secondary.opacity(contrast == .increased ? 1 : 0.3),
-									lineWidth: isSelected ? 2 : 1
-								)
-						}
-					if isSelected {
-						Image(systemName: "checkmark.circle.fill")
-							.foregroundStyle(.tint)
-							.padding(UISpacing.regular)
-					}
-				}
-				.environment(\.colorScheme, colorScheme)
-				.accessibilityHidden(true)
-
-				Text(style.displayName).font(.headline)
-				Text(style.onboardingCaption)
-					.font(.caption)
-					.foregroundStyle(.secondary)
-					.multilineTextAlignment(.center)
-					.fixedSize(horizontal: false, vertical: true)
-			}
-		}
-		.buttonStyle(.plain)
-		.frame(maxWidth: .infinity)
-		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(.Onboarding.appearanceStyleAccessibilityLabel(
-			String(localized: style.displayName),
-			String(localized: style.onboardingCaption)
-		)))
-		.accessibilityAddTraits(.isButton)
-		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
-		.accessibilityIdentifier(style.onboardingIdentifier)
-	}
-
-	@ViewBuilder
-	private var preview: some View {
 		switch style {
 		case .dialogs: dialogPreview
 		case .conversation: conversationPreview
@@ -122,7 +92,7 @@ private struct OnboardingInteractionPreview: View {
 	}
 
 	private var transcript: some View {
-		VStack(alignment: .leading, spacing: 5) {
+		VStack(alignment: .leading, spacing: UISpacing.tight) {
 			line(.Onboarding.stepLookAndFeelAlice, .Onboarding.goodMorningEveryone)
 			line(.Onboarding.stepLookAndFeelBob, .Onboarding.morningAnyoneTriedTheNewBuild)
 		}
@@ -130,76 +100,76 @@ private struct OnboardingInteractionPreview: View {
 	}
 
 	private func line(_ nickname: LocalizedStringResource, _ message: LocalizedStringResource) -> some View {
-		HStack(alignment: .firstTextBaseline, spacing: 4) {
-			Text(nickname).font(.system(size: 10, weight: .semibold))
-			Text(message).font(.system(size: 10)).lineLimit(1)
+		HStack(alignment: .firstTextBaseline, spacing: UISpacing.tight) {
+			Text(nickname)
+				.font(palette.smallFont.weight(.semibold))
+				.foregroundStyle(palette.remoteNickname)
+			Text(message)
+				.font(palette.smallFont)
+				.foregroundStyle(palette.text)
+				.lineLimit(1)
 		}
 	}
 
-	/// A miniature alert over a dimmed conversation.
+	/// The two answers, as the real buttons at their smallest size.
+	private var answers: some View {
+		HStack(spacing: UISpacing.snug) {
+			Button(.Onboarding.interactionPreviewCancel) {}
+			Button(.Onboarding.interactionPreviewSend) {}
+				.buttonStyle(.borderedProminent)
+		}
+		.controlSize(.mini)
+		.allowsHitTesting(false)
+	}
+
+	/// A miniature alert over the conversation.
 	private var dialogPreview: some View {
 		ZStack {
-			VStack(alignment: .leading, spacing: 5) {
+			VStack(alignment: .leading, spacing: UISpacing.tight) {
 				transcript
 				Spacer(minLength: 0)
 			}
 			.opacity(0.35)
 
-			VStack(spacing: 6) {
-				Image(systemName: "app.badge.fill")
-					.font(.system(size: 18))
-					.foregroundStyle(.tint)
+			VStack(spacing: UISpacing.snug) {
+				Image(nsImage: NSApp.applicationIconImage)
+					.resizable()
+					.frame(width: 24, height: 24)
 				Text(.Onboarding.interactionPreviewQuestion)
-					.font(.system(size: 10, weight: .semibold))
+					.font(.caption.weight(.semibold))
 					.multilineTextAlignment(.center)
-				HStack(spacing: 6) {
-					miniButton(.Onboarding.interactionPreviewCancel, prominent: false)
-					miniButton(.Onboarding.interactionPreviewSend, prominent: true)
-				}
+				answers
 			}
-			.padding(10)
+			.padding(UISpacing.comfortable)
 			.frame(width: 150)
-			.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-			.shadow(color: .black.opacity(0.18), radius: 6, y: 2)
+			.background(.regularMaterial, in: .rect(cornerRadius: Self.alertCornerRadius))
+			.shadow(radius: UISpacing.snug, y: 2)
 		}
 	}
 
-	/// The same question as a card above the message field, answered by typing.
+	/// The same question as a card above the message field, answered by a
+	/// click or by typing.
 	private var conversationPreview: some View {
-		VStack(alignment: .leading, spacing: 6) {
+		VStack(alignment: .leading, spacing: UISpacing.snug) {
 			transcript
 			Spacer(minLength: 0)
-			HStack(alignment: .firstTextBaseline, spacing: 5) {
-				Image(systemName: "questionmark.bubble")
-					.font(.system(size: 10))
-					.foregroundStyle(.tint)
-				VStack(alignment: .leading, spacing: 4) {
-					Text(.Onboarding.interactionPreviewQuestion)
-						.font(.system(size: 10, weight: .semibold))
-					HStack(spacing: 6) {
-						Spacer(minLength: 0)
-						miniButton(.Onboarding.interactionPreviewCancel, prominent: false)
-						miniButton(.Onboarding.interactionPreviewSend, prominent: true)
-					}
+			VStack(alignment: .leading, spacing: UISpacing.tight) {
+				Label(.Onboarding.interactionPreviewQuestion, systemImage: "questionmark.bubble")
+					.font(.caption.weight(.semibold))
+				HStack {
+					Spacer(minLength: 0)
+					answers
 				}
 			}
-			.padding(6)
-			.background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+			.padding(UISpacing.snug)
+			.background(.regularMaterial, in: .rect(cornerRadius: Self.questionCornerRadius))
 			Text(verbatim: "/yes")
-				.font(.system(size: 10, design: .monospaced))
-				.padding(.horizontal, 8)
-				.padding(.vertical, 4)
+				.font(palette.smallFont)
+				.foregroundStyle(palette.text)
+				.padding(.horizontal, UISpacing.regular)
+				.padding(.vertical, UISpacing.tight)
 				.frame(maxWidth: .infinity, alignment: .leading)
-				.background(Color.secondary.opacity(0.12), in: Capsule())
+				.background(.quaternary, in: .capsule)
 		}
-	}
-
-	private func miniButton(_ title: LocalizedStringResource, prominent: Bool) -> some View {
-		Text(title)
-			.font(.system(size: 9, weight: .medium))
-			.foregroundStyle(prominent ? Color.white : Color.primary)
-			.padding(.horizontal, 8)
-			.padding(.vertical, 3)
-			.background(prominent ? Color.accentColor : Color.secondary.opacity(0.18), in: Capsule())
 	}
 }

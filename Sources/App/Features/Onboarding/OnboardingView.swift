@@ -36,8 +36,8 @@ private struct OnboardingSceneRoot: View {
 	}
 }
 
-/// The frame the five steps are shown in: the same heading, page indicator and
-/// buttons whichever step is up.
+/// The frame the steps are shown in: the welcome heading on the first, a
+/// title on the others, and the same buttons whichever step is up.
 struct OnboardingView: View {
 	@Bindable var model: OnboardingModel
 	let applicationIcon: Image
@@ -61,6 +61,9 @@ struct OnboardingView: View {
 							.padding(.bottom, UISpacing.loose)
 					}
 					.scrollBounceBehavior(.basedOnSize)
+					/* No page dots: a Mac setup flow does not draw them. Where the
+					 step falls in the flow is said to VoiceOver instead. */
+					.accessibilityLabel(Text(model.progressDescription))
 					.accessibilityIdentifier(AccessibilityIdentifier.onboardingStep(String(describing: model.currentStep)))
 					.id(model.currentStep)
 					.transition(
@@ -77,7 +80,7 @@ struct OnboardingView: View {
 
 			footer
 		}
-		.frame(minWidth: 720, idealWidth: 720, minHeight: 620, idealHeight: 700)
+		.frame(minWidth: 600, idealWidth: 620, minHeight: 540, idealHeight: 620)
 		.accessibilityElement(children: .contain)
 		.accessibilityIdentifier(AccessibilityIdentifier.onboardingWindow)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.currentStep)
@@ -92,24 +95,30 @@ struct OnboardingView: View {
 		}
 	}
 
+	/// The icon and large title welcome the reader on the first step only;
+	/// the steps after it carry a plain title, as a setup assistant's do.
 	private var header: some View {
 		VStack(spacing: UISpacing.snug) {
-			applicationIcon
-				.resizable()
-				.scaledToFit()
-				.frame(width: 72, height: 72)
-				.accessibilityHidden(true)
+			if model.isFirstStep {
+				applicationIcon
+					.resizable()
+					.scaledToFit()
+					.frame(width: 64, height: 64)
+					.accessibilityHidden(true)
+			}
 
 			Text(model.currentStep.title)
-				.font(.largeTitle.weight(.bold))
-				.contentTransition(.numericText())
+				.font(model.isFirstStep ? .largeTitle.weight(.bold) : .title2.weight(.bold))
+				.multilineTextAlignment(.center)
+				.accessibilityAddTraits(.isHeader)
 
 			Text(model.currentStep.subtitle)
 				.foregroundStyle(.secondary)
 				.multilineTextAlignment(.center)
-				.frame(maxWidth: 560)
+				.frame(maxWidth: 480)
 		}
-		.padding(.top, UISpacing.spacious)
+		.padding(.horizontal, UISpacing.loose * 2)
+		.padding(.top, model.isFirstStep ? UISpacing.spacious : UISpacing.loose)
 		.padding(.bottom, UISpacing.wide)
 	}
 
@@ -135,47 +144,38 @@ struct OnboardingView: View {
 		}
 	}
 
+	/// Set Up Later on the leading edge; Skip, Back and Continue together on
+	/// the trailing edge, Continue the default button.
 	private var footer: some View {
-		/* The page indicator sits behind the buttons rather than between
-		 them, so it stays centred whichever of them a step shows. */
-		ZStack {
-			OnboardingPageIndicator(
-				currentStep: model.currentStep.rawValue,
-				stepCount: OnboardingStep.allCases.count,
-				accessibilityDescription: model.progressDescription
-			)
+		HStack {
+			/* Onboarding has to be dismissible without answering it, and
+			 without it asking again at the next launch. */
+			Button(.Onboarding.windowChromeSetUpLater, action: setUpLater)
+				.buttonStyle(.borderless)
+				.keyboardShortcut(.cancelAction)
 
-			HStack {
-				if model.isFirstStep == false {
-					Button(.Onboarding.windowChromeBack, action: model.moveBack)
-						.keyboardShortcut(.leftArrow, modifiers: .command)
-						.accessibilityIdentifier(AccessibilityIdentifier.onboardingBack)
-				}
+			Spacer()
 
-				/* Onboarding has to be dismissible without answering it, and
-				 without it asking again at the next launch. */
-				Button(.Onboarding.windowChromeSetUpLater, action: setUpLater)
-					.buttonStyle(.borderless)
-					.keyboardShortcut(.cancelAction)
-
-				Spacer()
-
-				if model.currentStep.isSkippable {
-					Button(.Onboarding.windowChromeSkip) { model.skip() }
-						.buttonStyle(.borderless)
-						.accessibilityIdentifier(AccessibilityIdentifier.onboardingSkip)
-				}
-
-				Button(model.primaryButtonTitle, action: advance)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.isCurrentStepValid == false)
-					.accessibilityIdentifier(
-						model.isLastStep ? AccessibilityIdentifier.onboardingFinish : AccessibilityIdentifier.onboardingContinue
-					)
+			if model.currentStep.isSkippable {
+				Button(.Onboarding.windowChromeSkip) { model.skip() }
+					.accessibilityIdentifier(AccessibilityIdentifier.onboardingSkip)
 			}
+
+			if model.isFirstStep == false {
+				Button(.Onboarding.windowChromeBack, action: model.moveBack)
+					.keyboardShortcut(.leftArrow, modifiers: .command)
+					.accessibilityIdentifier(AccessibilityIdentifier.onboardingBack)
+			}
+
+			Button(model.primaryButtonTitle, action: advance)
+				.keyboardShortcut(.defaultAction)
+				.disabled(model.isCurrentStepValid == false)
+				.accessibilityIdentifier(
+					model.isLastStep ? AccessibilityIdentifier.onboardingFinish : AccessibilityIdentifier.onboardingContinue
+				)
 		}
 		.disabled(model.isCompleting)
-		.padding(UISpacing.loose)
+		.padding(UISpacing.spacious)
 	}
 
 	private func advance() {
@@ -200,23 +200,5 @@ private struct OnboardingCompletionProgress: View {
 			.progressViewStyle(.circular)
 			.controlSize(.large)
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
-	}
-}
-
-private struct OnboardingPageIndicator: View {
-	let currentStep: Int
-	let stepCount: Int
-	let accessibilityDescription: LocalizedStringResource
-
-	var body: some View {
-		HStack(spacing: UISpacing.regular) {
-			ForEach(0 ..< stepCount, id: \.self) { step in
-				Circle()
-					.fill(step == currentStep ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.quaternary))
-					.frame(width: 7, height: 7)
-			}
-		}
-		.accessibilityElement(children: .ignore)
-		.accessibilityLabel(Text(accessibilityDescription))
 	}
 }
