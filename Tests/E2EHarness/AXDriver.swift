@@ -188,13 +188,44 @@ final class AXDriver {
 		kAXTableRole, kAXOutlineRole, kAXListRole, kAXMenuBarRole, kAXBrowserRole,
 	]
 
+	/// What a search reads of every element it passes.
+	struct ElementSummary {
+		let role: String?
+		let identifier: String?
+		let children: [AXUIElement]
+	}
+
+	/** An element's role, identifier and children in one round trip. A search
+	 reads all three of every element it passes, and a busy application answers
+	 each request only between pieces of its own main-thread work, so three
+	 requests per element made every search three times as slow as it had to be. */
+	func summary(_ element: AXUIElement) throws -> ElementSummary {
+		var values: CFArray?
+		let names = [kAXRoleAttribute, kAXIdentifierAttribute, kAXChildrenAttribute] as CFArray
+		let status = timed {
+			AXUIElementCopyMultipleAttributeValues(element, names, AXCopyMultipleAttributeOptions(), &values)
+		}
+		switch status {
+		case .success: break
+		case .cannotComplete: throw TransientAXError(code: status.rawValue)
+		default: return ElementSummary(role: nil, identifier: nil, children: [])
+		}
+		/* An attribute the element lacks comes back as an error value in its
+		 slot, which none of these casts accept. */
+		let slots = values as? [AnyObject] ?? []
+		let slot = { (index: Int) in index < slots.count ? slots[index] : nil }
+		return ElementSummary(
+			role: slot(0) as? String,
+			identifier: slot(1) as? String,
+			children: slot(2) as? [AXUIElement] ?? []
+		)
+	}
+
 	/** The first element below `root` (or `root` itself) whose identifier is
 	 `identifier`, breadth first. Rows of tables, outlines and lists and the
 	 menu bar are only searched when the search starts inside them. */
 	func find(_ identifier: String, in root: AXUIElement? = nil, limit: Int = 4000) throws -> AXUIElement? {
-		try first(in: root ?? application, limit: limit) { element, _ in
-			try self.identifier(element) == identifier
-		}
+		try first(in: root ?? application, limit: limit) { $0.identifier == identifier }
 	}
 
 	/// Every element below `root`, rows included, whose identifier has `prefix`.
@@ -205,10 +236,11 @@ final class AXDriver {
 		while index < queue.count, index < limit {
 			let element = queue[index]
 			index += 1
-			if let identifier = try identifier(element), identifier.hasPrefix(prefix) {
+			let summary = try summary(element)
+			if let identifier = summary.identifier, identifier.hasPrefix(prefix) {
 				found.append((identifier, element))
 			}
-			try queue.append(contentsOf: children(element))
+			queue.append(contentsOf: summary.children)
 		}
 		return found
 	}
@@ -222,10 +254,11 @@ final class AXDriver {
 		while index < queue.count, index < limit {
 			let element = queue[index]
 			index += 1
-			if try self.role(element) == role {
+			let summary = try summary(element)
+			if summary.role == role {
 				found.append(element)
 			} else {
-				try queue.append(contentsOf: children(element))
+				queue.append(contentsOf: summary.children)
 			}
 		}
 		return found
@@ -234,21 +267,21 @@ final class AXDriver {
 	private func first(
 		in root: AXUIElement,
 		limit: Int,
-		where matches: (AXUIElement, String?) throws -> Bool
+		where matches: (ElementSummary) -> Bool
 	) throws -> AXUIElement? {
 		var queue = [root]
 		var index = 0
 		while index < queue.count, index < limit {
 			let element = queue[index]
 			index += 1
-			let role = try role(element)
-			if try matches(element, role) {
+			let summary = try summary(element)
+			if matches(summary) {
 				return element
 			}
-			if index > 1, let role, Self.collections.contains(role) {
+			if index > 1, let role = summary.role, Self.collections.contains(role) {
 				continue
 			}
-			try queue.append(contentsOf: children(element))
+			queue.append(contentsOf: summary.children)
 		}
 		return nil
 	}
@@ -301,11 +334,12 @@ final class AXDriver {
 		while index < queue.count, index < limit {
 			let (element, enclosing) = queue[index]
 			index += 1
-			let row = try role(element) == kAXRowRole ? element : enclosing
-			if let row, try self.identifier(element) == identifier {
+			let summary = try summary(element)
+			let row = summary.role == kAXRowRole ? element : enclosing
+			if let row, summary.identifier == identifier {
 				return row
 			}
-			try queue.append(contentsOf: children(element).map { ($0, row) })
+			queue.append(contentsOf: summary.children.map { ($0, row) })
 		}
 		return nil
 	}
