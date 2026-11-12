@@ -12,6 +12,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case adchat
 	case ame
 	case amsg
+	case answer
 	case aquote
 	case araw
 	case attach
@@ -72,6 +73,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case nachat
 	case names
 	case nick
+	case no
 	case notice
 	case notifybubble
 	case notifysound
@@ -80,6 +82,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case op
 	case part
 	case pass
+	case prompts
 	case query
 	case quiet
 	case quit
@@ -125,6 +128,7 @@ enum LocalCommand: String, Sendable, CaseIterable {
 	case whois
 	case whowas
 	case xdcc
+	case yes
 	case zline
 	case znccert
 }
@@ -158,6 +162,9 @@ extension LocalCommand {
 		case xdcc
 		/// Accounts and profiles on the server: `/register`, `/verify`, `/metadata`.
 		case account
+		/// Answering and listing questions: `/answer`, `/yes`, `/no`, `/prompts`.
+		/// Only the message field answers them; the session refuses them.
+		case prompt
 	}
 
 	/// Matches the name however the user capitalised it.
@@ -211,6 +218,7 @@ extension LocalCommand {
 		case .who, .whois, .weights, .myversion, .tage, .lagcheck, .mylag: .information
 		case .attach, .detach, .znccert: .bouncer
 		case .register, .verify, .metadata: .account
+		case .answer, .yes, .no, .prompts: .prompt
 		default: nil
 		}
 	}
@@ -269,6 +277,7 @@ extension LocalCommand {
 		.adchat: "<message>",
 		.ame: "<message>",
 		.amsg: "<message>",
+		.answer: "<number> [answer] [--remember]",
 		.aquote: "<input>",
 		.araw: "<input>",
 		.attach: "[channel]",
@@ -315,6 +324,7 @@ extension LocalCommand {
 		.nachat: "<message>",
 		.names: "<channel>",
 		.nick: "<nickname>",
+		.no: "[number]",
 		.notice: "<target[,target]]> <message>",
 		.notifybubble: "[target] <message>",
 		.notifysound: "<sound>",
@@ -360,6 +370,7 @@ extension LocalCommand {
 		.who: "<channel>",
 		.whois: "<nickname>",
 		.whowas: "<nickname>",
+		.yes: "[number] [--remember]",
 		.zline: "<+ | -><hostmask | nickname> [duration] [comment]",
 	]
 }

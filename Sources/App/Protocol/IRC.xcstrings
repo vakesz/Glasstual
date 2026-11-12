@@ -18460,6 +18460,54 @@
           }
         }
       }
+    },
+    "prompt-answer-typed-only": {
+      "comment": "Printed when a script, timer, connect command or alias tries to answer a question. /answer, /yes, /no and /dcc are commands and stay untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions can only be answered by typing in the message field. /answer, /yes, /no and /dcc trust, accept or decline were ignored."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen können nur durch Tippen im Nachrichtenfeld beantwortet werden. /answer, /yes, /no und /dcc trust, accept oder decline wurden ignoriert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las preguntas solo se pueden responder escribiendo en el campo de mensaje. Se ignoró /answer, /yes, /no o /dcc trust, accept o decline."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On ne peut répondre aux questions qu’en tapant dans le champ de message. /answer, /yes, /no et /dcc trust, accept ou decline ont été ignorés."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérdésekre csak az üzenetmezőbe gépelve lehet válaszolni. A /answer, /yes, /no és a /dcc trust, accept vagy decline figyelmen kívül maradt."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問にはメッセージ欄に入力してのみ答えられます。/answer、/yes、/no、/dcc trust・accept・decline は無視されました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só é possível responder a perguntas digitando no campo de mensagem. /answer, /yes, /no e /dcc trust, accept ou decline foram ignorados."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -148,7 +148,8 @@ struct ServerSessionXDCCTests {
 		session.sendCommand("dcc trust d9 once", completeTarget: false, target: nil)
 
 		#expect(sent(session) == ["PRIVMSG Bot :XDCC LIST"])
-		#expect(printed(session).contains(String(localized: .IRC.dccQuestionUnknown("d9"))))
+		/* Answering a question is the message field's alone. */
+		#expect(printed(session).contains(String(localized: .IRC.promptAnswerTypedOnly)))
 	}
 
 	@Test("Malformed requests send nothing and print the syntax", arguments: [

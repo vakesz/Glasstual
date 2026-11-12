@@ -99,20 +99,29 @@ struct ServerSessionSecureDCCOfferTests {
 		])
 	}
 
-	@Test("A chat offer is answered once, by the alert or by /dcc decline, whichever comes first")
+	@Test("A chat offer is answered once, by its card or by /dcc decline, whichever comes first")
 	func chatOfferIsAnsweredOnce() async throws {
 		let session = makeSession()
+		let router = PromptRouter(registry: PendingPromptRegistry())
+		router.style = { .conversation }
+		router.resolveAnchor = { $0.sessionID }
+		session.environment.services.prompts = router
 		try offer("SCHAT chat 0 0 T9", on: session)
-		try await Eventually.until("the question") { session.recordedOutput.presentedAlertCompletions.isEmpty == false }
-		let completion = try #require(session.recordedOutput.presentedAlertCompletions.first)
+		try await Eventually.until("the question") { router.registry.pending.count == 1 }
+		let prompt = try #require(router.registry.pending.first)
+		let handler = PromptCommandHandler(
+			registry: router.registry, itemID: session.uniqueIdentifier, sessionID: session.uniqueIdentifier
+		)
 
-		session.handleDCCCommand(CommandArguments("decline d1"), command: "DCC", targetConversation: nil)
-		completion(AlertOutcome(response: .default, isSuppressed: false))
-		session.handleDCCCommand(CommandArguments("accept d1"), command: "DCC", targetConversation: nil)
+		#expect(try handler.perform(#require(PromptCommand(line: "/dcc decline d1"))) == .answered)
+		#expect(router.registry.answer(prompt, with: .default) == .notPending)
+		#expect(try handler.perform(#require(PromptCommand(line: "/dcc accept d1"))) == .feedback(
+			String(localized: .IRC.dccQuestionUnknown("d1"))
+		))
+		try await Eventually.until("the answer") { session.dccDecisions.isEmpty }
 
 		let bodies = printedBodies(of: session)
 		#expect(bodies.filter { $0 == String(localized: .IRC.declinedDirectChatRequest("alice")) }.count == 1)
-		#expect(bodies.last == String(localized: .IRC.dccQuestionUnknown("d1")))
 		#expect(session.directChatConversation(forNickname: "alice") == nil)
 	}
 

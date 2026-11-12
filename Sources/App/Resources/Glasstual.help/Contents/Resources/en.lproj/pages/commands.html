@@ -128,6 +128,15 @@
 	<tr id="command-znccert"><th scope="row"><code>/znccert</code></th><td>Inspect the certificate reported by ZNC</td></tr>
 </table>
 
+<h2>Questions</h2>
+<p>Answer the questions Glasstual asks in the conversation.</p>
+<table>
+	<tr id="command-answer"><th scope="row"><code>/answer &lt;number&gt; [answer] [--remember]</code></th><td>Answer a question by its number<span class="hint">Name the answer by its word or button title. Questions about passwords, certificates and links need it spelled out. --remember stops asking where the question offers it.</span></td></tr>
+	<tr id="command-yes"><th scope="row"><code>/yes [number] [--remember]</code></th><td>Answer yes to the question waiting here<span class="hint">Chooses the one way forward. Questions about passwords, certificates and links need /answer with the answer spelled out.</span></td></tr>
+	<tr id="command-no"><th scope="row"><code>/no [number]</code></th><td>Decline the question waiting here<span class="hint">Chooses the way out, which never sends, opens or deletes anything.</span></td></tr>
+	<tr id="command-prompts"><th scope="row"><code>/prompts</code></th><td>List the questions waiting for an answer</td></tr>
+</table>
+
 <h2>Diagnostics and automation</h2>
 <p>Check the connection, send raw lines and run commands later.</p>
 <table>

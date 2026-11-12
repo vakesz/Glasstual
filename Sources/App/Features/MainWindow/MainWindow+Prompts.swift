@@ -74,4 +74,39 @@ extension MainWindow {
 			.priority: priority.rawValue,
 		])
 	}
+
+	/// Carries out a typed `/answer`, `/yes`, `/no`, `/prompts` or answering
+	/// `/dcc` command in the conversation on screen, and shows what it had to
+	/// say above the message field rather than in the transcript.
+	@discardableResult
+	func performPromptCommand(_ command: PromptCommand) -> PromptCommandOutcome {
+		let registry = AppServices.promptRegistry
+		let item = selectedItem
+		let handler = PromptCommandHandler(
+			registry: registry,
+			itemID: item?.uniqueIdentifier,
+			sessionID: item?.associatedSession?.uniqueIdentifier
+		) { [weak self] itemID in
+			guard let item = self?.chatSession?.findItem(withId: itemID) else { return nil }
+			return item.label.isEmpty ? item.name : item.label
+		}
+		let outcome = handler.perform(command)
+		switch outcome {
+		case .answered, .focusedField:
+			registry.feedback = nil
+		case let .feedback(text), let .refusedSecret(text):
+			registry.feedback = PromptFeedback(itemID: item?.uniqueIdentifier, text: text)
+		}
+		return outcome
+	}
+
+	/// Sending a message in a conversation counts as having read the notices
+	/// waiting in it.
+	func dismissNotices(in item: ChatItem?) {
+		guard let itemID = item?.uniqueIdentifier else { return }
+		let registry = AppServices.promptRegistry
+		for prompt in registry.inlinePrompts(inItem: itemID) where prompt.request.isNotice {
+			registry.answer(prompt, with: .default)
+		}
+	}
 }

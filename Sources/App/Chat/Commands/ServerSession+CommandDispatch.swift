@@ -66,6 +66,21 @@ extension ServerSession {
 			dispatchBouncerCommand(command, parsed: parsed, targetConversation: targetConversation)
 		case .raw:
 			dispatchRawCommand(command, parsed: parsed)
+		default:
+			dispatchServerRequest(group, command: command, parsed: parsed, targetConversation: targetConversation)
+		}
+	}
+
+	/// The second half of ``dispatch(_:command:parsed:targetConversation:)``:
+	/// requests to the server, the session's own state, and the questions
+	/// only the message field may answer.
+	private func dispatchServerRequest(
+		_ group: LocalCommand.Group,
+		command: LocalCommand,
+		parsed: ParsedUserCommand,
+		targetConversation: Conversation?
+	) {
+		switch group {
 		case .request:
 			dispatchNativeRequestCommand(command, parsed: parsed)
 		case .operatorControl:
@@ -80,6 +95,11 @@ extension ServerSession {
 			dispatchNativeInformationCommand(command, parsed: parsed, targetConversation: targetConversation)
 		case .account:
 			dispatchAccountCommand(command, parsed: parsed)
+		case .prompt:
+			refuseUntypedPromptAnswer()
+		case .directChat, .xdcc, .message, .broadcast, .ctcp, .configuration, .timer, .moderation, .lifecycle,
+		     .window, .mode, .conversation, .bouncer, .raw:
+			assertionFailure("Dispatched by the first half")
 		}
 	}
 

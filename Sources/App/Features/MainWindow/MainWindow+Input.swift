@@ -213,8 +213,21 @@ extension MainWindow {
 		let value = NSAttributedString(attributedString: inputTextField.attributedStringValue)
 		guard value.length > 0 else { return }
 		inputTextField.attributedStringValue = NSAttributedString(string: "")
+		/* Questions are answered here, from the keyboard, and never by
+		 anything a session runs on its own. */
+		if let command = PromptCommand(line: value.string) {
+			let outcome = performPromptCommand(command)
+			if outcome.keepsLineInHistory {
+				inputHistory.add(value)
+			}
+			return
+		}
+		AppServices.promptRegistry.feedback = nil
 		if LocalCommand.lineCarriesSecret(value.string) == false {
 			inputHistory.add(value)
+		}
+		if value.string.hasPrefix("/") == false || value.string.hasPrefix("//") {
+			dismissNotices(in: selectedItem)
 		}
 		let privateRecipient = inputTextField.privateReplyRecipient
 		let privateReplyIdentifier = inputTextField.replyMessageIdentifier

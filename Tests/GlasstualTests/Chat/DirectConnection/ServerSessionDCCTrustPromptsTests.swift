@@ -61,6 +61,25 @@ struct ServerSessionDCCTrustPromptsTests {
 		return decision
 	}
 
+	/// Puts the session's questions through a real router, so they can be
+	/// answered the way the message field answers them. The caller keeps the
+	/// router: the session holds it weakly.
+	private func typedAnswers(on session: TestServerSession) -> PromptRouter {
+		let router = PromptRouter(registry: PendingPromptRegistry())
+		router.style = { .conversation }
+		router.resolveAnchor = { $0.sessionID }
+		session.environment.services.prompts = router
+		return router
+	}
+
+	/// Types `line` into the message field of the session's console.
+	private func type(_ line: String, on session: TestServerSession, router: PromptRouter) throws -> PromptCommandOutcome {
+		let command = try #require(PromptCommand(line: line))
+		return PromptCommandHandler(
+			registry: router.registry, itemID: session.uniqueIdentifier, sessionID: session.uniqueIdentifier
+		).perform(command)
+	}
+
 	private func waitForPinCount(_ count: Int, on session: TestServerSession) async {
 		while await pins(on: session).count != count {
 			await Task.yield()
@@ -329,21 +348,46 @@ struct ServerSessionDCCTrustPromptsTests {
 	@Test("/dcc trust answers a peer that presented no certificate with once or reject only")
 	func noCertificateDespitePinTypedAnswer() async throws {
 		let session = makeSession()
+		let router = typedAnswers(on: session)
 		try await session.environment.services.dccPeerCertificates.remember(
 			certificate(), network: session.config.uniqueIdentifier, nickname: "alice",
 			caseMapping: .rfc1459, account: nil, at: .now
 		)
-		let decision = await ask(nil, on: session)
+		let decision = Task { await session.decideDCCPeer(nil, context: context()) }
+		try await Eventually.until("the question") { router.registry.pending.count == 1 }
 
-		session.handleDCCCommand(CommandArguments("trust d1 remember"), command: "DCC", targetConversation: nil)
-		session.handleDCCCommand(CommandArguments("trust d1 once"), command: "DCC", targetConversation: nil)
+		let refused = try type("/dcc trust d1 remember", on: session, router: router)
+		let answered = try type("/dcc trust d1 once", on: session, router: router)
 
+		#expect(refused == .feedback(String(localized: .IRC.dccQuestionWrongAnswer("d1", "remember"))))
+		#expect(answered == .answered)
 		#expect(await decision.value)
-		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
 		/* The question itself leaves no line behind: only what the answer did. */
-		#expect(session.recordedOutput.presentedAlerts.first?.reference == "d1")
-		#expect(bodies.contains(String(localized: .IRC.dccQuestionWrongAnswer("d1", "remember"))))
+		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
 		#expect(bodies.contains(String(localized: .IRC.dccTrustUnidentifiedOnce("alice"))))
+	}
+
+	@Test("A changed or missing certificate is never answered by /yes, a number or the first word that fits")
+	func securityAnswersMustBeSpelledOut() async throws {
+		let session = makeSession()
+		let router = typedAnswers(on: session)
+		try await session.environment.services.dccPeerCertificates.remember(
+			certificate(), network: session.config.uniqueIdentifier, nickname: "alice",
+			caseMapping: .rfc1459, account: nil, at: .now
+		)
+		let decision = Task { await session.decideDCCPeer(try? certificate(), context: context()) }
+		try await Eventually.until("the question") { router.registry.pending.count == 1 }
+		let number = try #require(router.registry.pending.first?.number)
+
+		#expect(try type("/yes", on: session, router: router) == .feedback(
+			String(localized: .InlinePrompts.spellOut(number, "replace"))
+		))
+		#expect(try type("/answer \(number) 2", on: session, router: router) == .feedback(
+			String(localized: .InlinePrompts.spellOut(number, "replace"))
+		))
+		#expect(router.registry.pending.count == 1)
+		#expect(try type("/no", on: session, router: router) == .answered)
+		#expect(await decision.value == false)
 	}
 
 	@Test("A peer that presented no certificate does not join a question about one that did")
@@ -387,15 +431,35 @@ struct ServerSessionDCCTrustPromptsTests {
 	@Test("/dcc trust answers by identifier and reports what it could not answer")
 	func trustCommand() async throws {
 		let session = makeSession()
-		let decision = try await ask(certificate(), on: session)
+		let router = typedAnswers(on: session)
+		let decision = Task { await session.decideDCCPeer(try? certificate(), context: context()) }
+		try await Eventually.until("the question") { router.registry.pending.count == 1 }
 
-		session.handleDCCCommand(CommandArguments("trust d1 replace"), command: "DCC", targetConversation: nil)
-		session.handleDCCCommand(CommandArguments("trust d1 ONCE"), command: "DCC", targetConversation: nil)
+		#expect(try type("/dcc trust d9 once", on: session, router: router) == .feedback(
+			String(localized: .IRC.dccQuestionUnknown("d9"))
+		))
+		#expect(try type("/dcc trust d1 replace", on: session, router: router) == .feedback(
+			String(localized: .IRC.dccQuestionWrongAnswer("d1", "replace"))
+		))
+		#expect(try type("/dcc trust d1 ONCE", on: session, router: router) == .answered)
 
 		#expect(await decision.value)
 		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
-		#expect(bodies.contains(String(localized: .IRC.dccQuestionWrongAnswer("d1", "replace"))))
 		#expect(bodies.contains(String(localized: .IRC.dccTrustOnce("alice"))))
+	}
+
+	@Test("A script, timer or connect command cannot answer by /dcc trust")
+	func untypedTrustIsRefused() async throws {
+		let session = makeSession()
+		let decision = try await ask(certificate(), on: session)
+
+		session.sendCommand("dcc trust d1 remember", completeTarget: false, target: nil)
+
+		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
+		#expect(bodies.contains(String(localized: .IRC.promptAnswerTypedOnly)))
+		#expect(session.dccDecisions.isEmpty == false)
+		session.answerDCCTrustQuestion("d1", with: .reject)
+		#expect(await decision.value == false)
 	}
 
 	@Test("/dcc forget removes a nickname's pins on this network")

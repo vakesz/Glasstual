@@ -9456,6 +9456,486 @@
           }
         }
       }
+    },
+    "description-answer": {
+      "comment": "Slash-command discovery: /answer. Command names and literal subcommands stay unchanged; translate placeholder names and explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer a question by its number"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Frage über ihre Nummer beantworten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder a una pregunta por su número"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre à une question par son numéro"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérdés megválaszolása a száma alapján"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "番号を指定して質問に答える"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder a uma pergunta pelo número"
+          }
+        }
+      }
+    },
+    "syntax-answer": {
+      "comment": "Slash-command discovery: arguments of /answer. Command names and literal subcommands (--remember) stay unchanged; translate placeholder names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<number> [answer] [--remember]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<Nummer> [Antwort] [--remember]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<número> [respuesta] [--remember]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<numéro> [réponse] [--remember]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<szám> [válasz] [--remember]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<番号> [答え] [--remember]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "<número> [resposta] [--remember]"
+          }
+        }
+      }
+    },
+    "hint-answer": {
+      "comment": "Slash-command discovery: help for /answer. Command names and literal subcommands stay unchanged; translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name the answer by its word or button title. Questions about passwords, certificates and links need it spelled out. --remember stops asking where the question offers it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenne die Antwort mit ihrem Wort oder dem Titel der Taste. Fragen zu Passwörtern, Zertifikaten und Links müssen ausgeschrieben beantwortet werden. --remember fragt nicht mehr, wo die Frage das anbietet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombra la respuesta por su palabra o por el título del botón. Las preguntas sobre contraseñas, certificados y enlaces necesitan la respuesta completa. --remember deja de preguntar cuando la pregunta lo ofrece."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nommez la réponse par son mot ou par le titre du bouton. Les questions sur les mots de passe, les certificats et les liens exigent une réponse en toutes lettres. --remember cesse de demander quand la question le propose."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nevezd meg a választ a szavával vagy a gomb feliratával. A jelszavakra, tanúsítványokra és hivatkozásokra vonatkozó kérdésekre ki kell írni a választ. A --remember nem kérdez többé, ahol a kérdés ezt felkínálja."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "答えは単語かボタン名で指定します。パスワード、証明書、リンクに関する質問は省略せずに入力する必要があります。--remember を付けると、対応する質問では次回から尋ねません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nomeie a resposta pela palavra ou pelo título do botão. Perguntas sobre senhas, certificados e links precisam da resposta por extenso. --remember deixa de perguntar quando a pergunta oferece isso."
+          }
+        }
+      }
+    },
+    "description-yes": {
+      "comment": "Slash-command discovery: /yes. Command names stay unchanged; translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer yes to the question waiting here"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die hier wartende Frage mit Ja beantworten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder que sí a la pregunta que espera aquí"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre oui à la question qui attend ici"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igennel válaszolni az itt várakozó kérdésre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ここで待機中の質問に「はい」と答える"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder sim à pergunta que está esperando aqui"
+          }
+        }
+      }
+    },
+    "syntax-yes": {
+      "comment": "Slash-command discovery: arguments of /yes. Literal --remember stays unchanged; translate placeholder names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[number] [--remember]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Nummer] [--remember]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[número] [--remember]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[numéro] [--remember]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[szám] [--remember]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[番号] [--remember]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[número] [--remember]"
+          }
+        }
+      }
+    },
+    "hint-yes": {
+      "comment": "Slash-command discovery: help for /yes. Command names stay unchanged; translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chooses the one way forward. Questions about passwords, certificates and links need /answer with the answer spelled out."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählt den einen Weg nach vorn. Fragen zu Passwörtern, Zertifikaten und Links brauchen /answer mit ausgeschriebener Antwort."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la única opción para continuar. Las preguntas sobre contraseñas, certificados y enlaces necesitan /answer con la respuesta completa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisit la seule façon de continuer. Les questions sur les mots de passe, les certificats et les liens demandent /answer avec la réponse en toutes lettres."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az egyetlen továbblépési lehetőséget választja. A jelszavakra, tanúsítványokra és hivatkozásokra vonatkozó kérdésekhez a /answer kell, kiírt válasszal."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "唯一の進む選択肢を選びます。パスワード、証明書、リンクに関する質問には、答えを省略せずに /answer を使います。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolhe a única opção para seguir. Perguntas sobre senhas, certificados e links precisam de /answer com a resposta por extenso."
+          }
+        }
+      }
+    },
+    "description-no": {
+      "comment": "Slash-command discovery: /no. Command names stay unchanged; translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline the question waiting here"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die hier wartende Frage ablehnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazar la pregunta que espera aquí"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refuser la question qui attend ici"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az itt várakozó kérdés elutasítása"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ここで待機中の質問を断る"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recusar a pergunta que está esperando aqui"
+          }
+        }
+      }
+    },
+    "syntax-no": {
+      "comment": "Slash-command discovery: arguments of /no. Translate placeholder names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[number]"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Nummer]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[número]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[numéro]"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[szám]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[番号]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[número]"
+          }
+        }
+      }
+    },
+    "hint-no": {
+      "comment": "Slash-command discovery: help for /no. Translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chooses the way out, which never sends, opens or deletes anything."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählt den Ausweg, der nie etwas sendet, öffnet oder löscht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige la salida, que nunca envía, abre ni elimina nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisit la sortie, qui n’envoie, n’ouvre ni ne supprime jamais rien."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kilépést választja, amely soha nem küld, nyit meg vagy töröl semmit."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取りやめを選びます。何かを送信、開く、削除することはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolhe a saída, que nunca envia, abre nem apaga nada."
+          }
+        }
+      }
+    },
+    "description-prompts": {
+      "comment": "Slash-command discovery: /prompts. Translate explanatory text.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List the questions waiting for an answer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Fragen auflisten, die auf eine Antwort warten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listar las preguntas que esperan respuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lister les questions qui attendent une réponse"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A válaszra váró kérdések listázása"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回答待ちの質問を一覧表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listar as perguntas que aguardam resposta"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

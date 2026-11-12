@@ -38,21 +38,10 @@ extension ServerSession {
 		case "send", "ssend":
 			let secure = subcommand == "ssend" || environment.settings.fileTransferOffersAreSecure
 			offerFile(from: &input, secure: secure, command: command)
-		case "accept", "decline":
-			let id = input.next()
-			guard id.isEmpty == false else {
-				printInvalidSyntaxMessage(for: command)
-				return
-			}
-			report(answerDCCChatOffer(id, accept: subcommand == "accept"), id: id, answer: subcommand)
-		case "trust":
-			let id = input.next()
-			let typed = input.next()
-			guard id.isEmpty == false, let answer = DCCTrustAnswer(typed: typed) else {
-				printInvalidSyntaxMessage(for: command)
-				return
-			}
-			report(answerDCCTrustQuestion(id, with: answer), id: id, answer: typed)
+		case "accept", "decline", "trust":
+			/* Answering a question is the message field's: the window reads
+			 these before a typed line gets here. */
+			refuseUntypedPromptAnswer()
 		case "fingerprint":
 			printOwnDCCFingerprint()
 		case "certificates":
@@ -109,17 +98,6 @@ extension ServerSession {
 			if identifier == nil {
 				self?.printDebugInformation(String(localized: .IRC.fileAtCouldNotBeOffered(path)))
 			}
-		}
-	}
-
-	private func report(_ result: DCCQuestionAnswerResult, id: String, answer: String) {
-		switch result {
-		case .answered:
-			break
-		case .unknown:
-			printDebugInformation(String(localized: .IRC.dccQuestionUnknown(id)))
-		case .wrongAnswer:
-			printDebugInformation(String(localized: .IRC.dccQuestionWrongAnswer(id, answer)))
 		}
 	}
 
