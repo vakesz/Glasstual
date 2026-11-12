@@ -115,5 +115,8 @@ struct OnboardingPreviewCard<Preview: View>: View {
 		)))
 		.accessibilityAddTraits(.isButton)
 		.accessibilityAddTraits(isSelected ? [.isSelected] : [])
+		/* The element stands in for the button, so it needs the button's
+		 action: without it, VoiceOver's press chose nothing. */
+		.accessibilityAction { select() }
 	}
 }
