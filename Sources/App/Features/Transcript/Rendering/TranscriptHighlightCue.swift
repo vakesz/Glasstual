@@ -10,15 +10,25 @@ import Foundation
  differentiate without colour gets an underline in the highlight's own text
  colour, and a reader who is not looking hears the word first. */
 nonisolated enum TranscriptHighlightCue {
-	/// Whether a highlighted run is underlined. Runs that carry an action keep
-	/// the styling of that action, which already sets them apart from the text
-	/// around them.
+	/// Whether a highlighted run is underlined. Every highlighted run is: a
+	/// run that carries an action is drawn in the highlight's colours like the
+	/// text around it, so nothing else sets it apart.
 	nonisolated static func underlinesRun( // nonisolated: pure
 		isHighlighted: Bool,
-		differentiatesWithoutColor: Bool,
-		action: TranscriptRunAction?
+		differentiatesWithoutColor: Bool
 	) -> Bool {
-		isHighlighted && differentiatesWithoutColor && action == nil
+		isHighlighted && differentiatesWithoutColor
+	}
+
+	/** Whether a run's action chooses the colour of its text.
+
+	 A link, a channel and a nickname each have a colour picked to be read on
+	 the transcript's ground. A highlighted run is drawn on the highlight's
+	 ground instead, and the only colour measured against that is the
+	 highlight's own text role: a pale nickname on the yellow of a dark-mode
+	 highlight cannot be read. The action stays; its colour gives way. */
+	nonisolated static func actionColorsRun(isHighlighted: Bool) -> Bool { // nonisolated: pure
+		isHighlighted == false
 	}
 
 	/// The spoken text of a highlighted line's first run: the highlight word

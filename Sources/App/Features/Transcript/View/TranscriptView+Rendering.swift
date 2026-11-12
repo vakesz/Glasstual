@@ -214,8 +214,7 @@ extension TranscriptView {
 			 asked to be told things without colour gets a line under the run. */
 			if TranscriptHighlightCue.underlinesRun(
 				isHighlighted: true,
-				differentiatesWithoutColor: NSWorkspace.shared.accessibilityDisplayShouldDifferentiateWithoutColor,
-				action: run.action
+				differentiatesWithoutColor: NSWorkspace.shared.accessibilityDisplayShouldDifferentiateWithoutColor
 			) {
 				attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
 				attributes[.underlineColor] = themeColor(palette.highlightText)
@@ -227,19 +226,23 @@ extension TranscriptView {
 		if run.traits.contains(.underline) {
 			attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
 		}
+		let actionColor: NSColor?
 		switch run.action {
 		case let .link(url):
 			attributes[.link] = url
-			attributes[.foregroundColor] = themeColor(palette.link)
+			actionColor = themeColor(palette.link)
 		case let .channel(name):
 			attributes[.transcriptAction] = TranscriptAction.channel(name)
-			attributes[.foregroundColor] = themeColor(palette.link)
+			actionColor = themeColor(palette.link)
 		case let .nickname(name):
 			attributes[.transcriptAction] = TranscriptAction.nickname(name)
 			attributes[.transcriptNickname] = name
-			attributes[.foregroundColor] = nicknameColor(for: name)
+			actionColor = nicknameColor(for: name)
 		case nil:
-			break
+			actionColor = nil
+		}
+		if let actionColor, TranscriptHighlightCue.actionColorsRun(isHighlighted: run.traits.contains(.highlighted)) {
+			attributes[.foregroundColor] = actionColor
 		}
 		return attributes
 	}

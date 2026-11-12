@@ -6,19 +6,17 @@ import Foundation
 import Testing
 
 struct TranscriptHighlightCueTests {
-	@Test("A highlighted plain run is underlined only when colour is not enough")
+	@Test("A highlighted run is underlined only when colour is not enough")
 	func underlinesOnlyWithoutColor() {
-		#expect(TranscriptHighlightCue.underlinesRun(isHighlighted: true, differentiatesWithoutColor: true, action: nil))
-		#expect(!TranscriptHighlightCue.underlinesRun(isHighlighted: true, differentiatesWithoutColor: false, action: nil))
-		#expect(!TranscriptHighlightCue.underlinesRun(isHighlighted: false, differentiatesWithoutColor: true, action: nil))
+		#expect(TranscriptHighlightCue.underlinesRun(isHighlighted: true, differentiatesWithoutColor: true))
+		#expect(!TranscriptHighlightCue.underlinesRun(isHighlighted: true, differentiatesWithoutColor: false))
+		#expect(!TranscriptHighlightCue.underlinesRun(isHighlighted: false, differentiatesWithoutColor: true))
 	}
 
-	@Test("A highlighted run that carries an action keeps its own styling")
-	func actionRunsAreNotUnderlined() {
-		let action = TranscriptRunAction.channel("#swift")
-		#expect(!TranscriptHighlightCue.underlinesRun(
-			isHighlighted: true, differentiatesWithoutColor: true, action: action
-		))
+	@Test("An action colours its run only outside a highlight")
+	func highlightKeepsItsOwnTextColour() {
+		#expect(TranscriptHighlightCue.actionColorsRun(isHighlighted: false))
+		#expect(!TranscriptHighlightCue.actionColorsRun(isHighlighted: true))
 	}
 
 	@Test("The spoken prefix leads and does not duplicate")
