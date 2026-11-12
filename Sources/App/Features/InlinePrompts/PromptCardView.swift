@@ -19,12 +19,13 @@ import SwiftUI
 struct PromptCardView: View {
 	@Bindable var prompt: PendingPrompt
 	let registry: PendingPromptRegistry
-	/// Changes whenever cards are added or removed around this one, which
-	/// moves it and makes it wait again before a click counts.
-	let layoutGeneration: Int
 	let answered: (PromptAnswerResult) -> Void
 
 	@State private var isArmed = false
+	/// Counts every move of the card on screen. Anything that shifts it — a
+	/// card, a note or a banner appearing around it, the window resizing —
+	/// makes it wait again before a click counts.
+	@State private var placement = 0
 	@FocusState private var fieldIsFocused: Bool
 	@Environment(\.appearsActive) private var appearsActive
 
@@ -69,7 +70,10 @@ struct PromptCardView: View {
 		.accessibilityElement(children: .contain)
 		.accessibilityLabel(Text(verbatim: request.title))
 		.accessibilityIdentifier("prompt-card-\(prompt.number)")
-		.task(id: layoutGeneration) {
+		.onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { _ in
+			placement &+= 1
+		}
+		.task(id: placement) {
 			isArmed = false
 			try? await Task.sleep(for: Self.armingDelay)
 			guard Task.isCancelled == false else { return }

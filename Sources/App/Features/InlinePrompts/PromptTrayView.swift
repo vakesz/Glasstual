@@ -40,7 +40,6 @@ struct PromptTrayView: View {
 	var body: some View {
 		let here = here
 		let shown = Array(here.prefix(Self.visibleLimit))
-		let generation = shown.map(\.number).reduce(into: Hasher()) { $0.combine($1) }.finalize()
 		VStack(alignment: .leading, spacing: UISpacing.tight) {
 			if let feedback {
 				Label {
@@ -54,7 +53,7 @@ struct PromptTrayView: View {
 				.accessibilityIdentifier("prompt-feedback")
 			}
 			ForEach(shown) { prompt in
-				PromptCardView(prompt: prompt, registry: registry, layoutGeneration: generation) { result in
+				PromptCardView(prompt: prompt, registry: registry) { result in
 					answered(prompt, result)
 				}
 				.transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
