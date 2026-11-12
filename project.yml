@@ -36,6 +36,15 @@ settings:
     # ---- Product identity -------------------------------------------------
     GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
     GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
+    # ---- Unit test scratch state ------------------------------------------
+    # The defaults suite and the "UI Reviews" directory the unit tests run
+    # against, named after the checkout. Every checkout launches the same
+    # bundle identifier, so one fixed pair would be one set of settings, one
+    # scrollback database and one keychain prefix for all of them, and a test
+    # run starting in one checkout would clear them under a run in another.
+    GLASSTUAL_TEST_SCRATCH_NAME: $(SRCROOT:rfc1034identifier)
+    GLASSTUAL_TEST_DEFAULTS_SUITE: com.vakesz.glasstual.tests.$(GLASSTUAL_TEST_SCRATCH_NAME)
+    GLASSTUAL_TEST_REVIEW_DIRECTORY: GlasstualTests-$(GLASSTUAL_TEST_SCRATCH_NAME)
     MARKETING_VERSION: "2.5.0"
     # CFBundleVersion is what LaunchServices and updaters compare, so it has to
     # move every release. The release workflow overrides MARKETING_VERSION on
@@ -514,17 +523,19 @@ schemes:
       # suite moves preferences to a scratch defaults domain. The review
       # directory moves the group container and Application Support, which
       # hold the scrollback database, caches, scripts and extensions, into
-      # "UI Reviews/GlasstualTests". The pre-action empties both before every
-      # run, from Xcode or from `make test`. Keep its arguments equal to the
-      # two values below. GLASSTUAL_UNIT_TEST_HOST keeps that launch in the
+      # "UI Reviews". Both are named after the checkout by the build settings
+      # GLASSTUAL_TEST_DEFAULTS_SUITE and GLASSTUAL_TEST_REVIEW_DIRECTORY, so
+      # runs in two checkouts keep apart. The pre-action empties both before
+      # every run, from Xcode or from `make test`, and reads the same two
+      # settings. GLASSTUAL_UNIT_TEST_HOST keeps that launch in the
       # background: no activation, no windows raised or restored, no welcome
       # flow. `make e2e` launches the app with GLASSTUAL_E2E instead.
       environmentVariables:
         - variable: GLASSTUAL_UI_REVIEW_SUITE
-          value: com.vakesz.glasstual.tests
+          value: $(GLASSTUAL_TEST_DEFAULTS_SUITE)
           isEnabled: true
         - variable: GLASSTUAL_UI_REVIEW_DIRECTORY
-          value: GlasstualTests
+          value: $(GLASSTUAL_TEST_REVIEW_DIRECTORY)
           isEnabled: true
         - variable: GLASSTUAL_UNIT_TEST_HOST
           value: "1"
@@ -533,7 +544,7 @@ schemes:
         - name: Clear test scratch state
           settingsTarget: Glasstual
           script: |
-            "${SRCROOT}/scripts/clear-test-scratch.sh" com.vakesz.glasstual.tests GlasstualTests
+            "${SRCROOT}/scripts/clear-test-scratch.sh" "${GLASSTUAL_TEST_DEFAULTS_SUITE}" "${GLASSTUAL_TEST_REVIEW_DIRECTORY}"
       targets:
         - GlasstualTests
     profile:

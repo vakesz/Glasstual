@@ -15,13 +15,16 @@ struct KeychainStoreTests {
 
 	/// The tests run inside the application and share its access group, so
 	/// every item they touch carries the prefix that keeps it apart from the
-	/// user's real secrets, and from another run's: the scheme names the review
-	/// directory `GlasstualTests`.
+	/// user's real secrets, and from another checkout's run: the scheme names
+	/// the review directory `GlasstualTests-` and the checkout.
 	@Test("Items written by the tests are kept apart from real secrets")
-	func itemsAreIsolated() {
+	func itemsAreIsolated() throws {
 		let item = uniqueItem()
+		let run = try #require(ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_DIRECTORY"])
 
-		#expect(item.storedService == "glasstual.tests.GlasstualTests." + item.service)
+		#expect(run.hasPrefix("GlasstualTests-"))
+		#expect(run.count > "GlasstualTests-".count)
+		#expect(item.storedService == "glasstual.tests.\(run)." + item.service)
 	}
 
 	@Test("A password written to the data-protection keychain reads back")
