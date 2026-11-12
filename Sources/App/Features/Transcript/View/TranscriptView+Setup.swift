@@ -161,6 +161,9 @@ extension TranscriptView {
 	func addSubviewsAndActivateConstraints() {
 		toolbarBackdrop.wantsLayer = true
 		toolbarBackdrop.translatesAutoresizingMaskIntoConstraints = false
+		toolbarSeparator.boxType = .separator
+		toolbarSeparator.translatesAutoresizingMaskIntoConstraints = false
+		toolbarBackdrop.addSubview(toolbarSeparator)
 		addSubview(scrollView)
 		addSubview(toolbarBackdrop)
 		addSubview(topicBar)
@@ -169,12 +172,16 @@ extension TranscriptView {
 		 transcript scrolls beneath both, and the top content inset keeps the
 		 first line clear of them. Both are opaque, in the transcript's
 		 background, so the text passing beneath never shows through the window
-		 title or the topic. */
+		 title or the topic. The lower of the two that is shown draws the
+		 hairline the text passes under. */
 		NSLayoutConstraint.activate([
 			toolbarBackdrop.topAnchor.constraint(equalTo: topAnchor),
 			toolbarBackdrop.leadingAnchor.constraint(equalTo: leadingAnchor),
 			toolbarBackdrop.trailingAnchor.constraint(equalTo: trailingAnchor),
 			toolbarBackdrop.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+			toolbarSeparator.leadingAnchor.constraint(equalTo: toolbarBackdrop.leadingAnchor),
+			toolbarSeparator.trailingAnchor.constraint(equalTo: toolbarBackdrop.trailingAnchor),
+			toolbarSeparator.bottomAnchor.constraint(equalTo: toolbarBackdrop.bottomAnchor),
 			topicBar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
 			topicBar.leadingAnchor.constraint(equalTo: leadingAnchor),
 			topicBar.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -194,6 +201,10 @@ extension TranscriptView {
 	override func layout() {
 		super.layout()
 		updateTopContentInset()
+		toolbarSeparator.isHidden = TranscriptMetrics.showsToolbarSeparator(
+			safeAreaTop: safeAreaInsets.top,
+			topicBarIsShown: topicBar.isHidden == false
+		) == false
 		guard window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else { return }
 		reflowInlineImages()
 		textView.updateBottomAlignment()

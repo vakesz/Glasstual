@@ -35,6 +35,15 @@ enum TranscriptMetrics {
 		max(0, safeAreaTop) + max(0, topicBarHeight ?? 0)
 	}
 
+	/** Whether the strip behind the toolbar draws a hairline at its foot.
+
+	 The topic bar draws that edge under itself, so the strip draws it only
+	 while no topic bar is shown, and only where there is a toolbar to be
+	 under: a transcript with no safe area above it has no strip. */
+	static func showsToolbarSeparator(safeAreaTop: CGFloat, topicBarIsShown: Bool) -> Bool {
+		safeAreaTop > 0 && topicBarIsShown == false
+	}
+
 	/// How close to the top of the document the reader has to scroll before
 	/// the next page of history is fetched.
 	static let historyFetchTrigger: CGFloat = 160

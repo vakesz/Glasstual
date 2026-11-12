@@ -42,6 +42,10 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// the window title and its subtitle sit over it, and messages scrolling
 	/// beneath them made both unreadable.
 	let toolbarBackdrop = NSView()
+	/// The hairline under that strip while no topic bar is shown. The topic
+	/// bar draws the same edge under itself, so exactly one of the two is drawn
+	/// and the first line never meets the window title without one.
+	let toolbarSeparator = NSBox()
 	let scrollView = NSScrollView()
 	/* SwiftUI owns controls; this adapter only hosts them. */
 	let jumpToLatest = NSHostingView(rootView: TranscriptJumpToLatestButton(action: {}))

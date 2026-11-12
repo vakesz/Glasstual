@@ -58,6 +58,13 @@ struct TranscriptLayoutMetricsTests {
 		#expect(TranscriptMetrics.topContentInset(safeAreaTop: 0, topicBarHeight: 33) == 33)
 	}
 
+	@Test("The toolbar strip draws its hairline only under a toolbar with no topic bar beneath it")
+	func toolbarSeparator() {
+		#expect(TranscriptMetrics.showsToolbarSeparator(safeAreaTop: 52, topicBarIsShown: false))
+		#expect(TranscriptMetrics.showsToolbarSeparator(safeAreaTop: 52, topicBarIsShown: true) == false)
+		#expect(TranscriptMetrics.showsToolbarSeparator(safeAreaTop: 0, topicBarIsShown: false) == false)
+	}
+
 	@Test("A sender's picture grows with the name's font and sits on its baseline", arguments: [11.0, 13.0, 20.0])
 	@MainActor
 	func avatarFollowsTheFont(pointSize: Double) {
