@@ -44,14 +44,23 @@ enum LinePresentationPolicy {
 			(lineType == .privateMessage || lineType == .action) && memberType == .normal
 	}
 
+	/** Whether the unread boundary goes above the line being printed.
+
+	 It does for the first line to arrive unseen and for no line after it,
+	 until the reader has read the conversation again. `boundaryIsPlaced` is
+	 what says so within a burst: the unread count is raised only once a line
+	 has rendered, by which time the lines behind it have been printed too. */
 	static func needsUnreadMarker(
 		autoMark: Bool,
 		itemIsVisible: Bool,
 		windowIsMain: Bool,
 		conversationIsUnread: Bool,
+		boundaryIsPlaced: Bool,
 		lineType: ChatLineKind
 	) -> Bool {
-		guard autoMark, itemIsVisible == false || windowIsMain == false, conversationIsUnread == false else {
+		guard autoMark, itemIsVisible == false || windowIsMain == false,
+		      conversationIsUnread == false, boundaryIsPlaced == false
+		else {
 			return false
 		}
 		return lineType == .privateMessage || lineType == .action || lineType == .notice

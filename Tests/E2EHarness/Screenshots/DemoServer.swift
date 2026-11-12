@@ -55,6 +55,13 @@ final class DemoServer {
 		}
 	}
 
+	/// Has `channel` say the lines it kept back until the reader looked away.
+	func sendUnseenLines(for channel: String) {
+		for client in direct.clients + bouncer.clients {
+			client.sendUnseenLines(for: channel)
+		}
+	}
+
 	/// Has `marlow` offer the demo file over a passive `DCC SSEND`.
 	func offerSecureTransfer() {
 		for client in direct.clients {
@@ -360,7 +367,14 @@ private final class DemoClient {
 		send(":\(DemoWire.host) 332 \(nickname) \(channel.name) :\(channel.topic)", tags: early)
 		send(":\(DemoWire.host) 353 \(nickname) = \(channel.name) :\(channel.members.joined(separator: " "))")
 		send(":\(DemoWire.host) 366 \(nickname) \(channel.name) :End of NAMES list")
-		for line in channel.lines {
+		for line in channel.seenLines {
+			say(line, to: channel.name, channelName: channel.name)
+		}
+	}
+
+	func sendUnseenLines(for channelName: String) {
+		guard let channel = joined[channelName] else { return }
+		for line in channel.unseenLines {
 			say(line, to: channel.name, channelName: channel.name)
 		}
 	}

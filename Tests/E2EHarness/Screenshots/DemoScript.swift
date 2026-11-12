@@ -29,6 +29,24 @@ struct DemoChannel {
 	let members: [String]
 	let lines: [DemoLine]
 	let reactions: [DemoReaction]
+	/// The first line that is said only once the reader has seen the ones
+	/// before it and looked away. `nil` when every line arrives with the join.
+	var unseenFrom: String?
+
+	private var unseenStart: Int {
+		unseenFrom.flatMap { identifier in lines.firstIndex { $0.identifier == identifier } } ?? lines.count
+	}
+
+	/// What the channel says as it is joined.
+	var seenLines: [DemoLine] {
+		Array(lines[..<unseenStart])
+	}
+
+	/// What it says after the reader has looked away: the lines the unread
+	/// boundary is drawn above.
+	var unseenLines: [DemoLine] {
+		Array(lines[unseenStart...])
+	}
 }
 
 struct DemoNetwork {
@@ -191,7 +209,9 @@ enum DemoScript {
 			DemoReaction(sender: "jordan", emoji: "❤️", target: "s4", minutesAgo: 30),
 			DemoReaction(sender: "sam", emoji: "🎉", target: "s7", minutesAgo: 16),
 			DemoReaction(sender: "kai", emoji: "👍", target: "s7", minutesAgo: 15),
-		]
+		],
+		// Everything after the reader's own last message.
+		unseenFrom: "s6"
 	)
 
 	static let macdev = DemoChannel(
@@ -217,7 +237,10 @@ enum DemoScript {
 				text: "The slides from the window restoration session are worth a second look.", minutesAgo: 18
 			),
 		],
-		reactions: []
+		reactions: [],
+		// Said while the reader is here, after #swift's unseen lines: seeing
+		// it is how the scene knows those have arrived.
+		unseenFrom: "m4"
 	)
 
 	static let design = DemoChannel(

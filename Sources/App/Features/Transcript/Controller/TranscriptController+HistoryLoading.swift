@@ -218,15 +218,8 @@ private extension TranscriptController {
 			backingView?.updateReactions(merged, messageIdentifier: identifier.rawValue)
 		}
 		restoreRedactions()
-		switch transcriptProjection.mark {
-		case .none:
-			break
-		case .latest:
-			backingView?.setUnreadMarker(.latest)
-		case let .line(identifier):
-			backingView?.setUnreadMarker(.line(identifier))
-		case let .after(date):
-			backingView?.setUnreadMarker(.after(date))
+		if transcriptProjection.mark != .none {
+			backingView?.setUnreadMarker(transcriptProjection.mark)
 		}
 	}
 }

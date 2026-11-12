@@ -20,6 +20,7 @@ final class RemovalPresentation: ChatItemPresenting {
 
 	func setTopic(_: String?) {}
 	func mark() {}
+	func mark(before _: String) {}
 	func mark(at _: Date) {}
 	func noteReaction(_: String, fromNickname _: String, toMessageIdentifier _: String) {}
 	func updateDeliveryState(

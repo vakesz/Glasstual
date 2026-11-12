@@ -261,9 +261,11 @@ private extension ServerSession {
 			itemIsVisible: output.isItemVisible(conversation),
 			windowIsMain: output.isMainWindow,
 			conversationIsUnread: conversation.isUnread,
+			boundaryIsPlaced: conversation.unreadBoundaryIsPlaced,
 			lineType: chatLine.lineType
 		) {
-			conversation.presentation?.mark()
+			conversation.presentation?.mark(before: chatLine.uniqueIdentifier)
+			conversation.noteUnreadBoundaryPlaced()
 		}
 		conversation.print(
 			chatLine,

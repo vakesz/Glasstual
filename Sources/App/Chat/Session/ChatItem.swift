@@ -71,6 +71,19 @@ class ChatItem: NSObject {
 		unreadCount > 0
 	}
 
+	/** Whether the unread boundary already stands above a line the reader has
+	 not seen, since they last read this item.
+
+	 The unread count says the same thing later: it is raised when a line has
+	 rendered, and a burst prints many lines before the first of them has. The
+	 boundary is decided as each line is printed, so it needs an answer that
+	 is already true for the second line of the burst. */
+	private(set) var unreadBoundaryIsPlaced = false
+
+	func noteUnreadBoundaryPlaced() {
+		unreadBoundaryIsPlaced = true
+	}
+
 	/// Clears the counts and redraws the badge that showed them. `setUnreadState`
 	/// asks for the redraw when it raises a count, so the reset does the same
 	/// rather than leaving a stale badge until something else redraws the row.
@@ -79,6 +92,7 @@ class ChatItem: NSObject {
 
 	func resetState() {
 		readStateGeneration &+= 1
+		unreadBoundaryIsPlaced = false
 		dockUnreadCount = 0
 		nicknameHighlightCount = 0
 		unreadCount = 0

@@ -387,6 +387,7 @@ struct TranscriptDocument {
 		 line the reader stopped at, so the boundary belongs above all of it.
 		 A conversation opened unseen carries its marker the same way. */
 		case let .line(identifier): index(ofLine: identifier) ?? lines.indices.first
+		case let .before(identifier): index(ofLine: identifier)
 		case let .after(date): lines.firstIndex { $0.receivedAt >= date && $0.lineType.isConversation }
 		}
 		if let target {

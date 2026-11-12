@@ -11,6 +11,10 @@ nonisolated enum UnreadMarker: Equatable, Sendable {
 	case none
 	case latest
 	case line(String)
+	/// Above the line with this identifier once it is drawn, and nowhere
+	/// until then: the first line to arrive unseen is named when it is
+	/// printed, which is before it has rendered.
+	case before(String)
 	case after(Date)
 }
 

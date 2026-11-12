@@ -180,6 +180,15 @@ struct ScreenshotSession {
 			}
 		}
 
+		/* The reader reads #swift, looks at #macdev, and #swift goes on
+		 without them: what it says then is unread, and the boundary is drawn
+		 above the first of it. #macdev's own late line is said after those,
+		 on the same connection, so seeing it says they have arrived. */
+		try await show(DemoScript.swift, through: DemoScript.swift.seenLines)
+		try await show(DemoScript.macdev, through: DemoScript.macdev.seenLines)
+		server.sendUnseenLines(for: DemoScript.swift.name)
+		server.sendUnseenLines(for: DemoScript.macdev.name)
+		try await show(DemoScript.macdev)
 		try await show(DemoScript.swift)
 		server.sendReactions(for: DemoScript.swift.name)
 		try await capture("main-window", window: AXID.mainWindow, size: Self.mainWindowSize)
@@ -325,10 +334,11 @@ struct ScreenshotSession {
 		try await context.server(AXID.RowState.connected, network: name)
 	}
 
-	/// Selects `channel` and waits for the last line of its script.
-	private func show(_ channel: DemoChannel) async throws {
+	/// Selects `channel` and waits for the last of `lines`: the whole of its
+	/// script unless the scene is still holding some of it back.
+	private func show(_ channel: DemoChannel, through lines: [DemoLine]? = nil) async throws {
 		try await context.selectRow("channel", channel.name)
-		if let last = channel.lines.last {
+		if let last = (lines ?? channel.lines).last {
 			try await context.transcript(contains: last.text)
 		}
 	}

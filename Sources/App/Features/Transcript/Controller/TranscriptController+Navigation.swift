@@ -57,6 +57,27 @@ extension TranscriptController {
 		backingView?.setUnreadMarker(mark)
 	}
 
+	/** Puts the boundary above a line that is being printed unseen.
+
+	 The line is named rather than looked up: it has not rendered yet, and
+	 neither may the lines printed just before it, so "the newest line drawn"
+	 is wherever rendering happens to have reached. The boundary is drawn when
+	 the line is, by ``settleUnreadMarker(onDrawing:)``. */
+	func mark(before lineIdentifier: String) {
+		let mark = UnreadMarker.before(lineIdentifier)
+		transcriptProjection.setMark(mark)
+		backingView?.setUnreadMarker(mark)
+	}
+
+	/// The line a pending boundary waits for has been drawn: the boundary
+	/// lands on it and from here on is kept the way any marked line is.
+	func settleUnreadMarker(onDrawing lineIdentifier: String) {
+		guard transcriptProjection.mark == .before(lineIdentifier) else { return }
+		let mark = UnreadMarker.line(lineIdentifier)
+		transcriptProjection.setMark(mark)
+		backingView?.setUnreadMarker(mark)
+	}
+
 	func mark(at date: Date) {
 		transcriptProjection.setMark(.after(date))
 		backingView?.setUnreadMarker(.after(date))
@@ -70,6 +91,10 @@ extension TranscriptController {
 			jump(toLine: backingView?.displayedLines
 				.first(where: { $0.matches(identifier: identifier) })?.lineNumber
 				?? oldestLineNumber ?? identifier)
+		case let .before(identifier):
+			if let line = backingView?.displayedLines.first(where: { $0.matches(identifier: identifier) })?.lineNumber {
+				jump(toLine: line)
+			}
 		case let .after(date):
 			if let line = backingView?.displayedLines
 				.first(where: { $0.receivedAt >= date && $0.lineType.isConversation })?.lineNumber

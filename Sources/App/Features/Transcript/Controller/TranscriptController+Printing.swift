@@ -100,6 +100,7 @@ extension TranscriptController {
 				)
 			}
 			backingView?.appendLines([displayedLine])
+			settleUnreadMarker(onDrawing: lineNumber)
 		}
 		if case .append = projectionAction, !alreadyDisplayed, drawsLine, result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: lineNumber)

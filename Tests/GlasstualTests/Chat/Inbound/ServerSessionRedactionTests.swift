@@ -25,6 +25,7 @@ private final class RedactionRecordingPresentation: ChatItemPresenting {
 
 	nonisolated func setTopic(_: String?) {} // nonisolated: pure
 	func mark() {}
+	func mark(before _: String) {}
 	func mark(at _: Date) {}
 	func noteReaction(_: String, fromNickname _: String, toMessageIdentifier _: String) {}
 	func noteRedaction(ofMessageIdentifier identifier: String) {

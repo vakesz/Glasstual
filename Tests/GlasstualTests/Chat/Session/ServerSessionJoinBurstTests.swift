@@ -19,6 +19,8 @@ private final class CompletingPresentation: ChatItemPresenting {
 	private var renderedDate: Date?
 	/// Every date the unread divider was moved to, in order.
 	private(set) var markedDates: [Date] = []
+	/// Every line the unread divider was put above, in order.
+	private(set) var markedLines: [String] = []
 	weak var session: ServerSession?
 	weak var channel: Conversation?
 
@@ -76,6 +78,10 @@ private final class CompletingPresentation: ChatItemPresenting {
 
 	nonisolated func setTopic(_: String?) {} // nonisolated: pure
 	func mark() {}
+	func mark(before lineIdentifier: String) {
+		markedLines.append(lineIdentifier)
+	}
+
 	func mark(at date: Date) {
 		markedDates.append(date)
 	}
@@ -178,6 +184,37 @@ struct ServerSessionJoinBurstTests {
 			presentation.finishPrinting()
 			#expect(channel.unreadCount == 0)
 			#expect(session.readMarkers.pendingConversations.isEmpty)
+		}
+	}
+
+	/** The unread count is raised when a line has rendered, and a burst prints
+	 every line before the first has. The divider used to follow the burst for
+	 as long as that took, so where it stopped depended on the renderer. */
+	@Test("The unread divider goes above the first unseen line of a burst and stays until the channel is read")
+	func unreadDividerIsPlacedOncePerUnseenRun() throws {
+		try withNotificationsSilenced {
+			let session = makeSession()
+			session.environment.settings.autoAddUnreadMarker = true
+			let presentation = CompletingPresentation()
+			presentation.defersCompletions = true
+			let channel = try joinedChannel(on: session, at: Date(), drawnInto: presentation)
+			let printedBefore = presentation.printedLines.count
+
+			for text in ["one", "two", "three"] {
+				try session.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :\(text)", on: session))
+			}
+			let burst = presentation.printedLines.dropFirst(printedBefore)
+			#expect(burst.count == 3)
+			#expect(channel.isUnread == false)
+			#expect(presentation.markedLines == [burst.first?.uniqueIdentifier])
+
+			presentation.finishPrinting()
+			try session.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :four", on: session))
+			#expect(presentation.markedLines.count == 1)
+
+			channel.resetState()
+			try session.receivePrivmsgAndNotice(message(":bob!u@h PRIVMSG #chat :five", on: session))
+			#expect(presentation.markedLines == [burst.first?.uniqueIdentifier, presentation.printedLines.last?.uniqueIdentifier])
 		}
 	}
 

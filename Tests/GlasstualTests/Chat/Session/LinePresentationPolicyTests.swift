@@ -43,6 +43,7 @@ struct LinePresentationPolicyTests {
 			itemIsVisible: false,
 			windowIsMain: true,
 			conversationIsUnread: false,
+			boundaryIsPlaced: false,
 			lineType: .notice
 		))
 		#expect(LinePresentationPolicy.needsUnreadMarker(
@@ -50,7 +51,22 @@ struct LinePresentationPolicyTests {
 			itemIsVisible: true,
 			windowIsMain: true,
 			conversationIsUnread: false,
+			boundaryIsPlaced: false,
 			lineType: .notice
+		) == false)
+	}
+
+	/// A burst prints every line before the first has rendered, and the
+	/// unread count is raised on render: the boundary must not follow the burst.
+	@Test("The scrollback mark stays above the first unseen line of a burst")
+	func unreadMarkerIsPlacedOnceUntilTheConversationIsRead() {
+		#expect(LinePresentationPolicy.needsUnreadMarker(
+			autoMark: true,
+			itemIsVisible: false,
+			windowIsMain: true,
+			conversationIsUnread: false,
+			boundaryIsPlaced: true,
+			lineType: .privateMessage
 		) == false)
 	}
 

@@ -44,6 +44,9 @@ protocol ChatItemPresenting: AnyObject {
 	func setTopic(_ topic: String?)
 
 	func mark()
+	/// Puts the unread boundary above the line with this identifier, which is
+	/// about to be printed to a reader who is not looking.
+	func mark(before lineIdentifier: String)
 	func mark(at date: Date)
 	func noteReaction(_ emoji: String, fromNickname nickname: String, toMessageIdentifier identifier: String)
 	/** A message was deleted. The view replaces it with a placeholder, and the
