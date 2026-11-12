@@ -63,6 +63,10 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 	 change what every other suite running beside it sees. Read on each reload,
 	 so a setting change still takes effect at once. */
 	var loadsHistoryLazily: @MainActor () -> Bool = { SettingsKeys.Logging.loadHistoryLazily.value }
+	/** Whether a view's first load replays the stored scrollback, and whether
+	 closing the view keeps it. A closure for the same reason as
+	 ``loadsHistoryLazily``: the setting is one value for the whole process. */
+	var reloadsScrollbackOnLaunch: @MainActor () -> Bool = { SettingsKeys.Logging.reloadScrollbackOnLaunch.value }
 
 	private let memberRenderCache = TranscriptMemberDirectoryCache()
 	/// How senders' profiles draw, kept until the members, the profiles or the
@@ -302,7 +306,7 @@ final class TranscriptController: ChatItemPresenting, ServerHistoryPresenting {
 
 	private func closeScrollback() {
 		let conversation = associatedConversation
-		if !SettingsKeys.Logging.reloadScrollbackOnLaunch.value || conversation?.isConsole == true || conversation?
+		if !reloadsScrollbackOnLaunch() || conversation?.isConsole == true || conversation?
 			.isDirectChat == true ||
 			(conversation?.isDirect == true && !SettingsKeys.Appearance.rememberDirectConversations.value)
 		{

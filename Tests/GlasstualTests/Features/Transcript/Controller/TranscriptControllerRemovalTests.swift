@@ -11,9 +11,6 @@ struct TranscriptControllerRemovalTests {
 	@Test("Removal preserves stored rows independently of launch-reload preferences",
 	      arguments: [false, true], [false, true])
 	func removalPolicy(preservingLocalData: Bool, reloadScrollback: Bool) async throws {
-		let previousReload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reloadScrollback
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = previousReload }
 		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
 			UUID().uuidString,
 			isDirectory: true
@@ -32,6 +29,7 @@ struct TranscriptControllerRemovalTests {
 			session: session, in: window, inlineImageLoader: InlineImageLoader(), scrollback: history
 		)
 		controller.loadsHistoryLazily = { false }
+		controller.reloadsScrollbackOnLaunch = { reloadScrollback }
 		controller.historyPageFetcher = { await historySession.fetchOutcome($0) }
 		var line = ChatLine()
 		line.messageBody = "retained archive"

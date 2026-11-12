@@ -57,6 +57,7 @@ struct TranscriptControllerHistoryWindowTests {
 			scrollback: Scrollback(session: history)
 		)
 		controller.loadsHistoryLazily = { false }
+		controller.reloadsScrollbackOnLaunch = { true }
 		let view = controller.ensureBackingView()
 		await controller.drainRenderJobs()
 		return Fixture(
@@ -89,9 +90,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("An old line is shown inside a window of its neighbours, and the view is no longer live")
 	func windowShowsAnOldLine() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture()
 		#expect(displays(299, in: fixture))
 		#expect(displays(10, in: fixture) == false)
@@ -112,9 +110,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("Lines that arrive while a window shows are stored and come back with the live end")
 	func liveLinesWaitForTheReturn() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture()
 		let middle = try await hit(for: 150, in: fixture)
 		#expect(await fixture.controller.showHistoryWindow(around: middle))
@@ -142,9 +137,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("Jump to Present from a window returns to the live end")
 	func jumpToPresentReturns() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture()
 		let early = try await hit(for: 20, in: fixture)
 		#expect(await fixture.controller.showHistoryWindow(around: early))
@@ -159,9 +151,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("A line already on screen is scrolled to and no window replaces the view")
 	func loadedLineNeedsNoWindow() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture()
 		let target = try await hit(for: 290, in: fixture)
 
@@ -175,9 +164,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("A line that has been pruned since the search leaves the view as it was")
 	func prunedLineLeavesTheViewAlone() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture()
 		let target = try await hit(for: 5, in: fixture)
 		_ = await fixture.history.removeHistory(fixture.identifier, forget: false)
@@ -192,9 +178,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("A hit from another conversation is refused")
 	func foreignHitIsRefused() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture(count: 120)
 		var target = try await hit(for: 3, in: fixture)
 		target = ScrollbackSearchHit(
@@ -209,9 +192,6 @@ struct TranscriptControllerHistoryWindowTests {
 
 	@Test("Leaving the window with nothing detached does nothing")
 	func returnWithoutAWindowIsANoOp() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let fixture = try await makeFixture(count: 120)
 		let before = fixture.view.displayedLines.map(\.lineNumber)
 

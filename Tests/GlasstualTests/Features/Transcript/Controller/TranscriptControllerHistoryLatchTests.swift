@@ -55,13 +55,11 @@ struct TranscriptControllerHistoryLatchTests {
 	@Test("A history job dropped mid-flight still leaves the view able to reload",
 	      .timeLimit(.minutes(1)))
 	func droppedHistoryJobDoesNotLatchTheReload() async {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let session = ServerSession(config: ServerConfig())
 		let window = window()
 		let controller = TranscriptController(session: session, in: window)
 		controller.loadsHistoryLazily = { false }
+		controller.reloadsScrollbackOnLaunch = { true }
 		defer { controller.tearDown(.permanentRemoval) }
 		let gate = FirstFetchGate()
 		controller.historyPageFetcher = { _ in await gate.fetch() }

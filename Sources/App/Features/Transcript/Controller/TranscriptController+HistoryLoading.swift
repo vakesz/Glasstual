@@ -32,7 +32,7 @@ extension TranscriptController {
 		let conversation = associatedConversation
 		let includeStoredHistory = HistoryLoadPolicy(
 			firstLoad: firstLoad,
-			reloadsScrollbackOnLaunch: SettingsKeys.Logging.reloadScrollbackOnLaunch.value,
+			reloadsScrollbackOnLaunch: reloadsScrollbackOnLaunch(),
 			isConsole: conversation?.isConsole == true,
 			isDirectChat: conversation?.isDirectChat == true,
 			isDirect: conversation?.isDirect == true,

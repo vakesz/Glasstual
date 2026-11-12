@@ -26,14 +26,6 @@ struct TranscriptOfflineHistoryTests {
 	      arguments: [false, true], [false, true])
 	func offlineSelectionAndPaging(selectChannelFirst: Bool, reloadOnLaunch: Bool) async throws {
 		try await withArchive { archive in
-			let previousReload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-			let previousLazy = SettingsKeys.Logging.loadHistoryLazily.value
-			SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reloadOnLaunch
-			SettingsKeys.Logging.loadHistoryLazily.value = true
-			defer {
-				SettingsKeys.Logging.reloadScrollbackOnLaunch.value = previousReload
-				SettingsKeys.Logging.loadHistoryLazily.value = previousLazy
-			}
 			let session = TestServerSession()
 			session.enableCapability([.batch, .serverTime, .messageTags, .chatHistory])
 			let channel = Conversation(config: ConversationConfig(name: "#offline-history"))
@@ -56,6 +48,8 @@ struct TranscriptOfflineHistoryTests {
 			let archivedIdentifiers = try await seedArchive(for: controllers, in: archive)
 			for controller in controllers {
 				controller.historyPageFetcher = { await archive.fetch($0) }
+				controller.loadsHistoryLazily = { true }
+				controller.reloadsScrollbackOnLaunch = { reloadOnLaunch }
 			}
 
 			// Creating a transcript before it is selected must defer the local read.

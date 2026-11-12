@@ -226,13 +226,11 @@ struct TranscriptControllerApplicationTests {
 
 	@Test("Initial replay merges archived reactions with deltas and retains live prints")
 	func initialReplayKeepsLiveState() async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let session = ServerSession(config: ServerConfig())
 		let window = window()
 		let controller = TranscriptController(session: session, in: window)
 		controller.loadsHistoryLazily = { false }
+		controller.reloadsScrollbackOnLaunch = { true }
 		defer { controller.tearDown(.permanentRemoval) }
 		let gate = TranscriptPageGate()
 		controller.historyPageFetcher = { _ in await gate.suspend() }
@@ -556,13 +554,11 @@ struct TranscriptControllerApplicationTests {
 
 	@Test("An initial read failure keeps live rendering active and allows history retry")
 	func initialReadFailureIsRetryable() async {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let session = ServerSession(config: ServerConfig())
 		let window = window()
 		let controller = TranscriptController(session: session, in: window)
 		controller.loadsHistoryLazily = { false }
+		controller.reloadsScrollbackOnLaunch = { true }
 		defer { controller.tearDown(.permanentRemoval) }
 		controller.historyPageFetcher = { _ in .failed(.read("Cannot read history")) }
 		let view = controller.ensureBackingView()

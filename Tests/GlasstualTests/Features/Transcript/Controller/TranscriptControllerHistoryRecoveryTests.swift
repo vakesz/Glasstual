@@ -14,9 +14,6 @@ struct TranscriptControllerHistoryRecoveryTests {
 		arguments: [false, true]
 	)
 	func retrySameDatabase(olderPage: Bool) async throws {
-		let reload = SettingsKeys.Logging.reloadScrollbackOnLaunch.value
-		SettingsKeys.Logging.reloadScrollbackOnLaunch.value = true
-		defer { SettingsKeys.Logging.reloadScrollbackOnLaunch.value = reload }
 		let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
 			UUID().uuidString,
 			isDirectory: true
@@ -46,6 +43,7 @@ struct TranscriptControllerHistoryRecoveryTests {
 		let controller = TranscriptController(session: session, in: window, inlineImageLoader: InlineImageLoader(),
 		                                      scrollback: Scrollback(session: historySession))
 		controller.loadsHistoryLazily = { false }
+		controller.reloadsScrollbackOnLaunch = { true }
 		if !olderPage {
 			try await setSession(nil, context: context, view: identifier)
 		}
