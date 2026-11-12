@@ -499,6 +499,26 @@ struct TranscriptViewStorageTests {
 		#expect(abs(visibleBottom - textView.frame.maxY) < 2)
 	}
 
+	/// TextKit estimates the height of text it has not laid out and settles it
+	/// later, usually by a line or less. A reader at the end is following the
+	/// end, not a band near it.
+	@Test("A transcript following the end stays on it when the document settles by less than the follow slack")
+	func smallDocumentGrowthIsFollowed() throws {
+		let transcriptView = makeTranscriptView()
+		transcriptView.appendLines((0 ..< 200).map(message))
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.scrollToBottom()
+		let textView = try textView(of: transcriptView)
+		let scrollView = try #require(textView.enclosingScrollView)
+		let clip = scrollView.contentView
+		try #require(abs(clip.bounds.maxY - scrollView.contentInsets.bottom - textView.frame.maxY) < 2)
+
+		let growth = TranscriptMetrics.followBottomSlack / 2
+		textView.setFrameSize(NSSize(width: textView.frame.width, height: textView.frame.height + growth))
+
+		#expect(abs(clip.bounds.maxY - scrollView.contentInsets.bottom - textView.frame.maxY) < 2)
+	}
+
 	@Test("Bubble fills are fallback backgrounds, below IRC colors and highlights")
 	func bubbleBackgroundPreservesExplicitAndHighlightColors() throws {
 		let controller = AppServices.theme

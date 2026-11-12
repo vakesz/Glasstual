@@ -20,9 +20,16 @@ extension TranscriptView {
 		scrollToBottom()
 	}
 
+	/** Keeps a reader who is following the end on the end when the document
+	 changes height underneath them.
+
+	 The test is the end itself, not ``isNearBottom``: TextKit settles the
+	 height of text it had only estimated, usually by a line or less, and a
+	 change inside the follow slack left the newest line that far below the
+	 visible end until something else scrolled. */
 	func documentHeightDidChange() {
 		guard editDepth == 0, window != nil, !isHiddenOrHasHiddenAncestor,
-		      followsBottom, isNearBottom == false, isFollowingDocumentGrowth == false else { return }
+		      followsBottom, isAtBottom == false, isFollowingDocumentGrowth == false else { return }
 		/* `scrollToBottom` resizes the document itself; that resize must not
 		 come back through here. */
 		isFollowingDocumentGrowth = true
@@ -205,6 +212,13 @@ extension TranscriptView {
 		}
 		guard let findBar = scrollView.findBarView else { return false }
 		return responder === findBar || responder.isDescendant(of: findBar)
+	}
+
+	/// Whether the last line sits exactly where ``scrollToBottom()`` puts it.
+	private var isAtBottom: Bool {
+		let clip = scrollView.contentView
+		let visibleBottom = clip.bounds.maxY - scrollView.contentInsets.bottom
+		return abs(visibleBottom - textView.frame.maxY) < 0.5
 	}
 
 	/// Whether the reader is at the end, judged by the part of the clip view
