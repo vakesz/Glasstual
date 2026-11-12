@@ -175,7 +175,8 @@ extension ServerSession {
 			alternateButton: PromptStrings.Action.decline,
 			sensitivity: .security,
 			keywords: [.default: .accept, .alternate: .decline],
-			reference: id
+			reference: id,
+			accessibilityIdentifier: AccessibilityIdentifier.dccChatOffer
 		)
 	}
 

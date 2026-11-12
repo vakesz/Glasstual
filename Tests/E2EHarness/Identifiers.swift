@@ -35,6 +35,8 @@ enum AXID {
 	static let dccCertificateFirstUse = "dcc-certificate-first-use"
 	/// Default button Cancel, alternate replaces the saved certificate.
 	static let dccCertificateChanged = "dcc-certificate-changed"
+	/// Default button Accept, alternate Decline.
+	static let dccChatOffer = "dcc-chat-offer"
 
 	// MARK: Questions in the conversation
 

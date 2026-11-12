@@ -60,6 +60,10 @@ enum AccessibilityIdentifier {
 	/// saved certificate.
 	static let dccCertificateChanged = "dcc-certificate-changed"
 
+	/// The question a `DCC CHAT` or `DCC SCHAT` offer asks. Its default button
+	/// is Accept and its alternate Decline.
+	static let dccChatOffer = "dcc-chat-offer"
+
 	// MARK: - Questions in the conversation
 
 	/// The questions above the message field.

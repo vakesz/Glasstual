@@ -59,6 +59,21 @@ struct AccessibilityIdentifiersTests {
 			== "credential-consent")
 	}
 
+	@Test("A direct chat offer is identified whether it is plain or secure, passive or not")
+	func dccChatOffer() {
+		#expect(AccessibilityIdentifier.dccChatOffer == "dcc-chat-offer")
+		let offers = [
+			DirectChatOffer(address: "127.0.0.1", port: 0, token: "1", isSecure: true),
+			DirectChatOffer(address: "127.0.0.1", port: 0, token: "1"),
+			DirectChatOffer(address: "203.0.113.5", port: 5000, token: nil, isSecure: true),
+			DirectChatOffer(address: "203.0.113.5", port: 5000, token: nil),
+		]
+		for offer in offers {
+			#expect(ServerSession.directChatOfferRequest(offer, from: "fixture", id: "d1").accessibilityIdentifier
+				== "dcc-chat-offer")
+		}
+	}
+
 	@Test("Secure DCC certificate questions")
 	func dccCertificates() throws {
 		#expect(AccessibilityIdentifier.dccCertificateFirstUse == "dcc-certificate-first-use")
