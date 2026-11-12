@@ -22,6 +22,10 @@ struct PeerEvidence {
 	var deniedJoinPhases: [DeniedJoinFixture.Phase] = []
 	var interactionStage = 0
 	var banLine: String?
+	/// What a scripted fixture saw, in its own words.
+	var scripted: String?
+	/// Whether an XDCC offer is written and waiting to be released.
+	var offerHeld = false
 	var tlsStalled = false
 	var tlsRejected = false
 	var stallClosed = false
@@ -46,10 +50,14 @@ final class LoopbackPeer {
 	private let listener: NWListener
 	private var connection: NWConnection?
 	private var pending = Data()
+	/// The WebSocket layer of the current connection, for the modes that use one.
+	private var webSocket: WebSocketFixture?
+	private var dccDials = 0
 	private var state: FixtureProtocol
 	private var burstTask: Task<Void, Never>?
 	private(set) var dcc: DCCFixturePeer?
 	private let usesPassiveDCC: Bool
+	private let corpora: URL
 	private(set) var evidence = PeerEvidence()
 	private(set) var failure: (any Error)?
 	private(set) var port: UInt16 = 0
@@ -57,6 +65,7 @@ final class LoopbackPeer {
 	init(mode: FixtureMode, corpora: URL, passiveDCC: Bool = false) throws {
 		self.mode = mode
 		usesPassiveDCC = passiveDCC
+		self.corpora = corpora
 		state = FixtureProtocol(mode: mode, attempt: 1)
 		let tls: NWProtocolTLS.Options?
 		if mode.secured, mode != .tlsStall {
@@ -72,8 +81,10 @@ final class LoopbackPeer {
 	}
 
 	/// The throwaway loopback identity in `Tests/Corpora/TLS`, imported in memory.
-	static func identity(corpora: URL) throws -> sec_identity_t {
-		let data = try Data(contentsOf: corpora.appendingPathComponent("TLS/LoopbackTestIdentity.p12"))
+	/// `named` picks another of the corpus identities, for a peer that has to
+	/// present a different certificate.
+	static func identity(corpora: URL, named name: String = "LoopbackTestIdentity") throws -> sec_identity_t {
+		let data = try Data(contentsOf: corpora.appendingPathComponent("TLS/\(name).p12"))
 		let options: [String: Any] = [
 			kSecImportExportPassphrase as String: "glasstual",
 			kSecImportToMemoryOnly as String: true,
@@ -94,7 +105,8 @@ final class LoopbackPeer {
 	/// Starts listening and returns the port.
 	func start() async throws -> UInt16 {
 		if mode.dcc {
-			let dcc = DCCFixturePeer(cancel: mode == .dccCancel)
+			let tls = try mode.secureDCC ? DCCFixtureTLS(corpora: corpora, rotatesCertificate: mode == .dccSecureChanged) : nil
+			let dcc = DCCFixturePeer(cancel: mode == .dccCancel, transfers: mode.dccTransfers, tls: tls)
 			self.dcc = dcc
 			_ = try await dcc.start()
 		}
@@ -134,11 +146,12 @@ final class LoopbackPeer {
 		evidence.connections += 1
 		connection = peer
 		pending = Data()
+		webSocket = mode.webSocket ? WebSocketFixture() : nil
 		let interaction = mode.interactive ? InteractiveFixture(
 			mode: mode,
 			dccPort: dcc?.port ?? 0,
 			usesPassiveDCC: usesPassiveDCC,
-			dccFilename: dcc?.filename ?? "e2e-transfer.bin"
+			dccFilenames: dcc?.filenames ?? ["e2e-transfer.bin"]
 		) : nil
 		state = FixtureProtocol(mode: mode, attempt: evidence.connections, interaction: interaction)
 		peer.stateUpdateHandler = { [weak self] status in
@@ -178,6 +191,17 @@ final class LoopbackPeer {
 	}
 
 	private func received(_ data: Data, on peer: NWConnection) throws {
+		if var socket = webSocket {
+			let output = try socket.receive(data)
+			webSocket = socket
+			if output.reply.isEmpty == false {
+				write(output.reply, on: peer)
+			}
+			for line in output.lines {
+				try received(line, on: peer)
+			}
+			return
+		}
 		pending.append(data)
 		guard pending.count <= 65536 else { throw HarnessFailure.assertion("Oversized IRC input") }
 		while let range = pending.range(of: Data("\r\n".utf8)) {
@@ -185,27 +209,56 @@ final class LoopbackPeer {
 				throw HarnessFailure.assertion("Non-UTF8 IRC input")
 			}
 			pending.removeSubrange(..<range.upperBound)
-			evidence.linesReceived += 1
-			evidence.recent = Array((evidence.recent + [line.split(separator: " ").prefix(2).joined(separator: " ")])
-				.suffix(12))
-			if line == "PRIVMSG fixture :E2E_DCC_DONE", dcc?.complete != true {
-				throw HarnessFailure.assertion("DCC completion command preceded actual transfer closure")
-			}
-			let responses = try state.receive(line)
-			if line == "PRIVMSG fixture :E2E_BURST_START" {
-				startBurst(on: peer)
-			}
-			send(responses, on: peer)
-			observe()
-			if let port = state.interaction?.dccListeningPort {
-				dcc?.connect(to: port)
-			}
+			try received(line, on: peer)
 		}
+	}
+
+	private func received(_ line: String, on peer: NWConnection) throws {
+		evidence.linesReceived += 1
+		evidence.recent = Array((evidence.recent + [line.split(separator: " ").prefix(2).joined(separator: " ")])
+			.suffix(12))
+		if line == "PRIVMSG fixture :E2E_DCC_DONE", dcc?.complete != true {
+			throw HarnessFailure.assertion("DCC completion command preceded actual transfer closure")
+		}
+		if line == "PRIVMSG fixture :E2E_DCC_OFFER_AGAIN", dcc?.outcome == nil {
+			throw HarnessFailure.assertion("A second DCC offer was asked for before the first transfer ended")
+		}
+		let responses = try state.receive(line)
+		if line == "PRIVMSG fixture :E2E_BURST_START" {
+			startBurst(on: peer)
+		}
+		send(responses, on: peer)
+		observe()
+		if let ports = state.interaction?.dccListeningPorts, ports.count > dccDials {
+			dccDials = ports.count
+			dcc?.connect(to: ports[ports.count - 1])
+		}
+	}
+
+	/// Sends the XDCC offer the fixture wrote when the pack was asked for.
+	func releaseHeldOffer() throws {
+		guard let offer = state.interaction?.heldOffer, let connection else {
+			throw HarnessFailure.assertion("No XDCC offer is waiting to be released")
+		}
+		send([offer], on: connection)
+	}
+
+	/// Writes bytes that are not an IRC line: the WebSocket upgrade and control frames.
+	private func write(_ data: Data, on peer: NWConnection) {
+		peer.send(content: data, completion: .contentProcessed { [weak self] error in
+			Task { @MainActor in
+				// A client may drop the connection once its own close frame is out.
+				if error != nil, self?.webSocket?.closeReceived != true {
+					self?.record(HarnessFailure.assertion("Fixture send failed"))
+				}
+			}
+		})
 	}
 
 	private func send(_ responses: [String], on peer: NWConnection) {
 		for response in responses {
-			peer.send(content: Data((response + "\r\n").utf8), completion: .contentProcessed { [weak self] error in
+			let content = webSocket == nil ? Data((response + "\r\n").utf8) : WebSocketFixture.frame(response)
+			peer.send(content: content, completion: .contentProcessed { [weak self] error in
 				Task { @MainActor in
 					guard let self else { return }
 					if error != nil {
@@ -245,6 +298,10 @@ final class LoopbackPeer {
 		if let ban = state.banAccount?.banLine {
 			evidence.banLine = ban
 		}
+		if let scripted = state.scripted {
+			evidence.scripted = scripted.evidence
+		}
+		evidence.offerHeld = state.interaction?.heldOffer != nil
 	}
 
 	/// Sends the burst at its own pace, off the main actor: the harness's
@@ -279,7 +336,16 @@ final class LoopbackPeer {
 				evidence.stallClosed = true
 				evidence.complete = true
 			} else {
-				guard !transportFailure else { throw HarnessFailure.assertion("Transport failed instead of clean EOF") }
+				/* RFC 6455 lets a client drop the connection once its close frame
+				 is out, which a peer still writing its answer sees as a reset. */
+				guard !transportFailure || webSocket?.closeReceived == true else {
+					throw HarnessFailure.assertion("Transport failed instead of clean EOF")
+				}
+				if let webSocket {
+					guard webSocket.closeReceived, webSocket.isDrained else {
+						throw HarnessFailure.assertion("The WebSocket ended without a close frame")
+					}
+				}
 				try state.eof(pending: pending)
 				evidence.disconnect = "QUIT and EOF"
 				evidence.complete = true

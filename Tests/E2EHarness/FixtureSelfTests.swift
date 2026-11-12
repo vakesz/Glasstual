@@ -29,7 +29,7 @@ enum FixtureSelfTests {
 	}
 
 	private static func check(_ mode: FixtureMode, corpora: URL) async throws {
-		let peer = try LoopbackPeer(mode: mode, corpora: corpora)
+		let peer = try LoopbackPeer(mode: mode, corpora: corpora, passiveDCC: mode.secureDCC)
 		defer { peer.stop() }
 		guard let port = try await NWEndpoint.Port(rawValue: peer.start()) else {
 			throw HarnessFailure.assertion("Self-test port missing")
@@ -58,8 +58,15 @@ enum FixtureSelfTests {
 				continue
 			}
 			try await wait(peer, "client connected") { client.connection.state == .ready }
+			if mode.webSocket {
+				try await FixtureExtensionChecks.webSocket(peer: peer, client: client)
+				client.connection.cancel()
+				continue
+			}
 			// Exercise line framing across writes as well as several commands in one write.
-			if let answer = mode.saslConsent {
+			if mode.scripted != nil {
+				try await FixtureExtensionChecks.register(mode, peer: peer, client: client)
+			} else if let answer = mode.saslConsent {
 				try await consentRegistration(answer: answer, client: client)
 			} else if mode == .banAccount {
 				try await banAccountRegistration(client: client)
@@ -97,7 +104,12 @@ enum FixtureSelfTests {
 					throw HarnessFailure.assertion("Ban Account evidence missing")
 				}
 			}
-			if mode.interactive {
+			if mode.scripted != nil {
+				try await FixtureExtensionChecks.exchange(mode, peer: peer, client: client)
+			}
+			if mode.secureDCC {
+				try await FixtureExtensionChecks.secureDCC(mode, peer: peer, client: client, corpora: corpora)
+			} else if mode.interactive {
 				try await interactiveChecks(mode: mode, peer: peer, client: client)
 			}
 			try await client.send("QUIT E2E_QUIT\r\n", final: true)
@@ -114,7 +126,7 @@ enum FixtureSelfTests {
 	}
 
 	/// `Wait.until` that fails at once when the peer recorded a violation.
-	private static func wait(
+	static func wait(
 		_ peer: LoopbackPeer,
 		_ description: String,
 		_ condition: () throws -> Bool
@@ -235,6 +247,7 @@ enum FixtureSelfTests {
 	private static func protocolChecks() throws {
 		try consentChecks()
 		try banAccountChecks()
+		try FixtureExtensionChecks.protocolChecks()
 		let sample = Diagnostics.mainThreadSummary(Data("""
 		Path: /Users/private/Glasstual
 		Thread_1 DispatchQueue_1: com.apple.main-thread
@@ -324,7 +337,16 @@ enum FixtureSelfTests {
 			guard names.count == 10000,
 			      Set(names).count == 10000 else { throw HarnessFailure.assertion("Burst NAMES count mismatch") }
 		} else if mode.dcc, let dcc = peer.dcc {
-			try await client.send("PRIVMSG fixture :E2E_DCC_OFFER\r\n")
+			if mode == .xdccRequest {
+				try await client.send("PRIVMSG fixture :XDCC SEND #1\r\n")
+				try await wait(peer, "XDCC offer held") { peer.evidence.offerHeld }
+				guard client.contains("DCC SEND") == false else {
+					throw HarnessFailure.assertion("The XDCC offer went out before it was released")
+				}
+				try peer.releaseHeldOffer()
+			} else {
+				try await client.send("PRIVMSG fixture :E2E_DCC_OFFER\r\n")
+			}
 			try await wait(peer, "DCC offer") { client.contains("DCC SEND \(dcc.filename) 2130706433") }
 			guard let port = NWEndpoint.Port(rawValue: dcc.port) else {
 				throw HarnessFailure.assertion("DCC fixture port missing")
@@ -389,7 +411,7 @@ enum FixtureSelfTests {
 		try state.eof(pending: Data())
 	}
 
-	private static func mustReject(_ operation: () throws -> Void) throws {
+	static func mustReject(_ operation: () throws -> Void) throws {
 		do {
 			try operation()
 		} catch let HarnessFailure.assertion(message) {
@@ -400,7 +422,7 @@ enum FixtureSelfTests {
 		throw HarnessFailure.assertion("Invalid fixture input was accepted")
 	}
 
-	private final class Client {
+	final class Client {
 		let connection: NWConnection
 		let maximumBytes: Int
 		var received = Data()

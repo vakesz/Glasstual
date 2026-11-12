@@ -5,14 +5,37 @@ struct InteractiveFixture {
 	var stage = 0
 	var dccPort: UInt16 = 0
 	var usesPassiveDCC = false
-	var dccFilename = "e2e-transfer.bin"
-	var dccListeningPort: UInt16?
+	/// One name per file the DCC peer offers, in order.
+	var dccFilenames = ["e2e-transfer.bin"]
+	/// The ports the application said it listens on, one per passive offer it answered.
+	private(set) var dccListeningPorts: [UInt16] = []
+	/// Files offered so far.
+	private(set) var offers = 0
+	/// An offer the fixture has written but not sent: an XDCC bot takes its
+	/// time, and the scenario releases it once it has seen the request waiting.
+	private(set) var heldOffer: String?
 	var finished: Bool {
 		switch mode {
 		case .burstResponsiveness: stage == 4
-		case .dccSuccess, .dccCancel: stage == 2
-		default: false
+		default: mode.dcc && stage == 2
 		}
+	}
+
+	/// The words that ask the fixture for its next file.
+	private var offerRequest: String {
+		if mode == .xdccRequest {
+			return "XDCC SEND #1"
+		}
+		return offers == 0 ? "E2E_DCC_OFFER" : "E2E_DCC_OFFER_AGAIN"
+	}
+
+	private var dccVerb: String {
+		mode.secureDCC ? "SSEND" : "SEND"
+	}
+
+	/// The token of the passive offer for file `number`, from 1.
+	private static func token(_ number: Int) -> String {
+		"42424\(number)"
 	}
 
 	mutating func receive(_ line: String, joined: Bool) throws -> [String]? {
@@ -26,37 +49,47 @@ struct InteractiveFixture {
 			return [":fixture!fixture@localhost PRIVMSG #e2e :\(expected)_ACK"]
 		}
 		if mode.dcc {
-			if stage == 0, line == "PRIVMSG fixture :E2E_DCC_OFFER", usesPassiveDCC || dccPort > 0 {
-				stage = 1
-				let port = usesPassiveDCC ? 0 : dccPort
-				let token = usesPassiveDCC ? " 424242" : ""
-				return [
-					":fixture!fixture@localhost PRIVMSG e2euser :\u{01}DCC SEND \(dccFilename) 2130706433 \(port) 100003\(token)\u{01}",
-				]
-			}
-			if usesPassiveDCC, stage == 1, line.hasPrefix("PRIVMSG fixture :\u{01}DCC SEND ") {
-				let tokens = line.replacingOccurrences(of: "\u{01}", with: "").split(separator: " ")
-				guard tokens.count == 9,
-				      tokens[2] == ":DCC",
-				      tokens[3] == "SEND",
-				      tokens[4] == Substring(dccFilename),
-				      tokens[5] == "2130706433",
-				      let port = UInt16(tokens[6]),
-				      port > 0,
-				      tokens[7] == "100003",
-				      tokens[8] == "424242",
-				      dccListeningPort == nil
-				else { throw HarnessFailure.assertion("Passive DCC response mismatch") }
-				dccListeningPort = port
-				return []
-			}
-			guard stage == 1, line == "PRIVMSG fixture :E2E_DCC_DONE" else {
-				throw HarnessFailure.assertion("DCC fixture ordering mismatch")
-			}
-			stage = 2
-			return [":e2e.local NOTICE e2euser :E2E_DCC_FINISHED"]
+			return try receiveDCC(line)
 		}
 		throw HarnessFailure.assertion("Unexpected interactive fixture command")
+	}
+
+	private mutating func receiveDCC(_ line: String) throws -> [String] {
+		// Every offer so far has been answered, or needed no answer.
+		let answered = usesPassiveDCC == false || dccListeningPorts.count == offers
+		if stage < 2, offers < dccFilenames.count, answered, line == "PRIVMSG fixture :" + offerRequest,
+		   usesPassiveDCC || dccPort > 0
+		{
+			stage = 1
+			offers += 1
+			let port = usesPassiveDCC ? 0 : dccPort
+			let token = usesPassiveDCC ? " " + Self.token(offers) : ""
+			let offer = ":fixture!fixture@localhost PRIVMSG e2euser :\u{01}DCC \(dccVerb) \(dccFilenames[offers - 1])"
+				+ " 2130706433 \(port) 100003\(token)\u{01}"
+			guard mode == .xdccRequest else { return [offer] }
+			heldOffer = offer
+			return []
+		}
+		if usesPassiveDCC, stage == 1, line.hasPrefix("PRIVMSG fixture :\u{01}DCC \(dccVerb) ") {
+			let tokens = line.replacingOccurrences(of: "\u{01}", with: "").split(separator: " ")
+			guard tokens.count == 9,
+			      tokens[2] == ":DCC",
+			      tokens[4] == Substring(dccFilenames[offers - 1]),
+			      tokens[5] == "2130706433",
+			      let port = UInt16(tokens[6]),
+			      port > 0,
+			      tokens[7] == "100003",
+			      tokens[8] == Substring(Self.token(offers)),
+			      dccListeningPorts.count == offers - 1
+			else { throw HarnessFailure.assertion("Passive DCC response mismatch") }
+			dccListeningPorts.append(port)
+			return []
+		}
+		guard stage == 1, offers == dccFilenames.count, answered, line == "PRIVMSG fixture :E2E_DCC_DONE" else {
+			throw HarnessFailure.assertion("DCC fixture ordering mismatch")
+		}
+		stage = 2
+		return [":e2e.local NOTICE e2euser :E2E_DCC_FINISHED"]
 	}
 
 	nonisolated static func burstBatch(_ index: Int) -> [String] { // nonisolated: pure

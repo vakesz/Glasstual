@@ -21,6 +21,19 @@ enum FixtureMode: String, CaseIterable {
 	case credentialConsentDecline
 	case credentialConsentSend
 	case banAccount
+	/// `channelMessaging` carried over `ws://`, and over `wss://`.
+	case webSocketMessaging
+	case webSocketSecure
+	/// A `DCC SSEND` from a peer never seen, and from one whose certificate changed.
+	case dccSecure
+	case dccSecureChanged
+	case xdccRequest
+	case accountRegistration
+	case metadataEdit
+	case saslSignInAgain
+	case replyPrivately
+	case historyGapBanner
+	case showOriginalMessage
 
 	var rejectionCount: Int {
 		switch self {
@@ -31,11 +44,17 @@ enum FixtureMode: String, CaseIterable {
 	}
 
 	var secured: Bool {
-		[.tlsAccept, .tlsRejectRetry, .tlsStall, .credentialConsentDecline, .credentialConsentSend].contains(self)
+		[.tlsAccept, .tlsRejectRetry, .tlsStall, .credentialConsentDecline, .credentialConsentSend, .webSocketSecure]
+			.contains(self)
+	}
+
+	/// Whether IRC lines travel in WebSocket text messages.
+	var webSocket: Bool {
+		self == .webSocketMessaging || self == .webSocketSecure
 	}
 
 	var messaging: Bool {
-		self == .channelMessaging || self == .historyRelaunch
+		self == .channelMessaging || self == .historyRelaunch || webSocket
 	}
 
 	/// What the user answers when the client asks whether to send its
@@ -50,11 +69,34 @@ enum FixtureMode: String, CaseIterable {
 	}
 
 	var dcc: Bool {
-		self == .dccSuccess || self == .dccCancel
+		[.dccSuccess, .dccCancel, .dccSecure, .dccSecureChanged, .xdccRequest].contains(self)
+	}
+
+	/// Whether the DCC peer speaks TLS, as a `DCC SSEND` asks.
+	var secureDCC: Bool {
+		self == .dccSecure || self == .dccSecureChanged
+	}
+
+	/// How many files the DCC peer offers, one after another.
+	var dccTransfers: Int {
+		self == .dccSecureChanged ? 2 : 1
 	}
 
 	var interactive: Bool {
-		[.dccSuccess, .dccCancel, .burstResponsiveness].contains(self)
+		dcc || self == .burstResponsiveness
+	}
+
+	/// The fixture that owns registration and the extension this mode exercises.
+	var scripted: (any ScriptedFixture)? {
+		switch self {
+		case .accountRegistration: AccountRegistrationFixture()
+		case .metadataEdit: MetadataFixture()
+		case .saslSignInAgain: SASLSignInFixture()
+		case .replyPrivately: PrivateReplyFixture()
+		case .historyGapBanner: HistoryFixture(.gap)
+		case .showOriginalMessage: HistoryFixture(.originalMessage)
+		default: nil
+		}
 	}
 
 	var usesChannel: Bool {
@@ -96,6 +138,8 @@ struct FixtureProtocol {
 	var consent: SASLConsentFixture?
 	/// Owns registration, the channel and the ban, for Ban Account.
 	var banAccount: BanAccountFixture?
+	/// Owns registration and its extension's commands, for the scripted modes.
+	var scripted: (any ScriptedFixture)?
 
 	init(
 		reject: Bool,
@@ -104,7 +148,8 @@ struct FixtureProtocol {
 		interaction: InteractiveFixture? = nil,
 		acceptsOnboardingQuit: Bool = false,
 		consent: SASLConsentFixture? = nil,
-		banAccount: BanAccountFixture? = nil
+		banAccount: BanAccountFixture? = nil,
+		scripted: (any ScriptedFixture)? = nil
 	) {
 		self.reject = reject
 		self.messaging = messaging
@@ -113,6 +158,7 @@ struct FixtureProtocol {
 		self.acceptsOnboardingQuit = acceptsOnboardingQuit
 		self.consent = consent
 		self.banAccount = banAccount
+		self.scripted = scripted
 	}
 
 	/// The peer for `mode`, on connection attempt `attempt` (from 1).
@@ -124,7 +170,8 @@ struct FixtureProtocol {
 			interaction: interaction,
 			acceptsOnboardingQuit: mode == .onboardingFinish,
 			consent: mode.saslConsent.map(SASLConsentFixture.init(answer:)),
-			banAccount: mode == .banAccount ? BanAccountFixture() : nil
+			banAccount: mode == .banAccount ? BanAccountFixture() : nil,
+			scripted: mode.scripted
 		)
 	}
 
@@ -138,6 +185,15 @@ struct FixtureProtocol {
 				}
 			}
 			return try banAccount.register(line)
+		}
+		if var scripted, !scripted.registration.isRegistered {
+			defer {
+				self.scripted = scripted
+				if scripted.registration.isRegistered {
+					registrationIndex = Self.registration.count
+				}
+			}
+			return try scripted.register(line)
 		}
 		if var consent, !consent.isRegistered {
 			defer {
@@ -190,6 +246,16 @@ struct FixtureProtocol {
 		if var banAccount {
 			defer { self.banAccount = banAccount }
 			if let response = try banAccount.receive(line, pongSeen: pongSeen) {
+				return response
+			}
+		}
+		if var scripted {
+			defer { self.scripted = scripted }
+			let client = ClientLine(line)
+			if client.isTypingNotification {
+				return []
+			}
+			if let response = try scripted.receive(client, pongSeen: pongSeen) {
 				return response
 			}
 		}
@@ -260,6 +326,8 @@ struct FixtureProtocol {
 		else { throw HarnessFailure.assertion("QUIT before fixture interaction completed") }
 		guard banAccount == nil || banAccount?.banned == true
 		else { throw HarnessFailure.assertion("QUIT before the account ban") }
+		guard scripted == nil || scripted?.finished == true
+		else { throw HarnessFailure.assertion("QUIT before the scripted exchange completed") }
 	}
 
 	private static func redactedShape(of line: String) -> String {
