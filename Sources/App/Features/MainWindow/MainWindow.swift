@@ -388,6 +388,12 @@ extension MainWindow {
 		false
 	}
 
+	/// A password half typed into a question's secure field does not stay
+	/// behind a window the reader left.
+	func windowDidResignKey(_: Notification) {
+		AppServices.promptRegistry.discardTypedSecrets()
+	}
+
 	func windowDidResize(_: Notification) {
 		inputTextField.recalculateTextViewSize()
 	}

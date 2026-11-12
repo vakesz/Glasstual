@@ -167,6 +167,15 @@ final class PendingPromptRegistry {
 		}
 	}
 
+	/** Forgets what has been typed into every secure field, for a reader who
+	 switched conversations or left the window. The questions stay waiting; only
+	 a half-typed secret goes, so none is left on screen unattended. */
+	func discardTypedSecrets() {
+		for prompt in pending where prompt.request.field?.isSecure == true {
+			prompt.text = ""
+		}
+	}
+
 	func prompt(numbered number: Int) -> PendingPrompt? {
 		pending.first { $0.number == number }
 	}

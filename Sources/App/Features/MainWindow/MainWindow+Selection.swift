@@ -122,6 +122,7 @@ extension MainWindow {
 		let newItem = sidebar.selectedItem
 		guard selectedItem !== newItem else { return }
 		storePreviousSelection()
+		AppServices.promptRegistry.discardTypedSecrets()
 		selectedItem = newItem
 		columnModel.transcript = newItem?.transcriptController?.ensureBackingView()
 		newItem?.transcriptController?.notifyDidBecomeVisible()
