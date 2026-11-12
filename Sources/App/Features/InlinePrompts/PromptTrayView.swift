@@ -50,7 +50,7 @@ struct PromptTrayView: View {
 				.font(.caption)
 				.foregroundStyle(.secondary)
 				.padding(.horizontal, UISpacing.wide)
-				.accessibilityIdentifier("prompt-feedback")
+				.accessibilityIdentifier(AccessibilityIdentifier.promptFeedback)
 			}
 			ForEach(shown) { prompt in
 				PromptCardView(prompt: prompt, registry: registry) { result in
@@ -78,18 +78,18 @@ struct PromptTrayView: View {
 						showItem(anchor)
 					}
 					.controlSize(.small)
-					.accessibilityIdentifier("prompt-elsewhere-show")
+					.accessibilityIdentifier(AccessibilityIdentifier.promptElsewhereShow)
 				}
 				.padding(.horizontal, UISpacing.wide)
 				.frame(minHeight: InputBarLayout.replyBannerHeight)
 				.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
 				.accessibilityElement(children: .contain)
-				.accessibilityIdentifier("prompt-elsewhere")
+				.accessibilityIdentifier(AccessibilityIdentifier.promptElsewhere)
 			}
 		}
 		.animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: shown.map(\.number))
 		.accessibilityElement(children: .contain)
 		.accessibilityLabel(Text(.InlinePrompts.trayLabel))
-		.accessibilityIdentifier("prompt-tray")
+		.accessibilityIdentifier(AccessibilityIdentifier.promptTray)
 	}
 }

@@ -51,6 +51,39 @@ enum AccessibilityIdentifier {
 	/// applies the action.
 	static let moderationConfirmation = "moderation-confirmation"
 
+	// MARK: - Questions in the conversation
+
+	/// The questions above the message field.
+	static let promptTray = "prompt-tray"
+	/// The line saying questions wait in other conversations, and its button.
+	static let promptElsewhere = "prompt-elsewhere"
+	static let promptElsewhereShow = "prompt-elsewhere-show"
+	/// What the last typed answering command had to say.
+	static let promptFeedback = "prompt-feedback"
+
+	/** One question's card. A question that is identified as an alert keeps
+	 that identifier as a card, and its buttons keep their alert identifiers,
+	 so a client finds the same control in either style. Any other card is
+	 named by its number. */
+	static func promptCard(_ request: AlertRequest, number: Int) -> String {
+		request.accessibilityIdentifier ?? "prompt-card-\(number)"
+	}
+
+	static func promptButton(_ request: AlertRequest, number: Int, response: AlertResponse) -> String {
+		if let identifier = request.accessibilityIdentifier {
+			return alertButton(identifier, response)
+		}
+		return "prompt-\(number)-\(request.keyword(for: response).rawValue)"
+	}
+
+	static func promptField(_ request: AlertRequest, number: Int) -> String {
+		promptCard(request, number: number) + "-field"
+	}
+
+	static func promptRemember(_ request: AlertRequest, number: Int) -> String {
+		promptCard(request, number: number) + "-remember"
+	}
+
 	// MARK: - Onboarding
 
 	static let onboardingWindow = "onboarding-window"
@@ -71,9 +104,14 @@ enum AccessibilityIdentifier {
 		"onboarding-step-" + name
 	}
 
+	/// The two choices of the step that asks how Glasstual asks.
+	static let onboardingInteractionDialogs = "onboarding-interaction-dialogs"
+	static let onboardingInteractionConversation = "onboarding-interaction-conversation"
+
 	// MARK: - Settings
 
 	static let settingsConfirmQuit = "settings-confirm-quit"
+	static let settingsInteractionStyle = "settings-interaction-style"
 	static let settingsImport = "settings-import"
 	static let settingsExport = "settings-export"
 	static let settingsRecoveryPreview = "settings-recovery-preview"

@@ -48,6 +48,31 @@ struct AccessibilityIdentifiersTests {
 		#expect(AccessibilityIdentifier.onboardingNetworkSASL == "onboarding-network-sasl")
 		#expect(AccessibilityIdentifier.onboardingConnectWhenFinished == "onboarding-connect-when-finished")
 		#expect(AccessibilityIdentifier.networkPickerCustomServer == "network-picker-custom-server")
+		#expect(AccessibilityIdentifier.onboardingStep(String(describing: OnboardingStep.interaction))
+			== "onboarding-step-interaction")
+		#expect(AccessibilityIdentifier.onboardingInteractionDialogs == "onboarding-interaction-dialogs")
+		#expect(AccessibilityIdentifier.onboardingInteractionConversation == "onboarding-interaction-conversation")
+	}
+
+	/// A question identified as an alert keeps its identifiers as a card, so a
+	/// client finds the same controls whichever style the reader chose.
+	@Test("Questions in the conversation")
+	func prompts() {
+		let consent = ServerSession.credentialConsentAlert(host: "example.org")
+		let plain = AlertRequest(
+			title: "Q", body: "", defaultButton: "Send", alternateButton: "Cancel",
+			keywords: [.default: .send, .alternate: .cancel]
+		)
+		#expect(AccessibilityIdentifier.promptTray == "prompt-tray")
+		#expect(AccessibilityIdentifier.promptElsewhere == "prompt-elsewhere")
+		#expect(AccessibilityIdentifier.promptElsewhereShow == "prompt-elsewhere-show")
+		#expect(AccessibilityIdentifier.promptFeedback == "prompt-feedback")
+		#expect(AccessibilityIdentifier.promptCard(consent, number: 4) == "credential-consent")
+		#expect(AccessibilityIdentifier.promptButton(consent, number: 4, response: .alternate) == "credential-consent-alternate")
+		#expect(AccessibilityIdentifier.promptCard(plain, number: 4) == "prompt-card-4")
+		#expect(AccessibilityIdentifier.promptButton(plain, number: 4, response: .default) == "prompt-4-send")
+		#expect(AccessibilityIdentifier.promptField(plain, number: 4) == "prompt-card-4-field")
+		#expect(AccessibilityIdentifier.settingsInteractionStyle == "settings-interaction-style")
 	}
 
 	@Test("Settings and configuration transfer")

@@ -41,7 +41,6 @@ struct OnboardingInteractionView: View {
 				.frame(maxWidth: 440)
 		}
 		.frame(maxWidth: .infinity, alignment: .center)
-		.accessibilityIdentifier("onboarding-interaction")
 	}
 }
 
@@ -56,8 +55,8 @@ extension InteractionStyle {
 
 	var onboardingIdentifier: String {
 		switch self {
-		case .dialogs: "onboarding-interaction-dialogs"
-		case .conversation: "onboarding-interaction-conversation"
+		case .dialogs: AccessibilityIdentifier.onboardingInteractionDialogs
+		case .conversation: AccessibilityIdentifier.onboardingInteractionConversation
 		}
 	}
 }

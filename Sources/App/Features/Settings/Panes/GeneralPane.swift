@@ -31,7 +31,7 @@ struct GeneralPane: View {
 			} label: {
 				Text(.Settings.generalShowQuestions)
 			}
-			.accessibilityIdentifier("settings-interaction-style")
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsInteractionStyle)
 		} header: {
 			Text(.Settings.generalHeadingQuestions)
 		} footer: {

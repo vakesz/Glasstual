@@ -54,7 +54,7 @@ struct PromptCardView: View {
 						Text(verbatim: request.suppressionText ?? PromptStrings.Alert.doNotAskAgain)
 					}
 					.toggleStyle(.checkbox)
-					.accessibilityIdentifier("prompt-\(prompt.number)-remember")
+					.accessibilityIdentifier(AccessibilityIdentifier.promptRemember(request, number: prompt.number))
 				}
 				footer
 			}
@@ -69,7 +69,7 @@ struct PromptCardView: View {
 		}
 		.accessibilityElement(children: .contain)
 		.accessibilityLabel(Text(verbatim: request.title))
-		.accessibilityIdentifier("prompt-card-\(prompt.number)")
+		.accessibilityIdentifier(AccessibilityIdentifier.promptCard(request, number: prompt.number))
 		.onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { _ in
 			placement &+= 1
 		}
@@ -119,7 +119,7 @@ struct PromptCardView: View {
 			.textFieldStyle(.roundedBorder)
 			.focused($fieldIsFocused)
 			.onSubmit(submitField)
-			.accessibilityIdentifier("prompt-\(prompt.number)-field")
+			.accessibilityIdentifier(AccessibilityIdentifier.promptField(request, number: prompt.number))
 		case let .secure(placeholder):
 			SecureField(text: $prompt.text, prompt: Text(verbatim: placeholder)) {
 				Text(verbatim: request.title)
@@ -127,7 +127,7 @@ struct PromptCardView: View {
 			.textFieldStyle(.roundedBorder)
 			.focused($fieldIsFocused)
 			.onSubmit(submitField)
-			.accessibilityIdentifier("prompt-\(prompt.number)-field")
+			.accessibilityIdentifier(AccessibilityIdentifier.promptField(request, number: prompt.number))
 		case nil:
 			EmptyView()
 		}
@@ -143,7 +143,7 @@ struct PromptCardView: View {
 				.foregroundStyle(.secondary)
 				.lineLimit(2)
 				.textSelection(.enabled)
-				.accessibilityIdentifier("prompt-\(prompt.number)-hint")
+				.accessibilityIdentifier(AccessibilityIdentifier.promptCard(request, number: prompt.number) + "-hint")
 			Spacer(minLength: UISpacing.regular)
 			if request.alternateButton != nil {
 				button(for: .alternate)
@@ -162,7 +162,7 @@ struct PromptCardView: View {
 			Text(verbatim: title)
 		}
 		.disabled(isArmed == false || (response == .default && fieldBlocksSubmit))
-		.accessibilityIdentifier("prompt-\(prompt.number)-\(request.keyword(for: response).rawValue)")
+		.accessibilityIdentifier(AccessibilityIdentifier.promptButton(request, number: prompt.number, response: response))
 		.accessibilityHint(Text(verbatim: request.title))
 
 		if response == request.returnButton, request.isDestructive(response) == false {
