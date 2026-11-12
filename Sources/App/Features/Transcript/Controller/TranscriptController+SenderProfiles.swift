@@ -10,12 +10,16 @@ import Foundation
  A header asks at draw time on the main actor, so a profile or a picture that
  changes later redraws the rows already held without rendering them again. */
 extension TranscriptController {
+	/** The profile drawn in `nickname`'s header, if profiles are shown and they
+	 set one. The presentation compares display names against every member, so
+	 it is built only for a sender who has something to show: a line from
+	 anyone else used to rebuild it after each change to a large member list. */
 	func senderProfile(for nickname: String) -> TranscriptSenderProfile? {
-		guard let session = associatedSession, let user = session.findUser(nickname) else { return nil }
+		guard let session = associatedSession, session.environment.settings.showsServerProfiles,
+		      let user = session.findUser(nickname), user.profile.isEmpty == false
+		else { return nil }
 
 		let presentation = currentSenderPresentation(on: session)
-
-		guard presentation.showsProfiles, user.profile.isEmpty == false else { return nil }
 
 		return TranscriptSenderProfile(
 			displayName: presentation.displayName(for: user),
