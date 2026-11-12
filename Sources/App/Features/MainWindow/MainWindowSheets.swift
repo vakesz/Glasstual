@@ -170,13 +170,22 @@ protocol ChannelScoped: SessionScoped {
 	var channelId: String? { get }
 }
 
+/// A window other than the main one that keeps its own chain of sheets, such
+/// as a Server Properties window raising its editors.
+@MainActor
+protocol SheetHost: AnyObject {
+	var sheetModel: MainWindowSheetModel { get }
+}
+
 /** Owns one state-driven SwiftUI sheet attached to the application's main
- window. A feature subclasses this to keep validation and the closure it
- reports through beside the model it coordinates; the base owns no AppKit
- view. */
+ window, or to the window `host` names. A feature subclasses this to keep
+ validation and the closure it reports through beside the model it
+ coordinates; the base owns no AppKit view. */
 @MainActor
 class SheetSession: NSObject {
 	weak var window: MainWindow?
+	/// The window the sheet is raised on when it is not the main window's.
+	weak var host: (any SheetHost)?
 	private var content: AnyView?
 
 	@available(*, unavailable)
@@ -194,7 +203,16 @@ class SheetSession: NSObject {
 	}
 
 	func startSheet() {
-		guard let content, let mainWindow = window ?? AppServices.delegate.mainWindow else { return }
+		guard let content else { return }
+		if let host {
+			host.sheetModel.presentSheet(MainWindowSheet(
+				owner: self,
+				content: content,
+				onDismiss: { [weak self] in self?.sheetDidEnd() }
+			))
+			return
+		}
+		guard let mainWindow = window ?? AppServices.delegate.mainWindow else { return }
 		window = mainWindow
 		mainWindow.sheetModel.presentSheet(MainWindowSheet(
 			owner: self,
@@ -204,7 +222,7 @@ class SheetSession: NSObject {
 	}
 
 	func endSheet() {
-		window?.sheetModel.dismissSheet(ownedBy: self)
+		(host?.sheetModel ?? window?.sheetModel)?.dismissSheet(ownedBy: self)
 	}
 
 	/// The sheet has left the window, however it went.

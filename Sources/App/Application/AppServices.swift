@@ -25,6 +25,7 @@ enum AppServices {
 	static let channelMaskList = ChannelMaskListWindow()
 	static let transcriptLogViewer = TranscriptLogViewerWindow()
 	static let scrollbackSearch = ScrollbackSearchWindow()
+	static let serverProperties = ServerPropertiesWindows(save: MenuSheetPresenter.saveServerProperties)
 
 	/// Every question waiting for an answer, and the one place questions are
 	/// asked, as alerts or in the conversation.

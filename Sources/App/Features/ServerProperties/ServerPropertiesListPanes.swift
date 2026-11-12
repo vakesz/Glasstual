@@ -3,18 +3,19 @@
 
 import SwiftUI
 
-/* The connection sheet's three editable lists. Each is the same list with the
- same three buttons over different contents, which is what
- `ServerPropertiesListKind` names; what differs is the row. */
+/* The Server Properties window's three editable lists. Each is the same
+ bordered list with the same add and remove buttons under it, which is what
+ `ServerPropertiesListKind` names; what differs is the row. A row is edited by
+ double-clicking it or pressing Return. */
 
 struct ServerPropertiesChannelListPane: View {
 	@Bindable var model: ServerPropertiesModel
-	/// Weak for the same reason `ServerPropertiesView`'s is: the sheet holds the
-	/// view that holds this pane.
+	/// Weak for the same reason `ServerPropertiesView`'s is: the editor holds
+	/// the view that holds this pane.
 	weak var commands: (any ServerPropertiesCommands)?
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: UISpacing.wide) {
+		VStack(alignment: .leading, spacing: UISpacing.regular) {
 			List(selection: $model.selectedChannelID) {
 				ForEach(model.displayedChannels, id: \.uniqueIdentifier) { channel in
 					HStack {
@@ -44,6 +45,7 @@ struct ServerPropertiesChannelListPane: View {
 				commands: commands
 			)
 		}
+		.padding(SheetMetrics.margin)
 	}
 
 	private func autoJoinBinding(_ identifier: String) -> Binding<Bool> {
@@ -63,7 +65,7 @@ struct ServerPropertiesHighlightsPane: View {
 	weak var commands: (any ServerPropertiesCommands)?
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: UISpacing.wide) {
+		VStack(alignment: .leading, spacing: UISpacing.regular) {
 			List(selection: $model.selectedHighlightID) {
 				ForEach(model.config.highlightList, id: \.uniqueIdentifier) { entry in
 					VStack(alignment: .leading) {
@@ -86,6 +88,7 @@ struct ServerPropertiesHighlightsPane: View {
 				commands: commands
 			)
 		}
+		.padding(SheetMetrics.margin)
 	}
 }
 
@@ -101,78 +104,50 @@ private struct ServerPropertiesEmptyList: View {
 	}
 }
 
-/// Add, edit and remove under a list whose plus adds one kind of entry.
+/// Add and remove under a list whose plus adds one kind of entry.
 private struct ServerPropertiesListButtons: View {
 	let kind: ServerPropertiesListKind
 	let hasSelection: Bool
 	weak var commands: (any ServerPropertiesCommands)?
 
 	var body: some View {
-		HStack {
-			Button { kind.add(with: commands) } label: {
-				Label(String(localized: kind.addLabel), systemImage: "plus")
-					.labelStyle(.iconOnly)
-			}
-			.help(kind.addLabel)
-			ServerPropertiesListEditButtons(kind: kind, hasSelection: hasSelection, commands: commands)
-			Spacer()
-		}
-		.buttonStyle(.borderless)
-		.padding(.horizontal, SheetMetrics.margin)
-		.padding(.bottom, UISpacing.wide)
-	}
-}
-
-/** Edit and remove the selected row.
-
- Every button under these lists is an icon and nothing else, so each one carries
- the name of what it does -- as a help tag for the pointer and, through its
- icon-only label, for VoiceOver. */
-private struct ServerPropertiesListEditButtons: View {
-	let kind: ServerPropertiesListKind
-	let hasSelection: Bool
-	weak var commands: (any ServerPropertiesCommands)?
-
-	var body: some View {
-		Button { kind.edit(with: commands) } label: {
-			Label(String(localized: kind.editLabel), systemImage: "pencil")
-				.labelStyle(.iconOnly)
-		}
-		.disabled(hasSelection == false)
-		.help(kind.editLabel)
-		Button(role: .destructive) { kind.remove(with: commands) } label: {
-			Label(String(localized: kind.removeLabel), systemImage: "minus")
-				.labelStyle(.iconOnly)
-		}
-		.disabled(hasSelection == false)
-		.help(kind.removeLabel)
+		ListEditingControls(
+			addLabel: Text(kind.addLabel),
+			removeLabel: Text(kind.removeLabel),
+			canRemove: hasSelection,
+			add: { kind.add(with: commands) },
+			remove: { kind.remove(with: commands) }
+		)
 	}
 }
 
 private extension View {
-	/** The keyboard and context menu every one of the sheet's lists answers to.
+	/** The keyboard and context menu every one of the window's lists answers to.
 
-	 The three lists were selection and two buttons and nothing else: Delete did
-	 nothing, a secondary click offered nothing, and opening a row meant finding
-	 the pencil. `primaryAction` is the double-click and Return at once. */
+	 `primaryAction` is the double-click and Return at once, which is how a row
+	 is edited; Delete removes it. The context menu offers only what applies to
+	 the rows it was opened on. */
 	func listCommands(
 		_ kind: ServerPropertiesListKind,
 		commands: (any ServerPropertiesCommands)?,
 		selection: Binding<String?>
 	) -> some View {
 		onDeleteCommand { kind.remove(with: commands) }
+			.listStyle(.bordered)
 			.contextMenu(forSelectionType: String.self) { identifiers in
-				Button(kind.editLabel) {
-					selection.wrappedValue = identifiers.first
-					kind.edit(with: commands)
+				if identifiers.count == 1 {
+					Button(kind.editLabel) {
+						selection.wrappedValue = identifiers.first
+						kind.edit(with: commands)
+					}
+					Divider()
 				}
-				.disabled(identifiers.count != 1)
-				Divider()
-				Button(kind.removeLabel, role: .destructive) {
-					selection.wrappedValue = identifiers.first
-					kind.remove(with: commands)
+				if identifiers.isEmpty == false {
+					Button(kind.removeLabel, role: .destructive) {
+						selection.wrappedValue = identifiers.first
+						kind.remove(with: commands)
+					}
 				}
-				.disabled(identifiers.isEmpty)
 			} primaryAction: { identifiers in
 				guard identifiers.count == 1 else { return }
 				selection.wrappedValue = identifiers.first

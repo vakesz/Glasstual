@@ -8,23 +8,49 @@ import Security
 import SecurityInterface
 import SwiftUI
 
+/** What one Server Properties window edits, and everything it raises.
+
+ One editor per connection, kept by ``ServerPropertiesWindows`` under the
+ connection's identifier, which is also what the window is opened with: asking
+ for the same connection's properties again brings that window forward with
+ its edits. A new connection gets an editor of its own under the identifier its
+ configuration was made with, and its window closes once it is saved.
+
+ The window is not modal, so the edits live until they are saved or reverted.
+ The window cannot be closed while there are any, which is what keeps them from
+ being thrown away by a click on the close button, and quitting asks to review
+ them first. */
 @MainActor
-final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerPropertiesCommands {
-	private(set) var session: ServerSession?
-	private(set) var sessionId: String?
+@Observable
+final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCommands, SheetHost {
+	@ObservationIgnored private(set) var session: ServerSession?
+	@ObservationIgnored private(set) var sessionId: String?
 	let model: ServerPropertiesModel
+	/// The editors this window raises over itself: endpoints, channels,
+	/// highlights and address book entries.
+	let sheetModel = MainWindowSheetModel()
+	/// What the window is opened, found and restored by.
+	let windowID: String
 
-	private let notifications = NotificationSubscriptions()
-	var credentialPersistence = KeychainPersistence.shared
-	var settingsSaves = SettingsSaveQueue.shared
-	let certificateSelection = ClientCertificateSelection()
-	private var certificatePanelRequest: UUID?
-	private weak var clientCertificatePanel: SFChooseIdentityPanel?
+	/// Set when the connection's configuration changed underneath unsaved
+	/// edits, while the window asks whether to reload.
+	var asksToReload = false
+	/// Set when the window should go: a new connection was saved, or a new
+	/// connection was cancelled.
+	private(set) var closeRequested = false
 
-	/// The configuration the person accepted.
-	private let onSave: (ServerConfig) -> Void
+	@ObservationIgnored private let notifications = NotificationSubscriptions()
+	@ObservationIgnored var credentialPersistence = KeychainPersistence.shared
+	@ObservationIgnored var settingsSaves = SettingsSaveQueue.shared
+	@ObservationIgnored let certificateSelection = ClientCertificateSelection()
+	@ObservationIgnored private var certificatePanelRequest: UUID?
+	@ObservationIgnored private weak var clientCertificatePanel: SFChooseIdentityPanel?
 
-	init(session: ServerSession?, onSave: @escaping (ServerConfig) -> Void) {
+	/// The configuration the person saved, and the connection it belongs to:
+	/// `nil` for a connection the save is about to create.
+	@ObservationIgnored private let onSave: @MainActor (ServerConfig, ServerSession?) -> Void
+
+	init(session: ServerSession?, onSave: @escaping @MainActor (ServerConfig, ServerSession?) -> Void) {
 		self.onSave = onSave
 		self.session = session
 		sessionId = session?.uniqueIdentifier
@@ -42,26 +68,33 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			)]
 			model = ServerPropertiesModel(config: config, offersTemplates: true)
 		}
-		super.init(window: nil)
-		installSheet()
+		windowID = model.config.uniqueIdentifier
+		super.init()
 		addConfigurationDidChangeObserver()
 	}
 
-	private func installSheet() {
-		/* No frame here: `ServerPropertiesView` declares the sheet's minimum and
-		 ideal size. Two owners meant the host asked for less than the content
-		 demanded, and the sheet clipped both edges of it. */
-		setContent(ServerPropertiesView(model: model, commands: self))
+	/// The window's title: the connection, or New Server for one that does
+	/// not exist yet.
+	var windowTitle: String {
+		guard model.isNewServer == false else {
+			return String(localized: .ServerProperties.newServerWindowTitle)
+		}
+		let name = model.config.connectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+		return name.isEmpty ? String(localized: .ServerProperties.serverPropertiesWindowGroupTitle) : name
 	}
 
-	/// Opens the sheet on its first pane. The address book is the People
-	/// window's, so no destination opens here any more.
-	func start() {
-		model.selection = model.isBouncerNetwork ? .channelList : .general
-		startSheet()
+	/// The pane being shown, and whether there is anything left to save, the
+	/// way a document window says Edited.
+	var windowSubtitle: String {
+		let pane = String(localized: model.selection.title)
+		guard model.hasUnsavedChanges, model.templatePicker == nil else { return pane }
+		return String(localized: .ServerProperties.windowSubtitleEdited(pane))
 	}
 
-	override func submit() {
+	/** Saves the edits. The window stays open on an existing connection, as a
+	 saved document does; a new connection's window closes, because what it
+	 was for is done. */
+	func submit() {
 		guard !model.isSaving else { return }
 		let pendingCertificate = certificateSelection.isResolvingReference ? certificateSelection.task : nil
 		if pendingCertificate == nil {
@@ -88,11 +121,17 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 				var saved = submitted
 				saved.acknowledgeKeychainEdits(edits)
 				session?.sessionCredentials.apply(edits)
-				model.config = saved
-				removeConfigurationDidChangeObserver()
-				cancelCertificateSelection()
-				onSave(saved)
-				finishSaving()
+				/* Marked saved before the connection is told, so the update the
+				 save itself causes reads as nothing left to reload. */
+				model.markSaved(saved)
+				onSave(saved, session)
+				model.isSaving = false
+				if session == nil {
+					cancelCertificateSelection()
+					closeRequested = true
+				} else {
+					Task { await model.loadSecrets() }
+				}
 				return true
 			} catch {
 				model.isSaving = false
@@ -102,23 +141,34 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		}
 	}
 
-	private func finishSaving() {
-		model.isSaving = false
-		super.submit()
+	/** Throws the edits away: a new connection's window closes, and an existing
+	 connection's goes back to what is saved. Only ever the person's own
+	 choice, from Revert or Cancel. */
+	func cancel() {
+		guard !model.isSaving else { return }
+		guard let session else {
+			cancelCertificateSelection()
+			closeRequested = true
+			return
+		}
+		reload(from: session)
 	}
 
-	override func cancel() {
-		guard !model.isSaving else { return }
-		removeConfigurationDidChangeObserver()
+	private func reload(from session: ServerSession) {
 		cancelCertificateSelection()
-		super.cancel()
+		session.updateStoredConfiguration()
+		let selection = model.selection
+		model.replace(with: session.config)
+		model.selection = selection
+		Task { await model.loadSecrets() }
 	}
 
 	func editEndpoints() {
 		guard let servers = model.serverListForEditing() else { return }
-		let sheet = ServerEndpointListSheet(window: window) { [weak self] serverList in
+		let sheet = ServerEndpointListSheet(window: nil) { [weak self] serverList in
 			self?.model.applyServerList(serverList)
 		}
+		sheet.host = self
 		sheet.start(with: servers)
 	}
 
@@ -132,9 +182,9 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		presentChannelSheet(config: channel)
 	}
 
-	/// A channel raised from here is part of this sheet's pending edit, so its
-	/// keychain items are written when this sheet is accepted rather than when
-	/// the channel editor is.
+	/// A channel raised from here is part of this window's pending edit, so
+	/// its keychain items are written when the window is saved rather than
+	/// when the channel editor is.
 	private func presentChannelSheet(config: ConversationConfig?) {
 		let sheet = ChannelPropertiesSheet(
 			config: config,
@@ -191,9 +241,9 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		model.applySelectedTemplate()
 	}
 
-	/// Hangs a child editor sheet off this sheet's window and starts it.
+	/// Raises a child editor as a sheet on this window.
 	private func presentEditor(_ sheet: SheetSession) {
-		sheet.window = window
+		sheet.host = self
 		sheet.startSheet()
 	}
 
@@ -246,7 +296,11 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		clientCertificatePanel = panel
 		panel.setInformativeText(String(localized: .ServerProperties.selectACertificateToSendWhen))
 		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
-		guard let hostWindow = AppServices.delegate.mainWindow?.frontmostAttachedSheet else { return }
+		/* The panel hangs off the window the button was pressed in, which is
+		 this one and is key while it asks. */
+		guard let hostWindow = (NSApp.keyWindow ?? AppServices.delegate.mainWindow)?.frontmostAttachedSheet else {
+			return
+		}
 		let request = UUID()
 		certificatePanelRequest = request
 		panel.beginSheet(
@@ -293,27 +347,27 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		notifications.cancelAll()
 	}
 
-	/** The connection was reconfigured from somewhere else while the sheet is
-	 open.
+	/** The connection was reconfigured from somewhere else -- `/serverconfig`,
+	 an import, a bouncer -- while the window is open.
 
-	 The alert is a sheet on the window this sheet is already on, so it arrives
-	 over the edits it is asking about. Keeping what is typed is the default;
-	 reloading is the destructive answer, because it throws those edits away. */
+	 With nothing unsaved the window simply follows. With edits, the window asks
+	 over those edits; keeping them is the default and the safe answer, and
+	 reloading is the destructive one, because it throws them away. */
 	private func underlyingConfigurationChanged(_ message: ServerSessionConfigWasUpdated) {
 		let session = message.subject
-		Alerts.present(AlertRequest(
-			title: String(localized: .ServerProperties.thisConnectionsConfigurationHasChangedDo),
-			body: String(localized: .ServerProperties.youWillLooseUnsavedChangesIf),
-			defaultButton: PromptStrings.Action.cancel,
-			alternateButton: String(localized: .ServerProperties.reloadButton),
-			destructiveButton: .alternate,
-			cancelButton: .default
-		)) { [weak self] outcome in
-			guard outcome.response == .alternate, let self else { return }
-			cancelCertificateSelection()
-			session.updateStoredConfiguration()
-			model.replace(with: session.config)
+		guard session.config != model.config else { return }
+		guard model.hasUnsavedChanges else {
+			reload(from: session)
+			return
 		}
+		asksToReload = true
+	}
+
+	/// The answer to the reload question: `true` throws the edits away.
+	func answerReloadQuestion(reload shouldReload: Bool) {
+		asksToReload = false
+		guard shouldReload, let session else { return }
+		reload(from: session)
 	}
 
 	private func cancelCertificateSelection() {
@@ -325,11 +379,13 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		}
 	}
 
-	override func sheetDidEnd() {
-		// An accepted save owns its pending reference even after the sheet closes.
+	/// The window has gone, however it went: its editors go with it.
+	func windowDidClose() {
+		// An accepted save owns its pending reference even after the window closes.
 		if !model.isSaving {
 			cancelCertificateSelection()
 		}
+		sheetModel.dismissPresentedSheet()
 		removeConfigurationDidChangeObserver()
 	}
 }

@@ -60,6 +60,9 @@ final class ApplicationTermination {
 	/// Bounds both scrollback persistence and the independent transcript-file drain.
 	private var scrollbackSaveDeadline: SessionTimer?
 	private var skipConfirmation = false
+	/// Set once the person chose to discard unsaved Server Properties edits,
+	/// so the one quit request that follows does not ask about them again.
+	private var reviewsUnsavedServerProperties = false
 	/// The quit confirmation while it is on screen. Cancelling it takes the
 	/// sheet down without its answer being acted on.
 	private var confirmation: Task<Void, Never>?
@@ -93,6 +96,8 @@ final class ApplicationTermination {
 	 runs the three termination steps, and step three is what reports back to
 	 NSApp. */
 	func applicationShouldTerminate() -> NSApplication.TerminateReply {
+		let hasReviewedUnsavedEdits = reviewsUnsavedServerProperties
+		reviewsUnsavedServerProperties = false
 		if isTerminating {
 			/* Termination is already under way. Answering .terminateNow here
 			 used to schedule step one a second time, tearing everything down
@@ -110,6 +115,10 @@ final class ApplicationTermination {
 			} else {
 				Self.logger.debug("Termination confirmation is already on screen")
 			}
+		} else if skipConfirmation == false, hasReviewedUnsavedEdits == false,
+		          let edited = AppServices.serverProperties.editorsWithUnsavedChanges.first
+		{
+			presentUnsavedChangesReview(bringingForward: edited)
 		} else if skipConfirmation
 			|| SettingsKeys.Connection.confirmQuit.value == false
 			|| delegate.chatSession.sessions.contains(where: { $0.isConnecting || $0.isConnected }) == false
@@ -163,6 +172,41 @@ final class ApplicationTermination {
 			}
 
 			performStepOne()
+		}
+	}
+
+	/** Asks what to do with Server Properties edits nothing has saved, the way
+	 quitting with unsaved documents does: review them, which brings the first
+	 window forward and stays running; cancel; or throw them away and quit. */
+	private func presentUnsavedChangesReview(bringingForward edited: ServerPropertiesEditor) {
+		stage = .confirming
+		let request = AlertRequest(
+			title: String(localized: .ServerProperties.unsavedChangesOnQuitTitle),
+			body: String(localized: .ServerProperties.unsavedChangesOnQuitBody),
+			defaultButton: String(localized: .ServerProperties.reviewChangesButton),
+			alternateButton: PromptStrings.Action.cancel,
+			otherButton: String(localized: .ServerProperties.discardChangesButton),
+			style: .warning,
+			allowsInline: false
+		)
+
+		confirmation = Task { [weak self] in
+			let outcome = await Alerts.run(request, on: .mainWindow)
+			guard Task.isCancelled == false, let self else { return }
+			confirmation = nil
+			stage = .running
+
+			switch outcome.response {
+			case .default:
+				AppServices.serverProperties.bringForward(edited)
+				NSApp.reply(toApplicationShouldTerminate: false)
+			case .alternate:
+				NSApp.reply(toApplicationShouldTerminate: false)
+			case .other:
+				reviewsUnsavedServerProperties = true
+				NSApp.reply(toApplicationShouldTerminate: false)
+				NSApp.terminate(nil)
+			}
 		}
 	}
 

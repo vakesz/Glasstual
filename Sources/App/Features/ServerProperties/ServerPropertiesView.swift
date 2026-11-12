@@ -6,11 +6,10 @@ import SwiftUI
 struct ServerPropertiesView: View {
 	@Bindable var model: ServerPropertiesModel
 
-	/** What the view asks its sheet to do.
+	/** What the view asks its editor to do.
 
-	 Weak because the sheet holds this view as its content: a strong reference
-	 here would keep the sheet alive through itself. A view still on screen
-	 after its sheet has gone has nothing left to ask, which is what `nil`
+	 Weak because the editor outlives nothing it draws: a view still on screen
+	 after its editor has gone has nothing left to ask, which is what `nil`
 	 means. */
 	weak var commands: (any ServerPropertiesCommands)?
 
@@ -22,94 +21,91 @@ struct ServerPropertiesView: View {
 				form
 			}
 		}
-		/* The sheet takes its size from here and nowhere else. The infinite
-		 maxima are what let the user drag its edges: without them the content
-		 refuses to grow and the sheet has nothing to resize into. */
 		.disabled(model.isSaving)
-		.interactiveDismissDisabled(model.isSaving)
-		.frame(
-			minWidth: 820,
-			idealWidth: 900,
-			maxWidth: .infinity,
-			minHeight: 590,
-			idealHeight: 650,
-			maxHeight: .infinity
-		)
-		/* The sheet's keychain secrets are read once as it opens, and the
+		/* The window's keychain secrets are read once as it opens, and the
 		 certificate's description again whenever a different one is chosen. */
 		.task { await model.loadSecrets() }
 		.task(id: model.config.identityClientSideCertificate) { await model.loadCertificate() }
 	}
 
 	private var form: some View {
-		VStack(spacing: 0) {
-			NavigationSplitView {
-				List(selection: $model.selection) {
-					if model.isBouncerNetwork {
-						/* A network of a bouncer account takes its identity, endpoint and
-						 socket settings from the account. */
-						Section(.ServerProperties.navigationSectionConnection) {
-							navigationRows([.channelList, .highlights, .connectCommands])
-							if model.profile != nil {
-								navigationRows([.profile])
-							}
-						}
-						Section(.ServerProperties.bouncer) {
-							navigationRows([.bouncerNetworks])
-						}
-					} else {
-						Section(.ServerProperties.navigationSectionConnection) {
-							navigationRows([.general, .identity])
-							if model.profile != nil {
-								navigationRows([.profile])
-							}
-							navigationRows([
-								.channelList, .highlights,
-								.connectCommands, .disconnectMessages, .encoding,
-							])
-						}
-						Section(.ServerProperties.bouncer) {
-							navigationRows([.zncBouncer, .bouncerNetworks])
-						}
-						Section(.ServerProperties.serverPropertiesNavigationMenuAdvanced) {
-							navigationRows([.clientCertificate, .networkSocket, .proxyServer, .floodControl])
+		NavigationSplitView {
+			List(selection: $model.selection) {
+				if model.isBouncerNetwork {
+					/* A network of a bouncer account takes its identity, endpoint and
+					 socket settings from the account. */
+					Section(.ServerProperties.navigationSectionConnection) {
+						navigationRows([.channelList, .highlights, .connectCommands])
+						if model.profile != nil {
+							navigationRows([.profile])
 						}
 					}
+					Section(.ServerProperties.bouncer) {
+						navigationRows([.bouncerNetworks])
+					}
+				} else {
+					Section(.ServerProperties.navigationSectionConnection) {
+						navigationRows([.general, .identity])
+						if model.profile != nil {
+							navigationRows([.profile])
+						}
+						navigationRows([
+							.channelList, .highlights,
+							.connectCommands, .disconnectMessages, .encoding,
+						])
+					}
+					Section(.ServerProperties.bouncer) {
+						navigationRows([.zncBouncer, .bouncerNetworks])
+					}
+					Section(.ServerProperties.serverPropertiesNavigationMenuAdvanced) {
+						navigationRows([.clientCertificate, .networkSocket, .proxyServer, .floodControl])
+					}
 				}
-				.listStyle(.sidebar)
-				.navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 260)
-			} detail: {
-				pane
 			}
-			/* A sheet has no toolbar to put a sidebar toggle in, so the one the
-			 split view adds by default lands on top of the section list. The
-			 list is always visible here anyway. */
+			.listStyle(.sidebar)
+			.navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 280)
+			/* The pane list is always shown, as it is in System Settings, so the
+			 toggle a split view adds would be a button that hides the window's
+			 only way between panes. */
 			.toolbar(removing: .sidebarToggle)
-
-			SheetActions(
-				confirmTitle: Text(PromptStrings.Action.save),
-				confirmIsDisabled: model.validationMessage != nil,
-				confirmIdentifier: AccessibilityIdentifier.serverPropertiesSave,
-				confirm: { commands?.submit() },
-				cancel: { commands?.cancel() },
-				leading: {
-					if let message = model.validationMessage {
-						ValidationMessageLabel(message)
-					}
-				}
-			)
+		} detail: {
+			VStack(spacing: 0) {
+				selectedPane
+					.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+				actions
+			}
 		}
 	}
 
-	/// The selected pane under its own heading: the heading is drawn here, once,
-	/// from the selection that named the pane.
-	private var pane: some View {
-		VStack(alignment: .leading, spacing: 0) {
-			SheetHeading(Text(model.selection.title))
+	/** Save and Revert, under the pane.
 
-			selectedPane
+	 The window is not modal, so neither button has the keys a sheet's do:
+	 Escape must not throw edits away and Return must not save while a field is
+	 being typed in. Save is Command-S, as it is for a document. A new
+	 connection has nothing to revert to, so its window offers Cancel. */
+	private var actions: some View {
+		HStack(spacing: UISpacing.regular) {
+			if let message = model.validationMessage {
+				ValidationMessageLabel(message)
+			}
+			Spacer(minLength: UISpacing.loose)
+			if model.isNewServer {
+				Button(PromptStrings.Action.cancel) { commands?.cancel() }
+					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesRevert)
+			} else {
+				Button(.ServerProperties.revertButton) { commands?.cancel() }
+					.disabled(model.hasUnsavedChanges == false)
+					.help(Text(.ServerProperties.revertHelp))
+					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesRevert)
+			}
+			Button(PromptStrings.Action.save) { commands?.submit() }
+				.keyboardShortcut("s", modifiers: .command)
+				.buttonStyle(.borderedProminent)
+				.disabled(model.validationMessage != nil)
+				.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesSave)
 		}
-		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+		.padding(.top, UISpacing.wide)
+		.padding([.horizontal, .bottom], SheetMetrics.margin)
 	}
 
 	@ViewBuilder

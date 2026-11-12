@@ -12,6 +12,7 @@ enum ApplicationSceneID {
 	static let onboarding = "onboarding"
 	static let scrollbackSearch = "scrollback-search"
 	static let serverChannelList = "server-channel-list"
+	static let serverProperties = "server-properties"
 	static let highlightLog = "highlight-log"
 	static let transcriptLogViewer = "transcript-log-viewer"
 }
@@ -74,6 +75,7 @@ private struct ApplicationSceneGraph: Scene {
 		OnboardingScene()
 		ScrollbackSearchScene(window: AppServices.scrollbackSearch)
 		ServerChannelListScene(windows: AppServices.serverChannelLists)
+		ServerPropertiesScene(windows: AppServices.serverProperties)
 		HighlightLogScene(windows: AppServices.highlightLogs)
 		TranscriptLogViewerScene(window: AppServices.transcriptLogViewer)
 		SettingsScene(request: settingsRequest)

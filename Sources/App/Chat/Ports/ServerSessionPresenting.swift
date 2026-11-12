@@ -4,7 +4,7 @@
 
 import Foundation
 
-/// Where a menu asks ``ServerPropertiesSheet`` to open, and what it opens
+/// Where a menu asks Server Properties to open, and what it opens
 /// there with. The payloads used to travel beside the case as an `Any?` the
 /// sheet cast back.
 enum ServerPropertiesDestination {

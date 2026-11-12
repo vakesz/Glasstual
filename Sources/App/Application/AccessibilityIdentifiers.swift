@@ -142,6 +142,7 @@ enum AccessibilityIdentifier {
 	// MARK: - Server Properties
 
 	static let serverPropertiesSave = "server-properties-save"
+	static let serverPropertiesRevert = "server-properties-revert"
 	static let serverPropertiesServerPassword = "server-password"
 	static let serverPropertiesNicknamePassword = "server-nickserv-password"
 

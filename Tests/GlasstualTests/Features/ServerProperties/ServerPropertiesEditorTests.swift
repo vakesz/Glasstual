@@ -8,11 +8,11 @@ import SwiftUI
 import Testing
 
 @MainActor
-@Suite("Server properties sheet")
-struct ServerPropertiesSheetTests {
+@Suite("Server properties editor")
+struct ServerPropertiesEditorTests {
 	@Test("Reset removes an unresolved client certificate and cancels a pending replacement", .timeLimit(.minutes(1)))
 	func resetUnavailableCertificate() async throws {
-		let sheet = ServerPropertiesSheet(session: nil) { _ in }
+		let sheet = ServerPropertiesEditor(session: nil) { _, _ in }
 		sheet.model.replace(with: Self.configuration(withSecrets: false))
 		sheet.model.config.identityClientSideCertificate = Data([1])
 		#expect(sheet.model.certificate == nil)
@@ -46,9 +46,9 @@ struct ServerPropertiesSheetTests {
 		#expect(submitted.pendingProxyPassword == .set("proxy-secret"))
 	}
 
-	@Test("Closing the sheet suppresses identity enumeration that finishes late", .timeLimit(.minutes(1)))
+	@Test("Closing the window suppresses identity enumeration that finishes late", .timeLimit(.minutes(1)))
 	func closedCertificateLookupCannotPresent() async throws {
-		let sheet = ServerPropertiesSheet(session: nil) { _ in }
+		let sheet = ServerPropertiesEditor(session: nil) { _, _ in }
 		let (gate, release) = AsyncStream<Void>.makeStream()
 		let loading = Task { for await _ in gate {} }
 		let (started, didStart) = AsyncStream<Void>.makeStream()
@@ -61,7 +61,7 @@ struct ServerPropertiesSheetTests {
 		let pending = try #require(sheet.certificateSelection.task)
 		var iterator = started.makeAsyncIterator()
 		_ = await iterator.next()
-		sheet.sheetDidEnd()
+		sheet.windowDidClose()
 		release.finish()
 		await pending.value
 		#expect(presentations == 0)
@@ -95,7 +95,7 @@ struct ServerPropertiesSheetTests {
 	func saveAwaitsSelectedCertificate(sheetCloses: Bool) async throws {
 		let (saved, didSave) = AsyncStream<ServerConfig>.makeStream()
 		let recorder = CertificateSaveRecorder(saved: didSave)
-		let sheet = ServerPropertiesSheet(session: nil, onSave: recorder.record)
+		let sheet = ServerPropertiesEditor(session: nil, onSave: recorder.record)
 		let persistence = KeychainPersistence { _ in }
 		let saves = SettingsSaveQueue()
 		sheet.credentialPersistence = persistence
@@ -112,7 +112,7 @@ struct ServerPropertiesSheetTests {
 		sheet.cancel()
 		#expect(sheet.model.isSaving)
 		if sheetCloses {
-			sheet.sheetDidEnd()
+			sheet.windowDidClose()
 		}
 		#expect(saves.hasPendingSaves)
 		let quit = saves.waitForSaves()
@@ -477,7 +477,7 @@ private final class CertificateSaveRecorder {
 		self.saved = saved
 	}
 
-	func record(_ config: ServerConfig) {
+	func record(_ config: ServerConfig, _: ServerSession?) {
 		savedCount += 1
 		saved.yield(config)
 		saved.finish()

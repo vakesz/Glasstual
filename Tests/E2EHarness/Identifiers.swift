@@ -125,6 +125,7 @@ enum AXID {
 	/// The Server Properties sheet, known by its Save button.
 	static let serverProperties = serverPropertiesSave
 	static let serverPropertiesSave = "server-properties-save"
+	static let serverPropertiesRevert = "server-properties-revert"
 	static let serverPassword = "server-password"
 	static let nicknamePassword = "server-nickserv-password"
 

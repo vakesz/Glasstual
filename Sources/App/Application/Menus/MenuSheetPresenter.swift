@@ -50,12 +50,9 @@ enum MenuSheetPresenter {
 		return true
 	}
 
-	/** Opens the connection sheet, on an existing connection or on a new one.
-
-	 A new connection is created once the sheet is accepted; an existing one is
-	 updated in place, and the transcript is redrawn only where the encoding
-	 changed, because that is what decides how the lines already on screen are
-	 decoded. */
+	/** Opens the Server Properties window, on an existing connection or on a
+	 new one. The window is not a sheet, so whatever sheet the main window is
+	 showing stays where it is. */
 	static func presentServerProperties(
 		for session: ServerSession?,
 		at destination: ServerPropertiesDestination = .default
@@ -71,16 +68,23 @@ enum MenuSheetPresenter {
 			AppServices.addressBooks.open(for: session, request: request.editRequest)
 			return
 		}
-		present(ServerPropertiesSheet(session: session) { [weak session] config in
-			guard let directory = AppServices.chatSession else { return }
-			guard let session else {
-				let created = directory.createSession(with: config)
-				window?.expandSession(created)
-				directory.save()
-				return
-			}
-			applyServerConfiguration(config, to: session)
-		}) { $0.start() }
+		AppServices.serverProperties.open(for: session)
+	}
+
+	/** What a Server Properties window's Save does with the configuration.
+
+	 A new connection is created; an existing one is updated in place, and the
+	 transcript is redrawn only where the encoding changed, because that is what
+	 decides how the lines already on screen are decoded. */
+	static func saveServerProperties(_ config: ServerConfig, to session: ServerSession?) {
+		guard let directory = AppServices.chatSession else { return }
+		guard let session else {
+			let created = directory.createSession(with: config)
+			window?.expandSession(created)
+			directory.save()
+			return
+		}
+		applyServerConfiguration(config, to: session)
 	}
 
 	/// The conversation's way into the connection sheet: `/serverconfig`, or

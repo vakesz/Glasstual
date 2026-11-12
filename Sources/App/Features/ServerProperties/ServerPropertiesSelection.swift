@@ -66,3 +66,31 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		}
 	}
 }
+
+extension ServerPropertiesSelection {
+	/// The panes a network of a bouncer account lists; it takes the others
+	/// from the account.
+	static let bouncerNetworkPanes: Set<Self> = [
+		.channelList, .highlights, .connectCommands, .profile, .bouncerNetworks,
+	]
+
+	/// The pane a window stored by name, as its accessibility identifier and
+	/// `String(describing:)` spell it.
+	init?(storedName name: String) {
+		guard let pane = Self.allCases.first(where: { String(describing: $0) == name }) else { return nil }
+		self = pane
+	}
+
+	/// The name a window stores the pane under.
+	var storedName: String {
+		String(describing: self)
+	}
+
+	/// Whether the sidebar lists this pane for `model`'s connection.
+	func isListed(for model: ServerPropertiesModel) -> Bool {
+		if self == .profile, model.profile == nil {
+			return false
+		}
+		return model.isBouncerNetwork == false || Self.bouncerNetworkPanes.contains(self)
+	}
+}

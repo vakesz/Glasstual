@@ -13,6 +13,7 @@ struct ServerEndpointListView: View {
 			SheetHeading(.ServerProperties.endpointListWindowTitle, subtitle: Text(.ServerProperties.explanation))
 
 			endpointTable
+				.padding(.horizontal, SheetMetrics.margin)
 
 			VStack(alignment: .leading, spacing: UISpacing.tight) {
 				ForEach(model.faults, id: \.self) { fault in
@@ -26,52 +27,30 @@ struct ServerEndpointListView: View {
 			.padding(.horizontal, SheetMetrics.margin)
 			.padding(.vertical, UISpacing.regular)
 
-			/* The list is handed back to the connection sheet, which is what
-			 saves it. */
+			/* The list is handed back to the Server Properties window, which is
+			 what saves it. */
 			SheetActions(
 				confirmTitle: .sheetConfirmation,
 				confirmIsDisabled: model.faults.isEmpty == false,
 				confirm: submit,
 				cancel: cancel
 			) {
-				Button(action: model.addEntry) {
-					Label(String(localized: .ServerProperties.addServer), systemImage: "plus")
-						.labelStyle(.iconOnly)
+				ListEditingControls(
+					addLabel: Text(.ServerProperties.addServer),
+					removeLabel: Text(.ServerProperties.removeServer),
+					canRemove: model.selectedID != nil,
+					add: model.addEntry,
+					remove: model.removeSelection
+				) {
+					Button(.ServerProperties.moveUp) { model.moveSelection(by: -1) }
+						.disabled(model.canMoveSelectionUp == false)
+					Button(.ServerProperties.moveDown) { model.moveSelection(by: 1) }
+						.disabled(model.canMoveSelectionDown == false)
 				}
-				.help(.ServerProperties.addServer)
-
-				Button(role: .destructive, action: model.removeSelection) {
-					Label(String(localized: .ServerProperties.removeServer), systemImage: "minus")
-						.labelStyle(.iconOnly)
-				}
-				.disabled(model.selectedID == nil)
-				.help(.ServerProperties.removeServer)
-
-				Divider().frame(height: 18)
-
-				Button { model.moveSelection(by: -1) } label: {
-					Label(String(localized: .ServerProperties.moveUp), systemImage: "arrow.up")
-						.labelStyle(.iconOnly)
-				}
-				.disabled(model.canMoveSelectionUp == false)
-				.help(.ServerProperties.moveUp)
-
-				Button { model.moveSelection(by: 1) } label: {
-					Label(String(localized: .ServerProperties.moveDown), systemImage: "arrow.down")
-						.labelStyle(.iconOnly)
-				}
-				.disabled(model.canMoveSelectionDown == false)
-				.help(.ServerProperties.moveDown)
+				.fixedSize()
 			}
 		}
-		.frame(
-			minWidth: 760,
-			idealWidth: 860,
-			maxWidth: .infinity,
-			minHeight: 360,
-			idealHeight: 440,
-			maxHeight: .infinity
-		)
+		.sheetFrame(.wide, minHeight: 360, idealHeight: 440)
 	}
 
 	/** The endpoints, as a table rather than a stack of rows under hand-drawn
@@ -143,17 +122,18 @@ struct ServerEndpointListView: View {
 		}
 		.onDeleteCommand(perform: model.removeSelection)
 		.contextMenu(forSelectionType: ServerEndpointDraft.ID.self) { selection in
-			Button(.ServerProperties.moveUp) { move(selection, by: -1) }
-				.disabled(selection.count != 1)
-			Button(.ServerProperties.moveDown) { move(selection, by: 1) }
-				.disabled(selection.count != 1)
-			Divider()
-			Button(.ServerProperties.removeServer, role: .destructive) {
-				guard let id = selection.first else { return }
-				model.selectedID = id
-				model.removeSelection()
+			if selection.count == 1 {
+				Button(.ServerProperties.moveUp) { move(selection, by: -1) }
+				Button(.ServerProperties.moveDown) { move(selection, by: 1) }
+				Divider()
 			}
-			.disabled(selection.isEmpty)
+			if selection.isEmpty == false {
+				Button(.ServerProperties.removeServer, role: .destructive) {
+					guard let id = selection.first else { return }
+					model.selectedID = id
+					model.removeSelection()
+				}
+			}
 		}
 		.accessibilityLabel(.ServerProperties.serverList)
 	}

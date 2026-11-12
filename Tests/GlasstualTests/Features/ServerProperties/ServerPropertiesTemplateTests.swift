@@ -101,10 +101,10 @@ struct ServerPropertiesTemplateTests {
 
 	@Test("A new custom server starts with TLS on port 6697 without changing saved endpoint defaults")
 	func newCustomServerUsesSecureDefaults() throws {
-		let sheet = ServerPropertiesSheet(session: nil) { _ in
+		let sheet = ServerPropertiesEditor(session: nil) { _, _ in
 			Issue.record("Inspecting a new server draft must not save it")
 		}
-		defer { sheet.sheetDidEnd() }
+		defer { sheet.windowDidClose() }
 		let model = sheet.model
 		try #require(model.templatePicker).selection = .customServer
 		model.applySelectedTemplate()

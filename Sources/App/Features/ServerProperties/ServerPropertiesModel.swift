@@ -95,6 +95,13 @@ final class ServerPropertiesModel {
 	/// The bundled network catalog the Server Address field completes against.
 	let networkList: NetworkList
 
+	/// Whether this edits a connection that does not exist until it is saved.
+	let isNewServer: Bool
+
+	/// What the window last loaded or saved, which is what an edit is measured
+	/// against. Set as soon as the fields are.
+	var savedEditState: ServerPropertiesEditState?
+
 	/** The network list a new connection starts on, until a row is chosen.
 
 	 `nil` for a connection that already exists — there is nothing to start it
@@ -129,6 +136,7 @@ final class ServerPropertiesModel {
 	init(config: ServerConfig, networkList: NetworkList = NetworkList(), offersTemplates: Bool = false) {
 		self.config = config
 		self.networkList = networkList
+		isNewServer = offersTemplates
 		templatePicker = offersTemplates ? NetworkPickerListModel(networkList: networkList) : nil
 		let fields = DerivedFields(config: config, networkList: networkList)
 		lastResolvedAddressText = fields.serverAddress
@@ -152,6 +160,7 @@ final class ServerPropertiesModel {
 		if config.bouncerNetwork != nil {
 			selection = .channelList
 		}
+		savedEditState = editState
 	}
 
 	/** The fields the sheet edits as text, taken apart from the configuration.
@@ -214,6 +223,7 @@ final class ServerPropertiesModel {
 		secretTexts[.nicknamePassword] = secret(config.pendingNicknamePassword, from: config.nicknamePasswordKeychainItem)
 		secretTexts[.proxyPassword] = secret(config.pendingProxyPassword, from: config.proxyPasswordKeychainItem)
 		secretTexts[.saslBearerToken] = secret(config.pendingSASLBearerToken, from: config.saslBearerTokenKeychainItem)
+		savedEditState = editState
 	}
 
 	/** Reads the sheet's secrets off the main actor.

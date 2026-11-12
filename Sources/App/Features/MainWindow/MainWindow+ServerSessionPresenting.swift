@@ -22,6 +22,11 @@ extension MainWindow: ServerSessionPresenting {
 		AppServices.channelMaskList.close { $0.sessionId == sessionIdentifier }
 		AppServices.highlightLogs.close(for: sessionIdentifier)
 		AppServices.addressBooks.close(for: sessionIdentifier)
+		/* Quitting leaves the Server Properties windows open, so they are
+		 restored with the connections on the next launch. */
+		if AppServices.delegate?.applicationIsTerminating != true {
+			AppServices.serverProperties.close(forSession: sessionIdentifier)
+		}
 	}
 
 	func maskListEntryReceived(
