@@ -114,9 +114,11 @@ extension MenuActionController {
 			title: String(localized: .Prompts.dropSendTitle(names.formatted(.list(type: .and)), nickname)),
 			body: String(localized: .Prompts.dropSendBody(nickname)),
 			defaultButton: PromptStrings.Action.send,
-			alternateButton: PromptStrings.Action.cancel
-		), on: .mainWindow) { [weak self] outcome in
-			guard outcome.response == .default, let self,
+			alternateButton: PromptStrings.Action.cancel,
+			sensitivity: .security,
+			keywords: [.default: .send, .alternate: .cancel]
+		), about: session.promptScope(in: context.selectedConversation, boundToConnection: false)) { [weak self] answer in
+			guard answer.response == .default, let self,
 			      context.selectedSession === session, session.isLoggedIn
 			else { return }
 			sendDroppedFiles(files, nickname: nickname)

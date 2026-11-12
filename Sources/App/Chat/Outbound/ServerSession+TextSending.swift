@@ -181,7 +181,7 @@ extension ServerSession {
 		let shouldWarn = lineCount > 4 || source.length > 2040
 		if shouldWarn {
 			let destinationName = destination.name
-			requestConfirmation(Self.potentialFloodAlert, isCurrent: { session in
+			requestConfirmation(Self.potentialFloodAlert, in: destination as? Conversation, isCurrent: { session in
 				destination === session || (destination.name == destinationName &&
 					session.conversationList.contains { $0 === destination })
 			}, perform: { session in
@@ -358,14 +358,15 @@ extension ServerSession {
 	 Send/Cancel, not Yes/No: the question is whether to send, so the button
 	 that does it says so -- and the one that answers Escape says that nothing
 	 was sent. */
-	private static var potentialFloodAlert: AlertRequest {
+	static var potentialFloodAlert: AlertRequest {
 		AlertRequest(
 			title: String(localized: .IRC.messageThatYouAreSending),
 			body: String(localized: .IRC.areYouSureYouWant),
 			defaultButton: PromptStrings.Action.send,
 			alternateButton: PromptStrings.Action.cancel,
 			suppressionKey: OutboundTextSuppressionKey.potentialFlood.rawValue,
-			style: .warning
+			style: .warning,
+			keywords: [.default: .send, .alternate: .cancel]
 		)
 	}
 

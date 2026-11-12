@@ -78,7 +78,8 @@ enum ServerConnection {
 		/* Three buttons, because the question has three answers. Making
 		 "Create New Connection" the Escape button meant dismissing the alert
 		 connected somewhere the reader had not agreed to go. */
-		let outcome = await Alerts.run(AlertRequest(
+		guard let prompts = session.prompts else { return .cancel }
+		let answer = await prompts.ask(AlertRequest(
 			title: PromptStrings.ConnectionLink.title(
 				serverAddress: address,
 				channelNames: channelNames,
@@ -91,10 +92,11 @@ enum ServerConnection {
 			defaultButton: PromptStrings.ConnectionLink.useExistingConnectionButtonTitle,
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle,
-			style: .warning
-		), on: .mainWindow)
+			style: .warning,
+			keywords: [.default: .existing, .alternate: .cancel, .other: .new]
+		), about: session.promptScope(boundToConnection: false))
 
-		return switch outcome.response {
+		return switch answer.response {
 		case .default: .useExisting
 		case .other: .createNew
 		case .alternate: .cancel

@@ -317,6 +317,16 @@ private extension MenuActionController {
 			}
 		}
 
+		/// The word the confirming button is typed as in the conversation.
+		var keyword: PromptKeyword {
+			switch self {
+			case .kick: .kick
+			case .ban: .ban
+			case .banAccount: .banAccount
+			case .kickban: .kickban
+			}
+		}
+
 		var button: String {
 			switch self {
 			case .kick: String(localized: .Prompts.moderationKickButton)
@@ -352,11 +362,14 @@ private extension MenuActionController {
 			body: kind.body,
 			defaultButton: kind.button,
 			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default
+			destructiveButton: .default,
+			keywords: [.default: kind.keyword, .alternate: .cancel]
 		)
 		request.accessibilityIdentifier = AccessibilityIdentifier.moderationConfirmation
-		Alerts.present(request, on: .anyVisibleWindow) { outcome in
-			guard outcome.response == .default, session.isLoggedIn else { return }
+		Alerts.present(
+			request, about: session.promptScope(in: channel, boundToConnection: false, revealsMainWindow: false)
+		) { answer in
+			guard answer.response == .default, session.isLoggedIn else { return }
 			for nickname in nicknames {
 				action(session, channel, nickname)
 			}
@@ -400,14 +413,15 @@ private extension MenuActionController {
 		context.deselectMembers(for: sender)
 		let session = target.session
 		let nicknames = target.nicknames
-		mainWindow.sheetModel.presentInputPrompt(InputPromptRequest(
+		Alerts.present(AlertRequest(
 			title: PromptStrings.VirtualHost.title,
-			message: PromptStrings.VirtualHost.body,
-			placeholder: PromptStrings.VirtualHost.placeholder,
-			submitButtonTitle: PromptStrings.Action.confirmation,
-			cancelButtonTitle: PromptStrings.Action.cancel
-		)) { outcome in
-			guard case let .submitted(input) = outcome else { return }
+			body: PromptStrings.VirtualHost.body,
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: PromptStrings.Action.cancel,
+			field: .text(placeholder: PromptStrings.VirtualHost.placeholder, initialValue: ""),
+			keywords: [.default: .submit, .alternate: .cancel]
+		), about: session.promptScope(in: target.conversation, boundToConnection: false)) { answer in
+			guard answer.response == .default, let input = answer.text else { return }
 			let vhost = input.firstToken
 			guard vhost.isEmpty == false else { return }
 			for nickname in nicknames {

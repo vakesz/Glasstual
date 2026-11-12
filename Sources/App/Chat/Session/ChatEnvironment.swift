@@ -39,6 +39,10 @@ extension ServerSession {
 		environment.services.menu
 	}
 
+	var prompts: (any PromptPresenting)? {
+		environment.services.prompts
+	}
+
 	var channelListPresentation: (any ChannelListPresenting)? {
 		environment.services.channelList
 	}

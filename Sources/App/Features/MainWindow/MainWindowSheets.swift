@@ -16,7 +16,7 @@ private let mainWindowSheetLogger = Logger(
 
  Not the window's own presentation -- the columns are that -- but the
  presentations it happens to host: the sheet chain its features and the shared
- alerts attach to, the input prompt, the file chooser a transfer offer opens and
+ alerts attach to, the file chooser a transfer offer opens and
  the settings archive's import and export. They share one owner because they
  share one rule: only the outermost of them is ever the window's, and each of the
  rest belongs to whatever raised it. */
@@ -26,7 +26,6 @@ final class MainWindowSheetModel {
 	/// The outermost sheet the window is showing; each one holds whatever it
 	/// raised on top of itself.
 	private(set) var presentedSheet: MainWindowSheet?
-	private(set) var inputPrompt: InputPromptPresentation?
 	var isChoosingTransferFiles = false
 	let settingsTransfer = MainWindowSettingsTransferModel()
 
@@ -65,25 +64,6 @@ final class MainWindowSheetModel {
 			presentedSheet?.chain.first { $0.child === presentation }?.child = nil
 		}
 		presentation.finish()
-	}
-
-	// MARK: - Input prompts
-
-	func presentInputPrompt(
-		_ request: InputPromptRequest,
-		completion: @escaping @MainActor (InputPromptOutcome) -> Void
-	) {
-		let previous = inputPrompt
-		inputPrompt = InputPromptPresentation(request: request, completion: completion)
-		previous?.finish(.cancelled)
-	}
-
-	/// Consume the current presentation before calling back, so completion can
-	/// open another prompt. A delayed dismissal only applies to its own prompt.
-	func completeInputPrompt(_ outcome: InputPromptOutcome, for presentation: InputPromptPresentation) {
-		guard inputPrompt === presentation else { return }
-		inputPrompt = nil
-		presentation.finish(outcome)
 	}
 
 	// MARK: - Choosing files to send

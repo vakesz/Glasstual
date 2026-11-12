@@ -15,6 +15,7 @@ struct ServerSessionMultilineSendingTests {
 		session.userNickname = "me"
 		session.identity.hostmask = "me!user@example.org"
 		session.markAsLoggedIn()
+		session.recordedOutput.answersManually = true
 		if negotiated {
 			session.enableCapability(.batch)
 			session.enableCapability(.messageTags)
@@ -159,11 +160,12 @@ struct ServerSessionMultilineSendingTests {
 	}
 
 	@Test("Pasting asks how to send, and sends nothing until answered")
-	func pasteAsksFirst() throws {
+	func pasteAsksFirst() async throws {
 		let session = session()
 		let channel = try channel(on: session)
 
 		session.inputText("one\ntwo", destination: channel)
+		try await Eventually.until("the question") { session.recordedOutput.presentedAlerts.isEmpty == false }
 
 		let alert = try #require(session.recordedOutput.presentedAlerts.first)
 		#expect(session.recordedOutput.presentedAlerts.count == 1)
@@ -175,11 +177,12 @@ struct ServerSessionMultilineSendingTests {
 	}
 
 	@Test("Text over the limits asks to truncate instead")
-	func overLimitAsksToTruncate() throws {
+	func overLimitAsksToTruncate() async throws {
 		let session = session(limits: ["max-bytes=4096", "max-lines=2"])
 		let channel = try channel(on: session)
 
 		session.inputText("a\nb\nc", destination: channel)
+		try await Eventually.until("the question") { session.recordedOutput.presentedAlerts.isEmpty == false }
 
 		let alert = try #require(session.recordedOutput.presentedAlerts.first)
 		#expect(alert.defaultButton == String(localized: .MultilineSending.truncateAndSendButton))

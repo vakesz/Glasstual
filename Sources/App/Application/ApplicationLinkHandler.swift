@@ -162,7 +162,7 @@ enum ApplicationLinkHandler {
 	@discardableResult
 	static func open(
 		_ location: String,
-		presenter: any AlertPresenter = SystemAlertPresenter(),
+		prompts: any PromptPresenting = AppServices.prompts,
 		perform: @escaping Performer = performAction
 	) -> Task<Void, Never>? {
 		guard ChatServices.shared.applicationState?.applicationIsTerminating != true else { return nil }
@@ -172,7 +172,7 @@ enum ApplicationLinkHandler {
 				perform(action, source)
 				return nil
 			}
-			return confirm(action, source: source, presenter: presenter, perform: perform)
+			return confirm(action, source: source, prompts: prompts, perform: perform)
 		case let .connect(intent):
 			ServerConnection.connect(using: intent)
 		case nil:
@@ -190,14 +190,18 @@ enum ApplicationLinkHandler {
 	private static func confirm(
 		_ action: ApplicationLink.Action,
 		source: URL,
-		presenter: any AlertPresenter,
+		prompts: any PromptPresenting,
 		perform: @escaping Performer
 	) -> Task<Void, Never> {
 		pendingConfirmation?.cancel()
 		let request = TranscriptCommands.openLinkRequest(for: source)
+		/* A link from another application is about no conversation: the
+		 question appears wherever the reader is, and Open has to be spelled
+		 out there. Cancelling the task for a newer link withdraws it. */
 		let task = Task {
-			let outcome = await Alerts.run(request, on: .mainWindow, using: presenter)
-			guard !Task.isCancelled, outcome.response == .alternate else { return }
+			guard !Task.isCancelled else { return }
+			let answer = await prompts.ask(request, about: .application)
+			guard !Task.isCancelled, answer.response == .alternate else { return }
 			perform(action, source)
 		}
 		pendingConfirmation = task

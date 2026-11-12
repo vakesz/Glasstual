@@ -9,6 +9,8 @@ import Foundation
 @MainActor
 final class ChatServices {
 	weak var output: (any ServerSessionPresenting)?
+	/// Where questions are asked: as alerts, or in the conversation.
+	weak var prompts: (any PromptPresenting)?
 	weak var menu: (any MenuPresenting)?
 	weak var channelList: (any ChannelListPresenting)?
 	weak var applicationState: (any ApplicationStatePresenting)?
@@ -41,6 +43,7 @@ final class ChatServices {
 
 	init(
 		output: (any ServerSessionPresenting)? = nil,
+		prompts: (any PromptPresenting)? = nil,
 		menu: (any MenuPresenting)? = nil,
 		channelList: (any ChannelListPresenting)? = nil,
 		applicationState: (any ApplicationStatePresenting)? = nil,
@@ -56,6 +59,7 @@ final class ChatServices {
 		dccPeerCertificates: DCCPeerCertificateStore = .shared
 	) {
 		self.output = output
+		self.prompts = prompts
 		self.menu = menu
 		self.channelList = channelList
 		self.applicationState = applicationState

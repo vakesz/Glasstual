@@ -107,6 +107,9 @@ struct DCCPendingDecisions {
 		var question: Question
 		let startupIdentifier: UUID
 		let socketIdentifier: String?
+		/// The question as it is put to the user. Taking the decision out of
+		/// the table withdraws it.
+		var prompt: Task<Void, Never>?
 	}
 
 	/// What adding a waiter came to.
@@ -176,11 +179,22 @@ struct DCCPendingDecisions {
 		return add(.chatOffer(question), startupIdentifier: startupIdentifier, socketIdentifier: socketIdentifier)
 	}
 
-	/// Takes the decision out of the table. The first answer wins: a later one
-	/// finds nothing.
+	/// Records the task that puts the question to the user.
+	mutating func attachPrompt(_ prompt: Task<Void, Never>, toDecisionWithID id: String) {
+		guard let index = decisions.firstIndex(where: { $0.id == id }) else {
+			prompt.cancel()
+			return
+		}
+		decisions[index].prompt = prompt
+	}
+
+	/// Takes the decision out of the table and withdraws its question. The
+	/// first answer wins: a later one finds nothing.
 	mutating func remove(id: String) -> Decision? {
 		guard let index = decisions.firstIndex(where: { $0.id == id.lowercased() }) else { return nil }
-		return decisions.remove(at: index)
+		let decision = decisions.remove(at: index)
+		decision.prompt?.cancel()
+		return decision
 	}
 
 	/** Takes one waiter out of its question, for a connection that ended
@@ -193,7 +207,9 @@ struct DCCPendingDecisions {
 			else { continue }
 			let waiter = question.waiters.remove(at: position)
 			if question.waiters.isEmpty {
-				return (waiter, decisions.remove(at: index))
+				let decision = decisions.remove(at: index)
+				decision.prompt?.cancel()
+				return (waiter, decision)
 			}
 			decisions[index].question = .trust(question)
 			return (waiter, nil)
@@ -204,6 +220,7 @@ struct DCCPendingDecisions {
 	/// Empties the table, for a session whose connection ended.
 	mutating func removeAll() -> [Decision] {
 		defer { decisions.removeAll() }
+		decisions.forEach { $0.prompt?.cancel() }
 		return decisions
 	}
 

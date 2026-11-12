@@ -212,6 +212,7 @@ extension ServerSession {
 	func closeDialogs() {
 		channelListPresentation?.closeChannelList(for: self)
 		output?.closeSheets(for: self)
+		prompts?.withdrawPrompts(inSession: uniqueIdentifier, connectionBoundOnly: false)
 	}
 
 	func settingsChanged(_ action: SettingsReloadAction) {

@@ -102,6 +102,7 @@ final class ChatEnvironmentFixture {
 	init(settings: ChatSettings = .current()) {
 		let services = ChatServices(
 			output: output,
+			prompts: output,
 			menu: menu,
 			applicationState: applicationState,
 			notifications: notifications,

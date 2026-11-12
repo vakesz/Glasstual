@@ -189,7 +189,9 @@ extension ServerSession {
 			defaultButton: ConnectionSafetyStrings.Credentials.dontSend,
 			alternateButton: ConnectionSafetyStrings.Credentials.send,
 			cancelButton: .default,
-			style: .warning
+			style: .warning,
+			sensitivity: .security,
+			keywords: [.default: .dontSend, .alternate: .send]
 		)
 		request.accessibilityIdentifier = AccessibilityIdentifier.credentialConsent
 		return request

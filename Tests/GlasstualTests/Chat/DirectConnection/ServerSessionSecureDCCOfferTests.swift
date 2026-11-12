@@ -23,6 +23,7 @@ struct ServerSessionSecureDCCOfferTests {
 		session.userNickname = "me"
 		session.identity.hostmask = "me!u@h"
 		session.markAsLoggedIn()
+		session.recordedOutput.answersManually = true
 		session.forwardsProcessedMessages = true
 		return session
 	}
@@ -80,24 +81,29 @@ struct ServerSessionSecureDCCOfferTests {
 	}
 
 	@Test("A secure chat offer is put to the user as encrypted, with a typed way to answer it")
-	func secureChatOfferIsAsked() throws {
+	func secureChatOfferIsAsked() async throws {
 		let session = makeSession()
 
 		try offer("SCHAT chat 1568397154 5000", on: session)
+		try await Eventually.until("the question") { session.recordedOutput.presentedAlerts.isEmpty == false }
 
 		let alert = try #require(session.recordedOutput.presentedAlerts.first)
+		#expect(alert.reference == "d1")
+		#expect(alert.sensitivity == .security)
+		#expect(alert.keyword(for: .default) == .accept)
+		#expect(alert.keyword(for: .alternate) == .decline)
 		#expect(alert.title == PromptStrings.DirectChat.secureTitle(sender: "alice"))
 		#expect(alert.body == ConnectionSafetyStrings.DirectChat.secureRequestBody(sender: "alice", address: "93.123.215.98"))
 		#expect(printedBodies(of: session) == [
 			String(localized: .IRC.wantsToStartASecureDirectChat("alice")),
-			String(localized: .IRC.dccChatOfferAnswerHint("d1")),
 		])
 	}
 
 	@Test("A chat offer is answered once, by the alert or by /dcc decline, whichever comes first")
-	func chatOfferIsAnsweredOnce() throws {
+	func chatOfferIsAnsweredOnce() async throws {
 		let session = makeSession()
 		try offer("SCHAT chat 0 0 T9", on: session)
+		try await Eventually.until("the question") { session.recordedOutput.presentedAlertCompletions.isEmpty == false }
 		let completion = try #require(session.recordedOutput.presentedAlertCompletions.first)
 
 		session.handleDCCCommand(CommandArguments("decline d1"), command: "DCC", targetConversation: nil)

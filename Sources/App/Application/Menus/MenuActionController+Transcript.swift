@@ -149,7 +149,7 @@ extension MenuActionController {
 			title: PromptStrings.Logging.noLogsTitle,
 			body: PromptStrings.Logging.emptyAlertBody,
 			defaultButton: PromptStrings.Action.confirmation
-		), on: .anyVisibleWindow)
+		), about: PromptScope(origin: .application, revealsMainWindow: false))
 	}
 
 	private func sendReaction(_ emoji: String?, messageIdentifier: String?) {

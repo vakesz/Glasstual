@@ -403,8 +403,10 @@ extension ServerSession {
 					defaultButton: PromptStrings.Action.delete,
 					alternateButton: PromptStrings.Action.cancel,
 					destructiveButton: .default,
-					style: .warning
+					style: .warning,
+					keywords: [.default: .delete, .alternate: .cancel]
 				),
+				in: targetConversation,
 				isCurrent: { session in
 					session.conversationList.contains { $0 === targetConversation }
 						&& targetConversation.name == originalName

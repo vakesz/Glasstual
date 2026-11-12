@@ -13,14 +13,17 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	private(set) var reloadedGroups: [ChatItem] = []
 	private(set) var titleUpdates: [ChatItem?] = []
 	private(set) var clearedItems: [ChatItem] = []
-	/// Every sheet the protocol layer asked for, in order. No window is
-	/// involved, which is the point of the seam.
+	/// Every question the protocol layer asked, in order, whatever form it
+	/// would take. No window is involved, which is the point of the seam.
 	private(set) var presentedAlerts: [AlertRequest] = []
-	/// The completion of each sheet in ``presentedAlerts``, at the same index,
-	/// so a test can answer one as the user would, and as late as it likes.
+	/// Where each question in ``presentedAlerts`` belongs, at the same index.
+	private(set) var presentedScopes: [PromptScope] = []
+	/// Answers each question in ``presentedAlerts`` at the same index, as the
+	/// user would and as late as a test likes, while ``answersManually`` is on.
 	private(set) var presentedAlertCompletions: [AlertCompletion] = []
-	/// Every confirmation the protocol layer asked for, in order.
-	private(set) var confirmations: [AlertRequest] = []
+	/// The sessions and conversations whose questions were withdrawn.
+	private(set) var withdrawnSessions: [String] = []
+	private(set) var withdrawnConversations: [String] = []
 	private(set) var closedSheetSessions: [ServerSession] = []
 	/// One `+b`/`+e`/`+I`/`+q` entry a window would have taken, and the list it
 	/// was routed to.
@@ -36,13 +39,18 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	/// The `(channel, mode letter)` pairs an end-of-list reply was routed to.
 	private(set) var maskListFinishes: [String] = []
 
-	/// Tests can suspend the answer to exercise stale-session handling.
+	/// Tests can suspend the answer to exercise stale-session handling. A
+	/// `true` answer is the default button, `false` the Escape button.
 	var confirmation: (@MainActor (AlertRequest) async -> Bool)?
-	var confirmationAnswer = true
-	/// Every question asked through ``respond(to:)``, in order.
+	/// Every question that was answered at once, in order.
 	private(set) var responseRequests: [AlertRequest] = []
-	/// The button ``respond(to:)`` answers with. The default button is the safe one.
+	/// The button a question is answered with at once. The default button is the safe one.
 	var responseAnswer = AlertResponse.default
+	/// What a question with a field is answered with at once.
+	var responseText: String?
+	/// Leaves every question waiting until a test answers it through
+	/// ``presentedAlertCompletions``.
+	var answersManually = false
 	var showsMaskListSheet = false
 	/// The channels whose sheets the protocol layer asked to have closed.
 	private(set) var closedSheetChannelIds: [String] = []
@@ -55,24 +63,6 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	var isKeyWindow = false
 	var isMainWindow = false
 	var visibleItems: [ChatItem] = []
-
-	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
-		presentedAlerts.append(request)
-		presentedAlertCompletions.append(completion)
-	}
-
-	func confirm(_ request: AlertRequest) async -> Bool {
-		confirmations.append(request)
-		if let confirmation {
-			return await confirmation(request)
-		}
-		return confirmationAnswer
-	}
-
-	func respond(to request: AlertRequest) async -> AlertResponse {
-		responseRequests.append(request)
-		return responseAnswer
-	}
 
 	func closeSheets(for session: ServerSession) {
 		closedSheetSessions.append(session)
@@ -168,4 +158,64 @@ final class RecordingSessionOutput: ServerSessionPresenting {
 	}
 
 	func destroyInputHistory(for _: ChatItem) {}
+}
+
+extension RecordingSessionOutput: PromptPresenting {
+	func ask(_ request: AlertRequest, about scope: PromptScope) async -> PromptAnswer {
+		presentedAlerts.append(request)
+		presentedScopes.append(scope)
+		if let confirmation {
+			let accepted = await confirmation(request)
+			return PromptAnswer(outcome: AlertOutcome(response: accepted ? .default : request.escapeButton, isSuppressed: false))
+		}
+		guard answersManually else {
+			responseRequests.append(request)
+			return PromptAnswer(outcome: AlertOutcome(response: responseAnswer, isSuppressed: false), text: responseText)
+		}
+		let pending = PendingAnswer()
+		presentedAlertCompletions.append { pending.resume(with: PromptAnswer(outcome: $0)) }
+		return await withTaskCancellationHandler {
+			await withCheckedContinuation { continuation in
+				pending.wait(continuation, escape: .escape(for: request))
+			}
+		} onCancel: {
+			Task { @MainActor in pending.resume(with: .escape(for: request)) }
+		}
+	}
+
+	func withdrawPrompts(inSession sessionID: String, connectionBoundOnly _: Bool) {
+		withdrawnSessions.append(sessionID)
+	}
+
+	func withdrawPrompts(inConversation conversationID: String) {
+		withdrawnConversations.append(conversationID)
+	}
+}
+
+/// One question the recording window was asked, waiting for a test or a
+/// cancellation to answer it. Answered once.
+@MainActor
+private final class PendingAnswer {
+	private var continuation: CheckedContinuation<PromptAnswer, Never>?
+	private var answer: PromptAnswer?
+
+	func wait(_ continuation: CheckedContinuation<PromptAnswer, Never>, escape: PromptAnswer) {
+		if let answer {
+			continuation.resume(returning: answer)
+			return
+		}
+		guard Task.isCancelled == false else {
+			answer = escape
+			continuation.resume(returning: escape)
+			return
+		}
+		self.continuation = continuation
+	}
+
+	func resume(with answer: PromptAnswer) {
+		guard self.answer == nil else { return }
+		self.answer = answer
+		continuation?.resume(returning: answer)
+		continuation = nil
+	}
 }

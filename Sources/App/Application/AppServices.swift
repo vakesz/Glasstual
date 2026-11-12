@@ -25,6 +25,11 @@ enum AppServices {
 	static let transcriptLogViewer = TranscriptLogViewerWindow()
 	static let scrollbackSearch = ScrollbackSearchWindow()
 
+	/// Every question waiting for an answer, and the one place questions are
+	/// asked, as alerts or in the conversation.
+	static let promptRegistry = PendingPromptRegistry()
+	static let prompts = PromptRouter(registry: promptRegistry)
+
 	static let theme = ThemeStore()
 	static let fileTransfers = FileTransferStore()
 
@@ -73,7 +78,7 @@ extension KeychainPersistence {
 	/// error presenter: a static that names a live object is installed by
 	/// `Application/` and read as a service everywhere else.
 	static let shared = KeychainPersistence(reportFailure: { error, retry in
-		KeychainAlerts.showFailure(error, retry: retry)
+		KeychainAlerts.showFailure(error, about: PromptScope(origin: .application, revealsMainWindow: false), retry: retry)
 	})
 }
 

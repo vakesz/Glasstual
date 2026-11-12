@@ -5,20 +5,25 @@ import Foundation
 @testable import Glasstual
 import Testing
 
-/// Answers every alert with one scripted button and records what it was shown.
+/// Answers every question with one scripted button and records what it was asked.
 @MainActor
-private final class ScriptedLinkPresenter: AlertPresenter {
+private final class ScriptedLinkPresenter: PromptPresenting {
 	private(set) var requests: [AlertRequest] = []
+	private(set) var scopes: [PromptScope] = []
 	let response: AlertResponse
 
 	init(answering response: AlertResponse) {
 		self.response = response
 	}
 
-	func present(_ request: AlertRequest, in _: AlertPresentation) async -> AlertPresenterResult {
+	func ask(_ request: AlertRequest, about scope: PromptScope) async -> PromptAnswer {
 		requests.append(request)
-		return AlertPresenterResult(response: response, suppressionChecked: false)
+		scopes.append(scope)
+		return PromptAnswer(outcome: AlertOutcome(response: response, isSuppressed: false))
 	}
+
+	func withdrawPrompts(inSession _: String, connectionBoundOnly _: Bool) {}
+	func withdrawPrompts(inConversation _: String) {}
 }
 
 /// What the handler performed, in order.
@@ -43,7 +48,7 @@ struct ApplicationLinkHandlerTests {
 		let performed = PerformedActions()
 
 		let confirmation = ApplicationLinkHandler.open(
-			"glasstual://support-channel", presenter: presenter, perform: performed.record
+			"glasstual://support-channel", prompts: presenter, perform: performed.record
 		)
 		await confirmation?.value
 
@@ -62,7 +67,7 @@ struct ApplicationLinkHandlerTests {
 		let performed = PerformedActions()
 
 		await ApplicationLinkHandler.open(
-			"glasstual://support-channel", presenter: presenter, perform: performed.record
+			"glasstual://support-channel", prompts: presenter, perform: performed.record
 		)?.value
 
 		#expect(presenter.requests.count == 1)
@@ -77,7 +82,7 @@ struct ApplicationLinkHandlerTests {
 		let presenter = ScriptedLinkPresenter(answering: .default)
 		let performed = PerformedActions()
 
-		await ApplicationLinkHandler.open(link, presenter: presenter, perform: performed.record)?.value
+		await ApplicationLinkHandler.open(link, prompts: presenter, perform: performed.record)?.value
 
 		#expect(presenter.requests.map(\.body) == [link])
 		#expect(performed.actions.isEmpty)
@@ -91,7 +96,7 @@ struct ApplicationLinkHandlerTests {
 		let performed = PerformedActions()
 
 		let confirmation = ApplicationLinkHandler.open(
-			"glasstual://goto/conversation", presenter: presenter, perform: performed.record
+			"glasstual://goto/conversation", prompts: presenter, perform: performed.record
 		)
 
 		#expect(confirmation == nil)
@@ -105,10 +110,10 @@ struct ApplicationLinkHandlerTests {
 		let performed = PerformedActions()
 
 		let first = ApplicationLinkHandler.open(
-			"glasstual://support-channel", presenter: presenter, perform: performed.record
+			"glasstual://support-channel", prompts: presenter, perform: performed.record
 		)
 		let second = ApplicationLinkHandler.open(
-			"glasstual://testing-channel", presenter: presenter, perform: performed.record
+			"glasstual://testing-channel", prompts: presenter, perform: performed.record
 		)
 		await first?.value
 		await second?.value

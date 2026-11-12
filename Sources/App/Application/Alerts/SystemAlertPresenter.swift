@@ -98,6 +98,9 @@ private final class AlertSession {
 	private var buttonResponses: [AlertResponse] = []
 	private var parent: NSWindow?
 	private var hasAnswered = false
+	/// The field a request with one is answered in: plain text, or a secure
+	/// field that turns on Secure Event Input while it is focused.
+	private var field: NSTextField?
 
 	init(request: AlertRequest) {
 		self.request = request
@@ -160,12 +163,40 @@ private final class AlertSession {
 			addButton(otherButton, as: .other)
 		}
 
+		if let requestedField = request.field {
+			let field: NSTextField = switch requestedField {
+			case let .text(placeholder, initialValue):
+				Self.textField(placeholder: placeholder, value: initialValue)
+			case let .secure(placeholder):
+				Self.secureField(placeholder: placeholder)
+			}
+			field.setAccessibilityLabel(request.title)
+			field.identifier = NSUserInterfaceItemIdentifier("alert-field")
+			alert.accessoryView = field
+			alert.window.initialFirstResponder = field
+			self.field = field
+		}
+
 		if request.suppressionKey != nil {
 			alert.showsSuppressionButton = true
 			alert.suppressionButton?.title = request.suppressionText ?? PromptStrings.Alert.doNotAskAgain
 		}
 
 		applyKeyEquivalents()
+	}
+
+	private static func textField(placeholder: String, value: String) -> NSTextField {
+		let field = NSTextField(string: value)
+		field.placeholderString = placeholder
+		field.frame = NSRect(x: 0, y: 0, width: 260, height: field.fittingSize.height)
+		return field
+	}
+
+	private static func secureField(placeholder: String) -> NSTextField {
+		let field = NSSecureTextField(string: "")
+		field.placeholderString = placeholder
+		field.frame = NSRect(x: 0, y: 0, width: 260, height: field.fittingSize.height)
+		return field
 	}
 
 	private func addButton(_ title: String, as response: AlertResponse) {
@@ -211,10 +242,15 @@ private final class AlertSession {
 	}
 
 	private func result(for code: NSApplication.ModalResponse) -> AlertPresenterResult {
-		AlertPresenterResult(
+		let result = AlertPresenterResult(
 			response: resolvedResponse(code),
-			suppressionChecked: alert.suppressionButton?.state == .on
+			suppressionChecked: alert.suppressionButton?.state == .on,
+			text: field?.stringValue
 		)
+		/* A secret is handed to whoever asked and to nothing else: the field
+		 does not keep it after the alert is gone. */
+		field?.stringValue = ""
+		return result
 	}
 
 	/** A modal session or a sheet someone else ended -- `abort` or `stop` while

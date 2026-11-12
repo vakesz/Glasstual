@@ -453,8 +453,7 @@ final class TranscriptCommands: NSObject {
 		item.representedObject = TranscriptMessageDeletionRequest(
 			messageIdentifier: messageIdentifier,
 			conversation: conversation,
-			session: session,
-			window: view.textView.window
+			session: session
 		)
 		return precededBySeparator ? [.separator(), item] : [item]
 	}
@@ -465,8 +464,9 @@ final class TranscriptCommands: NSObject {
 		}
 		deletingMessageTask?.cancel()
 		deletingMessageTask = Task {
-			guard let reason = await TranscriptMessageDeletion.confirm(in: request.window), !Task.isCancelled,
-			      let session = request.session, let conversation = request.conversation
+			guard let session = request.session, let conversation = request.conversation,
+			      let reason = await TranscriptMessageDeletion.confirm(in: conversation, on: session),
+			      !Task.isCancelled, request.session === session, request.conversation === conversation
 			else { return }
 			session.redactMessage(
 				withIdentifier: request.messageIdentifier,
@@ -490,10 +490,11 @@ final class TranscriptCommands: NSObject {
 		}
 
 		let request = Self.openLinkRequest(for: url)
+		let scope = linkPromptScope
 		openingLinkTask?.cancel()
 		openingLinkTask = Task {
-			let outcome = await Alerts.run(request, on: .mainWindow)
-			guard !Task.isCancelled, outcome.response == .alternate else { return }
+			let answer = await Alerts.ask(request, about: scope)
+			guard !Task.isCancelled, answer.response == .alternate else { return }
 			OpenLink.open(url: url, inBackground: openInBackground)
 		}
 	}
@@ -522,6 +523,12 @@ enum TranscriptImageExport {
 }
 
 extension TranscriptCommands {
+	/// A link is clicked in the conversation the reader is looking at, so the
+	/// question about it appears there.
+	private var linkPromptScope: PromptScope {
+		PromptScope(origin: .conversation)
+	}
+
 	static func openLinkRequest(for url: URL) -> AlertRequest {
 		/* Handing an address to another application is the risky answer, so
 		 Cancel is the one Return presses. The buttons name what they do, and
@@ -536,7 +543,9 @@ extension TranscriptCommands {
 			alternateButton: PromptStrings.Action.open,
 			suppressionKey: LinkSchemeRules.appSchemes.contains(url.scheme?.lowercased() ?? "")
 				? nil
-				: TranscriptContextMenuSuppressionKey.openExternalURL(scheme: url.scheme)
+				: TranscriptContextMenuSuppressionKey.openExternalURL(scheme: url.scheme),
+			sensitivity: .security,
+			keywords: [.default: .cancel, .alternate: .open]
 		)
 	}
 

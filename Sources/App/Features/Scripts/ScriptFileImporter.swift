@@ -60,6 +60,10 @@ enum ScriptFileImporter {
 		category: "ScriptFileImporter"
 	)
 
+	/// Opening a script file is not about any conversation: what it has to say
+	/// appears wherever the reader is, or as an alert with no window to show it in.
+	private static let noticeScope = PromptScope(origin: .application, revealsMainWindow: false)
+
 	private static func showInstallationInstructions(_ url: URL) async {
 		do {
 			guard UserScript(url: url, origin: .custom)?.kind == .appleScript,
@@ -78,13 +82,13 @@ enum ScriptFileImporter {
 				await showInstalledScript(url.lastPathComponent)
 				return
 			}
-			_ = await Alerts.run(
+			_ = await Alerts.ask(
 				AlertRequest(
 					title: String(localized: .Scripts.scriptInstallTitle),
 					body: String(localized: .Scripts.scriptInstallInstructions(scriptsURL.path)),
 					defaultButton: PromptStrings.Action.confirmation
 				),
-				on: .anyVisibleWindow
+				about: Self.noticeScope
 			)
 			// Application Scripts is read-only to the sandbox. Finder performs the copy.
 			NSWorkspace.shared.activateFileViewerSelecting([url, scriptsURL])
@@ -96,13 +100,13 @@ enum ScriptFileImporter {
 	private static func showInstalledScript(_ filename: String) async {
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 
-		_ = await Alerts.run(
+		_ = await Alerts.ask(
 			AlertRequest(
 				title: PromptStrings.DocumentImport.scriptInstalledTitle(name: filenameWithoutExtension),
 				body: PromptStrings.DocumentImport.scriptCommandBody(name: filenameWithoutExtension),
 				defaultButton: PromptStrings.Action.confirmation
 			),
-			on: .anyVisibleWindow
+			about: Self.noticeScope
 		)
 	}
 
@@ -118,13 +122,13 @@ enum ScriptFileImporter {
 
 	private static func presentImportError(_ error: Error) async {
 		logger.error("Script installation failed: \(error.localizedDescription, privacy: .public)")
-		_ = await Alerts.run(
+		_ = await Alerts.ask(
 			AlertRequest(
 				title: String(localized: .Scripts.importFailedTitle),
 				body: error.localizedDescription,
 				defaultButton: PromptStrings.Action.confirmation
 			),
-			on: .anyVisibleWindow
+			about: noticeScope
 		)
 	}
 }

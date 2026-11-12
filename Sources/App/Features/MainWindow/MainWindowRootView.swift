@@ -130,7 +130,6 @@ struct MainWindowRootView: View {
 			onCompletion: sheets.completeTransferFileSelection
 		)
 		.settingsTransfer(sheets.settingsTransfer)
-		.sheet(item: inputPrompt, content: inputPromptSheet)
 		.sheet(item: presentedSheet) { presentation in
 			MainWindowSheetHost(model: sheets, presentation: presentation)
 		}
@@ -152,18 +151,6 @@ struct MainWindowRootView: View {
 			maxWidth: .infinity,
 			maxHeight: .infinity,
 			alignment: .topLeading
-		)
-	}
-
-	private func inputPromptSheet(_ prompt: InputPromptPresentation) -> some View {
-		InputPromptView(
-			presentation: prompt,
-			submit: {
-				sheets.completeInputPrompt(.submitted(prompt.value), for: prompt)
-			},
-			cancel: {
-				sheets.completeInputPrompt(.cancelled, for: prompt)
-			}
 		)
 	}
 
@@ -219,18 +206,6 @@ struct MainWindowRootView: View {
 			set: { visible in
 				guard !loadingScreen.viewIsVisible else { return }
 				columns.setMemberListVisible(visible)
-			}
-		)
-	}
-
-	private var inputPrompt: Binding<InputPromptPresentation?> {
-		let presentation = sheets.inputPrompt
-		return Binding(
-			get: { sheets.inputPrompt },
-			set: { value in
-				if value == nil, let presentation {
-					sheets.completeInputPrompt(.cancelled, for: presentation)
-				}
 			}
 		)
 	}

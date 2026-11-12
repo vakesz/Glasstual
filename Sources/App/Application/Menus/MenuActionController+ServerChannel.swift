@@ -78,8 +78,8 @@ extension MenuActionController {
 		      let chatSession,
 		      MenuServerActionRules(session: session).canDeleteServer
 		else { return }
-		let completion: AlertCompletion = { outcome in
-			guard outcome.response == .default,
+		let completion: @MainActor (PromptAnswer) -> Void = { answer in
+			guard answer.response == .default,
 			      MenuServerActionRules(session: session).canDeleteServer
 			else { return }
 			chatSession.destroySessionWithBouncerNetworks(session)
@@ -99,8 +99,9 @@ extension MenuActionController {
 			body: body,
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default
-		), on: .anyVisibleWindow, completion: completion)
+			destructiveButton: .default,
+			keywords: [.default: .delete, .alternate: .cancel]
+		), about: session.promptScope(boundToConnection: false, revealsMainWindow: false), completion: completion)
 	}
 
 	@objc func joinChannel(_: Any?) {
@@ -139,19 +140,23 @@ extension MenuActionController {
 			chatSession.save()
 			return
 		}
-		let completion: AlertCompletion = { outcome in
-			guard outcome.response == .default, self.isRunning else { return }
+		let completion: @MainActor (PromptAnswer) -> Void = { answer in
+			guard answer.response == .default, self.isRunning else { return }
 			chatSession.destroyConversation(conversation)
 			chatSession.save()
 		}
+		let scope = conversation.associatedSession?.promptScope(
+			in: conversation, boundToConnection: false, revealsMainWindow: false
+		) ?? PromptScope(origin: .application, revealsMainWindow: false)
 		Alerts.present(AlertRequest(
 			title: PromptStrings.Deletion.confirmationTitle(named: conversation.name),
 			body: PromptStrings.Deletion.warning(for: .channel),
 			defaultButton: PromptStrings.Action.delete,
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default,
-			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue
-		), on: .anyVisibleWindow, completion: completion)
+			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue,
+			keywords: [.default: .delete, .alternate: .cancel]
+		), about: scope, completion: completion)
 	}
 
 	@objc func copyUniqueIdentifier(_: Any?) {

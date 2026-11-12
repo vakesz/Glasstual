@@ -235,7 +235,9 @@ final class ServerProfileModel {
 	}
 
 	/// Asks before removing every key from the server, through the session's
-	/// own prompt. Cancel is the default and the Escape button.
+	/// own prompt. Cancel is the default and the Escape button. The question is
+	/// raised inside the Profile pane, so it stays an alert there; typing
+	/// `/metadata clear` is the conversation's way to the same thing.
 	func confirmRemoval() {
 		guard let session else { return }
 
@@ -246,8 +248,9 @@ final class ServerProfileModel {
 			alternateButton: String(localized: .ServerProperties.profileRemoveButton),
 			destructiveButton: .alternate,
 			cancelButton: .default,
-			style: .warning
-		)) { [weak self] session, response in
+			style: .warning,
+			keywords: [.default: .cancel, .alternate: .remove]
+		), origin: .guiSurface) { [weak self] session, response in
 			guard response == .alternate else { return }
 			self?.removeProfile(on: session)
 		}

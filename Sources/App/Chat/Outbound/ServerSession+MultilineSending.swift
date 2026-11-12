@@ -132,8 +132,6 @@ extension ServerSession {
 		replyIdentifier: String?
 	) {
 		let fit = proposal.fit
-		let startupIdentifier = startup.identifier
-		let connection = socket?.uniqueIdentifier
 		let destinationName = conversation.name
 
 		let perform: @MainActor (ServerSession, MultilineChoice) -> Void = { session, choice in
@@ -147,20 +145,17 @@ extension ServerSession {
 			)
 		}
 
-		guard let output else {
+		guard prompts != nil else {
 			perform(self, MultilineChoice(unattended: fit))
 			return
 		}
 
-		let request = Self.multilineChoiceAlert(for: proposal)
-		output.presentAlertSheet(request) { [weak self, weak conversation] outcome in
-			guard let self, let conversation, isTerminating == false,
-			      startup.identifier == startupIdentifier, socket?.uniqueIdentifier == connection,
-			      conversation.name == destinationName, conversationList.contains(where: { $0 === conversation })
-			else { return }
-
-			perform(self, MultilineChoice(response: outcome.response, fit: fit))
-		}
+		requestResponse(Self.multilineChoiceAlert(for: proposal), in: conversation, isCurrent: { [weak conversation] session in
+			guard let conversation else { return false }
+			return conversation.name == destinationName && session.conversationList.contains { $0 === conversation }
+		}, answer: { session, response in
+			perform(session, MultilineChoice(response: response, fit: fit))
+		})
 	}
 
 	func carryOutMultilineChoice(
@@ -268,7 +263,7 @@ extension ServerSession {
 		send(.batch, arguments: ["-\(reference)"])
 	}
 
-	private static func multilineChoiceAlert(for proposal: MultilineProposal) -> AlertRequest {
+	static func multilineChoiceAlert(for proposal: MultilineProposal) -> AlertRequest {
 		let logicalLines = MultilineBatchPlanner.logicalLineCount(of: proposal.lines)
 
 		switch proposal.fit {
@@ -279,7 +274,8 @@ extension ServerSession {
 				defaultButton: String(localized: .MultilineSending.sendAsOneButton),
 				alternateButton: String(localized: .MultilineSending.sendLineByLineButton),
 				otherButton: PromptStrings.Action.cancel,
-				cancelButton: .other
+				cancelButton: .other,
+				keywords: [.default: .oneMessage, .alternate: .lineByLine, .other: .cancel]
 			)
 		case .tooManyLines:
 			return truncationAlert(body: String(localized: .MultilineSending.truncatedLinesBody(proposal.limits.maximumLines ?? 0)))
@@ -296,7 +292,8 @@ extension ServerSession {
 			alternateButton: String(localized: .MultilineSending.sendLineByLineButton),
 			otherButton: PromptStrings.Action.cancel,
 			cancelButton: .other,
-			style: .warning
+			style: .warning,
+			keywords: [.default: .truncate, .alternate: .lineByLine, .other: .cancel]
 		)
 	}
 }

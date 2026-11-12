@@ -130,6 +130,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 	private func installSessionServices() {
 		let services = ChatServices.shared
 		services.output = mainWindow
+		services.prompts = AppServices.prompts
+		installPromptRouting()
 		services.menu = menuController
 		services.channelList = AppServices.serverChannelLists
 		services.applicationState = self
@@ -151,6 +153,26 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
 		chatSession?.addObserver(AppServices.conversationIndex)
 		AppServices.conversationIndex.schedule()
+	}
+
+	/// Tells the prompt router where a question can appear in the window and
+	/// which connection each session is on.
+	private func installPromptRouting() {
+		let router = AppServices.prompts
+		router.resolveAnchor = { [weak self] scope in
+			self?.mainWindow?.promptAnchor(for: scope)
+		}
+		router.revealWindow = { [weak self] in
+			guard let window = self?.mainWindow, window.isVisible == false else { return }
+			ApplicationForeground.bringForward(window)
+		}
+		router.registry.isConnectionCurrent = { [weak self] scope in
+			guard let connection = scope.connection else { return true }
+			guard let sessionID = scope.sessionID,
+			      let session = self?.chatSession?.findSession(withId: sessionID)
+			else { return false }
+			return session.promptConnection == connection
+		}
 	}
 
 	private func startApplicationServices() {

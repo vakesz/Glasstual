@@ -20,6 +20,7 @@ struct ServerSessionDCCTrustPromptsTests {
 		)
 		session.userNickname = "me"
 		session.markAsLoggedIn()
+		session.recordedOutput.answersManually = true
 		return session
 	}
 
@@ -51,6 +52,10 @@ struct ServerSessionDCCTrustPromptsTests {
 		let context = context ?? self.context()
 		let decision = Task { await session.decideDCCPeer(certificate, context: context) }
 		while session.dccDecisions.decisions.count < questions, session.recordedOutput.presentedAlerts.count < questions {
+			await Task.yield()
+		}
+		/* The question is put to the user from a task of its own. */
+		while session.recordedOutput.presentedAlerts.count < min(questions, session.dccDecisions.decisions.count) {
 			await Task.yield()
 		}
 		return decision
@@ -335,7 +340,8 @@ struct ServerSessionDCCTrustPromptsTests {
 
 		#expect(await decision.value)
 		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
-		#expect(bodies.contains(String(localized: .IRC.dccTrustUnidentifiedQuestion("alice", "d1"))))
+		/* The question itself leaves no line behind: only what the answer did. */
+		#expect(session.recordedOutput.presentedAlerts.first?.reference == "d1")
 		#expect(bodies.contains(String(localized: .IRC.dccQuestionWrongAnswer("d1", "remember"))))
 		#expect(bodies.contains(String(localized: .IRC.dccTrustUnidentifiedOnce("alice"))))
 	}

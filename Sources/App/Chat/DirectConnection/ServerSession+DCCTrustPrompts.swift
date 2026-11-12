@@ -39,7 +39,8 @@ struct DCCPeerContext {
 
  The verifier a secure transfer or chat runs is answered here, inside the TLS
  handshake: a pinned certificate goes ahead unasked, a new or changed one is
- put to the user as an alert and as a line they can answer by typing, and the
+ put to the user as a question they answer as an alert, in the conversation or
+ by typing `/dcc trust`, and the
  handshake waits for that answer. Nothing moves before it, so a receiver is
  never fed bytes from a peer nobody agreed to. */
 extension ServerSession {
@@ -101,7 +102,8 @@ extension ServerSession {
 		}
 	}
 
-	/** Answers a certificate question, from its alert or from `/dcc trust`.
+	/** Answers a certificate question, from its alert, its card in the
+	 conversation or `/dcc trust`.
 
 	 The first answer wins. An answer that arrives after the connection the
 	 question was asked on has gone refuses every waiting handshake instead of
@@ -231,10 +233,8 @@ extension ServerSession {
 			return
 		}
 		let fingerprint = certificate.fingerprint
-		let request: AlertRequest
-		let line: String
-		if let saved = previous.first {
-			request = AlertRequest(
+		let request = if let saved = previous.first {
+			AlertRequest(
 				title: PromptStrings.DCC.changedTitle(peer: nickname),
 				body: PromptStrings.DCC.changedBody(
 					peer: nickname, trustedOn: saved.firstTrusted, saved: saved.fingerprint, presented: fingerprint
@@ -243,25 +243,50 @@ extension ServerSession {
 				alternateButton: PromptStrings.DCC.replaceSavedCertificate,
 				destructiveButton: .alternate,
 				cancelButton: .default,
-				style: .critical
+				style: .critical,
+				sensitivity: .security,
+				keywords: [.default: .reject, .alternate: .replace],
+				reference: id
 			)
-			line = String(localized: .IRC.dccTrustChangedQuestion(nickname, fingerprint.formatted, id))
 		} else {
-			request = AlertRequest(
+			AlertRequest(
 				title: PromptStrings.DCC.verifyTitle(peer: nickname),
 				body: PromptStrings.DCC.verifyBody(peer: nickname, network: config.connectionName, fingerprint: fingerprint),
 				defaultButton: PromptStrings.DCC.trustAndRemember,
 				alternateButton: PromptStrings.Action.cancel,
-				otherButton: PromptStrings.DCC.trustOnce
+				otherButton: PromptStrings.DCC.trustOnce,
+				sensitivity: .security,
+				keywords: [.default: .remember, .alternate: .reject, .other: .once],
+				reference: id
 			)
-			line = String(localized: .IRC.dccTrustFirstUseQuestion(nickname, fingerprint.formatted, id))
 		}
 
-		printDebugInformation(line, in: conversation)
 		let kind: DCCTrustQuestion.Kind = previous.isEmpty ? .firstUse : .changed
-		output?.presentAlertSheet(request) { [weak self] outcome in
-			self?.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: outcome.response, kind: kind))
+		askDCCQuestion(id, request, in: conversation) { session, response in
+			session.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: response, kind: kind))
 		}
+	}
+
+	/** Puts a DCC question to the user and answers it with what they chose.
+
+	 The question appears as an alert or in the conversation, and `/dcc trust`,
+	 `/dcc accept` and `/dcc decline` answer it by its identifier. Taking the
+	 question out of the table withdraws it. */
+	func askDCCQuestion(
+		_ id: String,
+		_ request: AlertRequest,
+		in conversation: Conversation?,
+		answer: @escaping @MainActor (ServerSession, AlertResponse) -> Void
+	) {
+		guard let prompts else { return }
+		let scope = promptScope(in: conversation, revealsMainWindow: false)
+		let task = Task { [weak self, weak prompts] in
+			guard let prompts else { return }
+			let response = await prompts.ask(request, about: scope).response
+			guard let self, !Task.isCancelled else { return }
+			answer(self, response)
+		}
+		dccDecisions.attachPrompt(task, toDecisionWithID: id)
 	}
 
 	/** Asks about a peer that presented no certificate although one is saved
@@ -286,11 +311,13 @@ extension ServerSession {
 			alternateButton: PromptStrings.DCC.connectWithoutVerifying,
 			destructiveButton: .alternate,
 			cancelButton: .default,
-			style: .critical
+			style: .critical,
+			sensitivity: .security,
+			keywords: [.default: .reject, .alternate: .once],
+			reference: id
 		)
-		printDebugInformation(String(localized: .IRC.dccTrustUnidentifiedQuestion(nickname, id)), in: conversation)
-		output?.presentAlertSheet(request) { [weak self] outcome in
-			self?.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: outcome.response, kind: .unidentified))
+		askDCCQuestion(id, request, in: conversation) { session, response in
+			session.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: response, kind: .unidentified))
 		}
 	}
 

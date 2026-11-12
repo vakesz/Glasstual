@@ -27,31 +27,29 @@ enum TranscriptMessageDeletion {
 		return member.isOp
 	}
 
+	/// The question asked before a message is deleted, with a field for the
+	/// reason. Cancel is the Return key: the default deletes.
+	static var request: AlertRequest {
+		AlertRequest(
+			title: String(localized: .Transcript.deleteMessageTitle),
+			body: String(localized: .Transcript.deleteMessageBody),
+			defaultButton: String(localized: .Transcript.deleteMessageConfirm),
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default,
+			style: .warning,
+			field: .text(placeholder: String(localized: .Transcript.deleteMessageReasonPlaceholder), initialValue: ""),
+			keywords: [.default: .delete, .alternate: .cancel]
+		)
+	}
+
 	/** Asks whether to delete the message, and why.
 
 	 Returns the reason the reader typed, which is empty for none, or `nil` when
-	 they backed out. A sheet on the transcript's window when there is one. */
-	static func confirm(in window: NSWindow?) async -> String? {
-		let alert = NSAlert()
-		alert.alertStyle = .warning
-		alert.messageText = String(localized: .Transcript.deleteMessageTitle)
-		alert.informativeText = String(localized: .Transcript.deleteMessageBody)
-		alert.addButton(withTitle: String(localized: .Transcript.deleteMessageConfirm)).hasDestructiveAction = true
-		alert.addButton(withTitle: PromptStrings.Action.cancel)
-
-		let placeholder = String(localized: .Transcript.deleteMessageReasonPlaceholder)
-		let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
-		field.placeholderString = placeholder
-		field.setAccessibilityLabel(placeholder)
-		alert.accessoryView = field
-
-		let response: NSApplication.ModalResponse = if let window {
-			await alert.beginSheetModal(for: window)
-		} else {
-			alert.runModal()
-		}
-		guard response == .alertFirstButtonReturn else { return nil }
-		return field.stringValue
+	 they backed out. */
+	static func confirm(in conversation: Conversation, on session: ServerSession) async -> String? {
+		let answer = await Alerts.ask(request, about: session.promptScope(in: conversation, boundToConnection: false))
+		guard answer.response == .default else { return nil }
+		return answer.text ?? ""
 	}
 }
 
@@ -61,12 +59,10 @@ final class TranscriptMessageDeletionRequest: NSObject {
 	let messageIdentifier: String
 	weak var conversation: Conversation?
 	weak var session: ServerSession?
-	weak var window: NSWindow?
 
-	init(messageIdentifier: String, conversation: Conversation, session: ServerSession, window: NSWindow?) {
+	init(messageIdentifier: String, conversation: Conversation, session: ServerSession) {
 		self.messageIdentifier = messageIdentifier
 		self.conversation = conversation
 		self.session = session
-		self.window = window
 	}
 }

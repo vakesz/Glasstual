@@ -9,18 +9,6 @@ import AppKit
 /** The window-side work the IRC layer asks for. Most of it forwards to a method
  that already existed; the seam is what keeps the caller from knowing that. */
 extension MainWindow: ServerSessionPresenting {
-	func presentAlertSheet(_ request: AlertRequest, completion: @escaping AlertCompletion) {
-		Alerts.present(request, completion: completion)
-	}
-
-	func confirm(_ request: AlertRequest) async -> Bool {
-		await Alerts.run(request, on: .mainWindow).response == .default
-	}
-
-	func respond(to request: AlertRequest) async -> AlertResponse {
-		await Alerts.run(request, on: .mainWindow).response
-	}
-
 	func closeSheets(for session: ServerSession) {
 		let sessionIdentifier = session.uniqueIdentifier
 		sheetModel.closeSheets { owner in

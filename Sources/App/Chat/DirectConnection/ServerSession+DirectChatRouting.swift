@@ -151,17 +151,15 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.dccTooManyQuestions(sender)))
 			return
 		}
-		print(String(localized: .IRC.dccChatOfferAnswerHint(id)), by: nil, in: nil,
-		      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
-		output?.presentAlertSheet(directChatOfferRequest(offer, from: sender)) { [weak self] outcome in
-			self?.answerDCCChatOffer(id, accept: outcome.response == .default)
+		askDCCQuestion(id, directChatOfferRequest(offer, from: sender, id: id), in: nil) { session, response in
+			session.answerDCCChatOffer(id, accept: response == .default)
 		}
 	}
 
 	/// The alert a chat offer is put to the user with. The address is what the
 	/// user is actually being asked to approve: the nickname alone says nothing
 	/// about where the connection would go.
-	private func directChatOfferRequest(_ offer: DirectChatOffer, from sender: String) -> AlertRequest {
+	private func directChatOfferRequest(_ offer: DirectChatOffer, from sender: String, id: String) -> AlertRequest {
 		let body = switch (offer.isPassive, offer.isSecure) {
 		case (true, false): PromptStrings.DirectChat.body(sender: sender)
 		case (true, true): PromptStrings.DirectChat.secureBody(sender: sender)
@@ -174,12 +172,15 @@ extension ServerSession {
 				: PromptStrings.DirectChat.title(sender: sender),
 			body: body,
 			defaultButton: PromptStrings.Action.accept,
-			alternateButton: PromptStrings.Action.decline
+			alternateButton: PromptStrings.Action.decline,
+			sensitivity: .security,
+			keywords: [.default: .accept, .alternate: .decline],
+			reference: id
 		)
 	}
 
-	/** Answers a chat offer, from its alert or from `/dcc accept` and
-	 `/dcc decline`. The first answer wins; one that arrives after the
+	/** Answers a chat offer, from its question: as an alert, in the
+	 conversation, or typed as `/dcc accept` and `/dcc decline`. The first answer wins; one that arrives after the
 	 connection the offer came over has gone opens nothing. */
 	@discardableResult
 	func answerDCCChatOffer(_ id: String, accept: Bool) -> DCCQuestionAnswerResult {

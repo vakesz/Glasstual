@@ -47,6 +47,7 @@ extension ServerSession {
 		away.resetForTeardown()
 		znc = ZNCSession()
 		refuseDCCDecisions()
+		prompts?.withdrawPrompts(inSession: uniqueIdentifier, connectionBoundOnly: true)
 		resetXDCCRequests()
 
 		resetChatHistoryState()

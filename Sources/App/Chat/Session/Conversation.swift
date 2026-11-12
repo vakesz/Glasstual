@@ -359,6 +359,7 @@ class Conversation: ChatItem {
 
 	func prepareForRemoval(preservingLocalData: Bool) {
 		associatedSession?.output?.closeSheets(forConversationId: uniqueIdentifier)
+		associatedSession?.prompts?.withdrawPrompts(inConversation: uniqueIdentifier)
 		if !preservingLocalData {
 			associatedSession?.output?.destroyInputHistory(for: self)
 		}

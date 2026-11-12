@@ -5,10 +5,11 @@ import Foundation
 
 /// Showing an alert, and skipping the ones the reader asked not to see again.
 /// Where an alert is drawn is `SystemAlertPresenter`'s question; what has been
-/// suppressed is `AlertSuppression`'s.
+/// suppressed is `AlertSuppression`'s. A question that may also appear in the
+/// conversation is asked through ``ask(_:about:)``, which routes it.
 enum Alerts {
 	/// Whether the alert has to be shown, or the answer a previous run recorded.
-	private enum PreparedAlert {
+	enum PreparedAlert {
 		case show(AlertRequest, suppressionKey: String?)
 		case suppressed(AlertResponse)
 	}
@@ -37,7 +38,7 @@ enum Alerts {
 	}
 
 	@MainActor
-	private static func prepare(_ request: AlertRequest) -> PreparedAlert {
+	static func prepare(_ request: AlertRequest) -> PreparedAlert {
 		var request = request
 
 		guard let baseKey = request.suppressionKey else {
@@ -66,6 +67,35 @@ enum Alerts {
 		}
 
 		return AlertOutcome(response: result.response, isSuppressed: result.suppressionChecked)
+	}
+
+	/// Records a "Don't ask again" an answer came back with, in either form.
+	@MainActor
+	static func finish(_ answer: PromptAnswer, suppressionKey: String?) -> PromptAnswer {
+		if answer.outcome.isSuppressed, let suppressionKey {
+			AlertSuppression.record(answer.response, fullKey: suppressionKey)
+		}
+		return answer
+	}
+}
+
+extension Alerts {
+	/// Asks `request` as an alert or in the conversation, whichever the reader
+	/// chose and `scope` allows.
+	static func ask(_ request: AlertRequest, about scope: PromptScope) async -> PromptAnswer {
+		await AppServices.prompts.ask(request, about: scope)
+	}
+
+	/// Asks from a synchronous action and delivers the answer on the main actor.
+	static func present(
+		_ request: AlertRequest,
+		about scope: PromptScope,
+		completion: (@MainActor (PromptAnswer) -> Void)? = nil
+	) {
+		Task { @MainActor in
+			let answer = await ask(request, about: scope)
+			completion?(answer)
+		}
 	}
 }
 
@@ -113,9 +143,16 @@ enum KeychainAlerts {
 		)
 	}
 
-	static func showFailure(_ error: any Error, retry: (() -> Void)? = nil) {
-		Alerts.present(failureAlert(error, canRetry: retry != nil)) { outcome in
-			if outcome.response == .default {
+	/// Says a credential could not be saved. `scope` is where the save was
+	/// asked for: an editor answers inside itself, a save the application made
+	/// on its own wherever the reader is.
+	static func showFailure(_ error: any Error, about scope: PromptScope = .guiSurface, retry: (() -> Void)? = nil) {
+		var request = failureAlert(error, canRetry: retry != nil)
+		if retry != nil {
+			request.keywords = [.default: .retry, .alternate: .cancel]
+		}
+		Alerts.present(request, about: scope) { answer in
+			if answer.response == .default {
 				retry?()
 			}
 		}
@@ -136,7 +173,7 @@ enum FileLogAlerts {
 			title: PromptStrings.Logging.disabledForLowStorageTitle,
 			body: PromptStrings.Logging.resumeAfterLowStorageBody,
 			defaultButton: PromptStrings.Action.confirmation
-		), on: .anyVisibleWindow) { _ in
+		), about: PromptScope(origin: .application, revealsMainWindow: false)) { _ in
 			noSpaceAlert.dismiss()
 		}
 	}
