@@ -17,15 +17,33 @@ extension TranscriptController {
 		else { return }
 	}
 
-	/** Stores lines that fall somewhere before the live end and redraws the
-	 history around them. A window of stored history keeps what it shows; the
-	 lines are there the next time history is read. */
+	/** Stores lines that fall somewhere before the live end and reads the
+	 history again so they are drawn. A window of stored history keeps what it
+	 shows; the lines are there the next time history is read.
+
+	 A fill arrives a page at a time, faster than a read of the store finishes.
+	 A page stored while a read is under way is drawn by one more read once
+	 that one ends: the read in flight may have started before the page was in
+	 the store, and it is the only thing that would otherwise draw it. */
 	func archiveRecoveredChatLines(_ chatLines: [ChatLine]) {
 		guard !terminating, let associatedItem, chatLines.isEmpty == false else { return }
 		let viewIdentifier = associatedItem.uniqueIdentifier
 		for line in chatLines {
 			scrollback.writeNewEntry(line.scrollbackEntry(forView: viewIdentifier), for: line)
 		}
+		guard historyRecovery.isDetachedFromLive == false else { return }
+		guard historyRecovery.isReloading == false else {
+			historyRecovery.recoveredLinesAwaitReload = true
+			return
+		}
+		reloadHistory()
+	}
+
+	/// Reads the history once more for lines that were recovered during the
+	/// read that just ended.
+	func reloadForRecoveredLinesIfNeeded() {
+		guard historyRecovery.recoveredLinesAwaitReload, historyRecovery.isReloading == false else { return }
+		historyRecovery.recoveredLinesAwaitReload = false
 		guard historyRecovery.isDetachedFromLive == false else { return }
 		reloadHistory()
 	}
