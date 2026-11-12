@@ -32,6 +32,12 @@ enum Registry {
 		CredentialConsentDeclineScenario(),
 		CredentialConsentSendScenario(),
 		BanAccountScenario(),
+		ServerPropertiesWindowScenario(),
+		PeopleWindowScenario(),
+		OnboardingInteractionStyleScenario(),
+		InlineCredentialConsentScenario(),
+		HelpMenuScenario(),
+		ThemePresetPersistsScenario(),
 	]
 }
 
