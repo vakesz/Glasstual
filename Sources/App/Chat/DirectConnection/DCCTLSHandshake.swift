@@ -91,14 +91,24 @@ nonisolated struct DCCTLSHandshake: Sendable {
 	 was negotiated.
 
 	 A peer whose certificate went through the validator has already been
-	 decided on. One that never presented a certificate — only a TLS client can
-	 get that far without one — is decided on here, before any byte moves. */
+	 decided on. A session resumed from an earlier connection to the same
+	 address skips the validator, so the certificate it carries is decided on
+	 here the same way. One that never presented a certificate — only a TLS
+	 client can get that far without one — is decided on here too, before any
+	 byte moves. */
 	func establishedSession(of connection: NetworkConnection<TLS>) async throws -> DCCSecureSessionInfo {
 		guard let metadata = connection.metadata(definition: NWProtocolTLS.definition) as? NWProtocolTLS.Metadata else {
 			throw DCCTransferError.tlsHandshakeFailed("The connection reported no TLS metadata")
 		}
 		let security = metadata.securityProtocolMetadata
-		let peer = await record.presented
+		var peer = await record.presented
+
+		if peer == nil, let resumed = DCCPeerCertificate.inspect(security) {
+			guard await validate(resumed) else {
+				throw await record.refusal ?? .peerCertificateRejected
+			}
+			peer = resumed
+		}
 
 		if peer == nil {
 			guard role == .server else {

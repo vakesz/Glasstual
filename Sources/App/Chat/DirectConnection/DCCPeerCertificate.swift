@@ -87,6 +87,22 @@ nonisolated struct DCCPeerCertificate: Equatable, Sendable {
 		return DCCPeerCertificate(certificate: leaf, der: SecCertificateCopyData(leaf) as Data)
 	}
 
+	/** The leaf of the peer chain a finished handshake's metadata holds, or
+	 `nil` when there is none.
+
+	 A TLS 1.2 session resumed by its identifier skips the validator, and
+	 carries the chain from the handshake that created it. */
+	static func inspect(_ metadata: sec_protocol_metadata_t) -> DCCPeerCertificate? {
+		var leaf: SecCertificate?
+		_ = sec_protocol_metadata_access_peer_certificate_chain(metadata) { certificate in
+			if leaf == nil {
+				leaf = sec_certificate_copy_ref(certificate).takeRetainedValue()
+			}
+		}
+		guard let leaf else { return nil }
+		return DCCPeerCertificate(certificate: leaf, der: SecCertificateCopyData(leaf) as Data)
+	}
+
 	private init?(certificate: SecCertificate, der: Data) {
 		guard let key = SecCertificateCopyKey(certificate),
 		      let attributes = SecKeyCopyAttributes(key) as? [CFString: Any]

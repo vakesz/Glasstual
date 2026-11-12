@@ -329,9 +329,9 @@ struct DCCSecureTransferLoopbackTests {
 		let destination = directory.appendingPathComponent("destination")
 		let destinationFile = try TransferFixture.destination(destination)
 		let payload = TransferFixture.payload(byteCount: 16)
-		let serverIdentity = try DCCLocalIdentity.generate()
+		let serverIdentity = try TLSLoopbackPeer.olderPeerIdentity.get()
 		let (port, accepted) = try await TLSLoopbackPeer.listen(
-			options: .init(identity: serverIdentity, maximumVersion: .TLSv12)
+			options: .init(identity: serverIdentity, maximumVersion: .TLSv12), ports: TLSLoopbackPeer.olderPeerPorts
 		)
 		let server = Task {
 			let connection = try await accepted.value
@@ -354,6 +354,65 @@ struct DCCSecureTransferLoopbackTests {
 		#expect(try await server.value == DCCTransfer.acknowledgement(for: 16))
 		#expect(try Data(contentsOf: destination) == payload)
 		await destinationFile.close()
+	}
+
+	/// Receives 16 bytes from a TLS 1.2 peer listening on `ports`, deciding on
+	/// its certificate with `accept`.
+	private func receiveFromOlderPeer(
+		ports: ClosedRange<UInt16>,
+		log: VerifierLog,
+		accept: Bool = true
+	) async throws -> (port: UInt16, events: [DCCTransferEvent]) {
+		let directory = try TransferFixture.makeDirectory()
+		defer { TransferFixture.remove(directory) }
+		let destinationFile = try TransferFixture.destination(directory.appendingPathComponent("destination"))
+		let payload = TransferFixture.payload(byteCount: 16)
+		let (port, accepted) = try await TLSLoopbackPeer.listen(
+			options: .init(identity: TLSLoopbackPeer.olderPeerIdentity.get(), maximumVersion: .TLSv12), ports: ports
+		)
+		let server = Task {
+			let connection = try await accepted.value
+			try await connection.send(payload)
+			return try await TLSLoopbackPeer.read(4, from: connection)
+		}
+		let receiver = try DCCTransfer(config: SecureFixture.transfer(
+			role: .receiver, endpoint: SecureFixture.dialling(port: port),
+			configuration: SecureFixture.configuration(log: log) { _ in accept }, file: destinationFile, fileSize: 16
+		))
+		let events = TransferFixture.collectEvents(from: receiver)
+		await receiver.start()
+		let collected = await events.value
+		_ = await server.result
+		await destinationFile.close()
+		return (port, collected)
+	}
+
+	/// A TLS 1.2 session resumed by its identifier skips the certificate
+	/// validator; the certificate the session carries is still decided on, and
+	/// a refusal still refuses.
+	@Test("A resumed TLS 1.2 session is decided on the certificate it carries", .timeLimit(.minutes(1)))
+	func resumedSession() async throws {
+		let identity = try TLSLoopbackPeer.olderPeerIdentity.get()
+		let first = try await receiveFromOlderPeer(ports: TLSLoopbackPeer.resumptionPorts, log: VerifierLog())
+		#expect(first.events.last.map(TransferFixture.isFinished) == true)
+		let samePort = first.port ... first.port
+
+		let resumedLog = VerifierLog()
+		let resumed = try await receiveFromOlderPeer(ports: samePort, log: resumedLog)
+		#expect(await resumedLog.calls == [identity.fingerprint])
+		#expect(resumed.events.last.map(TransferFixture.isFinished) == true)
+		let session = try #require(resumed.events.lazy.compactMap(SecureFixture.session).first ?? nil)
+		#expect(session.peer?.fingerprint == identity.fingerprint)
+
+		let refusedLog = VerifierLog()
+		let refused = try await receiveFromOlderPeer(ports: samePort, log: refusedLog, accept: false)
+		#expect(await refusedLog.calls == [identity.fingerprint])
+		let wasRefused = if case .failed(.peerCertificateRejected)? = refused.events.last {
+			true
+		} else {
+			false
+		}
+		#expect(wasRefused)
 	}
 
 	@Test("A TLS peer that overshoots is still cut off at the announced size", .timeLimit(.minutes(1)))

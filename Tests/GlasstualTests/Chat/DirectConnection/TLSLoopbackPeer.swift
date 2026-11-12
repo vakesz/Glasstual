@@ -38,7 +38,17 @@ enum TLSLoopbackPeer {
 	struct PeerError: Error {}
 
 	/// A range clear of the plain transfer and chat tests'.
-	static let portRange: ClosedRange<UInt16> = 49670 ... 49870
+	static let portRange: ClosedRange<UInt16> = 49670 ... 49849
+	/** Ports for peers capped at TLS 1.2, which resume a session by its
+	 identifier on a later connection to the same address. The peers here
+	 share one session cache, so these tests keep to ports of their own and
+	 present one identity, and a resumed session carries the certificate the
+	 test expects. */
+	static let olderPeerPorts: ClosedRange<UInt16> = 49850 ... 49859
+	/// Ports for the test that resumes a TLS 1.2 session on purpose.
+	static let resumptionPorts: ClosedRange<UInt16> = 49860 ... 49870
+	/// The identity every peer capped at TLS 1.2 presents.
+	static let olderPeerIdentity = Result { try DCCLocalIdentity.generate() }
 
 	static func tls(_ options: Options, validations: VerifierLog) throws -> TLS {
 		var tls = TLS()
@@ -67,13 +77,15 @@ enum TLSLoopbackPeer {
 		return connection
 	}
 
-	/// Listens for one TLS connection and hands it over once its handshake
-	/// is done. Cancel the returned task to stop listening.
+	/// Listens for one TLS connection, on the first free port in `ports`, and
+	/// hands it over once its handshake is done. Cancel the returned task to
+	/// stop listening.
 	static func listen(
 		options: Options,
-		validations: VerifierLog = VerifierLog()
+		validations: VerifierLog = VerifierLog(),
+		ports: ClosedRange<UInt16> = portRange
 	) async throws -> (port: UInt16, connection: Task<NetworkConnection<TLS>, Error>) {
-		for candidate in portRange {
+		for candidate in ports {
 			guard let port = NWEndpoint.Port(rawValue: candidate) else { continue }
 			let tls = try tls(options, validations: validations)
 			guard let listener = try? NetworkListener<TLS>(using: .parameters { tls }.localPort(port)) else { continue }
