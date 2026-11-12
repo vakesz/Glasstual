@@ -129,6 +129,23 @@ struct RunSandbox {
 		return found
 	}
 
+	/// What the run's settings suite holds now, read through `cfprefsd` as
+	/// the application wrote it.
+	func storedSettings() async -> [String: Any] {
+		let output = artifactsScratch()
+		defer { try? FileManager.default.removeItem(at: output) }
+		let read = Process()
+		read.executableURL = URL(fileURLWithPath: "/usr/bin/defaults")
+		read.arguments = ["export", preferencesFile.deletingPathExtension().path, output.path]
+		read.standardOutput = FileHandle.nullDevice
+		read.standardError = FileHandle.nullDevice
+		guard await Bounded.run(read, timeout: .seconds(10)),
+		      let data = try? Data(contentsOf: output),
+		      let values = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+		else { return [:] }
+		return values
+	}
+
 	private func artifactsScratch() -> URL {
 		FileManager.default.temporaryDirectory.appendingPathComponent("glasstual-e2e-\(token).plist")
 	}

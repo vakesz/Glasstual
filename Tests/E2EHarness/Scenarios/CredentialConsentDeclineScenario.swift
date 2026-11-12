@@ -42,19 +42,23 @@ extension ScenarioContext {
 
 	/// The application stores secrets in its own keychain items, which the
 	/// harness cannot write: they go in through Server Properties.
-	private func storePasswords() async throws {
+	func storePasswords() async throws {
 		try await driver.menu("serverProperties")
-		try await until("Server Properties sheet") { try driver.anywhere(AXID.serverProperties) != nil }
-		let sheet = { () throws -> AXUIElement? in try self.driver.window(AXID.serverProperties) }
-		try await driver.select(AXID.serverPropertiesPane("general"), in: sheet)
+		try await until("Server Properties window") { try driver.window(AXID.serverProperties) != nil }
+		let window = { () throws -> AXUIElement? in try self.driver.window(AXID.serverProperties) }
+		try await driver.select(AXID.serverPropertiesPane("general"), in: window)
 		try await fillSecure(AXID.serverPassword, with: SASLConsentFixture.serverSecret)
-		try await driver.select(AXID.serverPropertiesPane("identity"), in: sheet)
+		try await driver.select(AXID.serverPropertiesPane("identity"), in: window)
 		try await fillSecure(AXID.nicknamePassword, with: SASLConsentFixture.secret)
-		try await driver.button(AXID.serverPropertiesSave)
-		try await until("Server Properties sheet closes") { try driver.anywhere(AXID.serverProperties) == nil }
+		try await requireServerPropertiesEdited(true)
+		try await driver.button(AXID.serverPropertiesSave, inWindow: AXID.serverProperties)
+		/* Save keeps an existing server's window open, as a saved document's
+		 is, with nothing left to revert; closing it then asks nothing. */
+		try await requireServerPropertiesEdited(false)
+		try await close(window: AXID.serverProperties)
 	}
 
-	/// Enters a secret in a secure field of the Server Properties sheet. A
+	/// Enters a secret in a secure field of the Server Properties window. A
 	/// secure field's value cannot be read back, so the peer's evidence is what
 	/// checks it.
 	private func fillSecure(_ identifier: String, with secret: String) async throws {

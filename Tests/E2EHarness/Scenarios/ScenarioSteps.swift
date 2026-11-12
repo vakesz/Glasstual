@@ -186,6 +186,85 @@ extension ScenarioContext {
 		}
 	}
 
+	/** Opens the menu or pop-up button `menu` in the window `window` and
+	 presses its item `item`. The menu runs its own tracking loop, so the press
+	 that opens it does not wait for an answer; the item is pressed once the
+	 open menu lists it. */
+	func choose(_ item: String, fromMenu menu: String, inWindow window: String) async throws {
+		try await until("choose \(item) from \(menu)") {
+			guard let button = try driver.element(menu, inWindow: window) else { return false }
+			if let entry = try driver.find(item, in: button) {
+				try driver.press(entry)
+				return true
+			}
+			try driver.showMenu(button, action: kAXPressAction)
+			return false
+		}
+	}
+
+	/** Waits until the run's stored setting `key` satisfies `condition`. The
+	 suite is read through `defaults`, a process of its own, so this polls at
+	 the slowest interval `Wait` uses rather than on Accessibility changes. */
+	func storedSetting(
+		_ key: String,
+		_ description: String,
+		timeout: Duration = .seconds(10),
+		_ condition: (Any?) -> Bool
+	) async throws {
+		let deadline = Deadline(after: timeout)
+		while true {
+			try Task.checkCancellation()
+			if await condition(sandbox.storedSettings()[key]) {
+				return
+			}
+			guard deadline.hasPassed == false else {
+				throw HarnessFailure.timeout("stored \(key) \(description)")
+			}
+			try await Task.sleep(for: min(.milliseconds(250), deadline.remaining))
+		}
+	}
+
+	/// Pushes the close button of the window identified `identifier`, without
+	/// waiting for the window to go.
+	func pressCloseButton(of identifier: String) async throws {
+		try await until("press the close button of \(identifier)") {
+			guard let window = try driver.window(identifier),
+			      let close = try driver.attribute(window, kAXCloseButtonAttribute),
+			      CFGetTypeID(close) == AXUIElementGetTypeID()
+			else { return false }
+			try driver.press(unsafeDowncast(close, to: AXUIElement.self))
+			return true
+		}
+	}
+
+	// MARK: - Server Properties
+
+	/// Chooses Server > Server Properties and waits for its window.
+	func openServerProperties() async throws {
+		try await driver.menu("serverProperties")
+		try await until("Server Properties window") { try driver.window(AXID.serverProperties) != nil }
+	}
+
+	/// Waits until the Server Properties window has, or has not, anything to
+	/// revert: what its subtitle calls Edited.
+	func requireServerPropertiesEdited(_ edited: Bool) async throws {
+		try await until(edited ? "Server Properties has unsaved edits" : "Server Properties has nothing unsaved") {
+			guard let revert = try driver.element(AXID.serverPropertiesRevert, inWindow: AXID.serverProperties) else {
+				return false
+			}
+			return try driver.isEnabled(revert) == edited
+		}
+	}
+
+	/// Presses `button` of the Save, Don't Save and Cancel sheet closing an
+	/// edited Server Properties window asks.
+	func answerCloseReview(_ button: String) async throws {
+		try await driver.press("close review, \(button)") {
+			try driver.window(AXID.serverPropertiesCloseReview).flatMap { try driver.find(button, in: $0) }
+		}
+		try await until("close review goes") { try driver.window(AXID.serverPropertiesCloseReview) == nil }
+	}
+
 	/// Closes the window identified `identifier` with its close button.
 	func close(window identifier: String) async throws {
 		try await until("close \(identifier)") {

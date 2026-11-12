@@ -413,6 +413,17 @@ final class AXDriver {
 	 to validate it, then read again. */
 	@discardableResult
 	func menu(_ command: String, timeout: Duration = .seconds(20)) async throws -> ContinuousClock.Instant {
+		let item = try await enabledMenuItem(command, timeout: timeout)
+		return try await until("press menu item \(command)", timeout: timeout) {
+			let pressed = ContinuousClock.now
+			try press(item)
+			return pressed
+		}
+	}
+
+	/// Waits until the main-menu item for `command` is there and enabled,
+	/// validating its menu the way ``menu(_:timeout:)`` does, without pressing it.
+	func enabledMenuItem(_ command: String, timeout: Duration = .seconds(20)) async throws -> AXUIElement {
 		var validatedAt: ContinuousClock.Instant?
 		return try await until("enabled menu item \(command)", timeout: timeout) {
 			guard let item = try menuItem(command) else { return nil }
@@ -423,9 +434,7 @@ final class AXDriver {
 				}
 				return nil
 			}
-			let pressed = ContinuousClock.now
-			try press(item)
-			return pressed
+			return item
 		}
 	}
 

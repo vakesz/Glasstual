@@ -1,7 +1,7 @@
 import ApplicationServices
 import Foundation
 
-/** Ban Account in a member's context menu: disabled for a member the server
+/** Ban Account in a member's context menu: left out for a member the server
  has not named an account for, and for a logged-in member it asks, then sets
  the account ban the server announced in `ACCOUNTEXTBAN`. */
 struct BanAccountScenario: Scenario {
@@ -17,11 +17,13 @@ struct BanAccountScenario: Scenario {
 		try await context.transcript(contains: "E2E_CHANNEL_READY")
 
 		let list = try await context.openMemberMenu(BanAccountFixture.memberWithoutAccount)
-		let disabled = try await context.until("Ban Account in the menu of a member without an account") {
-			try context.driver.contextMenuItem("banAccount", of: list)
+		/* A context menu leaves out what it cannot do rather than dimming it,
+		 so Get Info is there and Ban Account is not. */
+		try await context.until("the context menu of a member without an account is open") {
+			try context.driver.contextMenuItem("whois", of: list) != nil
 		}
-		guard try context.driver.isEnabled(disabled) == false else {
-			throw HarnessFailure.assertion("Ban Account was enabled for a member with no known account")
+		guard try context.driver.contextMenuItem("banAccount", of: list) == nil else {
+			throw HarnessFailure.assertion("Ban Account was offered for a member with no known account")
 		}
 		if let menu = try context.driver.contextMenu(of: list) {
 			try context.driver.perform(kAXCancelAction, on: menu)

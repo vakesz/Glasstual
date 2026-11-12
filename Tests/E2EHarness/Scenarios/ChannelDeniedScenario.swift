@@ -52,9 +52,18 @@ private extension ScenarioContext {
 			try sidebar().flatMap { try driver.find(AXID.sidebarRow("channel", channel), in: $0) }
 		}
 		try driver.showMenu(row)
-		try await until("Join Channel in the context menu") {
-			try sidebar().flatMap { try driver.contextMenuItem("joinChannel", of: $0) }
-				.map { try driver.isEnabled($0) } ?? false
+		do {
+			try await until("Join Channel in the context menu") {
+				try sidebar().flatMap { try driver.contextMenuItem("joinChannel", of: $0) }
+					.map { try driver.isEnabled($0) } ?? false
+			}
+		} catch {
+			// Tells a menu that never opened from one that left Join Channel out.
+			let items = try? sidebar().flatMap { try driver.contextMenu(of: $0) }.map { menu in
+				try driver.children(menu).compactMap { try driver.string($0, kAXIdentifierAttribute) }
+			}
+			note("context menu of \(channel): \(items.map { $0.joined(separator: ", ") } ?? "not open")")
+			throw error
 		}
 		guard try isSelected("channel", selection), try isSelected("channel", channel) == false else {
 			throw HarnessFailure.assertion("Opening the context menu changed the selected channel")
