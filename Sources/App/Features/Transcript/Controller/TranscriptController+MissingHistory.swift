@@ -17,34 +17,54 @@ extension TranscriptController {
 		else { return }
 	}
 
-	/** Stores lines that fall somewhere before the live end and reads the
-	 history again so they are drawn. A window of stored history keeps what it
-	 shows; the lines are there the next time history is read.
+	/** Stores lines that fall somewhere before the live end, and draws them
+	 between the lines they fall between.
 
-	 A fill arrives a page at a time, faster than a read of the store finishes.
-	 A page stored while a read is under way is drawn by one more read once
-	 that one ends: the read in flight may have started before the page was in
-	 the store, and it is the only thing that would otherwise draw it. */
+	 Only a transcript that has read its history, or is reading it, draws them:
+	 one that has not reads them from the store with everything else when it
+	 does, and a window of stored history keeps what it shows. Lines that
+	 arrive during a read wait for it to end, so they are placed among every
+	 line that read brings back. */
 	func archiveRecoveredChatLines(_ chatLines: [ChatLine]) {
 		guard !terminating, let associatedItem, chatLines.isEmpty == false else { return }
 		let viewIdentifier = associatedItem.uniqueIdentifier
 		for line in chatLines {
 			scrollback.writeNewEntry(line.scrollbackEntry(forView: viewIdentifier), for: line)
 		}
-		guard historyRecovery.isDetachedFromLive == false else { return }
-		guard historyRecovery.isReloading == false else {
-			historyRecovery.recoveredLinesAwaitReload = true
-			return
+		guard backingView != nil, historyRecovery.isDetachedFromLive == false,
+		      historyRecovery.isLoaded || historyRecovery.isReloading
+		else { return }
+		let context = makeHistoryRenderContext()
+		let snapshots = chatLines.map { ChatLineSnapshot($0, in: context) }
+		enqueueRenderJob(cost: .cpu) {
+			Self.renderJob(snapshots, context: context)
+		} apply: { [weak self] (results: [TranscriptRenderResult]) in
+			guard let self else { return }
+			let generation = renderScheduler.generation
+			let apply: @MainActor () -> Void = { [weak self] in
+				guard let self, acceptsRenderGeneration(generation) else { return }
+				applyRecoveredLines(results)
+			}
+			if historyRecovery.isReloading {
+				renderScheduler.hold(apply)
+			} else {
+				apply()
+			}
 		}
-		reloadHistory()
 	}
 
-	/// Reads the history once more for lines that were recovered during the
-	/// read that just ended.
-	func reloadForRecoveredLinesIfNeeded() {
-		guard historyRecovery.recoveredLinesAwaitReload, historyRecovery.isReloading == false else { return }
-		historyRecovery.recoveredLinesAwaitReload = false
-		guard historyRecovery.isDetachedFromLive == false else { return }
-		reloadHistory()
+	private func applyRecoveredLines(_ results: [TranscriptRenderResult]) {
+		guard historyRecovery.isDetachedFromLive == false, let backingView else { return }
+		let placed = backingView.insertRecoveredLines(results.map { applyingCurrentState(to: $0.transcriptLine) })
+		/* Lines older than everything drawn are in the store now, so a store
+		 that had nothing older has something again. */
+		if placed.heldBack.isEmpty == false {
+			locallyExhaustedBefore = nil
+		}
+		/* A boundary kept by time belongs on the first line after it, which
+		 may now be one of these. */
+		if placed.accepted.isEmpty == false, case let .after(date) = transcriptProjection.mark {
+			backingView.setUnreadMarker(.after(date))
+		}
 	}
 }

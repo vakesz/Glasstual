@@ -13,11 +13,13 @@ import Foundation
  asserting the one invariant that ties the two arrays together:
  `storedLineStarts.count == lines.count + 1`.
 
- The ordinals are what keep the indexes stable. Lines only ever arrive at
- either end and leave from the top, so an ordinal is fixed for as long as its
- line is held; ``firstLineOrdinal`` is the ordinal of `lines[0]`, and an index
- is the difference. Nothing is renumbered when older lines are put in front or
- the oldest are trimmed. */
+ The ordinals are what keep the indexes stable. Lines arrive at either end and
+ leave from the top, so an ordinal is fixed for as long as its line is held;
+ ``firstLineOrdinal`` is the ordinal of `lines[0]`, and an index is the
+ difference. Nothing is renumbered when older lines are put in front or the
+ oldest are trimmed. The one exception is history recovered from the server,
+ which goes between two held lines: the lines after it are renumbered then,
+ once per recovered run. */
 struct TranscriptDocument {
 	var folding = TranscriptFoldingState()
 	/// The rows the transcript is showing, oldest first.
@@ -215,27 +217,27 @@ struct TranscriptDocument {
 
 	 `starts` is where each one begins and `totalLength` how many characters
 	 they drew together, both measured by the caller as it rendered them. Lines
-	 arrive at either end: in front of the first ordinal, or after the last. */
+	 arrive in front of the first ordinal or after the last; recovered history
+	 arrives between two lines, and the lines after it take new ordinals. */
 	mutating func insert(_ newLines: [TranscriptRow], at index: Int, starts: [Int], totalLength: Int) {
-		precondition(index == 0 || index == lines.count)
+		precondition((0 ... lines.count).contains(index))
 		precondition(starts.count == newLines.count)
 		guard newLines.isEmpty == false else { return }
 		if index == 0 {
 			firstLineOrdinal -= newLines.count
+		} else if index < lines.count {
+			renumberOrdinals(from: firstLineOrdinal + index, by: newLines.count)
 		}
 		let firstOrdinal = firstLineOrdinal + index
 		lines.insert(contentsOf: newLines, at: index)
 		storedLineStarts.insert(contentsOf: starts.map { $0 - lineStartBias }, at: index)
 		shiftLineStarts(after: index + newLines.count - 1, by: totalLength)
-		/* In front, the new lines' message ordinals come before the ones already
-		 held, so they are indexed newest first to keep each list ascending. */
-		let ordinals = Array(zip(newLines.indices, newLines))
-		for (offset, line) in index == 0 ? ordinals.reversed() : ordinals {
+		for (offset, line) in newLines.enumerated() {
 			let ordinal = firstOrdinal + offset
 			for identifier in line.identifiers where lineOrdinals[identifier] == nil {
 				lineOrdinals[identifier] = ordinal
 			}
-			indexMessage(of: line, ordinal: ordinal, inFront: index == 0)
+			indexMessage(of: line, ordinal: ordinal)
 		}
 		highlightedLineCount += newLines.filter(\.body.isHighlight).count
 		checkInvariant()
@@ -458,12 +460,20 @@ struct TranscriptDocument {
 
 	// MARK: - Indexes
 
-	private mutating func indexMessage(of line: TranscriptRow, ordinal: Int, inFront: Bool = false) {
+	/// Keeps each message's ordinals ascending, wherever its line went in.
+	private mutating func indexMessage(of line: TranscriptRow, ordinal: Int) {
 		guard let identifier = line.messageIdentifier else { return }
-		if inFront {
-			messageLineOrdinals[MessageIdentifierKey(identifier), default: []].insert(ordinal, at: 0)
-		} else {
-			messageLineOrdinals[MessageIdentifierKey(identifier), default: []].append(ordinal)
+		var ordinals = messageLineOrdinals[MessageIdentifierKey(identifier)] ?? []
+		ordinals.insert(ordinal, at: ordinals.firstIndex { $0 > ordinal } ?? ordinals.endIndex)
+		messageLineOrdinals[MessageIdentifierKey(identifier)] = ordinals
+	}
+
+	/// Moves every ordinal from `boundary` on by `count`, for lines that go
+	/// in between two held lines.
+	private mutating func renumberOrdinals(from boundary: Int, by count: Int) {
+		lineOrdinals = lineOrdinals.mapValues { $0 >= boundary ? $0 + count : $0 }
+		messageLineOrdinals = messageLineOrdinals.mapValues { ordinals in
+			ordinals.map { $0 >= boundary ? $0 + count : $0 }
 		}
 	}
 

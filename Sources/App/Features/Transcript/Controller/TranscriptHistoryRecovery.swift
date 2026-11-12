@@ -28,9 +28,6 @@ final class TranscriptHistoryRecovery {
 	private var loadPhase = LoadPhase.unloaded
 	private var olderPagePhase = OlderPagePhase.idle
 	private(set) var hasEverLoaded = false
-	/// Lines recovered from the server were stored while a reload was under
-	/// way, which may have read the store before they were in it.
-	var recoveredLinesAwaitReload = false
 
 	var isLoaded: Bool {
 		switch loadPhase {
@@ -71,7 +68,6 @@ final class TranscriptHistoryRecovery {
 
 	func clearLoadedHistory() {
 		loadPhase = .unloaded
-		recoveredLinesAwaitReload = false
 	}
 
 	/** Whether the transcript shows a window of stored history rather than the

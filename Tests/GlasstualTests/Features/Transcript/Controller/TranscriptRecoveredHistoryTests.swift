@@ -5,12 +5,19 @@ import AppKit
 @testable import Glasstual
 import Testing
 
-/// Holds the second history read open until the test lets it answer, and
-/// counts every read.
-private actor SecondFetchGate {
+/// Holds the first history read open until the test lets it answer with the
+/// page it was given, and counts every read.
+private actor FirstFetchGate {
 	private var fetches = 0
-	private var parked: CheckedContinuation<ScrollbackFetchOutcome, Never>?
+	private var parked: CheckedContinuation<Void, Never>?
 	private var observers: [CheckedContinuation<Void, Never>] = []
+	private let page: [ScrollbackEntry]
+	private let parks: Bool
+
+	init(page: [ScrollbackEntry] = [], parks: Bool) {
+		self.page = page
+		self.parks = parks
+	}
 
 	var fetchCount: Int {
 		fetches
@@ -18,28 +25,35 @@ private actor SecondFetchGate {
 
 	func fetch() async -> ScrollbackFetchOutcome {
 		fetches += 1
-		guard fetches == 2 else { return .page([]) }
-		for observer in observers {
-			observer.resume()
+		guard fetches == 1 else { return .page([]) }
+		if parks {
+			for observer in observers {
+				observer.resume()
+			}
+			observers.removeAll()
+			await withCheckedContinuation { parked = $0 }
 		}
-		observers.removeAll()
-		return await withCheckedContinuation { parked = $0 }
+		return .page(page)
 	}
 
 	func waitUntilParked() async {
-		guard fetches < 2 else { return }
+		guard fetches < 1 else { return }
 		await withCheckedContinuation { observers.append($0) }
 	}
 
 	func release() {
-		parked?.resume(returning: .page([]))
+		parked?.resume()
 		parked = nil
 	}
 }
 
+/** Messages a gap fill recovers are older than the live end, so they are
+ drawn between the lines they fall between rather than after the newest one.
+ The store is read once, when the transcript loads; a fill does not read it
+ again. */
 @MainActor
-@Suite("Recovered history reload", .serialized)
-struct TranscriptRecoveredHistoryReloadTests {
+@Suite("Recovered history", .serialized)
+struct TranscriptRecoveredHistoryTests {
 	private func line(_ text: String, at seconds: Double) -> ChatLine {
 		var line = ChatLine()
 		line.messageBody = text
@@ -48,8 +62,7 @@ struct TranscriptRecoveredHistoryReloadTests {
 		return line
 	}
 
-	/// Runs the pipeline until no read is under way: the read that follows one
-	/// that just ended is submitted as that one is applied.
+	/// Runs the pipeline until no read is under way and nothing is queued.
 	private func drain(_ controller: TranscriptController) async {
 		for _ in 0 ..< 20 {
 			await controller.drainRenderJobs()
@@ -58,63 +71,87 @@ struct TranscriptRecoveredHistoryReloadTests {
 		}
 	}
 
-	/** A gap fill arrives a page at a time, faster than a read of the store
-	 finishes. A reload is refused while one is under way, so the pages after
-	 the first were stored and never drawn: the banner went away and most of
-	 the messages it promised did not appear. */
-	@Test("A page recovered while history is being read is read again once that read ends",
-	      .timeLimit(.minutes(1)))
-	func pageRecoveredDuringAReloadIsReadAgain() async {
+	/// The controller holds its session and its window weakly, so the fixture
+	/// keeps both alive.
+	private struct Fixture {
 		let session = ServerSession(config: ServerConfig())
 		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
-		let controller = TranscriptController(session: session, in: window)
-		controller.loadsHistoryLazily = { false }
-		defer { controller.tearDown(.permanentRemoval) }
-		let gate = SecondFetchGate()
+		let controller: TranscriptController
+
+		init() {
+			controller = TranscriptController(session: session, in: window)
+			controller.loadsHistoryLazily = { false }
+			controller.reloadsScrollbackOnLaunch = { true }
+		}
+	}
+
+	private func displayedText(_ controller: TranscriptController) -> [String] {
+		controller.backingView?.displayedLines.map(\.body.plainText) ?? []
+	}
+
+	@Test("Recovered pages are drawn between the lines they fall between, without reading the store again")
+	func recoveredPagesAreDrawnInPlace() async {
+		let fixture = Fixture()
+		let controller = fixture.controller
+		defer { withExtendedLifetime(fixture) { controller.tearDown(.permanentRemoval) } }
+		let gate = FirstFetchGate(page: [
+			line("live end", at: 500), line("before the gap", at: 100),
+		].map { $0.scrollbackEntry(forView: controller.uniqueIdentifier) }, parks: false)
+		controller.historyPageFetcher = { _ in await gate.fetch() }
+		controller.ensureBackingView()
+		await drain(controller)
+		#expect(displayedText(controller) == ["before the gap", "live end"])
+
+		controller.archiveRecoveredChatLines([line("gap one", at: 200), line("gap two", at: 300)])
+		controller.archiveRecoveredChatLines([line("gap three", at: 400), line("too old", at: 50)])
+		await drain(controller)
+
+		#expect(displayedText(controller) == ["before the gap", "gap one", "gap two", "gap three", "live end"])
+		#expect(await gate.fetchCount == 1)
+		#expect(controller.newestLineNumber == controller.backingView?.displayedLines.last?.lineNumber)
+	}
+
+	/** A fill can answer while the transcript is still reading its stored
+	 history. Placed against a transcript that read has not filled yet, the
+	 page would land above lines older than it. */
+	@Test("A page recovered while history is being read is placed once that read ends",
+	      .timeLimit(.minutes(1)))
+	func pageRecoveredDuringAReadWaitsForIt() async {
+		let fixture = Fixture()
+		let controller = fixture.controller
+		defer { withExtendedLifetime(fixture) { controller.tearDown(.permanentRemoval) } }
+		let gate = FirstFetchGate(page: [
+			line("live end", at: 500), line("before the gap", at: 100),
+		].map { $0.scrollbackEntry(forView: controller.uniqueIdentifier) }, parks: true)
 		controller.historyPageFetcher = { _ in await gate.fetch() }
 
 		controller.ensureBackingView()
-		await controller.drainRenderJobs()
-		#expect(await gate.fetchCount == 1)
-		#expect(controller.historyRecovery.isReloading == false)
-
-		controller.archiveRecoveredChatLines([line("first page", at: 100)])
 		await gate.waitUntilParked()
 		#expect(controller.historyRecovery.isReloading)
-
-		// The second page lands while the first page's read is still out.
-		controller.archiveRecoveredChatLines([line("second page", at: 200)])
-		#expect(controller.historyRecovery.recoveredLinesAwaitReload)
-		#expect(await gate.fetchCount == 2)
+		controller.archiveRecoveredChatLines([line("gap", at: 300)])
 
 		await gate.release()
 		await drain(controller)
 
-		#expect(await gate.fetchCount == 3)
-		#expect(controller.historyRecovery.recoveredLinesAwaitReload == false)
+		#expect(displayedText(controller) == ["before the gap", "gap", "live end"])
+		#expect(await gate.fetchCount == 1)
 		#expect(controller.historyRecovery.isReloading == false)
 	}
 
-	@Test("A page recovered with no read under way is read once")
-	func pageRecoveredWhileIdleIsReadOnce() async {
-		let session = ServerSession(config: ServerConfig())
-		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
-		let controller = TranscriptController(session: session, in: window)
-		controller.loadsHistoryLazily = { false }
-		defer { controller.tearDown(.permanentRemoval) }
-		let fetches = SecondFetchGate()
-		controller.historyPageFetcher = { _ in
-			await fetches.fetch()
-		}
+	@Test("A window of stored history keeps what it shows; the recovered lines are only stored")
+	func detachedWindowKeepsWhatItShows() async {
+		let fixture = Fixture()
+		let controller = fixture.controller
+		defer { withExtendedLifetime(fixture) { controller.tearDown(.permanentRemoval) } }
+		let gate = FirstFetchGate(parks: false)
+		controller.historyPageFetcher = { _ in await gate.fetch() }
 		controller.ensureBackingView()
-		await controller.drainRenderJobs()
-		#expect(await fetches.fetchCount == 1)
+		await drain(controller)
+		controller.historyRecovery.beginDetached()
 
-		Task { await fetches.waitUntilParked(); await fetches.release() }
-		controller.archiveRecoveredChatLines([line("only page", at: 100)])
+		controller.archiveRecoveredChatLines([line("gap", at: 300)])
 		await drain(controller)
 
-		#expect(await fetches.fetchCount == 2)
-		#expect(controller.historyRecovery.recoveredLinesAwaitReload == false)
+		#expect(displayedText(controller).isEmpty)
 	}
 }

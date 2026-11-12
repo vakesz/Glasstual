@@ -69,8 +69,10 @@ protocol ChatItemPresenting: AnyObject {
 	func prependEarlierChatLines(_ chatLines: [ChatLine])
 
 	/** Stores lines that belong somewhere in the middle of the history, such
-	 as a filled gap, and shows them where they fall. They are older than what
-	 is drawn at the live end, so they are not drawn there. */
+	 as a filled gap, and draws each between the lines it falls between, by
+	 the time it carries. They are older than what is drawn at the live end,
+	 so they are not drawn there; one older than everything drawn is only
+	 stored, and comes back with the older history. */
 	func archiveRecoveredChatLines(_ chatLines: [ChatLine])
 	/// Whether the conversation is missing messages the server still has.
 	func noteMissingServerHistory(_ state: MissingServerHistoryState)

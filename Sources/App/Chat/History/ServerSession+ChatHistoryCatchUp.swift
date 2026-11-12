@@ -95,9 +95,9 @@ extension ServerSession {
 		send(.chathistory, arguments: arguments)
 	}
 
-	/** Asks for the messages a catch-up could not reach. The lines are stored
-	 rather than drawn at the end, and the transcript shows them where they
-	 fall. Reports whether a fill started. */
+	/** Asks for the messages a catch-up could not reach. The transcript stores
+	 them and draws each between the lines it falls between, by server time,
+	 rather than at the end. Reports whether a fill started. */
 	@discardableResult
 	func fillChatHistoryGap(in conversation: Conversation) -> Bool {
 		let key = conversation.uniqueIdentifier
@@ -241,8 +241,9 @@ extension ServerSession {
 	/** Replays one page of catch-up or gap fill and moves the paging on.
 
 	 A catch-up page is processed like any replay, so its lines are drawn at
-	 the end. A gap-fill page is collected instead and handed to the transcript
-	 to store, because its lines are older than what is drawn. */
+	 the end. A gap-fill page is collected instead and handed to the transcript,
+	 which stores its lines and draws them between the lines they fall
+	 between: they are older than the live end. */
 	func replayPagingBatch(_ batch: MessageBatch, contents: MessageBatch, paging: PendingChatHistoryPaging) {
 		paging.timeoutTimer?.stop()
 		let incomplete = contents.labeledDelivery.outcome == .failed || batchMessages.queuedEntries.values.contains {

@@ -207,7 +207,6 @@ private extension TranscriptController {
 			attachedWindow?.noteItemWasViewed(associatedItem)
 		}
 		renderScheduler.releaseHeldApplications()
-		reloadForRecoveredLinesIfNeeded()
 	}
 
 	private func restoreTranscriptProjectionState() {

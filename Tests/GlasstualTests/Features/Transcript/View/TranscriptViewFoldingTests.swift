@@ -173,6 +173,37 @@ struct TranscriptViewFoldingTests {
 		}
 	}
 
+	@Test("An event recovered between collapsed events joins their group, and a message recovered there splits it")
+	func recoveredRowsRegroupTheirNeighbours() throws {
+		try withTranscript { view, _ in
+			func at(_ second: Double, _ row: TranscriptRow) -> TranscriptRow {
+				var row = row
+				row.receivedAt = Date(timeIntervalSince1970: second)
+				return row
+			}
+			view.appendLines([
+				at(10, line("first", kind: .join)), at(30, line("third", kind: .part)), at(50, line("visible")),
+			])
+			#expect(view.textView.string.hasPrefix(String(localized: .Transcript.expandGeneralEvents(2)) + "\n"))
+
+			view.insertRecoveredLines([at(20, line("second", kind: .quit))])
+			#expect(view.displayedLines.map(\.lineNumber) == ["first", "second", "third", "visible"])
+			#expect(view.textView.string.hasPrefix(String(localized: .Transcript.expandGeneralEvents(3)) + "\n"))
+			#expect(view.textView.string.contains("second body") == false)
+			#expect(view.textView.string.contains("visible body"))
+
+			view.insertRecoveredLines([at(25, line("between"))])
+			let text = view.textView.string as NSString
+			let earlier = text.range(of: String(localized: .Transcript.expandGeneralEvents(2))).location
+			let message = text.range(of: "between body").location
+			let later = text.range(of: String(localized: .Transcript.expandGeneralEvents(1))).location
+			#expect(earlier == 0)
+			#expect(message != NSNotFound && later != NSNotFound)
+			#expect(earlier < message && message < later)
+			#expect(view.document.lineStarts.last == view.textView.textStorage?.length)
+		}
+	}
+
 	@Test("Selections after zero-length hidden rows survive folds and row refreshes")
 	func visibleSelectionSurvivesChangingFoldLengths() throws {
 		try withTranscript { view, _ in

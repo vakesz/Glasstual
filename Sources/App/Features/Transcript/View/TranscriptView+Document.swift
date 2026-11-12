@@ -59,6 +59,41 @@ extension TranscriptView {
 		}
 	}
 
+	/** Adds lines recovered from the server between the lines they fall
+	 between, by the time each carries.
+
+	 A message the document already draws is not drawn again, whether it is
+	 named by its line or by its message identifier. Lines older than
+	 everything drawn are left out and reported, for the controller to load
+	 with the rest of the older history.
+
+	 The batch keeps the reader where they are: one following the end is
+	 scrolled to it, and one reading back keeps the line at the top of the
+	 viewport in place while the lines go in above or below it. */
+	@discardableResult
+	func insertRecoveredLines(_ newLines: [TranscriptRow]) -> (accepted: [String], heldBack: [String]) {
+		performEditingBatch {
+			let candidates = document.accepting(newLines).filter { line in
+				line.messageIdentifier.map { document.ordinals(ofMessage: $0) == nil } ?? true
+			}
+			let placement = TranscriptRecoveredPlacement(
+				drawn: document.lines.map(\.receivedAt),
+				recovered: candidates.map(\.receivedAt),
+				room: document.roomBeforeCeiling
+			)
+			/* From the end, so an insertion does not move the index the next
+			 one names. */
+			for run in placement.runs.reversed() {
+				insert(run.members.map { candidates[$0] }, at: run.index)
+			}
+			updateLayoutAfterEdit()
+			return (
+				placement.runs.flatMap(\.members).map { candidates[$0].lineNumber },
+				placement.heldBack.map { candidates[$0].lineNumber }
+			)
+		}
+	}
+
 	func clearLines() {
 		performEditingBatch { clear() }
 	}

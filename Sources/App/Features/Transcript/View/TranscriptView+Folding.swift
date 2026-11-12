@@ -30,7 +30,7 @@ extension TranscriptView {
 	/// summary, if it changed, is the only old row that needs a redraw.
 	func foldInsertedLines(_ newLines: [TranscriptRow], at index: Int) -> Set<String> {
 		let policy = foldingPolicy(for: newLines)
-		if document.folding.rowCount == document.count {
+		if document.folding.rowCount == document.count, index == 0 || index == document.count {
 			return if index == 0 {
 				document.folding.prepend(
 					rows: newLines, generalEventDisplay: policy.generalEventDisplay,
@@ -43,9 +43,11 @@ extension TranscriptView {
 				)
 			}
 		}
-		// A native rebuild temporarily empties the document but keeps folding
-		// state so retained identities can carry their expansion into new text.
-		let allRows = index == 0 ? newLines + document.lines : document.lines + newLines
+		/* Rows that go between two others can join, split or extend a group on
+		 either side, so the grouping is worked out again. A native rebuild
+		 arrives here too: it empties the document but keeps the folding state,
+		 so retained identities carry their expansion into new text. */
+		let allRows = Array(document.lines[..<index] + newLines + document.lines[index...])
 		let allPolicy = foldingPolicy(for: allRows)
 		return document.folding.update(
 			rows: allRows, generalEventDisplay: allPolicy.generalEventDisplay,
