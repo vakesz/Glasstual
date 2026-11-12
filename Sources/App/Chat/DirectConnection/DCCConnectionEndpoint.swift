@@ -219,19 +219,54 @@ nonisolated enum DCCConnectionEndpoint {
 	 Empty data puts no bytes on the stream but starts the connection, and the
 	 send does not return until the handshake has finished. A peer that
 	 presented no certificate is decided on after that, still before any byte
-	 moves. The failure names the validator's refusal when there was one. */
+	 moves. The failure names the validator's refusal when there was one.
+
+	 A handshake that fails moves the connection to `failed`, and the send that
+	 was waiting on it does not always hear: it then stays suspended until
+	 `timeout`, which is minutes long because it has to cover a person deciding.
+	 The connection's own state is therefore watched beside the send, and
+	 whichever reports first ends the wait. The handler is registered before the
+	 send, which is what starts the connection. */
 	private static func establish(
 		_ connection: NetworkConnection<TLS>,
 		handshake: DCCTLSHandshake,
 		timeout: Duration
 	) async throws -> DCCSecureSessionInfo {
+		let (failures, failure) = AsyncStream<NWError>.makeStream(bufferingPolicy: .bufferingOldest(1))
+		connection.onStateUpdate { _, state in
+			if case let .failed(error) = state {
+				failure.yield(error)
+			}
+		}
+
 		do {
 			return try await DCCTransport.withTimeout(timeout, failingWith: .connectTimeout) {
-				try await connection.send(Data())
+				try await withThrowingTaskGroup(of: Void.self) { group in
+					defer { group.cancelAll() }
+					group.addTask { try await connection.send(Data()) }
+					group.addTask {
+						for await error in failures {
+							throw error
+						}
+						/* The stream only ends for a cancelled task. Returning here
+						 would read as the send having answered. */
+						throw CancellationError()
+					}
+					try await group.next()
+				}
 				return try await handshake.establishedSession(of: connection)
 			}
 		} catch {
-			throw await handshake.failure(for: error)
+			throw await handshake.failure(for: handshakeFailure(of: connection, reportedAs: error))
 		}
+	}
+
+	/** Why the handshake failed, when the connection says it did.
+
+	 A failed handshake closes the socket, and the send waiting on it can report
+	 the closed socket instead of the TLS failure that closed it. */
+	private static func handshakeFailure(of connection: NetworkConnection<TLS>, reportedAs error: Error) -> Error {
+		guard error is NWError, case let .failed(cause) = connection.state, case .tls = cause else { return error }
+		return cause
 	}
 }
