@@ -32,7 +32,7 @@ struct ReplyPrivatelyScenario: Scenario {
 		try await context.scriptedEvidence(fixture.expectedEvidence)
 		try await context.transcript(contains: fixture.acknowledgement)
 		guard try context.isSelected("channel", "#e2e"),
-		      try context.rowState("direct", "fixture") == nil, try context.rowState("direct-chat", "fixture") == nil
+		      try context.rowState("direct", "fixture") == nil, try context.rowState("direct-chat", "=fixture") == nil
 		else { throw HarnessFailure.assertion("The private answer opened a conversation instead of staying in the channel") }
 		try await context.quit(peerSeesQuit: true)
 	}

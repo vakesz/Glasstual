@@ -3,7 +3,7 @@ import Foundation
 /// A passive `DCC SCHAT` from a peer never seen before: accepting it asks
 /// about the peer's certificate, Trust and Remember lets the handshake
 /// finish, a line goes each way over TLS, and the peer hanging up closes the
-/// chat.
+/// chat. The sidebar names a direct chat `=nick`.
 struct DCCSecureChatScenario: Scenario {
 	let name = "dccSecureChat"
 	let budget = Duration.seconds(150)
@@ -19,9 +19,9 @@ struct DCCSecureChatScenario: Scenario {
 		try await context.answerAlert(AXID.dccChatOffer, with: AXID.alertDefault(AXID.dccChatOffer))
 		try await context.answerAlert(AXID.dccCertificateFirstUse, with: AXID.alertDefault(AXID.dccCertificateFirstUse))
 		try await context.until("the secure chat is connected") {
-			try context.rowState("direct-chat", "fixture") == AXID.RowState.joined
+			try context.rowState("direct-chat", "=fixture") == AXID.RowState.joined
 		}
-		try await context.selectRow("direct-chat", "fixture")
+		try await context.selectRow("direct-chat", "=fixture")
 		try await context.transcript(contains: DCCFixturePeer.chatGreeting)
 
 		try await context.send(DCCFixturePeer.chatReply)
@@ -31,7 +31,7 @@ struct DCCSecureChatScenario: Scenario {
 		}
 		try await context.transcript(contains: DCCFixturePeer.chatReply)
 		try await context.until("the chat is closed") {
-			try context.rowState("direct-chat", "fixture") == AXID.RowState.notJoined
+			try context.rowState("direct-chat", "=fixture") == AXID.RowState.notJoined
 		}
 
 		try await context.selectRow("server", ScenarioContext.network)
