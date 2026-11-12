@@ -29,10 +29,15 @@ extension ServerPropertiesEditor {
 		return model.hasUnsavedChanges ? .asks : .closes
 	}
 
+	/// The window the editor is shown in, once it is on screen.
+	var hostWindow: NSWindow? {
+		closeReview?.window
+	}
+
 	/// Where the window's own questions appear: on the window, once it is on
 	/// screen.
 	var alertPresentation: AlertPresentation {
-		closeReview?.window.map(AlertPresentation.window) ?? .mainWindow
+		hostWindow.map(AlertPresentation.window) ?? .mainWindow
 	}
 
 	/** The question asked before unsaved edits would be lost, as a document

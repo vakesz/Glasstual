@@ -156,7 +156,9 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 				return true
 			} catch {
 				model.isSaving = false
-				KeychainAlerts.showFailure(error)
+				/* The failure is about this window's edits, so it is told on
+				 this window, over them. */
+				Alerts.present(KeychainAlerts.failureAlert(error, canRetry: false), on: alertPresentation)
 				completion?(false)
 				return false
 			}
@@ -316,22 +318,23 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 
 	private func presentCertificatePicker(_ identities: [SecIdentity]) {
 		guard !identities.isEmpty else {
-			Alerts.present(Self.noCertificatesRequest)
+			Alerts.present(Self.noCertificatesRequest, on: alertPresentation)
 			return
 		}
 		guard let panel = SFChooseIdentityPanel.shared() else { return }
 		clientCertificatePanel = panel
 		panel.setInformativeText(String(localized: .ServerProperties.selectACertificateToSendWhen))
 		panel.setAlternateButtonTitle(PromptStrings.Action.cancel)
-		/* The panel hangs off the window the button was pressed in, which is
-		 this one and is key while it asks. */
-		guard let hostWindow = (NSApp.keyWindow ?? AppServices.delegate.mainWindow)?.frontmostAttachedSheet else {
+		/* The panel hangs off this window, the one the button was pressed in,
+		 whichever window is key by the time the keychain has answered. */
+		guard let parent = hostWindow?.frontmostAttachedSheet else {
+			clientCertificatePanel = nil
 			return
 		}
 		let request = UUID()
 		certificatePanelRequest = request
 		panel.beginSheet(
-			for: hostWindow,
+			for: parent,
 			modalDelegate: self,
 			didEnd: #selector(identityPanelDidEnd(_:returnCode:contextInfo:)),
 			contextInfo: Unmanaged.passRetained(request as NSUUID).toOpaque(),

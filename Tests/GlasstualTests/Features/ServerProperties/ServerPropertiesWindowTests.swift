@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
-import Foundation
+import AppKit
 @testable import Glasstual
 import Testing
 
@@ -254,6 +254,27 @@ struct ServerPropertiesWindowTests {
 		editor.answerReloadQuestion(reload: true)
 		#expect(editor.model.config.realName == "Changed Elsewhere")
 		#expect(editor.model.hasUnsavedChanges == false)
+	}
+
+	@Test("The window's questions attach to the window once it is on screen")
+	func questionsAttachToTheWindow() {
+		let editor = ServerPropertiesEditor(session: ServerSession(config: Self.savedConfiguration())) { _, _ in }
+		defer { editor.windowDidClose() }
+		#expect(editor.alertPresentation == .mainWindow)
+
+		let window = NSWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 200, height: 100),
+			styleMask: [.titled, .closable],
+			backing: .buffered,
+			defer: true
+		)
+		window.isReleasedWhenClosed = false
+		let review = WindowCloseReview(window: window, policy: editor.closePolicy)
+		defer { review.uninstall() }
+		editor.closeReview = review
+
+		#expect(editor.alertPresentation == .window(window))
+		#expect(editor.hostWindow === window)
 	}
 
 	@Test("An address book edit made in the People window is not a configuration change here")
