@@ -15,11 +15,17 @@ struct DCCPeerTrustTests {
 		DCCPeerPin(certificate: certificate, nickname: "peer", account: nil, at: .now)
 	}
 
-	@Test("No certificate is unidentified, or refused when one is required", arguments: [false, true])
-	func noCertificate(required: Bool) throws {
+	@Test("No certificate and nothing saved is unidentified, or refused when one is required", arguments: [false, true])
+	func noCertificate(required: Bool) {
+		let verdict = DCCPeerTrust.evaluate(presented: nil, pins: [], requirePeerCertificate: required)
+		#expect(verdict == (required ? .certificateRequired : .unidentified))
+	}
+
+	@Test("No certificate from a nickname with one saved is asked about, or refused when one is required", arguments: [false, true])
+	func noCertificateDespitePins(required: Bool) throws {
 		let pins = try [Self.pin(Self.certificate())]
 		let verdict = DCCPeerTrust.evaluate(presented: nil, pins: pins, requirePeerCertificate: required)
-		#expect(verdict == (required ? .certificateRequired : .unidentified))
+		#expect(verdict == (required ? .certificateRequired : .unidentifiedDespitePins(saved: pins)))
 	}
 
 	@Test("A certificate with no pins is first use")

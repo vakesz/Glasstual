@@ -41,9 +41,14 @@ nonisolated enum DCCPeerTrustVerdict: Equatable, Sendable {
 	/// this never proceeds without the user replacing the pin, and automatic
 	/// flows never proceed at all.
 	case changed(previous: [DCCPeerPin])
-	/// The peer presented no certificate, which only a TLS client can do. The
-	/// connection is encrypted but nobody is verified.
+	/// The peer presented no certificate, which only a TLS client can do, and
+	/// none is saved for the nickname. The connection is encrypted but nobody
+	/// is verified.
 	case unidentified
+	/// The peer presented no certificate although one is saved for the
+	/// nickname. The user is asked every time, and automatic flows never
+	/// proceed unasked.
+	case unidentifiedDespitePins(saved: [DCCPeerPin])
 	/// The peer presented no certificate and the user requires one.
 	case certificateRequired
 	/// The certificate's key is too weak to be worth pinning.
@@ -58,7 +63,10 @@ nonisolated enum DCCPeerTrust {
 		requirePeerCertificate: Bool
 	) -> DCCPeerTrustVerdict {
 		guard let certificate else {
-			return requirePeerCertificate ? .certificateRequired : .unidentified
+			if requirePeerCertificate {
+				return .certificateRequired
+			}
+			return pins.isEmpty ? .unidentified : .unidentifiedDespitePins(saved: pins)
 		}
 		guard certificate.keyStrength == .acceptable else {
 			return .weakKey(certificate.keyAlgorithm, bits: certificate.keySize)

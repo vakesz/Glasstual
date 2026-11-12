@@ -196,6 +196,22 @@ nonisolated enum PromptStrings {
 		static var replaceSavedCertificate: String {
 			String(localized: .Prompts.dccReplaceSavedCertificate)
 		}
+
+		static func unidentifiedTitle(peer: String) -> String {
+			String(localized: .Prompts.dccPeerUnidentifiedTitle(peer))
+		}
+
+		static func unidentifiedBody(peer: String, trustedOn date: Date, saved: DCCCertificateFingerprint) -> String {
+			String(localized: .Prompts.dccPeerUnidentifiedBody(
+				peer,
+				date.formatted(date: .long, time: .omitted),
+				saved.grouped.joined(separator: "\n")
+			))
+		}
+
+		static var connectWithoutVerifying: String {
+			String(localized: .Prompts.dccConnectWithoutVerifying)
+		}
 	}
 
 	enum DocumentImport {

@@ -37,19 +37,42 @@ struct DCCTrustWaiter {
  Two connections from the same peer presenting the same certificate wait on
  one question, so the user answers once for both. */
 struct DCCTrustQuestion {
+	/// What the question is about.
+	enum Kind: Equatable {
+		/// A certificate from a nickname with none saved.
+		case firstUse
+		/// A certificate other than the ones saved for the nickname.
+		case changed
+		/// No certificate at all, from a nickname with one saved.
+		case unidentified
+	}
+
 	let peerNickname: String
-	let certificate: DCCPeerCertificate
+	/// What the peer presented; `nil` when it presented nothing although a
+	/// certificate is saved for its nickname.
+	let certificate: DCCPeerCertificate?
 	/// The pins that no longer match; empty when the peer has none.
 	let previous: [DCCPeerPin]
 	var waiters: [DCCTrustWaiter]
 
-	var isFirstUse: Bool {
-		previous.isEmpty
+	var kind: Kind {
+		if certificate == nil {
+			.unidentified
+		} else if previous.isEmpty {
+			.firstUse
+		} else {
+			.changed
+		}
 	}
 
-	/// The answers that fit: a changed certificate is never trusted once.
+	/// The answers that fit: a changed certificate is never trusted once, and
+	/// a missing one can only be let in for this connection or refused.
 	var acceptableAnswers: Set<DCCTrustAnswer> {
-		isFirstUse ? [.remember, .once, .reject] : [.replace, .reject]
+		switch kind {
+		case .firstUse: [.remember, .once, .reject]
+		case .changed: [.replace, .reject]
+		case .unidentified: [.once, .reject]
+		}
 	}
 }
 
@@ -108,12 +131,13 @@ struct DCCPendingDecisions {
 	}
 
 	/** Puts a waiter on the question about `certificate` from `peerKey`,
-	 asking a new one only when no identical question is pending. */
+	 asking a new one only when no identical question is pending. A `nil`
+	 certificate is the question about a peer that presented none. */
 	mutating func addTrustWaiter(
 		_ waiter: DCCTrustWaiter,
 		peerNickname: String,
 		peerKey: String,
-		certificate: DCCPeerCertificate,
+		certificate: DCCPeerCertificate?,
 		previous: [DCCPeerPin],
 		startupIdentifier: UUID,
 		socketIdentifier: String?,
@@ -124,7 +148,7 @@ struct DCCPendingDecisions {
 			/* Only a question asked under the same verdict: a waiter whose
 			 certificate has become a change must not be let through by an answer
 			 given to a first use, nor the reverse. */
-			return question.certificate.fingerprint == certificate.fingerprint
+			return question.certificate?.fingerprint == certificate?.fingerprint
 				&& casefold(question.peerNickname) == peerKey
 				&& $0.startupIdentifier == startupIdentifier
 				&& question.previous.map(\.fingerprint) == previous.map(\.fingerprint)

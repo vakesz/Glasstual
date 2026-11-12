@@ -63,8 +63,9 @@ extension ServerSession {
 	/** Whether the peer of a secure connection may proceed.
 
 	 The certificate is judged against the pins for the nickname the peer uses
-	 now. Only a new or changed certificate is asked about; a changed one is
-	 never let through without the user replacing the pin. */
+	 now. A new or changed certificate is asked about, and so is a missing one
+	 from a nickname that has one saved; a changed one is never let through
+	 without the user replacing the pin. */
 	func decideDCCPeer(_ certificate: DCCPeerCertificate?, context: DCCPeerContext) async -> Bool {
 		guard context.isCurrent() else { return false }
 		let nickname = context.nickname()
@@ -95,6 +96,8 @@ extension ServerSession {
 		case let .changed(previous):
 			guard let certificate else { return false }
 			return await askAboutDCCCertificate(certificate, from: nickname, previous: previous, context: context)
+		case let .unidentifiedDespitePins(saved):
+			return await askAboutDCCCertificate(nil, from: nickname, previous: saved, context: context)
 		}
 	}
 
@@ -113,21 +116,9 @@ extension ServerSession {
 			&& startup.identifier == decision.startupIdentifier
 			&& socket?.uniqueIdentifier == decision.socketIdentifier
 		let accepted = isSameConnection && answer != .reject
-		let nickname = question.peerNickname
 
 		if isSameConnection {
-			switch answer {
-			case .remember:
-				saveDCCPin(question.certificate, for: nickname, replacing: false)
-				printDebugInformation(toConsole: String(localized: .IRC.dccTrustRemembered(nickname)))
-			case .replace:
-				saveDCCPin(question.certificate, for: nickname, replacing: true)
-				printDebugInformation(toConsole: String(localized: .IRC.dccTrustReplaced(nickname)))
-			case .once:
-				printDebugInformation(toConsole: String(localized: .IRC.dccTrustOnce(nickname)))
-			case .reject:
-				printDebugInformation(toConsole: String(localized: .IRC.dccTrustRejected(nickname)))
-			}
+			noteDCCTrustAnswer(answer, to: question)
 		}
 
 		for waiter in question.waiters {
@@ -135,6 +126,27 @@ extension ServerSession {
 			waiter.continuation.resume(returning: accepted && waiter.isCurrent())
 		}
 		return .answered
+	}
+
+	/// Saves what `answer` asks to and says what it did. Only answers the
+	/// question accepts reach here, so a pin is never asked of a question
+	/// without a certificate.
+	private func noteDCCTrustAnswer(_ answer: DCCTrustAnswer, to question: DCCTrustQuestion) {
+		let nickname = question.peerNickname
+		switch (answer, question.certificate) {
+		case let (.remember, certificate?):
+			saveDCCPin(certificate, for: nickname, replacing: false)
+			printDebugInformation(toConsole: String(localized: .IRC.dccTrustRemembered(nickname)))
+		case let (.replace, certificate?):
+			saveDCCPin(certificate, for: nickname, replacing: true)
+			printDebugInformation(toConsole: String(localized: .IRC.dccTrustReplaced(nickname)))
+		case (.once, nil):
+			printDebugInformation(toConsole: String(localized: .IRC.dccTrustUnidentifiedOnce(nickname)))
+		case (.once, _):
+			printDebugInformation(toConsole: String(localized: .IRC.dccTrustOnce(nickname)))
+		case (.reject, _), (.remember, nil), (.replace, nil):
+			printDebugInformation(toConsole: String(localized: .IRC.dccTrustRejected(nickname)))
+		}
 	}
 
 	/// Refuses every handshake still waiting on the user and forgets every
@@ -152,7 +164,7 @@ extension ServerSession {
 	// MARK: - Asking
 
 	private func askAboutDCCCertificate(
-		_ certificate: DCCPeerCertificate,
+		_ certificate: DCCPeerCertificate?,
 		from nickname: String,
 		previous: [DCCPeerPin],
 		context: DCCPeerContext
@@ -209,11 +221,15 @@ extension ServerSession {
 
 	private func presentDCCTrustQuestion(
 		_ id: String,
-		certificate: DCCPeerCertificate,
+		certificate: DCCPeerCertificate?,
 		from nickname: String,
 		previous: [DCCPeerPin],
 		in conversation: Conversation?
 	) {
+		guard let certificate else {
+			presentDCCUnidentifiedPeerQuestion(id, from: nickname, saved: previous, in: conversation)
+			return
+		}
 		let fingerprint = certificate.fingerprint
 		let request: AlertRequest
 		let line: String
@@ -242,23 +258,55 @@ extension ServerSession {
 		}
 
 		printDebugInformation(line, in: conversation)
-		let isChange = previous.isEmpty == false
+		let kind: DCCTrustQuestion.Kind = previous.isEmpty ? .firstUse : .changed
 		output?.presentAlertSheet(request) { [weak self] outcome in
-			self?.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: outcome.response, isChange: isChange))
+			self?.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: outcome.response, kind: kind))
+		}
+	}
+
+	/** Asks about a peer that presented no certificate although one is saved
+	 for its nickname. Cancel is the default; letting it in is the destructive
+	 alternate, never on Return. */
+	private func presentDCCUnidentifiedPeerQuestion(
+		_ id: String,
+		from nickname: String,
+		saved: [DCCPeerPin],
+		in conversation: Conversation?
+	) {
+		/* The verdict only asks when a certificate is saved; without one there
+		 is nothing to say the peer failed to match. */
+		guard let pin = saved.first else {
+			answerDCCTrustQuestion(id, with: .reject)
+			return
+		}
+		let request = AlertRequest(
+			title: PromptStrings.DCC.unidentifiedTitle(peer: nickname),
+			body: PromptStrings.DCC.unidentifiedBody(peer: nickname, trustedOn: pin.firstTrusted, saved: pin.fingerprint),
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: PromptStrings.DCC.connectWithoutVerifying,
+			destructiveButton: .alternate,
+			cancelButton: .default,
+			style: .critical
+		)
+		printDebugInformation(String(localized: .IRC.dccTrustUnidentifiedQuestion(nickname, id)), in: conversation)
+		output?.presentAlertSheet(request) { [weak self] outcome in
+			self?.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: outcome.response, kind: .unidentified))
 		}
 	}
 
 	/** The answer an alert button stands for.
 
 	 For a changed certificate only the alternate button, which is destructive
-	 and never on Return, replaces the pin. Anything else refuses. */
-	static func trustAnswer(for response: AlertResponse, isChange: Bool) -> DCCTrustAnswer {
-		switch (response, isChange) {
-		case (.alternate, true): .replace
-		case (_, true): .reject
-		case (.default, false): .remember
-		case (.other, false): .once
-		case (.alternate, false): .reject
+	 and never on Return, replaces the pin; for a missing one only that button
+	 lets the peer in, for this connection. Anything else refuses. */
+	static func trustAnswer(for response: AlertResponse, kind: DCCTrustQuestion.Kind) -> DCCTrustAnswer {
+		switch (response, kind) {
+		case (.alternate, .changed): .replace
+		case (.alternate, .unidentified): .once
+		case (_, .changed), (_, .unidentified): .reject
+		case (.default, .firstUse): .remember
+		case (.other, .firstUse): .once
+		case (.alternate, .firstUse): .reject
 		}
 	}
 

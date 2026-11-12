@@ -3744,6 +3744,150 @@
           }
         }
       }
+    },
+    "dcc-peer-unidentified-title": {
+      "comment": "Title of the critical alert shown when a secure DCC peer whose nickname has a saved certificate presents no certificate at all. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ didn't identify this time"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ezúttal nem azonosította magát"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat sich diesmal nicht ausgewiesen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no se identificó esta vez"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune identification de %@ cette fois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今回、%@から証明書が提示されませんでした"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ não se identificou desta vez"
+          }
+        }
+      }
+    },
+    "dcc-peer-unidentified-body": {
+      "comment": "Body of the critical alert shown when a secure DCC peer whose nickname has a saved certificate presents no certificate at all. %1$@ is the peer's nickname, %2$@ the date the saved certificate was first trusted and %3$@ its SHA-256 fingerprint, on four lines.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ presented no certificate for this connection, but you trusted a certificate from %1$@ on %2$@. The connection would be encrypted, but nobody can confirm it's really %1$@.\n\nSaved SHA-256:\n%3$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nem mutatott be tanúsítványt ehhez a kapcsolathoz, pedig ekkor megbíztál a(z) %1$@ egyik tanúsítványában: %2$@. A kapcsolat titkosított lenne, de senki sem tudja megerősíteni, hogy valóban %1$@ az.\n\nMentett SHA-256:\n%3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat für diese Verbindung kein Zertifikat vorgelegt, obwohl du am %2$@ einem Zertifikat von %1$@ vertraut hast. Die Verbindung wäre verschlüsselt, aber niemand kann bestätigen, dass es wirklich %1$@ ist.\n\nGesichertes SHA-256:\n%3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no presentó ningún certificado para esta conexión, aunque aceptaste un certificado de %1$@ el %2$@. La conexión estaría cifrada, pero nadie puede confirmar que sea realmente %1$@.\n\nSHA-256 guardado:\n%3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n’a présenté aucun certificat pour cette connexion, alors que vous avez approuvé un certificat de %1$@ le %2$@. La connexion serait chiffrée, mais rien ne confirme qu’il s’agit bien de %1$@.\n\nSHA-256 enregistré :\n%3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@はこの接続で証明書を提示しませんでしたが、%2$@に%1$@の証明書を信頼しています。接続は暗号化されますが、本当に%1$@であることは確認できません。\n\n保存済みの SHA-256:\n%3$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não apresentou nenhum certificado para esta conexão, embora você tenha considerado confiável um certificado de %1$@ em %2$@. A conexão seria criptografada, mas ninguém pode confirmar que é mesmo %1$@.\n\nSHA-256 salvo:\n%3$@"
+          }
+        }
+      }
+    },
+    "dcc-connect-without-verifying": {
+      "comment": "Destructive button of the alert shown when a secure DCC peer whose nickname has a saved certificate presents none: let this one connection go ahead, encrypted but unverified.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Without Verifying"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csatlakozás ellenőrzés nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Überprüfung verbinden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar sin verificar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter sans vérifier"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検証せずに接続"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar sem verificar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

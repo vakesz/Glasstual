@@ -43,7 +43,7 @@ struct ServerSessionDCCTrustPromptsTests {
 
 	/// Starts a decision and waits until the session has asked about it.
 	private func ask(
-		_ certificate: DCCPeerCertificate,
+		_ certificate: DCCPeerCertificate?,
 		on session: TestServerSession,
 		context: DCCPeerContext? = nil,
 		questions: Int = 1
@@ -124,8 +124,8 @@ struct ServerSessionDCCTrustPromptsTests {
 		#expect(alert.destructiveButton == .alternate)
 		#expect(alert.returnButton == .default)
 		#expect(alert.escapeButton == .default)
-		#expect(ServerSession.trustAnswer(for: .default, isChange: true) == .reject)
-		#expect(ServerSession.trustAnswer(for: .alternate, isChange: true) == .replace)
+		#expect(ServerSession.trustAnswer(for: .default, kind: .changed) == .reject)
+		#expect(ServerSession.trustAnswer(for: .alternate, kind: .changed) == .replace)
 
 		let completion = try #require(session.recordedOutput.presentedAlertCompletions.first)
 		completion(AlertOutcome(response: .default, isSuppressed: false))
@@ -278,6 +278,94 @@ struct ServerSessionDCCTrustPromptsTests {
 		let session = makeSession(requirePeerCertificate: required)
 
 		#expect(await session.decideDCCPeer(nil, context: context()) == !required)
+		#expect(session.recordedOutput.presentedAlerts.isEmpty)
+	}
+
+	@Test("A nickname with a saved certificate that presents none is asked every time, with Cancel as the default")
+	func noCertificateDespitePinIsAsked() async throws {
+		let session = makeSession()
+		let saved = try certificate()
+		try await session.environment.services.dccPeerCertificates.remember(
+			saved, network: session.config.uniqueIdentifier, nickname: "alice",
+			caseMapping: .rfc1459, account: nil, at: .now
+		)
+
+		let first = await ask(nil, on: session)
+		let alert = try #require(session.recordedOutput.presentedAlerts.first)
+		#expect(alert.title == PromptStrings.DCC.unidentifiedTitle(peer: "alice"))
+		#expect(alert.style == .critical)
+		#expect(alert.defaultButton == PromptStrings.Action.cancel)
+		#expect(alert.alternateButton == PromptStrings.DCC.connectWithoutVerifying)
+		#expect(alert.otherButton == nil)
+		#expect(alert.destructiveButton == .alternate)
+		#expect(alert.returnButton == .default)
+		#expect(alert.escapeButton == .default)
+		let completion = try #require(session.recordedOutput.presentedAlertCompletions.first)
+		completion(AlertOutcome(response: .default, isSuppressed: false))
+		#expect(await first.value == false)
+
+		let second = await ask(nil, on: session, questions: 2)
+		#expect(session.recordedOutput.presentedAlerts.count == 2)
+		#expect(session.answerDCCTrustQuestion("d2", with: .remember) == .wrongAnswer)
+		#expect(session.answerDCCTrustQuestion("d2", with: .replace) == .wrongAnswer)
+		let secondCompletion = try #require(session.recordedOutput.presentedAlertCompletions.last)
+		secondCompletion(AlertOutcome(response: .alternate, isSuppressed: false))
+		#expect(await second.value)
+		#expect(await pins(on: session).map(\.fingerprint) == [saved.fingerprint])
+	}
+
+	@Test("Only the destructive button lets in a peer that presented no certificate", arguments: [
+		(AlertResponse.default, DCCTrustAnswer.reject), (.alternate, .once), (.other, .reject),
+	])
+	func noCertificateDespitePinAnswers(_ testCase: (response: AlertResponse, answer: DCCTrustAnswer)) {
+		#expect(ServerSession.trustAnswer(for: testCase.response, kind: .unidentified) == testCase.answer)
+	}
+
+	@Test("/dcc trust answers a peer that presented no certificate with once or reject only")
+	func noCertificateDespitePinTypedAnswer() async throws {
+		let session = makeSession()
+		try await session.environment.services.dccPeerCertificates.remember(
+			certificate(), network: session.config.uniqueIdentifier, nickname: "alice",
+			caseMapping: .rfc1459, account: nil, at: .now
+		)
+		let decision = await ask(nil, on: session)
+
+		session.handleDCCCommand(CommandArguments("trust d1 remember"), command: "DCC", targetConversation: nil)
+		session.handleDCCCommand(CommandArguments("trust d1 once"), command: "DCC", targetConversation: nil)
+
+		#expect(await decision.value)
+		let bodies = session.printedLines.compactMap { ($0 as? [String: Any])?["messageBody"] as? String }
+		#expect(bodies.contains(String(localized: .IRC.dccTrustUnidentifiedQuestion("alice", "d1"))))
+		#expect(bodies.contains(String(localized: .IRC.dccQuestionWrongAnswer("d1", "remember"))))
+		#expect(bodies.contains(String(localized: .IRC.dccTrustUnidentifiedOnce("alice"))))
+	}
+
+	@Test("A peer that presented no certificate does not join a question about one that did")
+	func noCertificateDoesNotJoinChanged() async throws {
+		let session = makeSession()
+		try await session.environment.services.dccPeerCertificates.remember(
+			certificate(), network: session.config.uniqueIdentifier, nickname: "alice",
+			caseMapping: .rfc1459, account: nil, at: .now
+		)
+		let changed = try await ask(certificate(), on: session)
+		let unidentified = await ask(nil, on: session, questions: 2)
+
+		#expect(session.dccDecisions.decisions.map(\.id) == ["d1", "d2"])
+		session.answerDCCTrustQuestion("d2", with: .reject)
+		#expect(await unidentified.value == false)
+		session.answerDCCTrustQuestion("d1", with: .reject)
+		#expect(await changed.value == false)
+	}
+
+	@Test("A peer that presented no certificate is refused unasked when one is required, saved or not")
+	func noCertificateRequiredDespitePin() async throws {
+		let session = makeSession(requirePeerCertificate: true)
+		try await session.environment.services.dccPeerCertificates.remember(
+			certificate(), network: session.config.uniqueIdentifier, nickname: "alice",
+			caseMapping: .rfc1459, account: nil, at: .now
+		)
+
+		#expect(await session.decideDCCPeer(nil, context: context()) == false)
 		#expect(session.recordedOutput.presentedAlerts.isEmpty)
 	}
 

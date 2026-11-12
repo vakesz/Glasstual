@@ -18364,6 +18364,102 @@
           }
         }
       }
+    },
+    "dcc-trust-unidentified-question": {
+      "comment": "Secure DCC messages. Printed when a peer whose nickname has a saved certificate presents none, so the question can be answered by typing. %1$@ is the peer's nickname and %2$@ the short identifier of the question, such as d1; keep the commands and answer words as written.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ presented no certificate this time, though you saved one for %1$@. The connection would be encrypted but not verified. Answer with /dcc trust %2$@ once or reject."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ezúttal nem mutatott be tanúsítványt, pedig mentettél egyet hozzá: %1$@. A kapcsolat titkosított lenne, de nem ellenőrzött. Válaszolj ezzel: /dcc trust %2$@ once vagy reject."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat diesmal kein Zertifikat vorgelegt, obwohl du eines für %1$@ gesichert hast. Die Verbindung wäre verschlüsselt, aber nicht überprüft. Antworte mit /dcc trust %2$@ once oder reject."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no presentó ningún certificado esta vez, aunque guardaste uno para %1$@. La conexión estaría cifrada, pero sin verificar. Responde con /dcc trust %2$@ once o reject."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n’a présenté aucun certificat cette fois, alors que vous en avez enregistré un pour %1$@. La connexion serait chiffrée mais non vérifiée. Répondez avec /dcc trust %2$@ once ou reject."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@は今回証明書を提示しませんでしたが、%1$@の証明書は保存されています。接続は暗号化されますが検証されません。/dcc trust %2$@ once または reject で応答してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não apresentou nenhum certificado desta vez, embora você tenha salvo um para %1$@. A conexão seria criptografada, mas não verificada. Responda com /dcc trust %2$@ once ou reject."
+          }
+        }
+      }
+    },
+    "dcc-trust-unidentified-once": {
+      "comment": "Secure DCC messages. Printed when the user lets a peer that presented no certificate, although one is saved for its nickname, connect this once. %@ is the peer's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let %@ connect without a certificate, for this connection only."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tanúsítvány nélkül csatlakozhat, csak ehhez a kapcsolathoz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ darf sich ohne Zertifikat verbinden, nur für diese Verbindung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se permitió a %@ conectarse sin certificado, solo para esta conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion sans certificat autorisée pour %@, pour cette connexion uniquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の証明書なしの接続を許可しました（この接続のみ）。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexão de %@ sem certificado permitida, apenas para esta conexão."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
