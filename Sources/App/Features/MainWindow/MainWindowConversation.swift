@@ -17,33 +17,51 @@ struct MainWindowConversation: View {
 	/// The tray's height depends only on its width, so measuring it does not
 	/// feed back into its own layout.
 	@State private var promptTrayHeight: CGFloat = 0
+	/// The height of the notices over the top of the transcript, which the
+	/// transcript keeps its topic and first line below. The banners' height
+	/// depends only on their width and content, as the tray's does.
+	@State private var noticeHeight: CGFloat = 0
 
 	/// AppKit measures the input bar and reserves its height in the transcript's
 	/// bottom inset. Feeding SwiftUI geometry back into layout can cause a loop.
 	var body: some View {
-		VStack(spacing: 0) {
-			ScrollbackMigrationBanner(recovery: Scrollback.shared.recovery)
-			TranscriptHistoryRecoveryView(controller: columns.transcript?.viewController)
+		ZStack(alignment: .top) {
 			ZStack(alignment: .bottom) {
-				// The native scroll view stays inside the toolbar safe area.
-				// SwiftUI's scrollEdgeEffectStyle does not reach hosted NSScrollViews.
+				/* The transcript runs under the toolbar, so its text scrolls
+				 beneath the Liquid Glass and its scroll edge effect; the
+				 transcript keeps its topic and first line clear of the toolbar
+				 through its own safe area, and of the notices through the height
+				 reported for them. */
 				TranscriptViewRepresentable(
 					transcriptView: columns.transcript,
 					inputField: inputContentView,
 					accessoryHeight: InputBarLayout.accessoryHeight(
 						for: inputContentView.textView.accessoryModel
 					) + SlashCommandDiscoveryView.height(for: inputContentView.textView.commandDiscovery) + promptTrayHeight,
+					topAccessoryHeight: noticeHeight,
 					isObscured: columns.isConversationObscured
 				)
+				.ignoresSafeArea(.container, edges: .top)
 
 				inputBar
+			}
+
+			/* Notices sit under the toolbar on the bar material, over the text,
+			 the way Mail's banners do. */
+			VStack(spacing: 0) {
+				ScrollbackMigrationBanner(recovery: Scrollback.shared.recovery)
+				TranscriptHistoryRecoveryView(controller: columns.transcript?.viewController)
+			}
+			.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+				noticeHeight = height
 			}
 		}
 		.background(columns.conversationBackground)
 	}
 
-	/// The input capsule is the only glass surface; the reply banner and the
-	/// command list above it are flat material, so no glass sits on glass.
+	/// The input capsule is the only glass surface; the reply banner, the
+	/// questions and the command list above it are flat material, so no glass
+	/// sits on glass.
 	private var inputBar: some View {
 		VStack(spacing: 0) {
 			promptTray

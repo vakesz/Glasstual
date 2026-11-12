@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppKit
 import SwiftUI
 
 /// A bounded command list above the editor. The model supplies its height so
@@ -9,11 +10,30 @@ struct SlashCommandDiscoveryView: View {
 	let model: SlashCommandDiscoveryModel
 	let insert: (SlashCommandSuggestion) -> Void
 
-	static let rowHeight: CGFloat = 32
-	private static let detailHeight: CGFloat = 84
-	private static let footerHeight: CGFloat = 22
-	private static let verticalPadding: CGFloat = 8
+	/** The panel's parts, from the text styles they are set in, so the panel
+	 grows with the reader's text size the way a completion list does. Each is
+	 one or more lines of its style and the system spacing around them; the
+	 transcript reserves the same numbers, which is why they are computed from
+	 fonts rather than measured from SwiftUI. */
+	static var rowHeight: CGFloat {
+		lineHeight(.body) + UISpacing.regular * 2
+	}
+
+	private static var detailHeight: CGFloat {
+		lineHeight(.callout) + UISpacing.tight + lineHeight(.caption1) * CGFloat(detailLineLimit) + UISpacing.regular * 2
+	}
+
+	private static var footerHeight: CGFloat {
+		lineHeight(.caption2) + UISpacing.regular
+	}
+
+	private static let verticalPadding = UISpacing.regular
 	private static let maximumVisibleRows = 5
+	private static let detailLineLimit = 3
+
+	private static func lineHeight(_ style: NSFont.TextStyle) -> CGFloat {
+		ceil(TextLineMetrics.lineHeight(for: .preferredFont(forTextStyle: style)))
+	}
 
 	static func height(for model: SlashCommandDiscoveryModel) -> CGFloat {
 		guard model.isVisible else { return 0 }
@@ -43,7 +63,7 @@ struct SlashCommandDiscoveryView: View {
 			}
 			.padding(.vertical, Self.verticalPadding)
 			.frame(height: Self.height(for: model))
-			.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
+			.inputAccessorySurface()
 			.accessibilityElement(children: .contain)
 			.accessibilityLabel(String(localized: .SlashCommands.commandSuggestions))
 			.accessibilityIdentifier("slash-command-discovery")
@@ -93,7 +113,13 @@ struct SlashCommandDiscoveryView: View {
 			.padding(.horizontal, UISpacing.regular)
 			.frame(height: Self.rowHeight)
 			.frame(maxWidth: .infinity, alignment: .leading)
-			.background(selected ? Color(nsColor: .selectedContentBackgroundColor) : .clear, in: .rect(cornerRadius: UISpacing.tight))
+			.background {
+				/* The system's selection style, which follows the accent colour,
+				 the window's key state and Increase Contrast by itself. */
+				if selected {
+					RoundedRectangle(cornerRadius: UISpacing.tight).fill(.selection)
+				}
+			}
 			.contentShape(.rect)
 		}
 		.buttonStyle(.plain)
@@ -116,7 +142,7 @@ struct SlashCommandDiscoveryView: View {
 				: String(localized: .SlashCommands.suggestionDescriptionAndHint(suggestion.description, suggestion.argumentHint)))
 				.font(.caption)
 				.foregroundStyle(.secondary)
-				.lineLimit(3)
+				.lineLimit(Self.detailLineLimit)
 				.help(String(localized: .SlashCommands.suggestionTooltip(suggestion.description, suggestion.argumentHint)))
 		}
 		.frame(maxWidth: .infinity, alignment: .leading)

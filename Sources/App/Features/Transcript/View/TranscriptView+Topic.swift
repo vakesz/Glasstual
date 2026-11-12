@@ -23,12 +23,7 @@ extension TranscriptView {
 	/// A bar with neither a topic nor modes to draw gives its room back to the
 	/// transcript, which is the only thing outside the bar its content decides.
 	func showTopicBarIfDrawn() {
-		let hidden = topicBar.isEmpty
-		topicBar.isHidden = hidden
-		let outgoing = hidden ? scrollViewTopWithTopicConstraint : scrollViewTopWithoutTopicConstraint
-		let incoming = hidden ? scrollViewTopWithoutTopicConstraint : scrollViewTopWithTopicConstraint
-		outgoing?.isActive = false
-		incoming?.isActive = true
+		topicBar.isHidden = topicBar.isEmpty
 		needsLayout = true
 	}
 

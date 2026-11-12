@@ -42,9 +42,8 @@ struct PromptCardView: View {
 
 	var body: some View {
 		HStack(alignment: .firstTextBaseline, spacing: UISpacing.regular) {
-			Image(systemName: symbol)
+			symbolImage
 				.font(.title3)
-				.foregroundStyle(isSecurity ? Color.orange : Color.accentColor)
 				.accessibilityHidden(true)
 			VStack(alignment: .leading, spacing: UISpacing.snug) {
 				header
@@ -61,12 +60,7 @@ struct PromptCardView: View {
 		}
 		.padding(UISpacing.wide)
 		.frame(maxWidth: .infinity, alignment: .leading)
-		.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
-		.overlay {
-			RoundedRectangle(cornerRadius: InputBarLayout.accessoryCornerRadius)
-				.strokeBorder(isSecurity ? Color.orange.opacity(0.5) : Color(nsColor: .separatorColor))
-				.accessibilityHidden(true)
-		}
+		.inputAccessorySurface()
 		.accessibilityElement(children: .contain)
 		.accessibilityLabel(Text(verbatim: request.title))
 		.accessibilityIdentifier(AccessibilityIdentifier.promptCard(request, number: prompt.number))
@@ -87,11 +81,23 @@ struct PromptCardView: View {
 		}
 	}
 
-	private var symbol: String {
-		if isSecurity {
-			return "lock.shield"
+	/** The card's glyph, drawn the way the system draws the same meaning: a
+	 warning as the multicolour caution triangle, a security question as the
+	 shield, and anything else in the accent colour. No custom tints. */
+	@ViewBuilder
+	private var symbolImage: some View {
+		switch (request.style, isSecurity) {
+		case (.warning, _), (.critical, _):
+			Image(systemName: "exclamationmark.triangle.fill")
+				.symbolRenderingMode(.multicolor)
+		case (.informational, true):
+			Image(systemName: "lock.shield")
+				.symbolRenderingMode(.hierarchical)
+				.foregroundStyle(.secondary)
+		case (.informational, false):
+			Image(systemName: request.isNotice ? "info.circle" : "questionmark.bubble")
+				.foregroundStyle(.tint)
 		}
-		return request.isNotice ? "info.circle" : "questionmark.bubble"
 	}
 
 	private var header: some View {

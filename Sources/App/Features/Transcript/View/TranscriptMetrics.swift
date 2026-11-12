@@ -19,8 +19,8 @@ enum TranscriptMetrics {
 	/// horizontal padding, so the topic starts where the messages start.
 	static let topicSideInset = UISpacing.comfortable
 
-	/// Between the topic and the chevron that unfolds it, and between the
-	/// topic bar and the first line of the transcript.
+	/// Between the topic and the chevron that unfolds it, and above and below
+	/// the topic inside its bar.
 	static let topicGap = UISpacing.regular
 
 	/// The square the topic's chevron is clickable in. The glyph inside it is
@@ -28,10 +28,12 @@ enum TranscriptMetrics {
 	/// be able to hit.
 	static let topicDisclosureHitTarget: CGFloat = 24
 
-	/// The circle the reader is taken back to the newest line by, sized to a
-	/// sidebar row's natural height so that it reads as part of the window's
-	/// scale rather than as a number chosen for this one control.
-	static let jumpToLatestButtonSize: CGFloat = 28
+	/** The transcript's top content inset: the safe area the toolbar covers,
+	 plus the topic bar where one is shown. The topic bar carries its own gap
+	 above and below the topic, so nothing is added for it here. */
+	static func topContentInset(safeAreaTop: CGFloat, topicBarHeight: CGFloat?) -> CGFloat {
+		max(0, safeAreaTop) + max(0, topicBarHeight ?? 0)
+	}
 
 	/// How close to the top of the document the reader has to scroll before
 	/// the next page of history is fetched.
@@ -51,7 +53,6 @@ enum TranscriptMetrics {
 	static let inlineImagePlaceholderBox = CGSize(width: 320, height: 44)
 	static let inlineImagePlaceholderPadding: CGFloat = 12
 	static let inlineImagePlaceholderSpacing: CGFloat = 8
-	static let inlineImagePlaceholderCornerRadius: CGFloat = 8
 
 	/// What an inline image keeps clear of the column's trailing edge, so a
 	/// picture never runs under the scroller.

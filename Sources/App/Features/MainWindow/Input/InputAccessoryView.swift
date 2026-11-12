@@ -46,7 +46,7 @@ struct InputAccessoryView: View {
 		}
 		.padding(.horizontal, UISpacing.wide)
 		.frame(minHeight: InputBarLayout.replyBannerHeight)
-		.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
+		.inputAccessorySurface()
 	}
 
 	/** The banner's own text, with the message it is quoting as its tooltip.

@@ -15,6 +15,9 @@ extension TranscriptView {
 		/* `textView.string` is the whole transcript; the storage reads only the
 		 selected characters. */
 		selection = range.length > 0 ? textView.textStorage?.attributedSubstring(from: range).string : nil
+		/* The caret moving onto or off an image placeholder moves the focus
+		 ring the text view draws around it. */
+		textView.noteFocusRingMaskChanged()
 		/* Stepping through find results selects each match in turn; that is the
 		 find bar moving the reader, not the reader selecting text, so it must
 		 not overwrite the pasteboard. */

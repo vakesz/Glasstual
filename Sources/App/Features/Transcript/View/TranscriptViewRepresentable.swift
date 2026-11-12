@@ -10,18 +10,22 @@ struct TranscriptViewRepresentable: NSViewRepresentable {
 	var inputField: InputFieldContentView?
 	/// Height of the accessory strip above the field, from what it is showing.
 	var accessoryHeight: CGFloat = 0
+	/// Height of the notices drawn over the transcript's top, below the toolbar.
+	var topAccessoryHeight: CGFloat = 0
 	/// Whether the loading overlay covers the transcript.
 	var isObscured = false
 
 	func makeNSView(context _: Context) -> TranscriptHostView {
 		let host = TranscriptHostView()
 		host.show(transcriptView, inputField: inputField, accessoryHeight: accessoryHeight)
+		host.setTopAccessoryHeight(topAccessoryHeight)
 		host.isHidden = isObscured
 		return host
 	}
 
 	func updateNSView(_ host: TranscriptHostView, context _: Context) {
 		host.show(transcriptView, inputField: inputField, accessoryHeight: accessoryHeight)
+		host.setTopAccessoryHeight(topAccessoryHeight)
 		host.isHidden = isObscured
 	}
 
@@ -49,6 +53,20 @@ final class TranscriptHostView: NSView {
 	private weak var transcriptView: TranscriptView?
 	private weak var inputField: InputFieldContentView?
 	private var accessoryHeight: CGFloat = 0
+	private var topAccessoryHeight: CGFloat = 0
+
+	/** The notices over the transcript's top are part of what covers it, as
+	 the toolbar is: the transcript's safe area grows by their height, so its
+	 topic bar sits below them and its top inset clears them. */
+	func setTopAccessoryHeight(_ height: CGFloat) {
+		topAccessoryHeight = height
+		applyTopAccessoryHeight()
+	}
+
+	private func applyTopAccessoryHeight() {
+		guard let transcriptView, transcriptView.additionalSafeAreaInsets.top != topAccessoryHeight else { return }
+		transcriptView.additionalSafeAreaInsets.top = topAccessoryHeight
+	}
 
 	func show(
 		_ nextTranscriptView: TranscriptView?,
@@ -71,6 +89,7 @@ final class TranscriptHostView: NSView {
 		transcriptView = nextTranscriptView
 
 		guard let transcriptView = nextTranscriptView else { return }
+		applyTopAccessoryHeight()
 		transcriptView.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(transcriptView)
 		NSLayoutConstraint.activate([

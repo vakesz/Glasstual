@@ -48,6 +48,9 @@ extension TranscriptView {
 		textView.isSelectable = true
 		textView.setAccessibilityIdentifier("channel-transcript")
 		updateAccessibilityDescription()
+		/* VoiceOver reaches the messages, the mentions, the links and the days
+		 by rotor, the structure a single text view otherwise hides. */
+		textView.setAccessibilityCustomRotors(makeAccessibilityRotors())
 		textView.isRichText = true
 		textView.importsGraphics = false
 		/* The find bar is the transcript's own, inline above the text, which is
@@ -57,6 +60,9 @@ extension TranscriptView {
 		textView.isAutomaticLinkDetectionEnabled = false
 		textView.isAutomaticDataDetectionEnabled = false
 		textView.drawsBackground = false
+		/* Rings only the image placeholder under the caret; see the text
+		 view's focus ring mask. */
+		textView.focusRingType = .exterior
 		textView.textContainerInset = NSSize(width: 0, height: TranscriptMetrics.documentInset)
 		textView.isVerticallyResizable = true
 		textView.isHorizontallyResizable = false
@@ -76,13 +82,14 @@ extension TranscriptView {
 
 	func configureScrollView() {
 		scrollView.documentView = textView
-		/* The insets are this view's, from the first layout on. The window
-		 carries a transparent titlebar over a full-size content view, which is
-		 exactly what AppKit's automatic adjustment reaches for -- and the
-		 transcript is laid out inside the safe area, so an adjustment for the
-		 titlebar is space nothing covers. Turning it off at construction rather
-		 than at the first `setBottomContentInset(_:)` is what keeps the view
-		 from ever running with both. */
+		/* The insets are this view's, from the first layout on. The scroll view
+		 runs under the toolbar and the topic bar, so the reader's text can pass
+		 beneath the Liquid Glass toolbar the way it does in Mail and Messages;
+		 the top inset is the safe area plus the topic bar, the bottom inset the
+		 input bar, and both are set here rather than by AppKit's automatic
+		 adjustment, which knows about neither the topic bar nor the input bar.
+		 Turning it off at construction keeps the view from ever running with
+		 both. */
 		scrollView.automaticallyAdjustsContentInsets = false
 		scrollView.hasVerticalScroller = true
 		scrollView.hasHorizontalScroller = false
@@ -149,24 +156,21 @@ extension TranscriptView {
 	}
 
 	func addSubviewsAndActivateConstraints() {
-		addSubview(topicBar)
 		addSubview(scrollView)
+		addSubview(topicBar)
 		addSubview(jumpToLatest)
-		/* No rule under the topic: the change of colour and the gap are the
-		 edge, and a hairline there read as a second toolbar. */
-		scrollViewTopWithTopicConstraint = scrollView.topAnchor.constraint(
-			equalTo: topicBar.bottomAnchor,
-			constant: TranscriptMetrics.topicGap
-		)
-		scrollViewTopWithoutTopicConstraint = scrollView.topAnchor.constraint(equalTo: topAnchor)
+		/* The topic bar is pinned under the toolbar, over the text: the
+		 transcript scrolls beneath both, and the top content inset keeps the
+		 first line clear of them. */
 		NSLayoutConstraint.activate([
-			topicBar.topAnchor.constraint(equalTo: topAnchor),
+			topicBar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
 			topicBar.leadingAnchor.constraint(equalTo: leadingAnchor),
 			topicBar.trailingAnchor.constraint(equalTo: trailingAnchor),
+			scrollView.topAnchor.constraint(equalTo: topAnchor),
 			scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
 			scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
 			scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
-			jumpToLatest.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -UISpacing.loose),
+			jumpToLatest.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -UISpacing.loose),
 		])
 		jumpToLatestBottomConstraint = jumpToLatest.bottomAnchor.constraint(
 			equalTo: bottomAnchor,
@@ -177,6 +181,7 @@ extension TranscriptView {
 
 	override func layout() {
 		super.layout()
+		updateTopContentInset()
 		guard window != nil, !isHiddenOrHasHiddenAncestor, editDepth == 0 else { return }
 		reflowInlineImages()
 		textView.updateBottomAlignment()

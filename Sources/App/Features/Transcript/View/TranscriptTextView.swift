@@ -168,6 +168,21 @@ final class TranscriptTextView: NSTextView {
 		menu?.popUp(positioning: nil, at: NSPoint(x: anchor.minX, y: anchor.maxY), in: self)
 	}
 
+	// MARK: - Focus ring
+
+	/** The system focus ring, drawn around the image placeholder the caret is
+	 on and nowhere else: the transcript is a document, not a control, and its
+	 scroll view is not ringed, but a placeholder is a button the keyboard can
+	 press. The text view's `focusRingType` is `.exterior` for this. */
+	override var focusRingMaskBounds: NSRect {
+		owner?.focusedInlineImagePlaceholderRect() ?? .zero
+	}
+
+	override func drawFocusRingMask() {
+		guard let rect = owner?.focusedInlineImagePlaceholderRect() else { return }
+		rect.fill()
+	}
+
 	/// The native text actions, plus joining the channel or opening the nickname
 	/// the selection sits on: the runs are not links, so a screen reader that
 	/// moves the cursor through the text has no other way to activate them.

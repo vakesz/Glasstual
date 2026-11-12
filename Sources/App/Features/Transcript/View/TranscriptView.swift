@@ -33,6 +33,8 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// The reaction picker, while it is open, anchored to the message it
 	/// answers.
 	var reactionPicker: ReactionPopover?
+	/// What answers the VoiceOver rotors; a rotor holds its delegate weakly.
+	var accessibilityRotorDelegates: [TranscriptRotorDelegate] = []
 
 	let themeStore: ThemeStore
 	let topicBar: TranscriptTopicBar
@@ -41,8 +43,6 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	let jumpToLatest = NSHostingView(rootView: TranscriptJumpToLatestButton(action: {}))
 	var jumpToLatestBottomConstraint: NSLayoutConstraint?
 	let textView: TranscriptTextView
-	var scrollViewTopWithTopicConstraint: NSLayoutConstraint?
-	var scrollViewTopWithoutTopicConstraint: NSLayoutConstraint?
 	let notifications = NotificationSubscriptions()
 	/// The lines, the indexes over them and the trim. A value: the storage edits
 	/// are this view's, and everything that decides which line an edit reaches

@@ -66,6 +66,22 @@ extension TranscriptView {
 		return activateInlineImagePlaceholder(key)
 	}
 
+	/** Where the placeholder under the caret is drawn, in the text view's
+	 coordinates, while the transcript has the keyboard; `nil` otherwise. The
+	 text view draws the system focus ring around it, so a keyboard reader can
+	 see which placeholder Return and Space will load. */
+	func focusedInlineImagePlaceholderRect() -> NSRect? {
+		guard let window, window.firstResponder === textView else { return nil }
+		let selection = textView.selectedRange()
+		guard selection.length <= 1, inlineImagePlaceholderKey(atCharacterIndex: selection.location) != nil
+		else { return nil }
+		let screenRect = textView.firstRect(
+			forCharacterRange: NSRange(location: selection.location, length: 1), actualRange: nil
+		)
+		guard screenRect.isEmpty == false else { return nil }
+		return textView.convert(window.convertFromScreen(screenRect), from: nil)
+	}
+
 	func inlineImagePlaceholderKey(atCharacterIndex index: Int) -> TranscriptInlineImagePlaceholder.Key? {
 		guard let storage = textView.textStorage, index != NSNotFound, index >= 0, index < storage.length
 		else { return nil }
@@ -112,8 +128,13 @@ extension TranscriptView {
 		result.append(attachmentString)
 	}
 
-	/** The placeholder's picture: a rounded, tinted box with a symbol and the
-	 words, in the theme's secondary text colour.
+	/** The placeholder's picture: a tinted box with a symbol and the words, in
+	 the theme's secondary text colour.
+
+	 Square-cornered, as the loaded image that replaces it is drawn: the image
+	 keeps its own edges so Copy and Save Image hand over exactly the picture
+	 that arrived, and the placeholder matches it rather than the other way
+	 round.
 
 	 It is drawn into a bitmap here, on the main actor, rather than by a drawing
 	 handler TextKit may call from elsewhere. A theme change, a resize or a new
@@ -149,8 +170,7 @@ extension TranscriptView {
 		NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
 		textView.effectiveAppearance.performAsCurrentDrawingAppearance {
 			let bounds = NSRect(origin: .zero, size: size)
-			let radius = metrics.inlineImagePlaceholderCornerRadius
-			let outline = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), xRadius: radius, yRadius: radius)
+			let outline = NSBezierPath(rect: bounds.insetBy(dx: 0.5, dy: 0.5))
 			color.withAlphaComponent(0.08).setFill()
 			outline.fill()
 			color.withAlphaComponent(0.24).setStroke()

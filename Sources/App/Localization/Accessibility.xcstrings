@@ -433,6 +433,104 @@
         }
       }
     },
+    "topic-expanded" : {
+      "comment" : "Accessibility value of the channel topic disclosure button while the full topic is shown. Lower case: VoiceOver reads it after the button name.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "expanded"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ausgeklappt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "expandido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "développé"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kibontva"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "expandido"
+          }
+        }
+      }
+    },
+    "topic-collapsed" : {
+      "comment" : "Accessibility value of the channel topic disclosure button while the topic is folded to one line. Lower case: VoiceOver reads it after the button name.",
+      "extractionState" : "manual",
+      "generatesSymbol" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "collapsed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eingeklappt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "contraído"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "réduit"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "összecsukva"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折りたたみ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "recolhido"
+          }
+        }
+      }
+    },
     "list-editing-more-actions" : {
       "comment" : "Accessibility label and tooltip for the action menu beside the add and remove buttons under an editable list.",
       "extractionState" : "manual",

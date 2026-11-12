@@ -23,13 +23,16 @@ struct TranscriptViewTopicTests {
 		let collapsedHeight = topic.frame.height
 		#expect(topic.disclosure.isHidden == false)
 		#expect(collapsedHeight > 0)
-		#expect(transcript.scrollViewTopWithTopicConstraint?.isActive == true)
-		#expect(transcript.scrollViewTopWithoutTopicConstraint?.isActive == false)
+		/* The text runs beneath the bar; the top inset keeps its first line
+		 below it. */
+		#expect(transcript.scrollView.frame.height == transcript.bounds.height)
+		#expect(transcript.scrollView.contentInsets.top == collapsedHeight)
 
 		topic.disclosure.rootView.action()
 		transcript.layoutSubtreeIfNeeded()
 		transcript.layoutSubtreeIfNeeded()
 		#expect(topic.frame.height > collapsedHeight)
+		#expect(transcript.scrollView.contentInsets.top == topic.frame.height)
 		#expect(transcript.frame.width == width)
 		#expect(topic.label.bounds.width > 0)
 		#expect(topic.label.preferredMaxLayoutWidth == topic.label.bounds.width)

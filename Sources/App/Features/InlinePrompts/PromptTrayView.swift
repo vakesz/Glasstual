@@ -82,7 +82,7 @@ struct PromptTrayView: View {
 				}
 				.padding(.horizontal, UISpacing.wide)
 				.frame(minHeight: InputBarLayout.replyBannerHeight)
-				.background(.regularMaterial, in: .rect(cornerRadius: InputBarLayout.accessoryCornerRadius))
+				.inputAccessorySurface()
 				.accessibilityElement(children: .contain)
 				.accessibilityIdentifier(AccessibilityIdentifier.promptElsewhere)
 			}

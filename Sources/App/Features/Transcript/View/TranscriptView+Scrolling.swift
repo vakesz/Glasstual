@@ -58,6 +58,33 @@ extension TranscriptView {
 		needsLayout = true
 	}
 
+	/** The space above the transcript that something else is drawn over: the
+	 toolbar, through the safe area, and the topic bar beneath it.
+
+	 Runs on every layout pass and writes only when the space changed. A
+	 reader at the start of the document stays at the start, and one following
+	 the end stays at the end. */
+	func updateTopContentInset() {
+		let inset = TranscriptMetrics.topContentInset(
+			safeAreaTop: safeAreaInsets.top,
+			topicBarHeight: topicBar.isHidden ? nil : topicBar.frame.height
+		)
+		let previous = scrollView.contentInsets.top
+		guard previous != inset else { return }
+		let clip = scrollView.contentView
+		let wasAtStart = clip.bounds.minY <= -previous + 0.5
+		scrollView.contentInsets.top = inset
+		scrollView.scrollerInsets.top = inset
+		if followsBottom {
+			scrollsToBottomOnLayout = true
+			scrollToBottomIfPending()
+		} else if wasAtStart {
+			clip.scroll(to: NSPoint(x: clip.bounds.origin.x, y: -inset))
+			scrollView.reflectScrolledClipView(clip)
+			noteViewportMovedByView()
+		}
+	}
+
 	/// The button is offered exactly while the reader is somewhere other than
 	/// the end of a transcript that has an end to go to.
 	func updateJumpToLatestVisibility() {

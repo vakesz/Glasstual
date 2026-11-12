@@ -146,7 +146,9 @@ struct TranscriptHistoryRecoveryView: View {
 				TranscriptNoticeBanner(
 					symbol: "questionmark.bubble",
 					title: String(localized: .Transcript.originalMessageUnavailable),
-					primaryAction: .init(
+					/* Dismissing changes nothing, so it is not drawn as the
+						notice's action: a quiet button, as a Close is. */
+					secondaryAction: .init(
 						title: String(localized: .Transcript.dismissNotice),
 						identifier: "original-message-dismiss",
 						perform: { history.unavailableMessageNotice = false }
@@ -203,7 +205,7 @@ struct TranscriptHistoryRecoveryView: View {
 			 and stays reachable beside the local one when both have. */
 			TranscriptNoticeBanner(
 				symbol: "exclamationmark.triangle.fill",
-				symbolTint: .orange,
+				symbolTint: nil,
 				symbolLabel: String(localized: .Transcript.warningAccessibility),
 				title: serverFailed && message == nil ?
 					String(localized: .Transcript.serverHistoryCouldNotBeLoaded) :
@@ -257,8 +259,8 @@ struct TranscriptMissingHistoryBanner: View {
 			false
 		}
 		TranscriptNoticeBanner(
-			symbol: "clock.badge.exclamationmark",
-			symbolTint: .orange,
+			symbol: "exclamationmark.triangle.fill",
+			symbolTint: nil,
 			symbolLabel: String(localized: .Transcript.warningAccessibility),
 			title: String(localized: .Transcript.missingHistoryTitle),
 			detail: failed ? (failure.map { String(localized: .Transcript.missingHistoryFailed($0)) }

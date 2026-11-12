@@ -21,7 +21,9 @@ struct TranscriptNoticeBanner: View {
 	}
 
 	let symbol: String?
-	var symbolTint: Color = .secondary
+	/// The glyph's tint, or `nil` for the symbol's own colours, which is how
+	/// the system draws a warning: the multicolour yellow triangle.
+	var symbolTint: Color? = .secondary
 	var symbolLabel: String?
 	let title: String
 	var detail: String?
@@ -38,7 +40,8 @@ struct TranscriptNoticeBanner: View {
 		HStack(alignment: .firstTextBaseline, spacing: UISpacing.regular) {
 			if let symbol {
 				Image(systemName: symbol)
-					.foregroundStyle(symbolTint)
+					.symbolRenderingMode(symbolTint == nil ? .multicolor : .monochrome)
+					.foregroundStyle(symbolTint ?? .primary)
 					.accessibilityLabel(symbolLabel ?? "")
 					.accessibilityHidden(symbolLabel == nil)
 			}

@@ -20,6 +20,11 @@ nonisolated enum AccessibilityStrings {
 		String(localized: .Accessibility.topicShowLess)
 	}
 
+	/// Whether the topic's disclosure is unfolded, as VoiceOver says it.
+	static func topicDisclosureState(isExpanded: Bool) -> String {
+		String(localized: isExpanded ? .Accessibility.topicExpanded : .Accessibility.topicCollapsed)
+	}
+
 	static func connectedServer(_ connectionName: String) -> String {
 		String(localized: .Accessibility.connectionConnected(connectionName))
 	}

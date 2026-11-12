@@ -56,6 +56,8 @@ private struct ReactionPopoverView: View {
 
 	@State private var recent = SettingsKeys.Reactions.recent.value
 	@State private var input = ""
+	/// Whether the reader asked for an emoji that is not on the row.
+	@State private var isChoosingOther = false
 	@FocusState private var inputIsFocused: Bool
 	/// The row's hit targets, scaled with the reader's text size so the emoji
 	/// drawn in them are never clipped.
@@ -76,32 +78,33 @@ private struct ReactionPopoverView: View {
 				.accessibilityLabel(String(localized: .Transcript.reactWithEmoji(emoji)))
 			}
 
-			Divider()
-				.frame(height: buttonSize * 0.75)
-
-			/* The palette inserts into whatever holds the keyboard, so the field
-			 stays: it is where the palette's choice lands, and
-			 `ReactionInput.emoji(from:)` still decides what counts. It also takes
-			 a pasted emoji, which is what the old field was for. */
-			TextField(String(localized: .Transcript.customReaction), text: $input)
-				.labelsHidden()
-				.textFieldStyle(.roundedBorder)
-				.multilineTextAlignment(.center)
-				.frame(width: 44)
-				.focused($inputIsFocused)
-				/* One submission, on the change: the palette and a paste both
-				 write the field without pressing Return, so the change is what
-				 has to act -- and `onSubmit` beside it sent the same emoji a
-				 second time when the reader did press Return. The field is
-				 cleared on the way out, so the next character typed into a
-				 popover that is still open is a reaction of its own rather
-				 than the second character of the last one. */
-				.onChange(of: input) { _, newValue in
-					guard newValue.isEmpty == false else { return }
-					input = ""
-					submit(newValue)
-				}
-				.help(String(localized: .Transcript.customReaction))
+			/* The row is the emoji and one button for the rest, as a Tapback
+			 row is. The palette types into whatever holds the keyboard, so a
+			 field takes it -- but only once the reader asked for the palette:
+			 it is where the palette's choice lands and where a pasted emoji
+			 goes, and `ReactionInput.emoji(from:)` still decides what counts. */
+			if isChoosingOther {
+				TextField(String(localized: .Transcript.customReaction), text: $input)
+					.labelsHidden()
+					.textFieldStyle(.roundedBorder)
+					.multilineTextAlignment(.center)
+					.frame(width: buttonSize * 1.5)
+					.focused($inputIsFocused)
+					/* One submission, on the change: the palette and a paste both
+					 write the field without pressing Return, so the change is what
+					 has to act -- and `onSubmit` beside it sent the same emoji a
+					 second time when the reader did press Return. The field is
+					 cleared on the way out, so the next character typed into a
+					 popover that is still open is a reaction of its own rather
+					 than the second character of the last one. */
+					.onChange(of: input) { _, newValue in
+						guard newValue.isEmpty == false else { return }
+						input = ""
+						submit(newValue)
+					}
+					.help(String(localized: .Transcript.customReaction))
+					.onAppear(perform: presentCharacterPalette)
+			}
 
 			Button(String(localized: .Transcript.moreEmoji), systemImage: "face.smiling") {
 				presentCharacterPalette()
@@ -114,13 +117,17 @@ private struct ReactionPopoverView: View {
 	}
 
 	/** The palette is a system panel that types into the first responder, so
-	 the field takes the keyboard first. The panel is ordered front on the next
-	 turn: asking for it in the same one races the focus change and the panel
-	 opens pointed at whatever had the keyboard before. */
+	 the field appears and takes the keyboard first. The panel is ordered front
+	 once the field has it: asking for it earlier races the focus change and
+	 the panel opens pointed at whatever had the keyboard before. */
 	private func presentCharacterPalette() {
-		inputIsFocused = true
-		Task { @MainActor in
-			NSApp.orderFrontCharacterPalette(nil)
+		if isChoosingOther {
+			inputIsFocused = true
+			Task { @MainActor in
+				NSApp.orderFrontCharacterPalette(nil)
+			}
+		} else {
+			isChoosingOther = true
 		}
 	}
 

@@ -115,3 +115,66 @@ struct TranscriptViewAccessibilityTests {
 		)
 	}
 }
+
+/// The transcript's VoiceOver rotors find what the rows say they are.
+@MainActor
+@Suite("Transcript rotors", .serialized)
+struct TranscriptViewRotorTests {
+	@Test("The text view offers rotors for messages, mentions, links and days")
+	func rotorsAreOffered() throws {
+		try withTranscript { transcript in
+			let rotors = transcript.textView.accessibilityCustomRotors()
+			#expect(rotors.count == TranscriptRotorKind.allCases.count)
+			#expect(rotors.contains { $0.type == .link })
+			#expect(rotors.map(\.label).contains(String(localized: .Transcript.rotorMessages)))
+		}
+	}
+
+	@Test("Messages, mentions and days come from the rows; links from the text")
+	func itemsFollowTheRows() throws {
+		try withTranscript { transcript in
+			#expect(transcript.accessibilityRotorItems(.messages).count == 2)
+			#expect(transcript.accessibilityRotorItems(.mentions).count == 1)
+			#expect(transcript.accessibilityRotorItems(.days).map(\.label) == ["Today"])
+			let mention = try #require(transcript.accessibilityRotorItems(.mentions).first)
+			#expect(mention.label.contains("ping"))
+		}
+	}
+
+	private func withTranscript(_ body: (TranscriptView) throws -> Void) throws {
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless, backing: .buffered, defer: false
+		)
+		window.isReleasedWhenClosed = false
+		defer { window.close() }
+		let conversation = Conversation(config: ConversationConfig(name: "#swift"))
+		let controller = TranscriptController(conversation: conversation, in: window, commands: TranscriptCommandSink())
+		let transcript = controller.ensureBackingView()
+		window.contentView = transcript
+		transcript.appendLines([
+			row("one", text: "hello", markers: [.date("Today")]),
+			row("two", text: "ping you", isHighlight: true),
+			row("three", text: "joined", lineType: .join),
+		])
+		try withExtendedLifetime((controller, conversation)) {
+			try body(transcript)
+		}
+	}
+
+	private func row(
+		_ lineNumber: String,
+		text: String,
+		lineType: ChatLineKind = .privateMessage,
+		isHighlight: Bool = false,
+		markers: [TranscriptMarker] = []
+	) -> TranscriptRow {
+		TranscriptRow(
+			lineNumber: lineNumber, receivedAt: Date(timeIntervalSince1970: 0),
+			nickname: "alice", memberType: .normal, lineType: lineType, command: "PRIVMSG",
+			messageIdentifier: "message-\(lineNumber)", replyToMessageIdentifier: nil,
+			deliveryState: .none, deliveryFailureReason: nil, reactions: [:], markers: markers,
+			body: TranscriptBody(plainText: text, runs: [TranscriptTextRun(text: text)], isHighlight: isHighlight)
+		)
+	}
+}

@@ -21,8 +21,13 @@ struct TranscriptSenderProfile {
  always drawn, in its own isolate and a different weight, so a display name
  cannot reorder it or pass for it. */
 extension TranscriptView {
-	/// The point size of the picture beside a sender.
-	static let senderAvatarSize: CGFloat = 16
+	/** Where the picture beside a sender sits: as tall as the name's capital
+	 letters and descenders together, on the name's baseline, so it grows with
+	 the transcript's text size and ⌘= as the name does. */
+	static func senderAvatarBounds(for font: NSFont) -> NSRect {
+		let size = ceil(font.ascender - font.descender)
+		return NSRect(x: 0, y: floor(font.descender), width: size, height: size)
+	}
 
 	/// - Parameters:
 	///   - nickname: The nickname as the theme formats it for the header.
@@ -41,8 +46,10 @@ extension TranscriptView {
 
 		if let avatar = profile.avatar {
 			let attachment = NSTextAttachment()
-			attachment.image = Self.circular(avatar, size: Self.senderAvatarSize)
-			attachment.bounds = NSRect(x: 0, y: -3, width: Self.senderAvatarSize, height: Self.senderAvatarSize)
+			let font = nameAttributes[.font] as? NSFont ?? NSFont.preferredFont(forTextStyle: .body)
+			let bounds = Self.senderAvatarBounds(for: font)
+			attachment.image = Self.circular(avatar, size: bounds.width)
+			attachment.bounds = bounds
 			let picture = NSMutableAttributedString(attachment: attachment)
 			picture.addAttributes(padding, range: NSRange(location: 0, length: picture.length))
 			result.append(picture)
