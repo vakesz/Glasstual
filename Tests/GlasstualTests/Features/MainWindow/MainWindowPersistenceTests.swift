@@ -106,6 +106,41 @@ struct MainWindowPersistenceTests {
 		#expect(model.columnState.isMemberListVisible)
 	}
 
+	/** Selecting a query and then the channel again collapses and reopens the
+	 inspector. AppKit reports the collapse on a later turn, after the
+	 reopening, and the inspector is closed by then. */
+	@Test("A collapse reported after the channel came back reopens the list and keeps the reader's choice")
+	func lateCollapseReportReopensTheList() {
+		let model = MainWindowColumnModel()
+		model.applyMemberListAvailability(true)
+		model.applyMemberListAvailability(false)
+		model.applyMemberListAvailability(true)
+
+		model.inspectorDidChangePresentation(false)
+		#expect(model.userPrefersMemberList)
+		#expect(model.isMemberListVisible == false)
+
+		model.memberListDidClose()
+		#expect(model.isMemberListVisible)
+		#expect(model.columnState.isMemberListVisible)
+	}
+
+	@Test("A collapse reported on time is not the reader's choice, and a later close is")
+	func timelyCollapseReportAndReaderClose() {
+		let model = MainWindowColumnModel()
+		model.applyMemberListAvailability(true)
+		model.applyMemberListAvailability(false)
+		model.inspectorDidChangePresentation(false)
+		model.applyMemberListAvailability(true)
+		#expect(model.isMemberListVisible)
+
+		model.inspectorDidChangePresentation(false)
+		#expect(model.userPrefersMemberList == false)
+		#expect(model.isMemberListVisible == false)
+		model.memberListDidClose()
+		#expect(model.isMemberListVisible == false)
+	}
+
 	@Test("The toggle does nothing where there is no member list to show")
 	func memberListToggleIsInertWithoutAChannel() {
 		let model = MainWindowColumnModel()

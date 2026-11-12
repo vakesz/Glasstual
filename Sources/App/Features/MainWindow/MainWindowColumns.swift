@@ -21,13 +21,27 @@ final class MainWindowColumnModel {
 
 	/// Visibility combines selection availability with the user's preference.
 	var isMemberListVisible: Bool {
-		isMemberListAvailable && userPrefersMemberList
+		isMemberListAvailable && userPrefersMemberList && !isReopeningAfterLateCollapse
 	}
 
 	/// Persists independently of availability so selecting a server preserves the preference.
 	private(set) var userPrefersMemberList = true {
 		didSet { window?.updateMinimumContentSize() }
 	}
+
+	/** The inspector was open when its channel went away, and the split view
+	 still owes the report that it collapsed.
+
+	 AppKit collapses the item and reports it on a later turn of the main
+	 queue. When a channel is selected again first, the collapse lands after
+	 the reopening and the report arrives while the list is available. It is
+	 not the reader closing the list. */
+	@ObservationIgnored private var owesAvailabilityCollapseReport = false
+
+	/// That late collapse left the inspector closed beside an available
+	/// channel. The column reads as closed until SwiftUI has drawn it closed,
+	/// so that opening it again is a change SwiftUI applies.
+	private(set) var isReopeningAfterLateCollapse = false
 
 	/// The widths the columns last came to rest at, or open at. A closed
 	/// column keeps its width for when it opens again.
@@ -54,8 +68,28 @@ final class MainWindowColumnModel {
 	func applyMemberListAvailability(_ isAvailable: Bool) {
 		if !isAvailable {
 			window?.prepareToHideMemberList()
+			if isMemberListVisible {
+				owesAvailabilityCollapseReport = true
+			}
 		}
 		isMemberListAvailable = isAvailable
+	}
+
+	/// The native inspector reports that it opened or closed. The collapse an
+	/// unavailable selection caused is not the reader's choice.
+	func inspectorDidChangePresentation(_ isPresented: Bool) {
+		if isPresented == false, owesAvailabilityCollapseReport {
+			owesAvailabilityCollapseReport = false
+			isReopeningAfterLateCollapse = isMemberListAvailable && userPrefersMemberList
+			return
+		}
+		setMemberListVisible(isPresented)
+	}
+
+	/// SwiftUI has drawn the column closed; one that a late collapse closed
+	/// opens again.
+	func memberListDidClose() {
+		isReopeningAfterLateCollapse = false
 	}
 
 	/// Shared by the menu and toolbar commands.
@@ -65,6 +99,7 @@ final class MainWindowColumnModel {
 
 	/// Native inspector changes apply only while the selection has a member list.
 	func setMemberListVisible(_ isVisible: Bool) {
+		owesAvailabilityCollapseReport = false
 		guard isMemberListAvailable else { return }
 		if !isVisible {
 			window?.prepareToHideMemberList()

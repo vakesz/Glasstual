@@ -82,6 +82,11 @@ struct MainWindowRootView: View {
 					}
 			}
 			.navigationSplitViewStyle(.balanced)
+			.onChange(of: columns.isMemberListVisible) { _, isVisible in
+				if isVisible == false {
+					columns.memberListDidClose()
+				}
+			}
 			.onGeometryChange(for: CGFloat.self) { geometry in
 				geometry.size.width.rounded()
 			} action: { width in
@@ -205,7 +210,7 @@ struct MainWindowRootView: View {
 			get: { columns.isMemberListVisible && !loadingScreen.viewIsVisible },
 			set: { visible in
 				guard !loadingScreen.viewIsVisible else { return }
-				columns.setMemberListVisible(visible)
+				columns.inspectorDidChangePresentation(visible)
 			}
 		)
 	}
