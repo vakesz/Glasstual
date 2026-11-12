@@ -138,7 +138,8 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 			body: String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf),
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: String(localized: .ChannelProperties.reloadButton),
-			destructiveButton: .alternate
+			destructiveButton: .alternate,
+			cancelButton: .default
 		)) { [weak self] outcome in
 			guard let self, outcome.response == .alternate else { return }
 			model.replace(with: channel.config)

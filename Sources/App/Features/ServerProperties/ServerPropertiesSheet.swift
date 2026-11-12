@@ -355,7 +355,8 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			body: String(localized: .ServerProperties.youWillLooseUnsavedChangesIf),
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: String(localized: .ServerProperties.reloadButton),
-			destructiveButton: .alternate
+			destructiveButton: .alternate,
+			cancelButton: .default
 		)) { [weak self] outcome in
 			guard outcome.response == .alternate, let self else { return }
 			cancelCertificateSelection()

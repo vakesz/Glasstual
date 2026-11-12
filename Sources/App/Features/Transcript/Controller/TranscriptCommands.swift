@@ -541,6 +541,9 @@ extension TranscriptCommands {
 			body: url.absoluteString,
 			defaultButton: PromptStrings.Action.cancel,
 			alternateButton: PromptStrings.Action.open,
+			/* Escape, `/no` and a withdrawn question all mean Cancel: without
+				this, the alternate button -- Open -- was the way out. */
+			cancelButton: .default,
 			suppressionKey: LinkSchemeRules.appSchemes.contains(url.scheme?.lowercased() ?? "")
 				? nil
 				: TranscriptContextMenuSuppressionKey.openExternalURL(scheme: url.scheme),
