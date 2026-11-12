@@ -150,6 +150,9 @@ struct ScreenshotSession {
 	let output: URL
 
 	private static let mainWindowSize = CGSize(width: 1440, height: 760)
+	/// The size a Server Properties window opens at. Stated, because a window
+	/// reopens at the size it was last left at on this Mac.
+	private static let serverPropertiesSize = CGSize(width: 860, height: 620)
 	/// Where a resized window is put: clear of the menu bar.
 	private static let windowOrigin = CGPoint(x: 40, y: 50)
 
@@ -207,7 +210,7 @@ struct ScreenshotSession {
 		try await context.until("the SASL mechanism menu") {
 			try driver.element(AXID.serverSASLMechanism, inWindow: AXID.serverProperties) != nil
 		}
-		try await capture("server-properties", window: AXID.serverProperties)
+		try await capture("server-properties", window: AXID.serverProperties, size: Self.serverPropertiesSize)
 		try await context.close(window: AXID.serverProperties)
 
 		try await driver.menu("addressBook")

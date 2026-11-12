@@ -13,6 +13,16 @@ struct ServerPropertiesView: View {
 	 means. */
 	weak var commands: (any ServerPropertiesCommands)?
 
+	@Environment(\.sidebarRowSize) private var sidebarRowSize
+
+	/// Wide enough for the longest pane name in the reader's language.
+	private var sidebarWidth: CGFloat {
+		ServerPropertiesSidebarMetrics.width(forTitleWidth: ServerPropertiesSidebarMetrics.widestTitleWidth(
+			ServerPropertiesSelection.allCases.map { String(localized: $0.title) },
+			rowSize: sidebarRowSize
+		))
+	}
+
 	var body: some View {
 		Group {
 			if let picker = model.templatePicker {
@@ -63,11 +73,11 @@ struct ServerPropertiesView: View {
 				}
 			}
 			.listStyle(.sidebar)
-			.navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 280)
 			/* The pane list is always shown, as it is in System Settings, so the
 			 toggle a split view adds would be a button that hides the window's
 			 only way between panes. */
 			.toolbar(removing: .sidebarToggle)
+			.navigationSplitViewColumnWidth(sidebarWidth)
 		} detail: {
 			VStack(spacing: 0) {
 				selectedPane
