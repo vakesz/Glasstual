@@ -526,20 +526,11 @@ struct TranscriptControllerApplicationTests {
 				viewIdentifier: channel.uniqueIdentifier,
 				kind: .before(uniqueIdentifier: oldest, fetchLimit: 1, limitToDate: nil)
 			)
-			var outcome = await ScrollbackSession.shared.fetchOutcome(fetch)
-			// A timeout is recorded by `untilResolved`; the outcome below then
-			// still reports what the last fetch said.
-			try? await Eventually.untilResolved(
-				timeout: .seconds(5), "an accepted server row to become a valid local history cursor"
-			) {
-				outcome = await ScrollbackSession.shared.fetchOutcome(fetch)
-				if case .failed(.missingCursor) = outcome {
-					return false
-				}
-				return true
-			}
+			/* The fetch takes its turn behind the write the prepend queued, so the
+			 row is stored by the time the page is read. */
+			let outcome = await ScrollbackSession.shared.fetchOutcome(fetch)
 			guard case let .page(entries) = outcome else {
-				Issue.record("An accepted server row never became a valid local history cursor")
+				Issue.record("An accepted server row is not a valid local history cursor: \(outcome)")
 				return
 			}
 			#expect(entries.isEmpty)
