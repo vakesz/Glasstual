@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Privacy and security in Glasstual</title>
+	<meta name="description" content="What Glasstual stores and where, how it protects passwords, and what it shares.">
+	<meta name="keywords" content="privacy, security, keychain, export, import, backup, images, Spotlight, IP address">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="privacy"></a>
+<h1>Privacy and security in Glasstual</h1>
+<h2>What’s stored where</h2>
+<ul>
+	<li><strong>Passwords and keys</strong>: Server, account, proxy and OAuth passwords, and SASL signing keys, are stored in your keychain.</li>
+	<li><strong>Settings and servers</strong>: Stored in Glasstual’s own container on your Mac.</li>
+	<li><strong>History</strong>: Messages Glasstual keeps for restoring and searching conversations stay in its container on your Mac.</li>
+	<li><strong>Transcript logs</strong>: Written only if you turn them on, to the folder you choose in Advanced settings.</li>
+</ul>
+
+<h2>Export and import settings</h2>
+<p>Choose File &gt; Export Settings to save your settings and servers to a file. Keychain passwords and certificate references are never included. Connect commands are included only if you select “Include connect commands,” because they may hold passwords.</p>
+<p>Choose File &gt; Import Settings to preview a file before applying it. Glasstual points out changes that send commands to servers or change what it trusts, saves a recovery backup first, and doesn’t connect imported servers on its own.</p>
+
+<h2>Images and links</h2>
+<ul>
+	<li>Inline images load only over HTTP and HTTPS, with limits on size. To turn them off, open Glasstual &gt; Settings, click Style, then deselect “Show inline images.” Each channel can also turn them off in Channel Properties.</li>
+	<li>A server that uses a proxy loads images only through it. See <a href="proxies.html">Connect through a proxy or Tor</a>.</li>
+	<li>Before a link opens in another app, Glasstual asks.</li>
+</ul>
+
+<h2>What others can see</h2>
+<ul>
+	<li>Files and direct chats reveal your IP address to the other person. See <a href="file-transfers.html">Send and receive files</a>.</li>
+	<li>Glasstual can answer client-to-client (CTCP) requests such as VERSION. Change this in Glasstual &gt; Settings &gt; Connection.</li>
+	<li>Typing notifications are shared only if you select “Share when I am typing” in IRCv3 settings.</li>
+</ul>
+
+<h2>Spotlight and Shortcuts</h2>
+<p>Spotlight gets only the names of servers and channels, never messages; direct conversations are left out unless you include them. Shortcuts actions ask you to confirm a message before it’s sent. See <a href="spotlight-shortcuts.html">Use Spotlight, Shortcuts and Focus</a>.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="connect-securely.html">Connect securely</a> · <a href="secure-dcc.html">Encrypted transfers</a></p>
+</nav>
+</body>
+</html>

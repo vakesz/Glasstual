@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Choose how Glasstual asks you questions</title>
+	<meta name="description" content="Have questions and editors open as dialogs, or appear in the conversation where you answer them.">
+	<meta name="robots" content="noindex">
+	<meta name="keywords" content="interaction, questions, dialogs, prompts, conversation, answer, yes, no">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="interaction-style"></a>
+<h1>Choose how Glasstual asks you questions</h1>
+<!-- Pending: describes the interaction-style preference being built on another branch.
+     Before publishing, check it against that branch, link it from index.html, remove the
+     robots tag and remove it from HelpBookTests.pendingPages. -->
+<p>Glasstual can ask you things in dialogs, or right in the conversation, where you answer by clicking or typing. One setting covers both questions and editors.</p>
+
+<h2>Choose a style</h2>
+<p>Open Glasstual &gt; Settings, click General, then under Questions and Editors choose As Dialogs or In the Conversation. The Welcome window also asks, after Look and Feel. A change applies to the next question; questions already showing stay where they are.</p>
+
+<h2>Answer a question in the conversation</h2>
+<p>A question appears as a card in the conversation it’s about, or in the server’s console. Click one of its buttons, or type a command in the message field:</p>
+<ul>
+	<li><code>/answer</code> followed by the question’s number and your answer, for example <code>/answer 2 send</code>.</li>
+	<li><code>/yes</code> for the usual answer, or <code>/no</code> to decline.</li>
+	<li><code>/prompts</code> to list the questions waiting for an answer.</li>
+</ul>
+<p>An answered question leaves no line in the conversation or in your logs. Messages that only tell you something appear as notices.</p>
+
+<h2>Questions that need care</h2>
+<p>Some questions could cost you if answered by accident: sending your password to a server whose certificate wasn’t checked, accepting a direct chat, sending files you dropped, and opening a link in another app. For these, type the answer’s word, such as <code>send</code>. <code>/yes</code>, a number alone and the Return key never answer them.</p>
+<p>When a password is needed, Glasstual switches the message field to a secure field. A password is never typed as part of a command and is never kept in history.</p>
+
+<h2>What stays a window</h2>
+<ul>
+	<li>Deciding whether to trust a server’s certificate always uses the certificate panel.</li>
+	<li>Lists such as the channel list and ban lists stay windows.</li>
+	<li>Editors such as Modify Topic and Change Nickname open as a ready-to-edit command in the message field, for example <code>/topic #channel</code> followed by the current topic.</li>
+</ul>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a></p>
+</nav>
+</body>
+</html>

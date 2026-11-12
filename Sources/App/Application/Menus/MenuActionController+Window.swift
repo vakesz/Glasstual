@@ -129,6 +129,10 @@ extension MenuActionController {
 
 	// MARK: - Help menu commands
 
+	@objc func showHelpBook(_: Any?) {
+		HelpBook.open(.home)
+	}
+
 	@objc func openAcknowledgements(_: Any?) {
 		guard let url = Bundle.main.url(
 			forResource: "Acknowledgements",

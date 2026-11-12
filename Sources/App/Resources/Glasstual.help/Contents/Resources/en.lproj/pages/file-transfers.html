@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Send and receive files</title>
+	<meta name="description" content="Send files and start direct chats over DCC, accept incoming files and request packs from XDCC bots.">
+	<meta name="keywords" content="DCC, file transfer, send file, download, XDCC, bot, pack, direct chat, passive, firewall">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="file-transfers"></a>
+<h1>Send and receive files</h1>
+<p>Files and direct chats go straight between your Mac and the other person’s computer, not through the IRC server. The other person learns your IP address.</p>
+
+<h2>Send a file</h2>
+<ul>
+	<li>Control-click a member, then choose Send File or Send File Securely.</li>
+	<li>Or drag files onto a private conversation or onto a member. Glasstual asks before sending.</li>
+	<li>Or type <code>/dcc send nickname</code> followed by the file’s path.</li>
+</ul>
+
+<h2>Receive a file</h2>
+<p>When someone offers you a file, Glasstual does what you chose in Glasstual &gt; Settings &gt; File Transfers: open a dialog, download automatically or ignore the offer. Files are saved to your Downloads folder unless you choose another one.</p>
+<p>Choose Window &gt; File Transfers to see every transfer. From there you can accept an offer, cancel a transfer, try again to resume one, show a file in the Finder, preview it with Quick Look or open it. Received files are marked as downloaded from the internet, so macOS checks them when you open them.</p>
+
+<h2>If transfers can’t connect</h2>
+<p>In File Transfers settings:</p>
+<ul>
+	<li>Choose how Glasstual finds your Mac’s IP address, or enter it yourself.</li>
+	<li>Set the range of ports to use, and allow them through your router.</li>
+	<li>Select “Send passive file transfer requests” so the other side connects to you only when it can.</li>
+</ul>
+
+<h2>Start a direct chat</h2>
+<p>Type <code>/dcc chat nickname</code>. When someone asks to chat with you, Glasstual shows their address and asks whether to accept.</p>
+
+<h2>Request packs from XDCC bots</h2>
+<ul>
+	<li>Control-click a bot’s pack announcement, then choose Request Pack, or choose Get Pack Info.</li>
+	<li>Or type <code>/xdcc get bot #pack</code>. <code>/xdcc list bot</code> asks for the bot’s list; <code>/xdcc requests</code> shows your pending requests.</li>
+</ul>
+<p>Pending requests appear under Waiting for Bots in the File Transfers window, with your place in the bot’s queue. To let a requested pack download on its own, select “Treat packs I request from XDCC bots as coming from people I know” in File Transfers settings; the pack must still fit the other conditions shown there.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="secure-dcc.html">Encrypted transfers and chats</a> · <a href="troubleshooting.html">Troubleshooting</a></p>
+</nav>
+</body>
+</html>

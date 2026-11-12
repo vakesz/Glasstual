@@ -1,0 +1,111 @@
+/* Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+   SPDX-License-Identifier: BSD-3-Clause */
+
+:root {
+	color-scheme: light dark;
+	--text: #1d1d1f;
+	--secondary: #6e6e73;
+	--ground: #ffffff;
+	--rule: #d2d2d7;
+	--link: #0066cc;
+	--code-ground: #f5f5f7;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text: #f5f5f7;
+		--secondary: #a1a1a6;
+		--ground: #1e1e1e;
+		--rule: #424245;
+		--link: #4da3ff;
+		--code-ground: #2c2c2e;
+	}
+}
+
+body {
+	margin: 0 auto;
+	max-width: 42em;
+	padding: 24px 28px 48px;
+	font: 14px/1.5 -apple-system, system-ui, sans-serif;
+	color: var(--text);
+	background: var(--ground);
+}
+
+h1 {
+	font-size: 26px;
+	line-height: 1.2;
+	margin: 0 0 12px;
+}
+
+h2 {
+	font-size: 18px;
+	margin: 28px 0 8px;
+}
+
+h3 {
+	font-size: 15px;
+	margin: 20px 0 6px;
+}
+
+a {
+	color: var(--link);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+ol, ul {
+	padding-left: 1.4em;
+}
+
+li {
+	margin: 4px 0;
+}
+
+code, kbd {
+	font: 13px ui-monospace, "SF Mono", Menlo, monospace;
+	background: var(--code-ground);
+	border-radius: 4px;
+	padding: 1px 4px;
+}
+
+.note {
+	color: var(--secondary);
+}
+
+.topics li {
+	margin: 6px 0;
+}
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 8px 0 16px;
+}
+
+th, td {
+	text-align: left;
+	vertical-align: top;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--rule);
+}
+
+th[scope="row"] {
+	font-weight: normal;
+	white-space: nowrap;
+}
+
+.aliases, .hint {
+	display: block;
+	color: var(--secondary);
+	font-size: 12px;
+}
+
+nav.related {
+	margin-top: 32px;
+	padding-top: 12px;
+	border-top: 1px solid var(--rule);
+	color: var(--secondary);
+}

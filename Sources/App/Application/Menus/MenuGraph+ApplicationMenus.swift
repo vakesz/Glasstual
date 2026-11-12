@@ -244,9 +244,18 @@ extension MenuGraph {
 	]
 
 	static let helpEntries: [Entry] = [
-		/* No key equivalent. Command-? opens the Help menu's search field
-		 everywhere on the Mac, and people press it out of habit. Bound here, the
-		 same keys opened a network connection to a public IRC channel. */
+		/* First, with Command-?, where every Mac app puts its help. AppKit adds
+		 the menu's search field above it and opens the field on Command-?. */
+		.item(
+			String(localized: .MainWindow.menuHelpGlasstualHelp),
+			.glasstualHelp,
+			#selector(MenuActionController.showHelpBook(_:)),
+			key: "?"
+		),
+		.separator(),
+		/* No key equivalent. Command-? belongs to Glasstual Help above, and
+			people press it out of habit. Bound here, the same keys opened a
+			network connection to a public IRC channel. */
 		.item(
 			String(localized: .MainWindow.menuHelpConnectToHelpChannel),
 			.connectToHelpChannel,

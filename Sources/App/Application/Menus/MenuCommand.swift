@@ -116,6 +116,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case highlightList // Highlight List
 	case fileTransfers // File Transfers
 	case bringAllToFront // Bring All to Front
+	case glasstualHelp // Glasstual Help
 	case acknowledgements // Acknowledgements
 	case connectToHelpChannel // Connect to Help Channel
 	case connectToTestingChannel // Connect to Testing Channel
@@ -255,11 +256,11 @@ extension MenuCommand {
 	}
 
 	/// Commands that stay live even before the application finishes launching:
-	/// nothing about Settings, About or Welcome waits on the rest of launch.
+	/// nothing about Settings, About, Help or Welcome waits on the rest of launch.
 	var isEssential: Bool {
 		switch self {
 		case .about, .settings, .quit, .printLog, .closeWindow, .paste, .mainWindow,
-		     .acknowledgements, .welcome, .exportSettings:
+		     .glasstualHelp, .acknowledgements, .welcome, .exportSettings:
 			true
 		default:
 			false

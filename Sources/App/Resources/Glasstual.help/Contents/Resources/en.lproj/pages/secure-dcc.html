@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Use encrypted file transfers and direct chats</title>
+	<meta name="description" content="Encrypt files and direct chats with TLS and verify the other person by their certificate.">
+	<meta name="keywords" content="secure DCC, SSEND, SCHAT, TLS, certificate, fingerprint, trust, verify, encrypted">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="secure-dcc"></a>
+<h1>Use encrypted file transfers and direct chats</h1>
+<p>Glasstual can encrypt files and direct chats with TLS. Each network gives you your own certificate, created the first time you need it, and you can verify the other person by theirs.</p>
+
+<h2>Send securely</h2>
+<p>Control-click a member, then choose Send File Securely, or type <code>/dcc ssend nickname</code> or <code>/dcc schat nickname</code>. Few other apps accept encrypted offers.</p>
+
+<h2>Choose your settings</h2>
+<p>Open Glasstual &gt; Settings, click File Transfers, then under Secure Connections:</p>
+<ul>
+	<li><strong>Accept encrypted offers</strong>: Accept SSEND and SCHAT offers.</li>
+	<li><strong>Offer files and chats over an encrypted connection</strong>: Make every offer encrypted.</li>
+	<li><strong>Require the other side to present a certificate</strong>: Refuse connections where nobody can be verified.</li>
+</ul>
+
+<h2>Verify a certificate</h2>
+<p>The first time you connect securely with someone, Glasstual shows their certificate’s SHA-256 fingerprint. Compare it with the one they see, for example by reading it to each other, then click Trust and Remember, or Trust Once for this connection only.</p>
+<p>If someone’s certificate later changes, Glasstual warns you, because someone may be impersonating them. Click Replace Saved Certificate only if they confirm they have a new one.</p>
+<p>To see your own fingerprint, type <code>/dcc fingerprint</code>.</p>
+
+<h2>Manage certificates</h2>
+<p>In File Transfers settings, click Known Certificates. You can copy your fingerprint for each network, create a new certificate, and remove the certificates you’ve trusted. You can also type <code>/dcc certificates</code> or <code>/dcc forget nickname</code>.</p>
+<p>The File Transfers window shows whether each transfer is encrypted and whether the certificate was verified.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="file-transfers.html">Send and receive files</a> · <a href="privacy.html">Privacy and security</a></p>
+</nav>
+</body>
+</html>

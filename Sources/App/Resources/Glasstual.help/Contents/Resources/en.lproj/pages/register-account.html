@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Register an account</title>
+	<meta name="description" content="Create an account on a network from Glasstual and sign in to it automatically.">
+	<meta name="keywords" content="register, account, create account, verify, email, NickServ REGISTER">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="register-account"></a>
+<h1>Register an account</h1>
+<p>On networks that support it, you can create an account without leaving Glasstual.</p>
+
+<h2>Register</h2>
+<ol>
+	<li>Select the server, then choose Server &gt; Register Account. If you aren’t connected, Glasstual connects to register.</li>
+	<li>Enter the account name. Some servers name the account after your nickname; to pick another, choose Server &gt; Change Nickname first.</li>
+	<li>Enter your email address if the server asks for one, then enter and verify a password.</li>
+	<li>Click Register.</li>
+	<li>If the server sends a verification code, enter it from your email, then click Verify.</li>
+</ol>
+<p>When registration succeeds, Glasstual saves the password in your keychain and signs in with SASL from then on.</p>
+<p>If the server’s certificate wasn’t checked, Glasstual asks before it sends the password. If the connection should be encrypted but isn’t, Glasstual doesn’t send it.</p>
+<p>You can also use <code>/register</code> and <code>/verify</code>.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="sign-in.html">Sign in to your account</a></p>
+</nav>
+</body>
+</html>

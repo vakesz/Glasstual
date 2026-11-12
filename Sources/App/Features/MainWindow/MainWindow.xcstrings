@@ -5303,6 +5303,54 @@
         }
       }
     },
+    "menu-help-glasstual-help": {
+      "comment": "Help menu item that opens the app's Help Book in the Help viewer. Uses the app's name, as macOS help menus do.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual Help"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual súgó"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual-Hilfe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda de Glasstual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aide Glasstual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual ヘルプ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajuda do Glasstual"
+          }
+        }
+      }
+    },
     "menu-help-welcome": {
       "comment": "Help menu item title.",
       "extractionState": "manual",

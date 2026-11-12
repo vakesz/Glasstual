@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Connect securely with TLS and certificates</title>
+	<meta name="description" content="Encrypt connections, decide whether to trust a server certificate and protect your password.">
+	<meta name="keywords" content="TLS, SSL, encryption, certificate, trust, self-signed, cipher, fingerprint, CertFP">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="connect-securely"></a>
+<h1>Connect securely with TLS and certificates</h1>
+<p>With Connect securely turned on, Glasstual encrypts the connection with TLS and checks the server’s certificate with macOS before anything else is sent.</p>
+
+<h2>Turn on encryption</h2>
+<ol>
+	<li>Select the server, then choose Server &gt; Server Properties.</li>
+	<li>In the General pane, select Connect securely and check that the port is the network’s TLS port, often 6697.</li>
+	<li>Click Save, then reconnect.</li>
+</ol>
+
+<h2>If a certificate can’t be verified</h2>
+<p>When macOS doesn’t trust the server’s certificate, Glasstual shows the certificate and explains why it failed. Someone may be pretending to be the server. Click Cancel unless you know why the certificate isn’t trusted, for example a private server with a self-signed certificate. Click Continue to connect anyway.</p>
+<p>To stop checking a server’s certificate, deselect “Validate the certificate chain when connecting” in the Network Socket pane. Glasstual then protects your password as described below.</p>
+<p>The Network Socket pane also chooses the cipher suites: the system default, modern suites only, or an intermediate list for older servers.</p>
+<p>To see the protocol, cipher and certificate of the current connection, type <code>/sslcontext</code>.</p>
+
+<h2>How Glasstual protects your password</h2>
+<ul>
+	<li>When the server’s certificate wasn’t checked, Glasstual asks before it sends your account password. Click Don’t Send unless you trust the server. If you allowed it once and the server later presents a different certificate, Glasstual asks again.</li>
+	<li>If a connection that should be encrypted isn’t, Glasstual doesn’t send the password.</li>
+	<li>Glasstual sends the password only to the servers configured for that network.</li>
+</ul>
+
+<h2>Sign in with a client certificate</h2>
+<p>A client certificate identifies you to the server without a password.</p>
+<ol>
+	<li>Add the certificate and its private key to your keychain. It must be an “SSL Client” certificate.</li>
+	<li>In Server Properties, click Client Certificate, then click Choose Certificate.</li>
+	<li>To have NickServ recognize the certificate, click Copy NickServ Command, then send the command once you’re identified.</li>
+	<li>To sign in with it through SASL, choose Client Certificate as the SASL mechanism. See <a href="sign-in.html">Sign in to your account</a>.</li>
+</ol>
+<p>The pane shows the certificate’s SHA-1, SHA-256 and SHA-512 fingerprints. Click Reset Certificate to stop sending it.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="sign-in.html">Sign in to your account</a> · <a href="troubleshooting.html">Troubleshooting</a></p>
+</nav>
+</body>
+</html>

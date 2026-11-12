@@ -295,6 +295,10 @@ targets:
             LSHandlerRank: Alternate
             LSItemContentTypes:
               - com.apple.applescript.script
+        # The Help Book: the folder inside Resources and its bundle identifier,
+        # which is how Help Viewer and NSHelpManager name it.
+        CFBundleHelpBookFolder: Glasstual.help
+        CFBundleHelpBookName: com.vakesz.glasstual.help
         CFBundleIconName: AppIcon
         CFBundleURLTypes:
           # Two types, because they are two things: the system's chooser lists
@@ -371,6 +375,29 @@ targets:
       - path: Sources/App/Resources/Documentation
         type: folder
         buildPhase: resources
+      # The Help Book ships as a folder reference; its search index is built
+      # by the "Index Help Book" phase below.
+      - path: Sources/App/Resources/Glasstual.help
+        type: folder
+        buildPhase: resources
+
+    # Runs after Copy Bundle Resources and before signing. The inputs are the
+    # English pages and the output is the index inside the copied book, so the
+    # phase reruns only when a page changes and stays within user script
+    # sandboxing. Adding a page means listing it in the file list; the script
+    # stops the build when a page is missing from it.
+    postBuildScripts:
+      - name: Index Help Book
+        basedOnDependencyAnalysis: true
+        inputFiles:
+          - $(SRCROOT)/scripts/index-help-book.sh
+          - $(SRCROOT)/Sources/App/Resources/Glasstual.help/Contents/Resources/en.lproj
+        inputFileLists:
+          - $(SRCROOT)/scripts/help-book-pages.xcfilelist
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Glasstual.help/Contents/Resources/en.lproj/Glasstual.cshelpindex
+        script: |
+          "${SCRIPT_INPUT_FILE_0}" "${SCRIPT_INPUT_FILE_1}" "${SCRIPT_INPUT_FILE_LIST_0}" "${SCRIPT_OUTPUT_FILE_0}"
 
     dependencies:
       - sdk: AudioToolbox.framework
