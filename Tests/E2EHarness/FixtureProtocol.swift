@@ -27,6 +27,8 @@ enum FixtureMode: String, CaseIterable {
 	/// A `DCC SSEND` from a peer never seen, and from one whose certificate changed.
 	case dccSecure
 	case dccSecureChanged
+	/// A passive `DCC SCHAT` from a peer never seen: a line each way over TLS.
+	case dccSecureChat
 	case xdccRequest
 	case accountRegistration
 	case metadataEdit
@@ -69,12 +71,17 @@ enum FixtureMode: String, CaseIterable {
 	}
 
 	var dcc: Bool {
-		[.dccSuccess, .dccCancel, .dccSecure, .dccSecureChanged, .xdccRequest].contains(self)
+		[.dccSuccess, .dccCancel, .dccSecure, .dccSecureChanged, .dccSecureChat, .xdccRequest].contains(self)
 	}
 
-	/// Whether the DCC peer speaks TLS, as a `DCC SSEND` asks.
+	/// Whether the DCC peer speaks TLS, as a `DCC SSEND` or `DCC SCHAT` asks.
 	var secureDCC: Bool {
-		self == .dccSecure || self == .dccSecureChanged
+		self == .dccSecure || self == .dccSecureChanged || self == .dccSecureChat
+	}
+
+	/// Whether the DCC peer offers a chat rather than a file.
+	var directChat: Bool {
+		self == .dccSecureChat
 	}
 
 	/// How many files the DCC peer offers, one after another.

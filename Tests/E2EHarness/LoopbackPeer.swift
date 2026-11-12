@@ -106,7 +106,7 @@ final class LoopbackPeer {
 	func start() async throws -> UInt16 {
 		if mode.dcc {
 			let tls = try mode.secureDCC ? DCCFixtureTLS(corpora: corpora, rotatesCertificate: mode == .dccSecureChanged) : nil
-			let dcc = DCCFixturePeer(cancel: mode == .dccCancel, transfers: mode.dccTransfers, tls: tls)
+			let dcc = DCCFixturePeer(cancel: mode == .dccCancel, transfers: mode.dccTransfers, tls: tls, chat: mode.directChat)
 			self.dcc = dcc
 			_ = try await dcc.start()
 		}

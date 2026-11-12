@@ -314,6 +314,14 @@ enum FixtureSelfTests {
 		try mustReject { _ = try burst.receive("PRIVMSG fixture :E2E_BURST_SWITCH_1", joined: true) }
 		_ = try burst.receive("PRIVMSG fixture :E2E_BURST_START", joined: true)
 		try mustReject { _ = try burst.receive("PRIVMSG fixture :E2E_BURST_SWITCH_2", joined: true) }
+		// A chat offer is answered as a chat: the token it named, and no file.
+		for answer in ["DCC SCHAT chat 2130706433 5000 424242", "DCC SSEND e2e-transfer.bin 2130706433 5000 100003 424241",
+		               "DCC CHAT chat 2130706433 5000 424241", "DCC SCHAT chat 2130706433 0 424241"]
+		{
+			var chat = InteractiveFixture(mode: .dccSecureChat, usesPassiveDCC: true)
+			_ = try chat.receive("PRIVMSG fixture :E2E_DCC_OFFER", joined: false)
+			try mustReject { _ = try chat.receive("PRIVMSG fixture :\u{01}\(answer)\u{01}", joined: false) }
+		}
 	}
 
 	private static func interactiveChecks(mode: FixtureMode, peer: LoopbackPeer, client: Client) async throws {

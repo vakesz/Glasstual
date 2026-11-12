@@ -290,6 +290,10 @@ enum FixtureExtensionChecks {
 			}
 		}
 
+		func say(_ line: String) {
+			connection?.send(content: Data((line + "\n").utf8), completion: .idempotent)
+		}
+
 		func acknowledge(_ count: Int) {
 			var value = UInt32(count).bigEndian
 			// The final message closes this side once the acknowledgement is out.
@@ -299,6 +303,9 @@ enum FixtureExtensionChecks {
 	}
 
 	static func secureDCC(_ mode: FixtureMode, peer: LoopbackPeer, client: Client, corpora: URL) async throws {
+		guard mode.directChat == false else {
+			return try await secureChat(peer: peer, client: client, corpora: corpora)
+		}
 		guard let dcc = peer.dcc else { throw HarnessFailure.assertion("The TLS DCC peer did not start") }
 		let receiver = try SecureReceiver(corpora: corpora)
 		defer {
@@ -323,6 +330,31 @@ enum FixtureExtensionChecks {
 		guard dcc.outcomes == expected, receiver.certificates.count == expected.count,
 		      Set(receiver.certificates).count == expected.count
 		else { throw HarnessFailure.assertion("The TLS DCC peer did not present the certificates the mode calls for") }
+		try await client.send("PRIVMSG fixture :E2E_DCC_DONE\r\n")
+	}
+
+	/// The application's side of a passive `DCC SCHAT`: it listens with TLS,
+	/// hears the peer's line, says its own, and the peer hangs up.
+	private static func secureChat(peer: LoopbackPeer, client: Client, corpora: URL) async throws {
+		guard let dcc = peer.dcc else { throw HarnessFailure.assertion("The TLS DCC peer did not start") }
+		let receiver = try SecureReceiver(corpora: corpora)
+		defer {
+			receiver.connection?.cancel()
+			receiver.listener.cancel()
+		}
+		try await FixtureSelfTests.wait(peer, "TLS chat listener ready") { receiver.listener.state == .ready }
+		guard let port = receiver.listener.port?.rawValue else { throw HarnessFailure.assertion("TLS chat listener has no port") }
+		try await send("PRIVMSG fixture :E2E_DCC_OFFER", to: client, peer: peer,
+		               expecting: "\u{01}DCC SCHAT CHAT 2130706433 0 424241\u{01}\r\n")
+		try await client.send("PRIVMSG fixture :\u{01}DCC SCHAT chat 2130706433 \(port) 424241\u{01}\r\n")
+		try await FixtureSelfTests.wait(peer, "the peer's chat line") {
+			receiver.received == Data((DCCFixturePeer.chatGreeting + "\n").utf8)
+		}
+		guard dcc.outcome == nil else { throw HarnessFailure.assertion("The chat ended before the application's line") }
+		receiver.say(DCCFixturePeer.chatReply)
+		try await FixtureSelfTests.wait(peer, "the peer hung up") { dcc.outcome != nil }
+		guard dcc.outcomes == [DCCFixturePeer.chatted], receiver.certificates.count == 1
+		else { throw HarnessFailure.assertion("The TLS chat did not carry a line each way under one certificate") }
 		try await client.send("PRIVMSG fixture :E2E_DCC_DONE\r\n")
 	}
 }

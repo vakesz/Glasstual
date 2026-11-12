@@ -30,7 +30,35 @@ struct InteractiveFixture {
 	}
 
 	private var dccVerb: String {
-		mode.secureDCC ? "SSEND" : "SEND"
+		if mode.directChat {
+			return "SCHAT"
+		}
+		return mode.secureDCC ? "SSEND" : "SEND"
+	}
+
+	/// What follows the verb in the fixture's offer `number`, from 1: a file
+	/// and its size, or the chat protocol. A passive offer names port zero
+	/// and a token.
+	private func offerArguments(_ number: Int) -> String {
+		let port = usesPassiveDCC ? 0 : dccPort
+		let token = usesPassiveDCC ? " " + Self.token(number) : ""
+		if mode.directChat {
+			return "CHAT 2130706433 \(port)\(token)"
+		}
+		return "\(dccFilenames[number - 1]) 2130706433 \(port) 100003\(token)"
+	}
+
+	/// The port the application listens on, from its answer to passive offer
+	/// `number`, or `nil` where the answer does not match the offer.
+	private func listeningPort(in line: String, answering number: Int) -> UInt16? {
+		let tokens = line.replacingOccurrences(of: "\u{01}", with: "").split(separator: " ").map(String.init)
+		let leading = [mode.directChat ? "chat" : dccFilenames[number - 1], "2130706433"]
+		let trailing = mode.directChat ? [Self.token(number)] : ["100003", Self.token(number)]
+		guard tokens.count == 4 + leading.count + 1 + trailing.count, tokens[2] == ":DCC",
+		      Array(tokens[4 ..< 6]) == leading, Array(tokens.suffix(trailing.count)) == trailing,
+		      let port = UInt16(tokens[6]), port > 0
+		else { return nil }
+		return port
 	}
 
 	/// The token of the passive offer for file `number`, from 1.
@@ -62,25 +90,13 @@ struct InteractiveFixture {
 		{
 			stage = 1
 			offers += 1
-			let port = usesPassiveDCC ? 0 : dccPort
-			let token = usesPassiveDCC ? " " + Self.token(offers) : ""
-			let offer = ":fixture!fixture@localhost PRIVMSG e2euser :\u{01}DCC \(dccVerb) \(dccFilenames[offers - 1])"
-				+ " 2130706433 \(port) 100003\(token)\u{01}"
+			let offer = ":fixture!fixture@localhost PRIVMSG e2euser :\u{01}DCC \(dccVerb) \(offerArguments(offers))\u{01}"
 			guard mode == .xdccRequest else { return [offer] }
 			heldOffer = offer
 			return []
 		}
 		if usesPassiveDCC, stage == 1, line.hasPrefix("PRIVMSG fixture :\u{01}DCC \(dccVerb) ") {
-			let tokens = line.replacingOccurrences(of: "\u{01}", with: "").split(separator: " ")
-			guard tokens.count == 9,
-			      tokens[2] == ":DCC",
-			      tokens[4] == Substring(dccFilenames[offers - 1]),
-			      tokens[5] == "2130706433",
-			      let port = UInt16(tokens[6]),
-			      port > 0,
-			      tokens[7] == "100003",
-			      tokens[8] == Substring(Self.token(offers)),
-			      dccListeningPorts.count == offers - 1
+			guard let port = listeningPort(in: line, answering: offers), dccListeningPorts.count == offers - 1
 			else { throw HarnessFailure.assertion("Passive DCC response mismatch") }
 			dccListeningPorts.append(port)
 			return []
