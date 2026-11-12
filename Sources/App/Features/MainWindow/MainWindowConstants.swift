@@ -5,8 +5,8 @@
 import AppKit
 
 /// The main window's own layout numbers: the widths its columns are built
-/// from, the sizes it restores to, and the two strokes its input capsule
-/// draws. A column's own metrics belong to that column -- the member list's
+/// from, the sizes it opens and restores to, and the two strokes its input
+/// capsule draws. A column's own metrics belong to that column -- the member list's
 /// are ``MemberListLayout`` -- and what is here is what the window itself has
 /// to leave room for.
 nonisolated enum MainWindowConstants {
@@ -16,14 +16,12 @@ nonisolated enum MainWindowConstants {
 	static let sidebarIdealWidth: CGFloat = .init(SettingsKeys.MainWindow.sidebarWidth.defaultValue)
 	static let sidebarMaximumWidth: CGFloat = .init(SettingsKeys.MainWindow.sidebarWidthRange.upperBound)
 	static let conversationMinimumWidth: CGFloat = 360
-	static let minimumSplitViewSlack: CGFloat = 60
-	/// The member list's own metrics belong to the member list; its narrowest
-	/// width is the one the window has to leave room for.
-	static let minimumContentSize = NSSize(
-		width: sidebarIdealWidth + conversationMinimumWidth + MemberListLayout.minimumWidth
-			+ minimumSplitViewSlack,
-		height: 500
-	)
+	/** The floor under the window's minimum content size.
+
+	 The minimum itself follows the columns that are open
+	 (``minimumContentWidth(sidebar:memberList:)``), so a window showing only
+	 the conversation can be made small, the way first-party windows can. */
+	static let minimumContentSize = NSSize(width: 600, height: 420)
 	/** The narrowest content that holds columns of these widths, `nil` for
 	 a closed column.
 
@@ -56,14 +54,25 @@ nonisolated enum MainWindowConstants {
 	}
 
 	static let minimumRestoredVisibleSize = NSSize(width: 80, height: 40)
-	/// The size Reset Window gives back, before ``minimumContentSize`` is
-	/// applied.
-	static let defaultWindowSize = NSSize(width: 800, height: 474)
-	static let sidebarFooterHeight: CGFloat = 32
+	/// The size a new window opens at and Reset Window gives back: comfortably
+	/// larger than the minimum, room for the sidebar, the conversation and the
+	/// member list side by side.
+	static let defaultWindowSize = NSSize(width: 1040, height: 680)
 
-	/// The footer icons' hit target: the smallest square that still reads as a
-	/// control at the sidebar's foot.
-	static let footerIconSize: CGFloat = 22
+	/** The default size on a screen whose usable area is `visibleSize`, never
+	 smaller than `minimumSize` and never larger than the screen. */
+	static func defaultWindowSize(minimumSize: NSSize, visibleSize: NSSize?) -> NSSize {
+		var size = NSSize(
+			width: max(defaultWindowSize.width, minimumSize.width),
+			height: max(defaultWindowSize.height, minimumSize.height)
+		)
+		if let visibleSize {
+			size.width = max(min(size.width, visibleSize.width), minimumSize.width)
+			size.height = max(min(size.height, visibleSize.height), minimumSize.height)
+		}
+		return size
+	}
+
 	/// The stroke the input capsule draws while it holds the keyboard.
 	static let focusRingWidth: CGFloat = 2
 	/// The same stroke where the system asks for increased contrast.

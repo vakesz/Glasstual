@@ -40,6 +40,8 @@ enum AXID {
 	static let sidebar = "sidebar"
 	static let memberList = "member-list"
 	static let memberCount = "member-count"
+	static let toolbarAddServer = "toolbar-add-server"
+	static let emptyStateAddServer = "empty-state-add-server"
 
 	static func memberRow(_ nickname: String) -> String {
 		"member-row-" + nickname

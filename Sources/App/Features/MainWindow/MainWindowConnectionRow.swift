@@ -26,14 +26,23 @@ struct MainWindowConnectionPresentation: Equatable {
 		}
 	}
 
-	/// Whether the row has anything to offer. The status itself is the toolbar
-	/// subtitle's to say; a row with no action would only repeat it.
+	/// Whether the row has anything to offer. A row with no action would only
+	/// say what the toolbar subtitle already says.
 	var hasActions: Bool {
 		actions.isEmpty == false
 	}
 
+	/// The symbol beside the status while nothing is in progress; a connection
+	/// in progress shows a spinner instead.
+	var symbolName: String {
+		switch status {
+		case .waitingToReconnect: "clock"
+		default: "bolt.slash"
+		}
+	}
+
 	/// Whether the connection is in progress, which the row marks with a spinner
-	/// beside its Cancel button rather than with a second status line.
+	/// beside its status.
 	var isInProgress: Bool {
 		switch status {
 		case .connecting, .reconnecting, .loggingOn: true
@@ -60,18 +69,32 @@ struct MainWindowConnectionRow: View {
 	let presentation: MainWindowConnectionPresentation
 	let perform: (MainWindowConnectionPresentation.Action) -> Void
 
+	/** The status on the leading edge and its one action on the trailing
+	 edge, the way Mail's offline bar says what is wrong and offers the way
+	 out. */
 	var body: some View {
 		HStack(spacing: UISpacing.regular) {
-			if presentation.isInProgress {
-				ProgressView().controlSize(.small)
-			}
+			status
 			Spacer(minLength: UISpacing.regular)
 			actions
 		}
+		.controlSize(.small)
 		.padding(UISpacing.regular)
 		.background(.bar)
 		.accessibilityElement(children: .contain)
-		.accessibilityLabel(presentation.status.title)
+	}
+
+	@ViewBuilder private var status: some View {
+		if presentation.isInProgress {
+			HStack(spacing: UISpacing.tight) {
+				ProgressView()
+				Text(verbatim: presentation.status.title)
+			}
+			.foregroundStyle(.secondary)
+		} else {
+			Label(presentation.status.title, systemImage: presentation.symbolName)
+				.foregroundStyle(.secondary)
+		}
 	}
 
 	private var actions: some View {
@@ -91,7 +114,7 @@ struct MainWindowConnectionRow: View {
 			Button(String(localized: .MainWindow.connectionCancelReconnect)) { perform(.cancelReconnect) }
 		}
 		if presentation.actions.contains(.disconnect) {
-			Button(PromptStrings.Action.cancel) { perform(.disconnect) }
+			Button(String(localized: .MainWindow.connectionStopConnecting)) { perform(.disconnect) }
 		}
 	}
 }

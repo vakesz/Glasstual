@@ -103,8 +103,6 @@ extension MenuActionController {
 
 	func setNotificationsMuted(_ muted: Bool) {
 		AppServices.notifications.areNotificationsDisabled = muted
-		/* The sidebar's overflow menu names the next press from this. */
-		mainWindow.chrome.areNotificationsDisabled = muted
 		let state: NSControl.StateValue = muted ? .on : .off
 		muteNotificationsFileMenuItem?.state = state
 		muteNotificationsDockMenuItem?.state = state

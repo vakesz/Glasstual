@@ -11,11 +11,6 @@ extension MenuActionController {
 			muteNotificationsSoundsFileMenuItem?.state = .on
 		}
 
-		/* The sidebar's overflow menu names its notification item from this;
-		 `setNotificationsMuted(_:)` keeps it in step afterwards. */
-		mainWindow.chrome.areNotificationsDisabled =
-			AppServices.notifications.areNotificationsDisabled
-
 		transcriptGeneralMenu.item(for: .transcriptChannelMenu)?.submenu =
 			mainMenuChannelMenu.copy() as? NSMenu
 

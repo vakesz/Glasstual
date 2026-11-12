@@ -76,19 +76,15 @@ extension MainWindow {
 		true
 	}
 
-	/** The frame Reset Window gives back, where the window already is.
-
-	 The appearance's default size is never allowed below the window's own
-	 minimum. The bundled default is 474 points tall against a 500-point
-	 minimum content height, so Reset Window left the window smaller than a
-	 resize could ever make it. */
+	/** The frame a new window opens at and Reset Window gives back, where the
+	 window already is: the default size, never below the window's own
+	 minimum and never beyond the usable area of its screen. */
 	var defaultWindowFrame: NSRect {
 		let minimumSize = frameRect(forContentRect: NSRect(origin: .zero, size: contentMinSize)).size
-		let defaultSize = MainWindowConstants.defaultWindowSize
 		var value = frame
-		value.size = NSSize(
-			width: max(defaultSize.width, minimumSize.width),
-			height: max(defaultSize.height, minimumSize.height)
+		value.size = MainWindowConstants.defaultWindowSize(
+			minimumSize: minimumSize,
+			visibleSize: (screen ?? NSScreen.main)?.visibleFrame.size
 		)
 		return value
 	}

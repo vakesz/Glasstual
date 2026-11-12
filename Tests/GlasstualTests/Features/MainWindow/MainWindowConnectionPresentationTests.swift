@@ -50,4 +50,15 @@ struct MainWindowConnectionPresentationTests {
 		#expect(first.isReconnecting)
 		#expect(second.isReconnecting)
 	}
+
+	/// The bar says what is wrong: a spinner while connecting, a symbol
+	/// otherwise, and the in-progress action names what it stops.
+	@Test("The bar marks progress with a spinner and stops a connection by name")
+	func statusAndStopConnecting() throws {
+		let session = TestServerSession()
+		let idle = try #require(MainWindowConnectionPresentation(session: session))
+		#expect(idle.isInProgress == false)
+		#expect(idle.symbolName == "bolt.slash")
+		#expect(String(localized: .MainWindow.connectionStopConnecting) == "Stop Connecting")
+	}
 }

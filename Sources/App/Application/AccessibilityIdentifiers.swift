@@ -183,6 +183,11 @@ enum AccessibilityIdentifier {
 		"sidebar-row-\(kind)-\(name)"
 	}
 
+	/// The main window's Add Server toolbar button.
+	static let toolbarAddServer = "toolbar-add-server"
+	/// The Add Server button of the empty state shown when no server is set up.
+	static let emptyStateAddServer = "empty-state-add-server"
+
 	/// The member list's heading. Its accessibility value is the member count.
 	static let memberCount = "member-count"
 

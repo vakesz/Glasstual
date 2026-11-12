@@ -17,13 +17,32 @@ struct MainWindowConstantsTests {
 				&& CGFloat(width) <= MainWindowConstants.sidebarMaximumWidth))
 	}
 
-	/// The window has to leave room for the narrowest layout, not the widest.
-	@Test("Minimum content size fits every column at its narrowest")
+	/** The floor holds the conversation beside the narrowest sidebar; the
+	 open columns raise the minimum from there, so a window showing only the
+	 conversation can be made small. */
+	@Test("The minimum floor holds the conversation beside the narrowest sidebar")
 	func minimumContentSizeFitsNarrowestColumns() {
 		#expect(MainWindowConstants.minimumContentSize.width
-			>= MainWindowConstants.sidebarMinimumWidth
-			+ MainWindowConstants.conversationMinimumWidth
-			+ MemberListLayout.minimumWidth)
+			>= MainWindowConstants.sidebarMinimumWidth + MainWindowConstants.conversationMinimumWidth)
+		#expect(MainWindowConstants.minimumContentSize.width < MainWindowConstants.minimumContentWidth(
+			sidebar: MainWindowConstants.sidebarIdealWidth,
+			memberList: MemberListLayout.minimumWidth
+		))
+	}
+
+	/// First-party windows open comfortably larger than their minimum, and
+	/// never larger than the screen they open on.
+	@Test("The default size is larger than the minimum and fits the screen", arguments: [
+		(NSSize(width: 2560, height: 1400), NSSize(width: 1040, height: 680)),
+		(NSSize(width: 900, height: 600), NSSize(width: 900, height: 600)),
+		(NSSize(width: 500, height: 300), NSSize(width: 640, height: 450)),
+	])
+	func defaultSizeFitsTheScreen(visible: NSSize, expected: NSSize) {
+		let size = MainWindowConstants.defaultWindowSize(
+			minimumSize: NSSize(width: 640, height: 450),
+			visibleSize: visible
+		)
+		#expect(size == expected)
 	}
 
 	struct Columns: Sendable, CustomTestStringConvertible {
@@ -40,7 +59,8 @@ struct MainWindowConstantsTests {
 	 it, and the conversation needs its own minimum besides. */
 	@Test("Open columns widen the window's minimum past its floor", arguments: [
 		Columns(sidebar: nil, memberList: nil, minimumWidth: MainWindowConstants.minimumContentSize.width),
-		Columns(sidebar: 220, memberList: 200, minimumWidth: MainWindowConstants.minimumContentSize.width),
+		Columns(sidebar: 180, memberList: nil, minimumWidth: MainWindowConstants.minimumContentSize.width),
+		Columns(sidebar: 220, memberList: 200, minimumWidth: 220 + MainWindowConstants.conversationMinimumWidth + 200),
 		Columns(sidebar: 300, memberList: 320, minimumWidth: 300 + MainWindowConstants.conversationMinimumWidth + 320),
 		Columns(sidebar: 400, memberList: 500, minimumWidth: 400 + 400 + 500),
 		Columns(sidebar: nil, memberList: 500, minimumWidth: MainWindowConstants.conversationMinimumWidth + 500),
@@ -71,9 +91,9 @@ struct MainWindowConstantsTests {
 		))
 	}
 
-	@Test("At the narrowest window the stored maximum widths are cut down")
+	@Test("In a narrow window the stored maximum widths are cut down")
 	func narrowestWindowClampsWideColumns() {
-		let width = MainWindowConstants.minimumContentSize.width
+		let width: CGFloat = 800
 		#expect(MainWindowConstants.sidebarMaximumWidth(inContentWidth: width, memberListOpen: true) == 280)
 		#expect(MainWindowConstants.sidebarMaximumWidth(inContentWidth: width, memberListOpen: false) == 400)
 		#expect(MainWindowConstants.memberListMaximumWidth(inContentWidth: width, sidebar: 220) == 220)

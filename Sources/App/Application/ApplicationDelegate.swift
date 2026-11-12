@@ -31,6 +31,8 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		subsystem: LogSubsystem.current,
 		category: "ApplicationDelegate"
 	)
+	/// The name the main window's frame is saved under; saved frames depend on it.
+	private static let mainWindowFrameName = "Main Window"
 
 	private var hasInstalledMainWindow = false
 
@@ -96,7 +98,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		_ = AppServices.appearance
 
 		let window = MainWindow(
-			contentRect: NSRect(origin: .zero, size: MainWindowConstants.minimumContentSize),
+			contentRect: NSRect(origin: .zero, size: MainWindowConstants.defaultWindowSize),
 			styleMask: [.titled, .closable, .miniaturizable, .resizable],
 			backing: .buffered,
 			defer: false
@@ -104,7 +106,13 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		window.title = ApplicationInfo.applicationName()
 		window.identifier = NSUserInterfaceItemIdentifier("GlasstualMainWindow")
 		window.contentMinSize = MainWindowConstants.minimumContentSize
-		window.setFrameAutosaveName("Main Window")
+		/* A first launch opens at the default size, centred; afterwards the
+		 saved frame wins. */
+		if window.setFrameUsingName(Self.mainWindowFrameName) == false {
+			window.setFrame(window.defaultWindowFrame, display: false)
+			window.center()
+		}
+		window.setFrameAutosaveName(Self.mainWindowFrameName)
 		window.tabbingMode = .disallowed
 		window.collectionBehavior.insert(.fullScreenPrimary)
 		window.isReleasedWhenClosed = false

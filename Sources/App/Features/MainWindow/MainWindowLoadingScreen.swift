@@ -29,11 +29,10 @@ final class MainWindowLoadingScreen {
 		content = .progress(reason)
 	}
 
-	/** Takes the overlay down.
+	/** Takes the empty state down.
 
-	 A full-window cross-fade is the largest piece of motion in the window, so
-	 it is the first thing Reduce Motion asks an interface to drop; the overlay
-	 simply goes. */
+	 The cross-fade is motion, so Reduce Motion drops it and the state simply
+	 goes. */
 	func hide() {
 		guard viewIsVisible else { return }
 		withAnimation(ReduceMotion.animation(.easeOut(duration: 0.25))) {
@@ -42,6 +41,10 @@ final class MainWindowLoadingScreen {
 	}
 }
 
+/** What the conversation column shows while there is no conversation to show:
+ the system's empty state when no server is set up, and a small progress
+ indicator with its reason while the configuration loads. The sidebar stays
+ beside it; there is no splash (HIG Launching). */
 struct MainWindowLoadingContent: View {
 	@Bindable var model: MainWindowLoadingScreen
 
@@ -57,7 +60,7 @@ struct MainWindowLoadingContent: View {
 			}
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity)
-		.background(.regularMaterial)
+		.background(.background)
 	}
 
 	/// The system's empty state, so the title, the description and the action
@@ -72,28 +75,15 @@ struct MainWindowLoadingContent: View {
 				AppServices.delegate.menuController?.addServer(nil)
 			}
 			.keyboardShortcut(.defaultAction)
+			.accessibilityIdentifier(AccessibilityIdentifier.emptyStateAddServer)
 		}
 	}
 
 	private func progress(reason: String) -> some View {
-		VStack(spacing: UISpacing.wide) {
-			Image(nsImage: NSApp.applicationIconImage)
-				.resizable()
-				.scaledToFit()
-				.frame(width: applicationIconSize, height: applicationIconSize)
-				.accessibilityHidden(true)
-			Text(verbatim: String(localized: .MainWindow.welcomeToGlasstual))
-				.font(.largeTitle)
-			HStack(spacing: UISpacing.regular) {
-				Text(verbatim: reason)
-				ProgressView()
-					.controlSize(.small)
-			}
+		ProgressView {
+			Text(verbatim: reason)
+				.foregroundStyle(.secondary)
 		}
-		.padding(UISpacing.loose)
+		.controlSize(.small)
 	}
-
-	/// The application icon at the size the Finder's own Get Info panel draws
-	/// it, scaled with the reader's text size.
-	@ScaledMetric private var applicationIconSize: CGFloat = 128
 }

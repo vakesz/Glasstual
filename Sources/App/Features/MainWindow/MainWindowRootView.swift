@@ -29,15 +29,8 @@ struct MainWindowRootView: View {
 	@State private var contentWidth = MainWindowConstants.minimumContentSize.width
 
 	var body: some View {
-		ZStack {
-			NavigationSplitView(columnVisibility: sidebarVisibility) {
-				MainWindowSidebar(
-					columns: columns,
-					chrome: chrome,
-					sidebar: sidebar,
-					commands: commands,
-					redirectTyping: redirectTyping
-				)
+		NavigationSplitView(columnVisibility: sidebarVisibility) {
+			MainWindowSidebar(sidebar: sidebar, redirectTyping: redirectTyping)
 				/* The width modifiers have to stay outermost: wrapped in
 				 `onGeometryChange`, the split view no longer sees them and the
 				 columns open at SwiftUI's own default widths. */
@@ -54,70 +47,68 @@ struct MainWindowRootView: View {
 					ideal: min(sidebarIdealWidth, sidebarMaximumWidth),
 					max: sidebarMaximumWidth
 				)
-				// Automatic placement keeps the filter in the sidebar toolbar.
+				/* Automatic placement keeps both in the sidebar's part of the
+				 toolbar: adding a server is about the list beneath them. The
+				 File menu offers Add Server as well. */
 				.toolbar {
 					if columns.isSidebarVisible {
-						ToolbarItem(placement: .automatic) {
+						ToolbarItemGroup(placement: .automatic) {
 							sidebarFilterMenu
+							addServerButton
 						}
 					}
 				}
-			} detail: {
-				conversationDetail
-					.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
-					.inspector(isPresented: memberListVisibility) {
-						MemberListView(model: memberList, redirectTyping: redirectTyping)
-							.onGeometryChange(for: CGFloat.self) { geometry in
-								geometry.size.width.rounded()
-							} action: { width in
-								guard columns.isMemberListVisible else { return }
-								columns.recordMemberListWidth(width)
-								memberListWidthWriter.record(width)
-							}
-							.inspectorColumnWidth(
-								min: MemberListLayout.minimumWidth,
-								ideal: min(memberListIdealWidth, memberListMaximumWidth),
-								max: memberListMaximumWidth
-							)
-					}
-			}
-			.navigationSplitViewStyle(.balanced)
-			.onChange(of: columns.isMemberListVisible) { _, isVisible in
-				if isVisible == false {
-					columns.memberListDidClose()
+		} detail: {
+			detailColumn
+				/* The conversation's ground runs under the toolbar, so the
+				 toolbar's Liquid Glass and scroll edge effect sit over the
+				 transcript rather than over a band of their own. */
+				.background(columns.conversationBackground.ignoresSafeArea(.container, edges: .top))
+				.inspector(isPresented: memberListVisibility) {
+					MemberListView(model: memberList, redirectTyping: redirectTyping)
+						.onGeometryChange(for: CGFloat.self) { geometry in
+							geometry.size.width.rounded()
+						} action: { width in
+							guard columns.isMemberListVisible else { return }
+							columns.recordMemberListWidth(width)
+							memberListWidthWriter.record(width)
+						}
+						.inspectorColumnWidth(
+							min: MemberListLayout.minimumWidth,
+							ideal: min(memberListIdealWidth, memberListMaximumWidth),
+							max: memberListMaximumWidth
+						)
 				}
-			}
-			.onGeometryChange(for: CGFloat.self) { geometry in
-				geometry.size.width.rounded()
-			} action: { width in
-				contentWidth = width
-			}
-			// The field filters the sidebar, so it stays on that column's background.
-			.searchable(
-				text: $sidebar.filterText,
-				placement: .sidebar,
-				prompt: Text(String(localized: .MainWindow.filterSidebar))
-			)
-			.searchFocused($isSearchFieldFocused)
-			// The window also hides hosted AppKit views and clears their focus;
-			// these SwiftUI modifiers alone do not remove them from navigation.
-			.disabled(loadingScreen.viewIsVisible)
-			.accessibilityHidden(loadingScreen.viewIsVisible)
-			.opacity(loadingScreen.viewIsVisible ? 0 : 1)
-			.onChange(of: loadingScreen.viewIsVisible, initial: true, conversationVisibilityChanged)
-
-			if loadingScreen.viewIsVisible {
-				MainWindowLoadingContent(model: loadingScreen)
-					.transition(.opacity)
+		}
+		.navigationSplitViewStyle(.balanced)
+		.onChange(of: columns.isMemberListVisible) { _, isVisible in
+			if isVisible == false {
+				columns.memberListDidClose()
 			}
 		}
+		.onGeometryChange(for: CGFloat.self) { geometry in
+			geometry.size.width.rounded()
+		} action: { width in
+			contentWidth = width
+		}
+		// The field filters the sidebar, so it stays on that column's background.
+		.searchable(
+			text: $sidebar.filterText,
+			placement: .sidebar,
+			prompt: Text(String(localized: .MainWindow.filterSidebar))
+		)
+		.searchFocused($isSearchFieldFocused)
+		.onChange(of: loadingScreen.viewIsVisible, initial: true, conversationVisibilityChanged)
 		.toolbar {
-			// NavigationSplitView supplies the sidebar toggle.
+			/* NavigationSplitView supplies the sidebar toggle. The inspector's
+			 toggle sits at the trailing edge, over the inspector, with one
+			 symbol whatever its state: the title says what a click does. It
+			 stays in the window toolbar so it is there to open the inspector
+			 again once it is closed. */
 			ToolbarItem(placement: .primaryAction) {
-				// Keep the button visible so selection changes preserve toolbar layout.
 				Button(
 					MenuCommand.memberListTitle(isVisible: columns.isMemberListVisible),
-					systemImage: columns.isMemberListVisible ? "sidebar.squares.trailing" : "sidebar.trailing"
+					systemImage: "sidebar.trailing"
 				) {
 					MainWindowColumnAnimation.run { columns.toggleMemberList() }
 				}
@@ -137,6 +128,24 @@ struct MainWindowRootView: View {
 		.settingsTransfer(sheets.settingsTransfer)
 		.sheet(item: presentedSheet) { presentation in
 			MainWindowSheetHost(model: sheets, presentation: presentation)
+		}
+	}
+
+	/** The conversation, or the empty state that stands in for it. The
+	 conversation stays in the hierarchy under the empty state, so its AppKit
+	 views keep their place; the window hides them and takes their focus
+	 (`setConversationObscured`), which SwiftUI's modifiers alone do not. */
+	private var detailColumn: some View {
+		ZStack {
+			conversationDetail
+				.disabled(loadingScreen.viewIsVisible)
+				.accessibilityHidden(loadingScreen.viewIsVisible)
+				.opacity(loadingScreen.viewIsVisible ? 0 : 1)
+
+			if loadingScreen.viewIsVisible {
+				MainWindowLoadingContent(model: loadingScreen)
+					.transition(.opacity)
+			}
 		}
 	}
 
@@ -173,14 +182,21 @@ struct MainWindowRootView: View {
 				systemImage: sidebar.filter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill"
 			)
 			.labelStyle(.iconOnly)
-			.foregroundStyle(sidebar.filter == .all ? Color.primary : Color.accentColor)
 		}
-		.menuStyle(.button)
+		/* A plain toolbar symbol the system tints; the filled variant says a
+		 filter is on, as Mail's does. */
 		.menuIndicator(.hidden)
-		.buttonBorderShape(.circle)
 		.accessibilityValue(Text(sidebar.filter.title))
 		.accessibilityIdentifier("sidebar-filter")
 		.help(String(localized: .Sidebar.filterLabel))
+	}
+
+	private var addServerButton: some View {
+		Button(String(localized: .MainWindow.toolbarAddServer), systemImage: "plus") {
+			commands?.addServer(nil)
+		}
+		.help(String(localized: .MainWindow.toolbarAddServer))
+		.accessibilityIdentifier(AccessibilityIdentifier.toolbarAddServer)
 	}
 
 	/** No column may be offered more than the window holds beside the

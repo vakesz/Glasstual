@@ -17,11 +17,6 @@ final class MainWindowChrome {
 	 with its `@FocusState` in both directions, so setting it is what moves the
 	 keyboard into the field and clicking away is what clears it. */
 	var isSearchFieldFocused = false
-	/** Mirrors the notification controller's mute switch so the footer menu can
-	 tick it. The controller is not observable and the switch is thrown from the
-	 main menu as well, so the coordinator that owns the switch writes it here
-	 whenever it changes. */
-	var areNotificationsDisabled = false
 	var connection: MainWindowConnectionPresentation?
 
 	/// Puts the keyboard in the sidebar filter field. Channel Spotlight has a
