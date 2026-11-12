@@ -17,7 +17,7 @@ struct InlineCredentialConsentScenario: Scenario {
 		try await context.chooseConversationStyle()
 
 		try await context.connect()
-		try await context.until("credential consent card in the prompt tray") { try context.consentCardIsShown() }
+		try await context.until("credential consent card above the message field") { try context.consentCardIsShown() }
 		try await context.until("TLS connection open") { peer.evidence.connections == 1 }
 		try context.requireNothingSent(peer)
 
@@ -60,11 +60,11 @@ private extension ScenarioContext {
 		try await close(window: AXID.settingsWindow)
 	}
 
-	/// Whether the tray shows the consent card, known by its Send button,
-	/// which keeps the alert's identifier as a card.
+	/// Whether the conversation shows the consent card: the container that
+	/// keeps the alert's identifier, holding the Send button that keeps its own.
 	func consentCardIsShown() throws -> Bool {
-		guard let tray = try mainWindow().flatMap({ try driver.find(AXID.promptTray, in: $0) }) else { return false }
-		return try driver.find(AXID.alertAlternate(AXID.credentialConsent), in: tray) != nil
+		guard let card = try mainWindow().flatMap({ try driver.find(AXID.credentialConsent, in: $0) }) else { return false }
+		return try driver.find(AXID.alertAlternate(AXID.credentialConsent), in: card) != nil
 	}
 
 	func requireNothingSent(_ peer: LoopbackPeer) throws {

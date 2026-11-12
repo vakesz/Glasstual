@@ -66,15 +66,14 @@ enum AccessibilityIdentifier {
 
 	// MARK: - Questions in the conversation
 
-	/// The questions above the message field.
-	static let promptTray = "prompt-tray"
 	/// The line saying questions wait in other conversations, and its button.
 	static let promptElsewhere = "prompt-elsewhere"
 	static let promptElsewhereShow = "prompt-elsewhere-show"
 	/// What the last typed answering command had to say.
 	static let promptFeedback = "prompt-feedback"
 
-	/** One question's card. A question that is identified as an alert keeps
+	/** One question's card, which is the accessibility container of its
+	 title, field, hint and buttons. A question that is identified as an alert keeps
 	 that identifier as a card, and its buttons keep their alert identifiers,
 	 so a client finds the same control in either style. Any other card is
 	 named by its number. */

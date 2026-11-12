@@ -266,6 +266,13 @@ struct ScreenshotSession {
 			let connection = (text as NSString).range(of: DemoScript.endOfConnectionLines)
 			return connection.location != NSNotFound && visible.location > connection.location
 		}
+		/* A card's buttons count only once it has been still for a moment, and
+		 are drawn disabled until then. */
+		try await context.until("the card's buttons count") {
+			guard let card = try context.mainWindow().flatMap({ try driver.find(AXID.promptCard(1), in: $0) }),
+			      let cancel = try driver.find(AXID.promptButton(1, "cancel"), in: card) else { return false }
+			return try driver.isEnabled(cancel)
+		}
 		try await capture("inline-prompt", window: AXID.mainWindow, size: Self.mainWindowSize)
 
 		try await context.send("/no")
@@ -274,7 +281,7 @@ struct ScreenshotSession {
 
 	/// What the first question's card says answers it.
 	private func promptHint() throws -> String? {
-		try context.mainWindow().flatMap { try driver.find(AXID.promptTray, in: $0) }
+		try context.mainWindow().flatMap { try driver.find(AXID.promptCard(1), in: $0) }
 			.flatMap { try driver.find(AXID.promptCardHint(1), in: $0) }
 			.flatMap { try driver.value($0) }
 	}

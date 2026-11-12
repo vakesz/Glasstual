@@ -9,7 +9,12 @@ import SwiftUI
  wait behind a count rather than pushing the conversation off the window.
  Questions waiting in other conversations are a single line with a way there.
  The tray holds no state of its own: the registry is the questions, and a
- card disappears the moment its question is answered or withdrawn. */
+ card disappears the moment its question is answered or withdrawn.
+
+ The tray is not an accessibility container. Each card is one, named by its
+ question, and a container whose only child is another container is merged
+ into it: a tray around a single card left that card with no element, no name
+ and no identifier of its own. */
 struct PromptTrayView: View {
 	let registry: PendingPromptRegistry
 	/// The chat item whose conversation is on screen.
@@ -88,8 +93,5 @@ struct PromptTrayView: View {
 			}
 		}
 		.animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: shown.map(\.number))
-		.accessibilityElement(children: .contain)
-		.accessibilityLabel(Text(.InlinePrompts.trayLabel))
-		.accessibilityIdentifier(AccessibilityIdentifier.promptTray)
 	}
 }

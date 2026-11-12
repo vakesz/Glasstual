@@ -156,7 +156,6 @@ struct AccessibilityIdentifiersTests {
 			title: "Q", body: "", defaultButton: "Send", alternateButton: "Cancel",
 			keywords: [.default: .send, .alternate: .cancel]
 		)
-		#expect(AccessibilityIdentifier.promptTray == "prompt-tray")
 		#expect(AccessibilityIdentifier.promptElsewhere == "prompt-elsewhere")
 		#expect(AccessibilityIdentifier.promptElsewhereShow == "prompt-elsewhere-show")
 		#expect(AccessibilityIdentifier.promptFeedback == "prompt-feedback")

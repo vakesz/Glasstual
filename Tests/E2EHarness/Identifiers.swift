@@ -40,16 +40,26 @@ enum AXID {
 
 	// MARK: Questions in the conversation
 
-	/// The questions above the message field. A question identified as an
-	/// alert keeps that identifier as a card, and its buttons keep theirs.
-	static let promptTray = "prompt-tray"
+	/// The card of question `number` above the message field: the container
+	/// of its field, hint and buttons. A question identified as an alert
+	/// keeps that identifier as a card instead, and its buttons keep theirs.
+	static func promptCard(_ number: Int) -> String {
+		"prompt-card-\(number)"
+	}
+
 	/// What the last typed answering command had to say.
 	static let promptFeedback = "prompt-feedback"
+
+	/// A button of question `number`'s card, named by the word that answers
+	/// with it, when the question is not also an alert.
+	static func promptButton(_ number: Int, _ keyword: String) -> String {
+		"prompt-\(number)-\(keyword)"
+	}
 
 	/// The line of question `number`'s card that names the commands
 	/// answering it, when the question is not also an alert.
 	static func promptCardHint(_ number: Int) -> String {
-		"prompt-card-\(number)-hint"
+		promptCard(number) + "-hint"
 	}
 
 	// MARK: Main window
