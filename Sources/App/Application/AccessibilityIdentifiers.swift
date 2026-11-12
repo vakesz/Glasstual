@@ -51,6 +51,15 @@ enum AccessibilityIdentifier {
 	/// applies the action.
 	static let moderationConfirmation = "moderation-confirmation"
 
+	/// The question about a secure DCC peer seen for the first time. Its default
+	/// button is Trust and Remember, its alternate Cancel and its other Trust Once.
+	static let dccCertificateFirstUse = "dcc-certificate-first-use"
+
+	/// The warning about a secure DCC peer whose certificate differs from the
+	/// saved one. Its default button is Cancel and its alternate replaces the
+	/// saved certificate.
+	static let dccCertificateChanged = "dcc-certificate-changed"
+
 	// MARK: - Questions in the conversation
 
 	/// The questions above the message field.
@@ -166,11 +175,62 @@ enum AccessibilityIdentifier {
 		"server-properties-pane-" + name
 	}
 
+	/// The Sign In with SASL switch, the mechanism menu and the switch that
+	/// keeps to the chosen mechanism.
+	static let serverPropertiesSASLEnabled = "server-sasl-enabled"
+	static let serverPropertiesSASLMechanism = "server-sasl-mechanism"
+	static let serverPropertiesSASLMechanismOnly = "server-sasl-mechanism-only"
+
+	/// One choice of the mechanism menu: `automatic`, or a mechanism's wire name.
+	static func serverPropertiesSASLMechanism(_ choice: String) -> String {
+		serverPropertiesSASLMechanism + "-" + choice
+	}
+
+	/// The Profile pane's display name field and its Update and Remove buttons.
+	static let serverProfileDisplayName = "server-profile-display-name"
+	static let serverProfileUpdate = "server-profile-update"
+	static let serverProfileClear = "server-profile-clear"
+
+	// MARK: - Sign In Again
+
+	static let saslSignInMechanism = "sasl-sign-in-mechanism"
+	static let saslSignInSubmit = "sasl-sign-in-submit"
+	/// What the exchange came to, named for which way it went.
+	static let saslSignInSucceeded = "sasl-sign-in-succeeded"
+	static let saslSignInFailed = "sasl-sign-in-failed"
+
+	// MARK: - Register Account
+
+	static let accountRegistrationSheet = "account-registration-sheet"
+	static let accountRegistrationAccount = "account-registration-account"
+	static let accountRegistrationEmail = "account-registration-email"
+	static let accountRegistrationPassword = "account-registration-password"
+	static let accountRegistrationPasswordVerify = "account-registration-password-verify"
+	static let accountRegistrationCode = "account-registration-code"
+	static let accountRegistrationSubmit = "account-registration-submit"
+	static let accountRegistrationSuccess = "account-registration-success"
+
 	// MARK: - File transfers
 
 	static let fileTransfersWindow = "file-transfers-window"
 	static let fileTransfersStart = "file-transfers-start"
 	static let fileTransfersStop = "file-transfers-stop"
+
+	/// A pack asked of an XDCC bot that has not offered it yet, named after
+	/// the request.
+	static func xdccRequestRow(_ id: String) -> String {
+		"xdcc-request-row-" + id
+	}
+
+	// MARK: - Transcript banners
+
+	/// The banner over a conversation missing messages the server still has,
+	/// and its Load button.
+	static let missingHistoryBanner = "missing-history-banner"
+	static let missingHistoryLoad = "missing-history-load"
+	/// The banner over a window of stored history, and its Return to Live button.
+	static let historyWindowBanner = "history-window-banner"
+	static let historyReturnToLive = "history-return-to-live"
 
 	// MARK: - History search
 
@@ -212,6 +272,12 @@ enum AccessibilityIdentifier {
 	static let toolbarAddServer = "toolbar-add-server"
 	/// The Add Server button of the empty state shown when no server is set up.
 	static let emptyStateAddServer = "empty-state-add-server"
+
+	/// The line above the message field that says what is typed next answers
+	/// a message, in public or privately, and the button that drops the reply.
+	static let inputReplyBanner = "input-reply-banner"
+	static let inputPrivateReplyBanner = "input-private-reply-banner"
+	static let inputReplyCancel = "input-reply-cancel"
 
 	/// The member list's heading. Its accessibility value is the member count.
 	static let memberCount = "member-count"

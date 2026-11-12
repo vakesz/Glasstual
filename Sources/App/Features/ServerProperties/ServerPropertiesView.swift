@@ -135,14 +135,8 @@ struct ServerPropertiesView: View {
 	/// written here; each row's title and symbol belong to the pane itself.
 	private func navigationRows(_ panes: [ServerPropertiesSelection]) -> some View {
 		ForEach(panes, id: \.self) { pane in
-			if pane == .profile {
-				Label(pane.title, systemImage: pane.symbol)
-					.tag(pane)
-					.accessibilityIdentifier("server-properties-profile")
-			} else {
-				Label(pane.title, systemImage: pane.symbol).tag(pane)
-					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesPane(String(describing: pane)))
-			}
+			Label(pane.title, systemImage: pane.symbol).tag(pane)
+				.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesPane(String(describing: pane)))
 		}
 	}
 }

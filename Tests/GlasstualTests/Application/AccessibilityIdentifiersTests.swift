@@ -59,6 +59,60 @@ struct AccessibilityIdentifiersTests {
 			== "credential-consent")
 	}
 
+	@Test("Secure DCC certificate questions")
+	func dccCertificates() throws {
+		#expect(AccessibilityIdentifier.dccCertificateFirstUse == "dcc-certificate-first-use")
+		#expect(AccessibilityIdentifier.dccCertificateChanged == "dcc-certificate-changed")
+		let certificate = try #require(DCCPeerCertificate(der: PeerCertificateFixture.ellipticCurve()))
+		let pin = DCCPeerPin(certificate: certificate, nickname: "fixture", account: nil, at: .now)
+		#expect(ServerSession.dccFirstUseRequest("d1", peer: "fixture", network: "E2E", fingerprint: certificate.fingerprint)
+			.accessibilityIdentifier == "dcc-certificate-first-use")
+		#expect(ServerSession.dccChangedCertificateRequest(
+			"d2", peer: "fixture", saved: pin, presented: certificate.fingerprint
+		).accessibilityIdentifier == "dcc-certificate-changed")
+		// A missing certificate has no card of its own: it is asked by number.
+		#expect(ServerSession.dccUnidentifiedPeerRequest("d3", peer: "fixture", saved: pin).accessibilityIdentifier == nil)
+	}
+
+	@Test("Register Account, Sign In Again and the Profile pane")
+	func accountSheets() {
+		#expect(AccessibilityIdentifier.accountRegistrationSheet == "account-registration-sheet")
+		#expect(AccessibilityIdentifier.accountRegistrationAccount == "account-registration-account")
+		#expect(AccessibilityIdentifier.accountRegistrationEmail == "account-registration-email")
+		#expect(AccessibilityIdentifier.accountRegistrationPassword == "account-registration-password")
+		#expect(AccessibilityIdentifier.accountRegistrationPasswordVerify == "account-registration-password-verify")
+		#expect(AccessibilityIdentifier.accountRegistrationCode == "account-registration-code")
+		#expect(AccessibilityIdentifier.accountRegistrationSubmit == "account-registration-submit")
+		#expect(AccessibilityIdentifier.accountRegistrationSuccess == "account-registration-success")
+		#expect(AccessibilityIdentifier.saslSignInMechanism == "sasl-sign-in-mechanism")
+		#expect(AccessibilityIdentifier.saslSignInSubmit == "sasl-sign-in-submit")
+		#expect(AccessibilityIdentifier.saslSignInSucceeded == "sasl-sign-in-succeeded")
+		#expect(AccessibilityIdentifier.saslSignInFailed == "sasl-sign-in-failed")
+		#expect(AccessibilityIdentifier.serverPropertiesSASLEnabled == "server-sasl-enabled")
+		#expect(AccessibilityIdentifier.serverPropertiesSASLMechanism == "server-sasl-mechanism")
+		#expect(AccessibilityIdentifier.serverPropertiesSASLMechanism(SASLMechanism.plain.wireName) == "server-sasl-mechanism-PLAIN")
+		#expect(AccessibilityIdentifier.serverPropertiesSASLMechanismOnly == "server-sasl-mechanism-only")
+		#expect(AccessibilityIdentifier.serverPropertiesPane(String(describing: ServerPropertiesSelection.profile))
+			== "server-properties-pane-profile")
+		#expect(AccessibilityIdentifier.serverProfileDisplayName == "server-profile-display-name")
+		#expect(AccessibilityIdentifier.serverProfileUpdate == "server-profile-update")
+		#expect(AccessibilityIdentifier.serverProfileClear == "server-profile-clear")
+	}
+
+	@Test("Transcript banners, commands and XDCC requests")
+	func transcript() {
+		#expect(AccessibilityIdentifier.missingHistoryBanner == "missing-history-banner")
+		#expect(AccessibilityIdentifier.missingHistoryLoad == "missing-history-load")
+		#expect(AccessibilityIdentifier.historyWindowBanner == "history-window-banner")
+		#expect(AccessibilityIdentifier.historyReturnToLive == "history-return-to-live")
+		#expect(AccessibilityIdentifier.menu(.transcriptReplyPrivately) == "menu.transcriptReplyPrivately")
+		#expect(AccessibilityIdentifier.menu(.transcriptShowOriginalMessage) == "menu.transcriptShowOriginalMessage")
+		#expect(AccessibilityIdentifier.xdccRequestRow("A1") == "xdcc-request-row-A1")
+		#expect(AccessibilityIdentifier.inputReplyBanner == "input-reply-banner")
+		#expect(AccessibilityIdentifier.inputPrivateReplyBanner == "input-private-reply-banner")
+		#expect(AccessibilityIdentifier.inputReplyCancel == "input-reply-cancel")
+	}
+
 	@Test("Onboarding")
 	func onboarding() {
 		#expect(AccessibilityIdentifier.onboardingWindow == "onboarding-window")

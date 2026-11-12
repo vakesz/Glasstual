@@ -70,6 +70,6 @@ struct XDCCRequestRow: View {
 		}
 		.accessibilityElement(children: .combine)
 		.accessibilityAction(named: Text(.FileTransfer.cancelRequest), cancel)
-		.accessibilityIdentifier("xdcc-request-row-\(pending.id.uuidString)")
+		.accessibilityIdentifier(AccessibilityIdentifier.xdccRequestRow(pending.id.uuidString))
 	}
 }

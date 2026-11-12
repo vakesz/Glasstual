@@ -20,24 +20,27 @@ struct ServerPropertiesAuthenticationSection: View {
 			 stuck with the default until someone hand-edited the
 			 stored configuration. */
 			Toggle(.ServerProperties.signInWithSasl, isOn: $model.config.usesSASL)
+				.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesSASLEnabled)
 			Picker(.ServerProperties.saslMechanism, selection: $model.saslMechanismChoice) {
 				Text(.ServerProperties.saslMechanismAutomatic)
 					.tag(SASLMechanismChoice.automatic)
+					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesSASLMechanism("automatic"))
 				Divider()
 				ForEach(SASLMechanism.defaultOrder, id: \.self) { mechanism in
 					Text(verbatim: "\(mechanism.localizedTitle) — \(mechanism.wireName)")
 						.tag(SASLMechanismChoice.mechanism(mechanism))
+						.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesSASLMechanism(mechanism.wireName))
 				}
 			}
 			.pickerStyle(.menu)
 			.disabled(model.config.usesSASL == false)
-			.accessibilityIdentifier("server-sasl-mechanism")
+			.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesSASLMechanism)
 			Toggle(
 				.ServerProperties.saslMechanismOnly,
 				isOn: $model.config.saslUsesOnlyPreferredMechanism
 			)
 			.disabled(model.config.usesSASL == false || model.config.saslMechanismPreference == nil)
-			.accessibilityIdentifier("server-sasl-mechanism-only")
+			.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesSASLMechanismOnly)
 			SecureField(
 				.ServerProperties.saslBearerToken,
 				text: model.secretBinding(.saslBearerToken)

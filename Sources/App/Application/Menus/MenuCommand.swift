@@ -184,6 +184,8 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case transcriptReply
 	case transcriptReplyPrivately
 	case transcriptReact
+	// Built by the transcript for a line that replies to another.
+	case transcriptShowOriginalMessage
 }
 
 // MARK: - Validation grouping
@@ -218,7 +220,7 @@ extension MenuCommand {
 		     .browseTranscriptLogs, .highlightList, .fileTransfers, .bringAllToFront:
 			.window
 		case .webSearch, .transcriptDictionary, .transcriptChannelMenu,
-		     .transcriptReply, .transcriptReplyPrivately, .transcriptReact:
+		     .transcriptReply, .transcriptReplyPrivately, .transcriptReact, .transcriptShowOriginalMessage:
 			.transcript
 		case .muteUser, .unmuteUser, .addIgnore, .modifyIgnore, .removeIgnore, .inviteTo, .whois,
 		     .startDirectConversation, .messagePrivatelyInChannel, .giveOp, .giveHalfop, .giveVoice, .takeOp, .takeHalfop,

@@ -26,7 +26,7 @@ struct ServerPropertiesProfilePane: View {
 						.labelsHidden()
 						.focused($focusedField, equals: .displayName)
 						.accessibilityLabel(.ServerProperties.profileDisplayNameLabel)
-						.accessibilityIdentifier("server-profile-display-name")
+						.accessibilityIdentifier(AccessibilityIdentifier.serverProfileDisplayName)
 				}
 				fieldError(.displayName, identifier: "server-profile-error-display-name")
 
@@ -73,7 +73,7 @@ struct ServerPropertiesProfilePane: View {
 				}
 				.buttonStyle(.bordered)
 				.disabled(profile.canEdit == false || profile.isUpdating || profile.serverValues.isEmpty)
-				.accessibilityIdentifier("server-profile-clear")
+				.accessibilityIdentifier(AccessibilityIdentifier.serverProfileClear)
 			}
 		}
 		.formStyle(.grouped)
@@ -148,7 +148,7 @@ struct ServerPropertiesProfilePane: View {
 			}
 			.buttonStyle(.bordered)
 			.disabled(profile.hasChanges == false || profile.isUpdating)
-			.accessibilityIdentifier("server-profile-update")
+			.accessibilityIdentifier(AccessibilityIdentifier.serverProfileUpdate)
 		}
 	}
 

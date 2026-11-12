@@ -306,7 +306,8 @@ extension ServerSession {
 			style: .critical,
 			sensitivity: .security,
 			keywords: [.default: .reject, .alternate: .replace],
-			reference: id
+			reference: id,
+			accessibilityIdentifier: AccessibilityIdentifier.dccCertificateChanged
 		)
 	}
 
@@ -322,7 +323,8 @@ extension ServerSession {
 			otherButton: PromptStrings.DCC.trustOnce,
 			sensitivity: .security,
 			keywords: [.default: .remember, .alternate: .reject, .other: .once],
-			reference: id
+			reference: id,
+			accessibilityIdentifier: AccessibilityIdentifier.dccCertificateFirstUse
 		)
 	}
 

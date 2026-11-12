@@ -43,6 +43,7 @@ struct InputAccessoryView: View {
 			.buttonStyle(.plain)
 			.foregroundStyle(.secondary)
 			.help(String(localized: .MainWindow.cancelReply))
+			.accessibilityIdentifier(AccessibilityIdentifier.inputReplyCancel)
 		}
 		.padding(.horizontal, UISpacing.wide)
 		.frame(minHeight: InputBarLayout.replyBannerHeight)
@@ -59,6 +60,11 @@ struct InputAccessoryView: View {
 			.font(.subheadline)
 			.lineLimit(1)
 			.truncationMode(.tail)
+			.accessibilityIdentifier(
+				model.privateRecipient == nil
+					? AccessibilityIdentifier.inputReplyBanner
+					: AccessibilityIdentifier.inputPrivateReplyBanner
+			)
 
 		if let excerpt = model.replyExcerpt, excerpt.isEmpty == false {
 			label.help(excerpt)

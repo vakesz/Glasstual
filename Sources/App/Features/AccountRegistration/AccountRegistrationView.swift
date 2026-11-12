@@ -37,7 +37,10 @@ struct AccountRegistrationView: View {
 			actionStrip
 		}
 		.sheetFrame(.compact)
-		.accessibilityIdentifier("account-registration-sheet")
+		/* A container of its own: an identifier on a plain stack is handed down
+		 to every control in it and replaces the buttons' own. */
+		.accessibilityElement(children: .contain)
+		.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationSheet)
 		.onAppear {
 			focusedField = model.accountIsEditable ? .account : .email
 		}
@@ -77,7 +80,7 @@ struct AccountRegistrationView: View {
 					.textContentType(.emailAddress)
 					.focused($focusedField, equals: .email)
 					.accessibilityLabel(.AccountRegistrationSheet.emailLabel)
-					.accessibilityIdentifier("account-registration-email")
+					.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationEmail)
 			} label: {
 				VStack(alignment: .leading, spacing: 2) {
 					Text(.AccountRegistrationSheet.emailLabel)
@@ -95,14 +98,14 @@ struct AccountRegistrationView: View {
 					.labelsHidden()
 					.textContentType(.newPassword)
 					.focused($focusedField, equals: .password)
-					.accessibilityIdentifier("account-registration-password")
+					.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationPassword)
 			}
 			LabeledContent(.AccountRegistrationSheet.verifyPasswordLabel) {
 				SecureField(.AccountRegistrationSheet.verifyPasswordLabel, text: $model.passwordConfirmation)
 					.labelsHidden()
 					.textContentType(.newPassword)
 					.focused($passwordConfirmationIsFocused)
-					.accessibilityIdentifier("account-registration-password-verify")
+					.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationPasswordVerify)
 					.onSubmit(model.confirm)
 			}
 			fieldError(.password)
@@ -121,7 +124,7 @@ struct AccountRegistrationView: View {
 					.labelsHidden()
 					.textContentType(.username)
 					.focused($focusedField, equals: .account)
-					.accessibilityIdentifier("account-registration-account")
+					.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationAccount)
 			}
 			if model.values == nil {
 				footnote(Text(.AccountRegistrationSheet.accountUnknownFootnote))
@@ -129,7 +132,7 @@ struct AccountRegistrationView: View {
 		} else {
 			LabeledContent(.AccountRegistrationSheet.accountLabel, value: model.currentNickname)
 				.textSelection(.enabled)
-				.accessibilityIdentifier("account-registration-account")
+				.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationAccount)
 			footnote(Text(.AccountRegistrationSheet.accountFollowsNicknameFootnote))
 		}
 		fieldError(.account)
@@ -187,7 +190,7 @@ struct AccountRegistrationView: View {
 					.labelsHidden()
 					.textContentType(.oneTimeCode)
 					.focused($focusedField, equals: .code)
-					.accessibilityIdentifier("account-registration-code")
+					.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationCode)
 					.onSubmit(model.confirm)
 			}
 			fieldError(.code)
@@ -214,7 +217,7 @@ struct AccountRegistrationView: View {
 					.imageScale(.large)
 			}
 			.accessibilityElement(children: .combine)
-			.accessibilityIdentifier("account-registration-success")
+			.accessibilityIdentifier(AccessibilityIdentifier.accountRegistrationSuccess)
 		}
 	}
 
@@ -271,7 +274,7 @@ struct AccountRegistrationView: View {
 		SheetActions(
 			confirmTitle: Text(model.confirmTitle),
 			confirmIsDisabled: model.confirmIsDisabled,
-			confirmIdentifier: "account-registration-submit",
+			confirmIdentifier: AccessibilityIdentifier.accountRegistrationSubmit,
 			cancelTitle: Text(isWaiting ? String(localized: .AccountRegistrationSheet.stopButton) : PromptStrings.Action.cancel),
 			cancelIdentifier: "account-registration-cancel",
 			confirm: model.confirm,

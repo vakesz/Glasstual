@@ -70,7 +70,7 @@ struct SASLSignInView: View {
 					.pickerStyle(.menu)
 					.focused($pickerIsFocused)
 					.disabled(model.state == .inProgress)
-					.accessibilityIdentifier("sasl-sign-in-mechanism")
+					.accessibilityIdentifier(AccessibilityIdentifier.saslSignInMechanism)
 
 					if case let .mechanism(mechanism) = model.selection,
 					   let reason = model.options.first(where: { $0.mechanism == mechanism })?.unavailableReason
@@ -88,6 +88,7 @@ struct SASLSignInView: View {
 			SheetActions(
 				confirmTitle: Text(model.isFinished ? .AccountSignIn.done : .AccountSignIn.signIn),
 				confirmIsDisabled: model.isFinished == false && model.canSignIn == false,
+				confirmIdentifier: AccessibilityIdentifier.saslSignInSubmit,
 				confirm: submit,
 				cancel: cancel
 			)
@@ -119,7 +120,7 @@ struct SASLSignInView: View {
 					Image(systemName: "checkmark.circle.fill")
 						.foregroundStyle(.green)
 				}
-				.accessibilityIdentifier("sasl-sign-in-result")
+				.accessibilityIdentifier(AccessibilityIdentifier.saslSignInSucceeded)
 			}
 		case let .failed(text):
 			Section {
@@ -129,7 +130,7 @@ struct SASLSignInView: View {
 					Image(systemName: "exclamationmark.triangle.fill")
 						.foregroundStyle(.yellow)
 				}
-				.accessibilityIdentifier("sasl-sign-in-result")
+				.accessibilityIdentifier(AccessibilityIdentifier.saslSignInFailed)
 			}
 		}
 	}

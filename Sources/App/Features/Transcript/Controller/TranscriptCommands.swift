@@ -382,6 +382,7 @@ final class TranscriptCommands: NSObject {
 			keyEquivalent: ""
 		)
 		item.target = self
+		item.command = .transcriptShowOriginalMessage
 		item.image = NSImage(systemSymbolName: "arrow.turn.up.left", accessibilityDescription: item.title)
 		item.isEnabled = controller.canRevealMessage(identifier: identifier)
 		if item.isEnabled == false {

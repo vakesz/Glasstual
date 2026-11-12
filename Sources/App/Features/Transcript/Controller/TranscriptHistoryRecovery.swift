@@ -232,10 +232,10 @@ struct TranscriptDetachedBanner: View {
 			title: String(localized: .Transcript.viewingHistory),
 			primaryAction: .init(
 				title: String(localized: .Transcript.returnToLive),
-				identifier: "history-return-to-live",
+				identifier: AccessibilityIdentifier.historyReturnToLive,
 				perform: returnToLive
 			),
-			identifier: "history-window-banner"
+			identifier: AccessibilityIdentifier.historyWindowBanner
 		)
 	}
 }
@@ -268,11 +268,11 @@ struct TranscriptMissingHistoryBanner: View {
 			isBusy: state == .loading,
 			primaryAction: .init(
 				title: String(localized: failed ? .Transcript.missingHistoryRetry : .Transcript.missingHistoryLoad),
-				identifier: "missing-history-load",
+				identifier: AccessibilityIdentifier.missingHistoryLoad,
 				isEnabled: state != .loading,
 				perform: load
 			),
-			identifier: "missing-history-banner"
+			identifier: AccessibilityIdentifier.missingHistoryBanner
 		)
 	}
 }

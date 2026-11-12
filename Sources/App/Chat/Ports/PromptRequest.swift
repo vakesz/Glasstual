@@ -87,7 +87,8 @@ nonisolated struct AlertRequest: Sendable {
 		sensitivity: PromptSensitivity = .routine,
 		keywords: [AlertResponse: PromptKeyword] = [:],
 		allowsInline: Bool = true,
-		reference: String? = nil
+		reference: String? = nil,
+		accessibilityIdentifier: String? = nil
 	) {
 		self.title = title
 		self.body = body
@@ -104,6 +105,7 @@ nonisolated struct AlertRequest: Sendable {
 		self.keywords = keywords
 		self.allowsInline = allowsInline
 		self.reference = reference
+		self.accessibilityIdentifier = accessibilityIdentifier
 	}
 
 	/** The button Escape presses.
