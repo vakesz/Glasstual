@@ -31,6 +31,10 @@ enum AXID {
 	static let credentialConsent = "credential-consent"
 	/// Default button applies the kick or ban, alternate cancels.
 	static let moderationConfirmation = "moderation-confirmation"
+	/// Default button Trust and Remember, alternate Cancel.
+	static let dccCertificateFirstUse = "dcc-certificate-first-use"
+	/// Default button Cancel, alternate replaces the saved certificate.
+	static let dccCertificateChanged = "dcc-certificate-changed"
 
 	// MARK: Questions in the conversation
 
@@ -48,6 +52,8 @@ enum AXID {
 	static let sidebar = "sidebar"
 	static let memberList = "member-list"
 	static let memberCount = "member-count"
+	/// The line above the message field while what is typed next is a private reply.
+	static let inputPrivateReplyBanner = "input-private-reply-banner"
 	static let toolbarAddServer = "toolbar-add-server"
 	static let emptyStateAddServer = "empty-state-add-server"
 
@@ -157,6 +163,35 @@ enum AXID {
 		"server-properties-pane-" + pane
 	}
 
+	static let serverSASLEnabled = "server-sasl-enabled"
+	static let serverSASLMechanism = "server-sasl-mechanism"
+	static let serverSASLMechanismOnly = "server-sasl-mechanism-only"
+
+	/// `automatic`, or a mechanism's wire name such as `PLAIN`.
+	static func serverSASLMechanism(_ choice: String) -> String {
+		serverSASLMechanism + "-" + choice
+	}
+
+	static let serverProfileDisplayName = "server-profile-display-name"
+	static let serverProfileUpdate = "server-profile-update"
+	static let serverProfileClear = "server-profile-clear"
+
+	// MARK: Sign In Again
+
+	static let saslSignInSubmit = "sasl-sign-in-submit"
+	static let saslSignInSucceeded = "sasl-sign-in-succeeded"
+	static let saslSignInFailed = "sasl-sign-in-failed"
+
+	// MARK: Register Account
+
+	static let accountRegistrationAccount = "account-registration-account"
+	static let accountRegistrationEmail = "account-registration-email"
+	static let accountRegistrationPassword = "account-registration-password"
+	static let accountRegistrationPasswordVerify = "account-registration-password-verify"
+	static let accountRegistrationCode = "account-registration-code"
+	static let accountRegistrationSubmit = "account-registration-submit"
+	static let accountRegistrationSuccess = "account-registration-success"
+
 	// MARK: System panels
 
 	/// The identifiers macOS gives its save and open panels, their default
@@ -181,6 +216,15 @@ enum AXID {
 	}
 
 	static let fileTransferFilenamePrefix = "file-transfer-filename-"
+	/// A pack asked of an XDCC bot that has not offered it yet.
+	static let xdccRequestRowPrefix = "xdcc-request-row-"
+
+	// MARK: Transcript banners
+
+	static let missingHistoryBanner = "missing-history-banner"
+	static let missingHistoryLoad = "missing-history-load"
+	static let historyWindowBanner = "history-window-banner"
+	static let historyReturnToLive = "history-return-to-live"
 
 	// MARK: History search
 

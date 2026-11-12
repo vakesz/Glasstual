@@ -38,6 +38,17 @@ enum Registry {
 		InlineCredentialConsentScenario(),
 		HelpMenuScenario(),
 		ThemePresetPersistsScenario(),
+		WebSocketMessagingScenario(),
+		WebSocketSecureScenario(),
+		DCCSecureScenario(),
+		DCCSecureChangedScenario(),
+		XDCCRequestScenario(),
+		AccountRegistrationScenario(),
+		MetadataEditScenario(),
+		SASLSignInAgainScenario(),
+		ReplyPrivatelyScenario(),
+		HistoryGapBannerScenario(),
+		ShowOriginalMessageScenario(),
 	]
 }
 

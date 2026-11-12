@@ -20,7 +20,8 @@ extension ScenarioContext {
 			corpora: corpora,
 			port: peer.port,
 			secured: mode.secured,
-			validatesCertificate: mode.saslConsent == nil
+			validatesCertificate: mode.saslConsent == nil,
+			webSocketPath: mode.webSocket ? WebSocketFixture.path : nil
 		)
 		try await launch(seed: seed, keepsState: keepsState)
 		return peer
@@ -119,6 +120,46 @@ extension ScenarioContext {
 			try (driver.window(AXID.certificateTrust) ?? driver.anywhere(AXID.certificateTrust))
 				.flatMap { try driver.find(button, in: $0) }
 		}
+	}
+
+	/// Presses a button of the alert identified `alert`, whether it is a window
+	/// of its own or a sheet on one.
+	func answerAlert(_ alert: String, with button: String) async throws {
+		try await driver.press("alert \(alert), \(button)") {
+			try (driver.window(alert) ?? driver.anywhere(alert)).flatMap { try driver.find(button, in: $0) }
+				?? driver.anywhere(button)
+		}
+	}
+
+	/** Puts the text cursor on `marker` in the selected conversation's
+	 transcript and opens the context menu there, as a keyboard reader does.
+	 Returns the transcript, which holds the open menu. */
+	func openTranscriptMenu(at marker: String) async throws -> AXUIElement {
+		let transcript = try await until("the transcript shows \(marker) to select") { () throws -> AXUIElement? in
+			guard let window = try mainWindow(), let transcript = try driver.find(AXID.transcript, in: window),
+			      let text = try driver.value(transcript)
+			else { return nil }
+			let range = (text as NSString).range(of: marker)
+			guard range.location != NSNotFound else { return nil }
+			try driver.select(range, in: transcript)
+			return try driver.selectedRange(in: transcript) == range ? transcript : nil
+		}
+		try driver.showMenu(transcript)
+		return transcript
+	}
+
+	/// Whether the selected conversation's transcript contains `marker`.
+	func transcriptContains(_ marker: String) throws -> Bool {
+		guard let window = try mainWindow(), let transcript = try driver.find(AXID.transcript, in: window),
+		      let text = try driver.value(transcript)
+		else { return false }
+		return text.contains(marker)
+	}
+
+	/// What the scripted fixture has seen, which has to become `expected`.
+	func scriptedEvidence(_ expected: String) async throws {
+		let peer = try requirePeer
+		try await until("the peer saw \(expected)") { peer.evidence.scripted == expected }
 	}
 
 	/// Waits for registration to finish: the welcome notice in the transcript,

@@ -176,7 +176,8 @@ enum Seed {
 		corpora: URL,
 		port: UInt16,
 		secured: Bool = false,
-		validatesCertificate: Bool = true
+		validatesCertificate: Bool = true,
+		webSocketPath: String? = nil
 	) throws -> Data {
 		var fixture = try startup(corpora: corpora)
 		guard var clients = fixture[SettingsKey.serverSessions] as? [[String: Any]], clients.count == 1 else {
@@ -184,10 +185,16 @@ enum Seed {
 		}
 		clients[0]["uniqueIdentifier"] = UUID().uuidString
 		clients[0]["validateServerCertificateChain"] = validatesCertificate
-		clients[0]["serverList"] = [[
+		var server: [String: Any] = [
 			"uniqueIdentifier": UUID().uuidString,
 			"serverAddress": "127.0.0.1", "serverPort": Int(port), "prefersSecuredConnection": secured,
-		]]
+		]
+		if let webSocketPath {
+			// IRC over WebSocket: `ws://` or, secured, `wss://` at this path.
+			server["transport"] = "websocket"
+			server["webSocketPath"] = webSocketPath
+		}
+		clients[0]["serverList"] = [server]
 		fixture[SettingsKey.serverSessions] = clients
 		return try encode(fixture)
 	}

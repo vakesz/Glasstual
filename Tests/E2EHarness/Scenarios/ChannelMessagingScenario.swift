@@ -17,9 +17,12 @@ struct ChannelMessagingScenario: Scenario {
 extension ScenarioContext {
 	/// Connects, joins `#e2e`, sends a message and a reply, and waits for the
 	/// peer's answers to both.
-	func exchangeChannelMessages(checkingColumns: Bool) async throws {
+	func exchangeChannelMessages(checkingColumns: Bool, acceptingCertificate: Bool = false) async throws {
 		try await server(AXID.RowState.disconnected)
 		try await connect()
+		if acceptingCertificate {
+			try await answerCertificate(continue: true)
+		}
 		try await awaitRegistered()
 		try await send("/join #e2e")
 		try await transcript(contains: "E2E_CHANNEL_READY")

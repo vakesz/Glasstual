@@ -501,6 +501,22 @@ final class AXDriver {
 		}
 	}
 
+	/// Selects `range` of a text element's characters, which is where a
+	/// keyboard context menu opens.
+	func select(_ range: NSRange, in element: AXUIElement) throws {
+		var range = CFRange(location: range.location, length: range.length)
+		guard let value = AXValueCreate(.cfRange, &range) else { return }
+		try set(element, kAXSelectedTextRangeAttribute, to: value)
+	}
+
+	func selectedRange(in element: AXUIElement) throws -> NSRange? {
+		guard let value = try attribute(element, kAXSelectedTextRangeAttribute), CFGetTypeID(value) == AXValueGetTypeID()
+		else { return nil }
+		var range = CFRange()
+		guard AXValueGetValue(unsafeDowncast(value, to: AXValue.self), .cfRange, &range) else { return nil }
+		return NSRange(location: range.location, length: range.length)
+	}
+
 	/// Sets a checkbox or switch to `on` and waits for the value to read back.
 	func toggle(_ identifier: String, inWindow window: String, to on: Bool) async throws {
 		try await until("set \(identifier) to \(on)") {
