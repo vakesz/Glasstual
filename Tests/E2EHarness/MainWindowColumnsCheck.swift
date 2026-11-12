@@ -1,10 +1,11 @@
-import CoreGraphics
+import AppKit
 import Foundation
 
 /** The main window's three columns, measured in the running app.
 
- The sidebar and the member list open at their stored widths, and all three
- columns stay inside the window, with the transcript between the other two.
+ A first launch opens at the default size. The sidebar and the member list
+ open at their stored widths, and all three columns stay inside the window,
+ with the transcript between the other two.
  Closing the member list gives its width back to the transcript. A unit
  test's window presents the inspector differently, so this is the check
  for where the columns actually sit. */
@@ -18,6 +19,9 @@ enum MainWindowColumnsCheck {
 	/// `MainWindowConstants.conversationMinimumWidth`.
 	private static let conversationMinimumWidth: CGFloat = 360
 	private static let tolerance: CGFloat = 1
+	/// `MainWindowConstants.defaultWindowSize`: the size a first launch opens
+	/// at, fitted to the screen.
+	private static let defaultWindowSize = CGSize(width: 1040, height: 680)
 
 	private struct Columns: CustomStringConvertible {
 		let window: CGRect
@@ -31,6 +35,12 @@ enum MainWindowColumnsCheck {
 	}
 
 	static func run(_ context: ScenarioContext) async throws {
+		try await expect("a first launch opens at the default size, fitted to the screen", context) { columns in
+			NSScreen.screens.map(\.visibleFrame.size).contains { screen in
+				abs(columns.window.width - min(defaultWindowSize.width, screen.width)) < tolerance
+					&& abs(columns.window.height - min(defaultWindowSize.height, screen.height)) < tolerance
+			}
+		}
 		try await expect("member list opens inside the window", context) { columns in
 			guard let list = columns.memberList else { return false }
 			return abs(columns.sidebar.width - sidebarWidth) < tolerance

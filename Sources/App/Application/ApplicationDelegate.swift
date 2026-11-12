@@ -106,13 +106,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		window.title = ApplicationInfo.applicationName()
 		window.identifier = NSUserInterfaceItemIdentifier("GlasstualMainWindow")
 		window.contentMinSize = MainWindowConstants.minimumContentSize
-		/* A first launch opens at the default size, centred; afterwards the
-		 saved frame wins. */
-		if window.setFrameUsingName(Self.mainWindowFrameName) == false {
-			window.setFrame(window.defaultWindowFrame, display: false)
-			window.center()
-		}
-		window.setFrameAutosaveName(Self.mainWindowFrameName)
 		window.tabbingMode = .disallowed
 		window.collectionBehavior.insert(.fullScreenPrimary)
 		window.isReleasedWhenClosed = false
@@ -121,6 +114,20 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 		SheetPresentation.install(window)
 		chatSession = ChatSession()
 		window.configure()
+		/* A first launch opens at the default size, centred; afterwards the
+		 saved frame wins. After `configure()`, because installing the content
+		 view controller sizes the window to its content, which is the
+		 window's minimum. The saved frame is in the container's own defaults,
+		 which a test launch shares with the person's launches, so a test
+		 launch neither reads nor saves it and always opens as a first launch. */
+		let savesFrame = ApplicationForeground.mode.restoresWindows
+		if savesFrame == false || window.setFrameUsingName(Self.mainWindowFrameName) == false {
+			window.setFrame(window.defaultWindowFrame, display: false)
+			window.center()
+		}
+		if savesFrame {
+			window.setFrameAutosaveName(Self.mainWindowFrameName)
+		}
 		AppServices.theme.reload()
 		menuController?.prepareInitialState()
 		// Install both observers before restoring the sessions that publish their rows.

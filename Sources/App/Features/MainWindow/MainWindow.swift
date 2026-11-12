@@ -187,7 +187,7 @@ private extension MainWindow {
 		let hostingController = NSHostingController(rootView: rootView)
 		/* The window sizes itself. Given the minimum size, SwiftUI widens the
 		 window to present the member list instead of narrowing the
-		 conversation; `fitContentToColumns()` keeps the window wide enough. */
+		 conversation; the minimum follows the open columns instead. */
 		hostingController.sizingOptions = []
 		contentViewController = hostingController
 		self.hostingController = hostingController
