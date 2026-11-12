@@ -61,8 +61,15 @@ final class MenuContextResolver {
 	/// target's menu does not end a session this one is keeping.
 	private weak var menuTarget: NSObject?
 
+	/** The window whose selection answers when no row was clicked.
+
+	 A closure so a test can hand its own window to one resolver: the
+	 application's window belongs to the whole process, and a test that read it
+	 answered for whatever the launch or another test had left selected. */
+	var mainWindowSource: @MainActor () -> MainWindow = { AppServices.delegate.mainWindow }
+
 	var mainWindow: MainWindow {
-		AppServices.delegate.mainWindow
+		mainWindowSource()
 	}
 
 	var selectedSession: ServerSession? {

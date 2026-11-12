@@ -52,8 +52,14 @@ struct MenuItemValidatorTests {
 		let session = TestServerSession(configDictionary: ["nickname": "local"])
 		let conversation: Conversation?
 		let other: Conversation?
+		/// The window the validator falls back to: one of the fixture's own with
+		/// nothing selected, so a scene answers for what it set up and never for
+		/// the selection in the application's window.
+		let window = MainWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+		                        styleMask: .borderless, backing: .buffered, defer: false)
 
 		init(_ scene: Scene) throws {
+			controller.context.mainWindowSource = { [window] in window }
 			session.userNickname = "local"
 			controller.context.pointedSession = scene == .none ? nil : session
 			if scene == .none {
@@ -383,6 +389,9 @@ struct MenuItemValidatorTests {
 	@Test("Register Account follows whether the session can register")
 	func registerAccountFollowsAvailability() {
 		let controller = MenuActionController()
+		let window = MainWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+		                        styleMask: .borderless, backing: .buffered, defer: false)
+		controller.context.mainWindowSource = { window }
 		let session = TestServerSession(configDictionary: ["nickname": "local"])
 		controller.context.pointedSession = session
 		let validate = { controller.validator.validateServerCommand(menuItem(.registerAccount)) }
