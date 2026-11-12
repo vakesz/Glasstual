@@ -120,7 +120,11 @@ extension TranscriptView {
 	func viewportAnchor() -> (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)? {
 		guard !followsBottom, editDepth == 0, window != nil, !isHiddenOrHasHiddenAncestor else { return nil }
 		let top = scrollView.contentView.bounds.minY
-		let index = textView.characterIndexForInsertion(at: NSPoint(x: textView.textContainerOrigin.x, y: top))
+		/* A reader at the very top has the container's inset at the top of the
+		 viewport, and a point above the first line names the end of the
+		 document, not its start. The first line is what they are looking at. */
+		let probe = NSPoint(x: textView.textContainerOrigin.x, y: max(top, textView.textContainerOrigin.y))
+		let index = textView.characterIndexForInsertion(at: probe)
 		guard let endpoint = selectionEndpoint(at: index),
 		      let verticalPosition = verticalPosition(at: index) else { return nil }
 		return (endpoint, verticalPosition - top)
@@ -157,12 +161,22 @@ extension TranscriptView {
 		 the line was before the edit: text that went in above it has not
 		 moved it yet. Scrolling to that place leaves the viewport where it
 		 was, and the line slides out from under the reader on the next
-		 layout. */
-		textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
-		guard let verticalPosition = verticalPosition(at: index) else { return }
-		var origin = scrollView.contentView.bounds.origin
-		origin.y = max(0, verticalPosition - anchor.offset)
-		scrollView.contentView.scroll(to: origin)
+		 layout.
+
+		 One pass is not always enough. The lines between the old viewport and
+		 the line are measured by estimate until they are laid out, so when
+		 more than a viewport of text went in above, the scroll lands near the
+		 line and laying that place out moves it again. Each pass lays out
+		 where the last one scrolled to, and the measurements settle. */
+		for _ in 0 ..< 4 {
+			textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
+			guard let verticalPosition = verticalPosition(at: index) else { return }
+			var origin = scrollView.contentView.bounds.origin
+			let target = max(0, verticalPosition - anchor.offset)
+			guard abs(target - origin.y) >= 0.5 else { break }
+			origin.y = target
+			scrollView.contentView.scroll(to: origin)
+		}
 		scrollView.reflectScrolledClipView(scrollView.contentView)
 		noteViewportMovedByView()
 	}
