@@ -173,7 +173,12 @@ final class MemberList: ConversationMembersPresenting {
 		appendCurrentGroup()
 
 		groups = builtGroups
-		selectedMemberIDs.formIntersection(admitted)
+		// Written only when someone left: the selection's observers include the
+		// inspector's toolbar, which a batch of joins must not rebuild.
+		let keptSelection = selectedMemberIDs.intersection(admitted)
+		if keptSelection != selectedMemberIDs {
+			selectedMemberIDs = keptSelection
+		}
 		if let lastInteractedMemberID, admitted.contains(lastInteractedMemberID) == false {
 			self.lastInteractedMemberID = nil
 		}
@@ -210,6 +215,12 @@ final class MemberList: ConversationMembersPresenting {
 	var profileMember: Member? {
 		_ = presentationRevision
 		return memberShowingProfile.flatMap(member(withID:))
+	}
+
+	/// Whether a profile is open. Unlike ``profileMember`` it does not change
+	/// when the list's rows are rebuilt.
+	var isShowingProfile: Bool {
+		memberShowingProfile != nil
 	}
 
 	var selectedProfileMember: Member? {

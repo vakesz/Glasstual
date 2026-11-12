@@ -3,6 +3,8 @@
 
 import AppKit
 @testable import Glasstual
+import Observation
+import Synchronization
 import Testing
 
 /// The profile a click opens, and the rank the row draws it for. Both used to
@@ -128,6 +130,38 @@ struct MemberListProfilePopoverTests {
 		#expect(plain.displayRank(isIRCOperator: true, channelRank: .voiced) == .voiced)
 		#expect(plain.symbolName(for: UserRank.none) == nil)
 		#expect(plain != favouring)
+	}
+
+	/** The profile button sits in the inspector's toolbar. A busy channel
+	 rebuilds the rows on every join; the button's state must not follow, or
+	 the toolbar is rebuilt for every batch. */
+	@Test("Joins redraw the open profile but not the profile button")
+	func joinsDoNotInvalidateTheProfileButton() throws {
+		let alice = try add("alice")
+		memberList.selectedMemberIDs = [alice.id]
+		memberList.showProfile(for: alice.id)
+		let button = Mutex(false)
+		let profile = Mutex(false)
+		withObservationTracking {
+			_ = memberList.selectedProfileMember
+			_ = memberList.isShowingProfile
+		} onChange: {
+			button.withLock { $0 = true }
+		}
+		withObservationTracking {
+			_ = memberList.profileMember
+		} onChange: {
+			profile.withLock { $0 = true }
+		}
+
+		for index in 0 ..< 50 {
+			try add("joined\(index)")
+		}
+
+		#expect(profile.withLock { $0 })
+		#expect(button.withLock { $0 } == false)
+		#expect(memberList.isShowingProfile)
+		#expect(memberList.selectedProfileMember?.id == alice.id)
 	}
 
 	@discardableResult
