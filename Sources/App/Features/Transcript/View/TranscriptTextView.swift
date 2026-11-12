@@ -96,14 +96,22 @@ final class TranscriptTextView: NSTextView {
 		let origin = super.textContainerOrigin
 		let insets = enclosingScrollView?.contentInsets ?? NSEdgeInsets()
 		let availableHeight = clipView.bounds.height - insets.top - insets.bottom
-		/* Once the laid-out text is taller than the viewport the offset is zero
-		 and stays zero, so only a transcript that still looks short is worth
-		 laying out in full: the alternative is a whole-document layout pass for
-		 every line the view receives. */
+		/* Once the text is taller than the viewport the offset is zero, so the
+		 question is only whether the text fills the viewport. The usage bounds
+		 cover what TextKit has laid out, which in a long transcript can be a
+		 short stretch near the viewport; laying out the whole document to be
+		 sure cost a pass over every line for every batch the view received.
+		 Layout from the top stops as soon as the text is tall enough. */
 		var contentHeight = layoutManager.usageBoundsForTextContainer.height
 		if contentHeight < availableHeight {
-			layoutManager.ensureLayout(for: layoutManager.documentRange)
-			contentHeight = layoutManager.usageBoundsForTextContainer.height
+			contentHeight = 0
+			layoutManager.enumerateTextLayoutFragments(
+				from: layoutManager.documentRange.location,
+				options: [.ensuresLayout]
+			) { fragment in
+				contentHeight = max(contentHeight, fragment.layoutFragmentFrame.maxY)
+				return contentHeight < availableHeight
+			}
 		}
 		let offset = max(0, availableHeight - contentHeight - origin.y - textContainerInset.height)
 		bottomAlignmentOffset = offset
