@@ -27,7 +27,7 @@ struct SystemAlertPresenter: AlertPresenter {
 
 		// The unit-test host never takes the foreground, so a main-window alert
 		// would fall through to a blocking modal and hang the suite.
-		if ApplicationForeground.mode.takesForeground == false, presentation == .mainWindow,
+		if ApplicationForeground.mode.takesForeground == false, presentation.waitsForMainWindow,
 		   SheetPresentation.hostWindow?.isVisible != true
 		{
 			return AlertPresenterResult(response: request.escapeButton, suppressionChecked: false)
@@ -60,6 +60,10 @@ struct SystemAlertPresenter: AlertPresenter {
 	 showing, because a sheet raised on a window with a sheet up would otherwise
 	 wait behind it. */
 	private func sheetParent(for presentation: AlertPresentation) -> NSWindow? {
+		if case let .window(window) = presentation, window.isVisible {
+			return window.frontmostAttachedSheet
+		}
+
 		if let host = SheetPresentation.hostWindow, host.isVisible == false {
 			let revealMainWindow = presentation == .mainWindow
 				|| NSApp.windows.contains(where: \.isVisible) == false
@@ -73,7 +77,7 @@ struct SystemAlertPresenter: AlertPresenter {
 			return hostWindow.frontmostAttachedSheet
 		}
 
-		guard presentation == .anyVisibleWindow else {
+		guard presentation != .mainWindow else {
 			return nil
 		}
 

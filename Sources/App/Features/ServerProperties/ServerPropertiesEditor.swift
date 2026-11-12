@@ -17,9 +17,8 @@ import SwiftUI
  configuration was made with, and its window closes once it is saved.
 
  The window is not modal, so the edits live until they are saved or reverted.
- The window cannot be closed while there are any, which is what keeps them from
- being thrown away by a click on the close button, and quitting asks to review
- them first. */
+ Closing the window while there are any asks whether to save them, as a
+ document window does, and quitting asks the same of every edited window. */
 @MainActor
 @Observable
 final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCommands, SheetHost {
@@ -38,6 +37,11 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 	/// Set when the window should go: a new connection was saved, or a new
 	/// connection was cancelled.
 	private(set) var closeRequested = false
+	/// Set while the window asks what to do with its edits before it closes.
+	@ObservationIgnored var isReviewingUnsavedChanges = false
+	/// The window's close review, which the window hands over once it is on
+	/// screen: what the editor's questions attach to, and what closes it.
+	@ObservationIgnored weak var closeReview: WindowCloseReview?
 
 	@ObservationIgnored private let notifications = NotificationSubscriptions()
 	@ObservationIgnored var credentialPersistence = KeychainPersistence.shared
@@ -95,7 +99,22 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 	 saved document does; a new connection's window closes, because what it
 	 was for is done. */
 	func submit() {
-		guard !model.isSaving else { return }
+		submit(completion: nil)
+	}
+
+	/// Saves the edits and reports whether they were saved. A refused or
+	/// failed save leaves the edits, and the window, where they are.
+	func save() async -> Bool {
+		await withCheckedContinuation { continuation in
+			submit { continuation.resume(returning: $0) }
+		}
+	}
+
+	private func submit(completion: ((Bool) -> Void)?) {
+		guard !model.isSaving else {
+			completion?(false)
+			return
+		}
 		let pendingCertificate = certificateSelection.isResolvingReference ? certificateSelection.task : nil
 		if pendingCertificate == nil {
 			certificateSelection.cancel()
@@ -105,6 +124,7 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 			await pendingCertificate?.value
 			guard var submitted = model.submittedConfig() else {
 				model.isSaving = false
+				completion?(false)
 				return false
 			}
 			/* The Profile pane changes the server's profile live, outside Save,
@@ -132,10 +152,12 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 				} else {
 					Task { await model.loadSecrets() }
 				}
+				completion?(true)
 				return true
 			} catch {
 				model.isSaving = false
 				KeychainAlerts.showFailure(error)
+				completion?(false)
 				return false
 			}
 		}

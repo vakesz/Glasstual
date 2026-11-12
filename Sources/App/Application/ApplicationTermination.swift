@@ -116,9 +116,9 @@ final class ApplicationTermination {
 				Self.logger.debug("Termination confirmation is already on screen")
 			}
 		} else if skipConfirmation == false, hasReviewedUnsavedEdits == false,
-		          let edited = AppServices.serverProperties.editorsWithUnsavedChanges.first
+		          case let edited = AppServices.serverProperties.editorsWithUnsavedChanges, edited.isEmpty == false
 		{
-			presentUnsavedChangesReview(bringingForward: edited)
+			presentUnsavedChangesReview(of: edited)
 		} else if skipConfirmation
 			|| SettingsKeys.Connection.confirmQuit.value == false
 			|| delegate.chatSession.sessions.contains(where: { $0.isConnecting || $0.isConnected }) == false
@@ -181,11 +181,45 @@ final class ApplicationTermination {
 	}
 
 	/** Asks what to do with Server Properties edits nothing has saved, the way
-	 quitting with unsaved documents does: review them, which brings the first
-	 window forward and stays running; cancel; or throw them away and quit. */
-	private func presentUnsavedChangesReview(bringingForward edited: ServerPropertiesEditor) {
+	 quitting with unsaved documents does. One edited window asks its own Save,
+	 Don't Save and Cancel question. Several ask first whether to review them,
+	 cancel, or throw them all away; reviewing asks each window in turn. Cancel,
+	 or a save that fails, keeps the application running. */
+	private func presentUnsavedChangesReview(of edited: [ServerPropertiesEditor]) {
 		stage = .confirming
-		let request = AlertRequest(
+
+		confirmation = Task { [weak self] in
+			let reviewsEach = edited.count == 1 ? true : await Self.asksToReviewEach()
+			let resolved = switch reviewsEach {
+			case true?: await Self.review(edited)
+			case false?: true
+			case nil: false
+			}
+			guard Task.isCancelled == false, let self else { return }
+			confirmation = nil
+			stage = .running
+			NSApp.reply(toApplicationShouldTerminate: false)
+			guard resolved else { return }
+			reviewsUnsavedServerProperties = true
+			NSApp.terminate(nil)
+		}
+	}
+
+	/// The question several edited windows ask first: `true` to review each,
+	/// `false` to throw all the edits away, `nil` to keep running.
+	private static func asksToReviewEach() async -> Bool? {
+		let outcome = await Alerts.run(unsavedChangesReviewRequest, on: .mainWindow)
+		return switch outcome.response {
+		case .default: true
+		case .alternate: nil
+		case .other: false
+		}
+	}
+
+	/// The question asked before quitting with several edited Server
+	/// Properties windows.
+	static var unsavedChangesReviewRequest: AlertRequest {
+		AlertRequest(
 			title: String(localized: .ServerProperties.unsavedChangesOnQuitTitle),
 			body: String(localized: .ServerProperties.unsavedChangesOnQuitBody),
 			defaultButton: String(localized: .ServerProperties.reviewChangesButton),
@@ -194,25 +228,16 @@ final class ApplicationTermination {
 			style: .warning,
 			allowsInline: false
 		)
+	}
 
-		confirmation = Task { [weak self] in
-			let outcome = await Alerts.run(request, on: .mainWindow)
-			guard Task.isCancelled == false, let self else { return }
-			confirmation = nil
-			stage = .running
-
-			switch outcome.response {
-			case .default:
-				AppServices.serverProperties.bringForward(edited)
-				NSApp.reply(toApplicationShouldTerminate: false)
-			case .alternate:
-				NSApp.reply(toApplicationShouldTerminate: false)
-			case .other:
-				reviewsUnsavedServerProperties = true
-				NSApp.reply(toApplicationShouldTerminate: false)
-				NSApp.terminate(nil)
-			}
+	/// Brings each edited window forward and asks it, stopping at the first
+	/// one that is cancelled or fails to save.
+	private static func review(_ edited: [ServerPropertiesEditor]) async -> Bool {
+		for editor in edited {
+			AppServices.serverProperties.bringForward(editor)
+			guard await editor.reviewUnsavedChanges() else { return false }
 		}
+		return true
 	}
 
 	/** Quit without arguing about it — the machine is powering off.

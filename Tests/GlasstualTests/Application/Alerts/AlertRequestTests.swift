@@ -23,6 +23,7 @@ private final class RecordingAlertPresenter: AlertPresenter {
 		switch presentation {
 		case .mainWindow: presentations.append("mainWindow")
 		case .anyVisibleWindow: presentations.append("anyVisibleWindow")
+		case .window: presentations.append("window")
 		}
 		return result
 	}

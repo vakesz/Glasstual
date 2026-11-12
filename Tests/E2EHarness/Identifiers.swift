@@ -126,6 +126,8 @@ enum AXID {
 	static let serverProperties = serverPropertiesSave
 	static let serverPropertiesSave = "server-properties-save"
 	static let serverPropertiesRevert = "server-properties-revert"
+	/// The Save, Don't Save and Cancel alert closing an edited window asks.
+	static let serverPropertiesCloseReview = "server-properties-close-review"
 	static let serverPassword = "server-password"
 	static let nicknamePassword = "server-nickserv-password"
 

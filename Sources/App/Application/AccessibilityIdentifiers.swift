@@ -143,6 +143,8 @@ enum AccessibilityIdentifier {
 
 	static let serverPropertiesSave = "server-properties-save"
 	static let serverPropertiesRevert = "server-properties-revert"
+	/// The Save, Don't Save and Cancel alert closing an edited window asks.
+	static let serverPropertiesCloseReview = "server-properties-close-review"
 	static let serverPropertiesServerPassword = "server-password"
 	static let serverPropertiesNicknamePassword = "server-nickserv-password"
 

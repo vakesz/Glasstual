@@ -65,17 +65,117 @@ struct ServerPropertiesWindowTests {
 		#expect(editor.model.hasUnsavedChanges)
 	}
 
-	@Test("The window closes only with nothing unsaved and nothing being saved")
-	func closingRule() {
-		let model = ServerPropertiesModel(config: Self.savedConfiguration())
-		#expect(ServerPropertiesWindows.closingIsAllowed(for: model))
+	@Test("Closing asks over unsaved edits and waits for a save under way")
+	func closePolicy() {
+		let editor = ServerPropertiesEditor(session: ServerSession(config: Self.savedConfiguration())) { _, _ in }
+		defer { editor.windowDidClose() }
+		#expect(editor.closePolicy == .closes)
 
-		model.isSaving = true
-		#expect(ServerPropertiesWindows.closingIsAllowed(for: model) == false)
-		model.isSaving = false
+		editor.model.config.nickname = "someone-else"
+		#expect(editor.closePolicy == .asks)
 
-		model.config.nickname = "someone-else"
-		#expect(ServerPropertiesWindows.closingIsAllowed(for: model) == false)
+		editor.model.isSaving = true
+		#expect(editor.closePolicy == .refuses)
+	}
+
+	@Test("The close review's buttons map to Save, Cancel and Don't Save")
+	func closeReviewAnswers() {
+		#expect(ServerPropertiesCloseAnswer(.default) == .save)
+		#expect(ServerPropertiesCloseAnswer(.alternate) == .cancel)
+		#expect(ServerPropertiesCloseAnswer(.other) == .dontSave)
+		let request = ServerPropertiesEditor.closeReviewRequest(windowTitle: "Libera")
+		#expect(request.title(for: .default) == PromptStrings.Action.save)
+		#expect(request.title(for: .alternate) == PromptStrings.Action.cancel)
+		#expect(request.allowsInline == false)
+	}
+
+	@Test("Cancel keeps the edits and the window")
+	func closeReviewCancel() async {
+		let session = ServerSession(config: Self.savedConfiguration())
+		let editor = ServerPropertiesEditor(session: session) { _, _ in
+			Issue.record("Cancel must not save")
+		}
+		defer { editor.windowDidClose() }
+		editor.model.config.nickname = "someone-else"
+
+		#expect(await editor.answerCloseReview(.cancel) == false)
+		#expect(editor.model.config.nickname == "someone-else")
+		#expect(editor.model.hasUnsavedChanges)
+	}
+
+	@Test("Don't Save throws the edits away and lets the window close")
+	func closeReviewDontSave() async {
+		let session = ServerSession(config: Self.savedConfiguration())
+		let editor = ServerPropertiesEditor(session: session) { _, _ in
+			Issue.record("Don't Save must not save")
+		}
+		defer { editor.windowDidClose() }
+		editor.model.config.nickname = "someone-else"
+
+		#expect(await editor.answerCloseReview(.dontSave))
+		#expect(editor.model.config.nickname == "someone")
+		#expect(editor.model.hasUnsavedChanges == false)
+		#expect(session.config.nickname == "someone")
+	}
+
+	@Test("Save stores the edits and lets the window close", .timeLimit(.minutes(1)))
+	func closeReviewSave() async {
+		let session = ServerSession(config: Self.savedConfiguration())
+		var saved: [ServerConfig] = []
+		let editor = ServerPropertiesEditor(session: session) { config, _ in saved.append(config) }
+		defer { editor.windowDidClose() }
+		editor.credentialPersistence = KeychainPersistence { _ in }
+		editor.settingsSaves = SettingsSaveQueue()
+		editor.model.config.nickname = "someone-else"
+
+		#expect(await editor.answerCloseReview(.save))
+		#expect(saved.map(\.nickname) == ["someone-else"])
+		#expect(editor.model.hasUnsavedChanges == false)
+		#expect(editor.closeRequested == false)
+	}
+
+	@Test("A save that fails keeps the edits and the window open", .timeLimit(.minutes(1)))
+	func closeReviewFailedSave() async {
+		let session = ServerSession(config: Self.savedConfiguration())
+		let editor = ServerPropertiesEditor(session: session) { _, _ in
+			Issue.record("A failed keychain write must not save the configuration")
+		}
+		defer { editor.windowDidClose() }
+		editor.credentialPersistence = KeychainPersistence { _ in throw CocoaError(.fileWriteUnknown) }
+		editor.settingsSaves = SettingsSaveQueue()
+		editor.model.config.nickname = "someone-else"
+		editor.model.setSecretText("secret", for: .nicknamePassword)
+
+		#expect(await editor.answerCloseReview(.save) == false)
+		#expect(editor.model.hasUnsavedChanges)
+		#expect(editor.model.isSaving == false)
+		#expect(editor.closePolicy == .asks)
+	}
+
+	@Test("A save the form refuses keeps the edits and the window open")
+	func closeReviewInvalidSave() async {
+		let session = ServerSession(config: Self.savedConfiguration())
+		let editor = ServerPropertiesEditor(session: session) { _, _ in
+			Issue.record("An invalid form must not be saved")
+		}
+		defer { editor.windowDidClose() }
+		editor.credentialPersistence = KeychainPersistence { _ in }
+		editor.settingsSaves = SettingsSaveQueue()
+		editor.model.serverPort = "70000"
+
+		#expect(await editor.answerCloseReview(.save) == false)
+		#expect(editor.model.hasUnsavedChanges)
+	}
+
+	@Test("A new connection's window goes with Don't Save")
+	func closeReviewDontSaveNewConnection() async throws {
+		let editor = ServerPropertiesEditor(session: nil) { _, _ in }
+		defer { editor.windowDidClose() }
+		try #require(editor.model.templatePicker).selection = .customServer
+		editor.model.applySelectedTemplate()
+
+		#expect(await editor.answerCloseReview(.dontSave))
+		#expect(editor.closeRequested)
 	}
 
 	@Test("A connection's window is identified by the connection, a new one by its new configuration")

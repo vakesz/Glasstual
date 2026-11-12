@@ -57,11 +57,13 @@ private struct ServerPropertiesWindowContent: View {
 			.frame(minWidth: 680, minHeight: 480)
 			.navigationTitle(editor.windowTitle)
 			.navigationSubtitle(editor.windowSubtitle)
-			/* Unsaved edits keep the window open: they are saved or reverted,
-			 never dropped by the close button. Quitting asks to review them. */
-			.windowDismissBehavior(
-				ServerPropertiesWindows.closingIsAllowed(for: editor.model) ? .automatic : .disabled
-			)
+			/* Closing over unsaved edits asks whether to save them, as a
+			 document window does; quitting asks the same of every window. */
+			.windowCloseReview(editor.closePolicy) { review in
+				editor.closeReview = review
+			} review: {
+				editor.closeRequestedWithUnsavedChanges()
+			}
 			.sheet(item: presentedSheet) { presentation in
 				MainWindowSheetHost(model: editor.sheetModel, presentation: presentation)
 			}
@@ -131,12 +133,6 @@ final class ServerPropertiesWindows {
 	init(scenes: ApplicationScenes = AppServices.scenes, save: @escaping @MainActor (ServerConfig, ServerSession?) -> Void) {
 		self.scenes = scenes
 		self.save = save
-	}
-
-	/// Whether the window may be closed without asking: nothing unsaved and
-	/// nothing being saved.
-	static func closingIsAllowed(for model: ServerPropertiesModel) -> Bool {
-		model.hasUnsavedChanges == false && model.isSaving == false
 	}
 
 	/** The editor a window shows. A restored window has none yet, and gets one

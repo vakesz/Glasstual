@@ -95,6 +95,12 @@ struct AlertRequestKeyRoleTests {
 			KeychainAlerts.terminationFailureAlert(CocoaError(.fileWriteUnknown))
 		},
 		PromptKind(name: "no certificates", roles: notice) { ServerPropertiesEditor.noCertificatesRequest },
+		PromptKind(name: "unsaved server properties", roles: routine) {
+			ServerPropertiesEditor.closeReviewRequest(windowTitle: "Example")
+		},
+		PromptKind(name: "unsaved server properties on quit", roles: routine) {
+			ApplicationTermination.unsavedChangesReviewRequest
+		},
 		PromptKind(name: "certificate summary", roles: notice) {
 			CertificatePresenter.summaryRequest(title: "Title", body: "Body", closeButton: "Close")
 		},

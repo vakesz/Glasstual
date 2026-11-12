@@ -12290,7 +12290,7 @@
       }
     },
     "review-changes-button" : {
-      "comment" : "Default button of the quit alert: brings the Server Properties window with unsaved changes forward and cancels quitting.",
+      "comment" : "Default button of the quit alert shown when several Server Properties windows have unsaved changes: asks about each window in turn.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -12381,6 +12381,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Descartar Alterações"
+          }
+        }
+      }
+    },
+    "close-review-title" : {
+      "comment" : "Title of the alert shown when a Server Properties window with unsaved changes is closed or the application quits. The argument is the window’s title, the connection’s name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do you want to save the changes you made to “%@”?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchtest du die Änderungen an „%@“ sichern?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quieres guardar los cambios realizados en “%@”?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous enregistrer les modifications apportées à « %@ » ?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szeretné menteni a(z) „%@” módosításait?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”に加えた変更を保存しますか?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseja salvar as alterações feitas em “%@”?"
+          }
+        }
+      }
+    },
+    "close-review-body" : {
+      "comment" : "Body of the alert shown when a Server Properties window with unsaved changes is closed or the application quits.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your changes will be lost if you don’t save them."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Änderungen gehen verloren, wenn du sie nicht sicherst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si no los guardas, se perderán los cambios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos modifications seront perdues si vous ne les enregistrez pas."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ha nem menti a módosításokat, azok elvesznek."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存しないと、変更内容は失われます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suas alterações serão perdidas se você não salvá-las."
+          }
+        }
+      }
+    },
+    "dont-save-button" : {
+      "comment" : "Button of the alert shown when a Server Properties window with unsaved changes is closed: discards the changes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don’t Save"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No guardar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne pas enregistrer"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs mentés"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存しない"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não Salvar"
           }
         }
       }

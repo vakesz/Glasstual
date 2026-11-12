@@ -12,8 +12,8 @@ and main-actor default isolation. Write all source code in Swift.
 - Keep these AppKit adapters: main-window responder and restoration shell,
   `NSMenu` commands, TextKit input and transcript, reaction popover,
   transcript-font `NSFontPanel`, sidebar outline, member and channel tables,
-  search-window geometry probe, dock tile and blocking alerts before scene
-  creation.
+  search-window geometry probe, window-close review, dock tile and blocking
+  alerts before scene creation.
 - Adapter changes must preserve keyboard commands, focus, selection, drag and
   drop, accessibility and restoration.
 - Model closed state with enums, option sets and value types. Use `Codable`
