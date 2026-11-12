@@ -47,6 +47,7 @@ struct AddressBookEntryView: View {
 			SheetActions(
 				confirmTitle: .sheetConfirmation,
 				confirmIsDisabled: model.validationMessage != nil,
+				confirmIdentifier: AccessibilityIdentifier.addressBookEntrySave,
 				confirm: submit,
 				cancel: cancel
 			)
@@ -70,6 +71,7 @@ struct AddressBookEntryView: View {
 					.textFieldStyle(.roundedBorder)
 					.focused($hostmaskFieldIsFocused)
 					.accessibilityLabel(model.entryType.identityLabel)
+					.accessibilityIdentifier(AccessibilityIdentifier.addressBookEntryHostmask)
 			}
 
 			if let validationMessage = model.validationMessage {

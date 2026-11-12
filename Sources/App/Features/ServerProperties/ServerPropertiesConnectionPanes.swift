@@ -21,6 +21,7 @@ struct ServerPropertiesGeneralPane: View {
 		Form {
 			Section {
 				TextField(.ServerProperties.connectionName, text: $model.config.connectionName)
+					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesConnectionName)
 				Picker(.ServerProperties.connectionType, selection: $model.primaryServerTransport) {
 					Text(.ServerProperties.transportIrc).tag(ServerTransport.irc)
 					Text(.ServerProperties.transportWebSocket).tag(ServerTransport.webSocket)

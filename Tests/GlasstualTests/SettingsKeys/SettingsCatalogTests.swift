@@ -329,6 +329,9 @@ struct SettingsKeyNamingTests {
 	func namesReadAsGroupThenName() {
 		#expect(SettingsKeys.Connection.confirmQuit.name == "Connection -> Confirm Quit")
 		#expect(SettingsKeys.Sessions.serverSessions.name == "Sessions -> Server Sessions")
+		/* The end-to-end harness reads these two back from a run's settings. */
+		#expect(SettingsKeys.Interaction.style.name == "Interaction -> Style")
+		#expect(SettingsKeys.Theme.transcriptTheme.name == "Theme -> Transcript Theme")
 	}
 
 	// MARK: - The plist fixture that holds literals

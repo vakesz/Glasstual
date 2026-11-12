@@ -113,6 +113,8 @@ enum AccessibilityIdentifier {
 	static let settingsConfirmQuit = "settings-confirm-quit"
 	static let settingsTranscriptFont = "settings-transcript-font"
 	static let settingsInteractionStyle = "settings-interaction-style"
+	/// The transcript theme preset menu in Settings ▸ Style.
+	static let settingsThemePreset = "settings-theme-preset"
 	static let settingsImport = "settings-import"
 	static let settingsExport = "settings-export"
 	static let settingsRecoveryPreview = "settings-recovery-preview"
@@ -134,6 +136,16 @@ enum AccessibilityIdentifier {
 		"settings-field-" + key
 	}
 
+	/// One choice of the interaction style picker, named after its case.
+	static func settingsInteractionStyle(_ style: String) -> String {
+		settingsInteractionStyle + "-" + style
+	}
+
+	/// One preset of the theme preset menu, named after its case.
+	static func settingsThemePreset(_ preset: String) -> String {
+		settingsThemePreset + "-" + preset
+	}
+
 	/// One setting an import preview lists, named after its stored key.
 	static func settingsTransferChange(_ key: String) -> String {
 		"settings-transfer-change-" + key
@@ -145,6 +157,7 @@ enum AccessibilityIdentifier {
 	static let serverPropertiesRevert = "server-properties-revert"
 	/// The Save, Don't Save and Cancel alert closing an edited window asks.
 	static let serverPropertiesCloseReview = "server-properties-close-review"
+	static let serverPropertiesConnectionName = "server-properties-connection-name"
 	static let serverPropertiesServerPassword = "server-password"
 	static let serverPropertiesNicknamePassword = "server-nickserv-password"
 
@@ -173,10 +186,18 @@ enum AccessibilityIdentifier {
 
 	// MARK: - People
 
-	static let addressBookWindow = "address-book-window"
 	static let addressBookList = "address-book-list"
 	static let addressBookAdd = "address-book-add"
 	static let addressBookRemove = "address-book-remove"
+	static let addressBookAddIgnore = "address-book-add-ignore"
+	static let addressBookAddTracking = "address-book-add-tracking"
+	static let addressBookEntryHostmask = "address-book-entry-hostmask"
+	static let addressBookEntrySave = "address-book-entry-save"
+
+	/// One entry of the People list, named after its hostmask.
+	static func addressBookEntry(_ hostmask: String) -> String {
+		"address-book-entry-" + hostmask
+	}
 
 	// MARK: - Main window
 

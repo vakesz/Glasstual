@@ -237,10 +237,12 @@ struct StylePane: View {
 					Button(preset.displayTitle) {
 						requestPreset(preset)
 					}
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsThemePreset(preset.rawValue))
 				}
 			} label: {
 				Text(currentPresetName)
 			}
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsThemePreset)
 			.confirmationDialog(
 				Text(pendingPresetTitle),
 				isPresented: $confirmsPresetReplace

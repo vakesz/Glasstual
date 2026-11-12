@@ -25,10 +25,26 @@ struct AccessibilityIdentifiersTests {
 
 	@Test("The People window")
 	func addressBook() {
-		#expect(AccessibilityIdentifier.addressBookWindow == "address-book-window")
 		#expect(AccessibilityIdentifier.addressBookList == "address-book-list")
 		#expect(AccessibilityIdentifier.addressBookAdd == "address-book-add")
 		#expect(AccessibilityIdentifier.addressBookRemove == "address-book-remove")
+		#expect(AccessibilityIdentifier.addressBookAddIgnore == "address-book-add-ignore")
+		#expect(AccessibilityIdentifier.addressBookAddTracking == "address-book-add-tracking")
+		#expect(AccessibilityIdentifier.addressBookEntryHostmask == "address-book-entry-hostmask")
+		#expect(AccessibilityIdentifier.addressBookEntrySave == "address-book-entry-save")
+		#expect(AccessibilityIdentifier.addressBookEntry("troll!*@*") == "address-book-entry-troll!*@*")
+	}
+
+	@Test("Server Properties and Settings")
+	func serverPropertiesAndSettings() {
+		#expect(AccessibilityIdentifier.serverPropertiesConnectionName == "server-properties-connection-name")
+		#expect(AccessibilityIdentifier.serverPropertiesCloseReview == "server-properties-close-review")
+		#expect(ServerPropertiesEditor.closeReviewRequest(windowTitle: "E2E").accessibilityIdentifier
+			== "server-properties-close-review")
+		#expect(AccessibilityIdentifier.settingsInteractionStyle(String(describing: InteractionStyle.conversation))
+			== "settings-interaction-style-conversation")
+		#expect(AccessibilityIdentifier.settingsThemePreset(TranscriptThemePreset.classic.rawValue)
+			== "settings-theme-preset-classic")
 	}
 
 	@Test("Alerts and their buttons")

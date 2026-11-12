@@ -32,6 +32,14 @@ enum AXID {
 	/// Default button applies the kick or ban, alternate cancels.
 	static let moderationConfirmation = "moderation-confirmation"
 
+	// MARK: Questions in the conversation
+
+	/// The questions above the message field. A question identified as an
+	/// alert keeps that identifier as a card, and its buttons keep theirs.
+	static let promptTray = "prompt-tray"
+	/// What the last typed answering command had to say.
+	static let promptFeedback = "prompt-feedback"
+
 	// MARK: Main window
 
 	static let mainWindow = "main-window"
@@ -105,6 +113,18 @@ enum AXID {
 	static let settingsTransferCommit = "settings-transfer-commit"
 	static let settingsTransferCancel = "settings-transfer-cancel"
 	static let settingsTransferResultConfirm = "settings-transfer-result-confirm"
+	static let settingsInteractionStyle = "settings-interaction-style"
+	static let settingsThemePreset = "settings-theme-preset"
+
+	/// An `InteractionStyle` case name: `dialogs` or `conversation`.
+	static func settingsInteractionStyle(_ style: String) -> String {
+		settingsInteractionStyle + "-" + style
+	}
+
+	/// A `TranscriptThemePreset` raw value, such as `classic`.
+	static func settingsThemePreset(_ preset: String) -> String {
+		settingsThemePreset + "-" + preset
+	}
 
 	/// A `SettingsPane` raw value, such as `general` or `defaultIdentity`.
 	static func settingsPage(_ pane: String) -> String {
@@ -122,12 +142,13 @@ enum AXID {
 
 	// MARK: Server Properties
 
-	/// The Server Properties sheet, known by its Save button.
+	/// The Server Properties window, known by its Save button.
 	static let serverProperties = serverPropertiesSave
 	static let serverPropertiesSave = "server-properties-save"
 	static let serverPropertiesRevert = "server-properties-revert"
 	/// The Save, Don't Save and Cancel alert closing an edited window asks.
 	static let serverPropertiesCloseReview = "server-properties-close-review"
+	static let serverPropertiesConnectionName = "server-properties-connection-name"
 	static let serverPassword = "server-password"
 	static let nicknamePassword = "server-nickserv-password"
 
@@ -174,10 +195,20 @@ enum AXID {
 
 	// MARK: People
 
-	static let addressBookWindow = "address-book-window"
+	/// SwiftUI names the People window itself, so the harness knows it as
+	/// the window that holds the People list.
+	static let addressBookWindow = addressBookList
 	static let addressBookList = "address-book-list"
 	static let addressBookAdd = "address-book-add"
 	static let addressBookRemove = "address-book-remove"
+	static let addressBookAddIgnore = "address-book-add-ignore"
+	static let addressBookAddTracking = "address-book-add-tracking"
+	static let addressBookEntryHostmask = "address-book-entry-hostmask"
+	static let addressBookEntrySave = "address-book-entry-save"
+
+	static func addressBookEntry(_ hostmask: String) -> String {
+		"address-book-entry-" + hostmask
+	}
 }
 
 /** The settings keys the harness seeds. The harness does not link the
@@ -189,4 +220,6 @@ enum SettingsKey {
 	static let nickname = "Identity -> Nickname"
 	static let realName = "Identity -> Real Name"
 	static let username = "Identity -> Username"
+	static let interactionStyle = "Interaction -> Style"
+	static let transcriptTheme = "Theme -> Transcript Theme"
 }

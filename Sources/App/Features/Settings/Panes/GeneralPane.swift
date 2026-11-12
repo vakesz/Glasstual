@@ -27,6 +27,7 @@ struct GeneralPane: View {
 			Picker(selection: model.settings.binding(for: SettingsKeys.Interaction.style)) {
 				ForEach(InteractionStyle.allCases, id: \.self) { style in
 					Text(style.displayName).tag(style)
+						.accessibilityIdentifier(AccessibilityIdentifier.settingsInteractionStyle(String(describing: style)))
 				}
 			} label: {
 				Text(.Settings.generalShowQuestions)

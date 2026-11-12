@@ -44,7 +44,6 @@ private struct AddressBookSceneRoot: View {
 		}
 		.navigationTitle(String(localized: .AddressBook.peopleWindowTitle))
 		.frame(minWidth: 360, minHeight: 280)
-		.accessibilityIdentifier(AccessibilityIdentifier.addressBookWindow)
 	}
 }
 
@@ -65,6 +64,8 @@ struct AddressBookView: View {
 						.foregroundStyle(.secondary)
 				}
 				.tag(entry.uniqueIdentifier)
+				.accessibilityElement(children: .combine)
+				.accessibilityIdentifier(AccessibilityIdentifier.addressBookEntry(entry.hostmask))
 			}
 		}
 		.listStyle(.inset)
@@ -97,7 +98,9 @@ struct AddressBookView: View {
 				 ignores or tracks someone and this one list holds both. */
 				Menu {
 					Button(.AddressBook.addIgnoreEntry) { book.begin(.newEntry(.ignore)) }
+						.accessibilityIdentifier(AccessibilityIdentifier.addressBookAddIgnore)
 					Button(.AddressBook.addTrackingEntry) { book.begin(.newEntry(.userTracking)) }
+						.accessibilityIdentifier(AccessibilityIdentifier.addressBookAddTracking)
 				} label: {
 					Label(String(localized: .AddressBook.addEntry), systemImage: "plus")
 				}
