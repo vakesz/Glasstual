@@ -61,4 +61,34 @@ struct EditorRoutingTests {
 		}
 		#expect((command as NSString).substring(with: selection) == "Hi 👋")
 	}
+
+	/** Values the server supplies can decode to a space or a line break. On a
+	 command line a line break starts another command, so such a request has to
+	 open as its sheet instead. */
+	nonisolated static let unsafeRequests: [EditorRequest] = [
+		.redact(messageID: "abc\n/quit"),
+		.redact(messageID: "abc def"),
+		.redact(messageID: "abc\u{2028}/quit"),
+		.redact(messageID: ""),
+		.channelProperties(channel: "#chan\r/part"),
+		.modes(channel: "#chan +o eve"),
+		.topic(channel: "#chan", current: "hello\n/quit"),
+		.topic(channel: "#chan\n/quit", current: "hello"),
+		.invite(nicknames: ["bob", "eve\n/quit"]),
+		.nickname(current: "me\n/quit"),
+		.nicknameColor(nickname: "bob #fff\n/quit"),
+		.ignore(mask: "*!*@host\n/quit"),
+		.virtualHost(nickname: "bob\n/quit"),
+	]
+
+	@Test("A value that would break the command line opens the sheet instead", arguments: unsafeRequests)
+	func unsafeValuesOpenTheSheet(_ request: EditorRequest) {
+		#expect(EditorRouting.route(request, style: .conversation) == .sheet)
+	}
+
+	@Test("A topic keeps its spaces when it is put on the command line")
+	func topicWithSpacesIsPrefilled() {
+		let route = EditorRouting.route(.topic(channel: "#chan", current: "hello there"), style: .conversation)
+		#expect(route == .prefill(command: "/topic #chan hello there", selection: NSRange(location: 13, length: 11)))
+	}
 }

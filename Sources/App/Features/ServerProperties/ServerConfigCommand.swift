@@ -120,10 +120,13 @@ struct ServerConfigField {
 
 	static func list(
 		_ name: String,
+		showsCountOnly: Bool = false,
 		get: @escaping (ServerPropertiesModel) -> [String],
 		set: @escaping (ServerPropertiesModel, [String]) -> Void
 	) -> Self {
-		Self(name: name, kind: .list) { get($0).joined(separator: ", ") } write: { model, text in
+		Self(name: name, kind: .list) { model in
+			showsCountOnly ? String(get(model).count) : get(model).joined(separator: ", ")
+		} write: { model, text in
 			var items = get(model)
 			var words = text.split(separator: " ", maxSplits: 1).map(String.init)
 			guard words.isEmpty == false else { return false }
@@ -297,7 +300,9 @@ extension ServerConfigField {
 		.flag("who-requests", \.sendWhoCommandRequestsToChannels),
 		.flag("invisible", \.setInvisibleModeOnConnect),
 		.flag("connect-commands-silent", \.runConnectCommandsSilently),
-		.list("connect-commands") { model in
+		// Connect commands often identify to services, so what they say is
+		// never printed: listing and changing them shows how many there are.
+		.list("connect-commands", showsCountOnly: true) { model in
 			model.connectCommands.components(separatedBy: .newlines).filter { $0.isEmpty == false }
 		} set: { model, items in
 			model.connectCommands = items.joined(separator: "\n")

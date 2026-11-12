@@ -437,6 +437,10 @@ enum CommandIndex {
  Such a setting is asked for in a secure field; a line that names one is kept
  out of input history in case the secret was typed after it anyway. */
 nonisolated enum ConfigurationSecrets {
-	static let serverFields: Set<String> = ["server-password", "nickname-password", "proxy-password", "sasl-token"]
+	/// `connect-commands` is here because a connect command often carries a
+	/// services password; a line that edits them stays out of input history.
+	static let serverFields: Set<String> = [
+		"server-password", "nickname-password", "proxy-password", "sasl-token", "connect-commands",
+	]
 	static let channelFields: Set<String> = ["key"]
 }

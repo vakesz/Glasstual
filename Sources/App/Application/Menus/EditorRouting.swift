@@ -39,7 +39,7 @@ nonisolated enum EditorRoute: Equatable, Sendable {
  than on the command line. */
 nonisolated enum EditorRouting {
 	static func route(_ request: EditorRequest, style: InteractionStyle) -> EditorRoute {
-		guard style == .conversation else { return .sheet }
+		guard style == .conversation, isSafeToPrefill(request) else { return .sheet }
 		switch request {
 		case .newServer:
 			return .prefill(command: "/server ", selection: nil)
@@ -69,6 +69,55 @@ nonisolated enum EditorRouting {
 			return .prefill(command: "/sasl auth", selection: nil)
 		case .registerAccount:
 			return .prefill(command: "/register ", selection: nil)
+		}
+	}
+
+	/** Whether everything `request` would put on the command line is safe there.
+
+	 A message identifier, a channel name, a nickname and a mask come from the
+	 server, and a tag value can decode to a space or a line break. A line break
+	 would end the command and start another, which Return then runs; a space
+	 would move what follows into a different argument. A request that carries
+	 either opens as its sheet, which takes the value as data. A topic is the
+	 text being edited, so spaces belong in it and only a line break or another
+	 control character rules it out. */
+	static func isSafeToPrefill(_ request: EditorRequest) -> Bool {
+		switch request {
+		case .newServer, .serverProperties, .addChannel, .saslSignIn, .registerAccount:
+			true
+		case let .channelProperties(channel), let .modes(channel):
+			isSingleArgument(channel)
+		case let .topic(channel, current):
+			isSingleArgument(channel) && isSingleLine(current)
+		case let .invite(nicknames):
+			nicknames.allSatisfy(isSingleArgument)
+		case let .nickname(nickname), let .nicknameColor(nickname), let .virtualHost(nickname):
+			isSingleArgument(nickname)
+		case let .ignore(mask):
+			mask.map(isSingleArgument) ?? true
+		case let .redact(messageID):
+			isSingleArgument(messageID)
+		}
+	}
+
+	/// One word of a command line: not empty, with no whitespace and no control
+	/// or line-breaking character.
+	private static func isSingleArgument(_ value: String) -> Bool {
+		value.isEmpty == false && value.unicodeScalars.allSatisfy { scalar in
+			scalar.properties.isWhitespace == false && isLineSafe(scalar)
+		}
+	}
+
+	private static func isSingleLine(_ value: String) -> Bool {
+		value.unicodeScalars.allSatisfy(isLineSafe)
+	}
+
+	/// Whether `scalar` can sit on a command line without ending it: no control
+	/// character, and no line or paragraph separator.
+	private static func isLineSafe(_ scalar: Unicode.Scalar) -> Bool {
+		switch scalar.properties.generalCategory {
+		case .control, .lineSeparator, .paragraphSeparator: false
+		default: true
 		}
 	}
 

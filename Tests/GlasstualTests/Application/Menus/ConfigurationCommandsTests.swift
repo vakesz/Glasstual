@@ -107,6 +107,23 @@ struct ConfigurationCommandsTests {
 		#expect(session.config.loginCommands.isEmpty)
 	}
 
+	@Test("Connect commands are counted, never printed")
+	func connectCommandsStayUnprinted() {
+		let session = session()
+		let added = commands.performServerConfiguration(
+			"connect-commands add /msg NickServ IDENTIFY hunter2", on: session
+		)
+		let listed = commands.performServerConfiguration("list", on: session)
+		let shown = commands.performServerConfiguration("connect-commands", on: session)
+
+		#expect(session.config.loginCommands == ["/msg NickServ IDENTIFY hunter2"])
+		for line in added + listed + shown {
+			#expect(line.contains("hunter2") == false)
+			#expect(line.contains("IDENTIFY") == false)
+		}
+		#expect(LocalCommand.lineCarriesSecret("/serverconfig connect-commands add /msg NickServ IDENTIFY hunter2"))
+	}
+
 	@Test("Reset returns a setting to what a new server has")
 	func reset() {
 		let session = session()
