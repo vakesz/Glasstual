@@ -151,7 +151,7 @@ struct FileTransferListView: View {
 			Button {
 				center.perform(.downloadTo, on: model.selection)
 			} label: {
-				Label(.FileTransfer.downloadTo, systemImage: "folder.badge.arrow.down")
+				Label(.FileTransfer.downloadTo, systemImage: "square.and.arrow.down")
 			}
 			.help(Text(.FileTransfer.downloadTo))
 			.disabled(model.canPerform(.downloadTo) == false)
