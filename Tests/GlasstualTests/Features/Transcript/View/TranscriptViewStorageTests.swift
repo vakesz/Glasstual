@@ -188,6 +188,26 @@ struct TranscriptViewStorageTests {
 		#expect(transcriptView.lastVisibleTop == clip.bounds.minY)
 	}
 
+	/** TextKit 2 reports where a line was before an edit until the viewport is
+	 laid out again, so a restore that measured straight after the edit
+	 scrolled nowhere and the older lines pushed the reader's line away. */
+	@Test("Older lines put above a reader who scrolled up leave the line at the top of the viewport where it was")
+	func prependKeepsTheReadersLine() throws {
+		let transcriptView = makeTranscriptView(bufferLimit: 1000)
+		transcriptView.appendLines((0 ..< 200).map(message))
+		transcriptView.layoutSubtreeIfNeeded()
+		transcriptView.followsBottom = false
+		_ = transcriptView.jump(to: "message 100")
+		transcriptView.layoutSubtreeIfNeeded()
+		let before = try #require(transcriptView.viewportAnchor())
+
+		transcriptView.prependLines((0 ..< 50).map { transcriptLine("older \($0)") })
+
+		let after = try #require(transcriptView.viewportAnchor())
+		#expect(after.endpoint.lineNumber == before.endpoint.lineNumber)
+		#expect(abs(after.offset - before.offset) < 1)
+	}
+
 	/** A reload that has to be retried re-sends lines the document already
 	 shows. Prepending has always refused a line it already holds; appending
 	 drew it a second time, so the reader read the same message twice. */

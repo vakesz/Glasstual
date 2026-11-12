@@ -152,8 +152,14 @@ extension TranscriptView {
 		 Keeping the reader where they are beats jumping them to the top of a
 		 transcript they had scrolled away from. */
 		guard window != nil, !isHiddenOrHasHiddenAncestor,
-		      let index = position(anchor.endpoint),
-		      let verticalPosition = verticalPosition(at: index) else { return }
+		      let index = position(anchor.endpoint) else { return }
+		/* Until the viewport is laid out again, TextKit 2 answers with where
+		 the line was before the edit: text that went in above it has not
+		 moved it yet. Scrolling to that place leaves the viewport where it
+		 was, and the line slides out from under the reader on the next
+		 layout. */
+		textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
+		guard let verticalPosition = verticalPosition(at: index) else { return }
 		var origin = scrollView.contentView.bounds.origin
 		origin.y = max(0, verticalPosition - anchor.offset)
 		scrollView.contentView.scroll(to: origin)
