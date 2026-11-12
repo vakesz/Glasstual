@@ -122,25 +122,16 @@ struct UnprintedEchoRegistry {
 }
 
 extension ServerSession {
-	/** A client-only tag on every message sent without a local print, where
-	 `message-tags` is on, so that an echo of it is recognised whenever it
-	 comes back: live, from a bouncer's playback or from `chathistory`.
-
-	 It reaches the recipient too, and says no more than that the sender keeps
-	 no copy. Without `message-tags`, where the server refuses client tags, or
-	 where a bouncer or history store drops them, a replayed echo carries
-	 nothing to recognise it by and is printed; one sent to a service still
-	 has its credentials masked. */
-	static let unprintedMessageTag = "+glasstual/unprinted"
-
 	/** Notes a message that is not printed locally, while its echo would be,
 	 and returns the tags to send it with: a label where labelled responses
-	 are tracked, and ``unprintedMessageTag``.
+	 are tracked, and nothing otherwise. No tag marks the message as unprinted,
+	 because a client tag is relayed to the recipient and would tell them which
+	 client sent it and that no copy was kept.
 
 	 Returns nil when the message must not go out: too many earlier ones are
 	 still waiting for their echo, and this one's would print. */
 	func noteUnprintedSend(to target: String, text: String, lineType: ChatLineKind) -> [String: String]? {
-		var tags = [Self.unprintedMessageTag: ""]
+		var tags: [String: String] = [:]
 		guard isCapabilityEnabled(.echoMessage) else { return tags }
 		let label = labeledResponseTrackingEnabled() ? nextMessageLabel() : nil
 		guard unprintedEchoes.record(
@@ -156,10 +147,10 @@ extension ServerSession {
 
 	/** Sends the identification text services asked for without printing it.
 	 When too many unprinted lines are waiting to track this one too, it still
-	 goes out: services are waiting on it, and its tag, where the server takes
-	 client tags, still keeps the echo out. */
+	 goes out: services are waiting on it, and its echo, like any message to a
+	 service, has its credentials masked. */
 	func sendUnprinted(_ command: RemoteCommand, to target: String, text: String) {
-		let tags = noteUnprintedSend(to: target, text: text, lineType: .privateMessage) ?? [Self.unprintedMessageTag: ""]
+		let tags = noteUnprintedSend(to: target, text: text, lineType: .privateMessage) ?? [:]
 		sendCommand(command, arguments: [target, text], tags: tags)
 	}
 
@@ -192,10 +183,11 @@ extension ServerSession {
 
 	/** Whether `message` is the echo of a message sent without a local print.
 
-	 One that carries ``unprintedMessageTag`` is, whenever it arrives. Otherwise
-	 only a live echo is matched: by its label, which the server puts on the
+	 Only a live echo is matched: by its label, which the server puts on the
 	 echo or on the batch around it, and failing that by what it says and where
-	 it went. */
+	 it went. A copy a bouncer or `chathistory` plays back later carries nothing
+	 to recognise it by and is printed; one sent to a service still has its
+	 credentials masked. */
 	func consumeUnprintedEcho(_ message: Message, target: String, text: String, lineType: ChatLineKind) -> Bool {
 		let label = message.messageTags?["label"] ?? message.parentBatchMessage?.openingMessage?.messageTags?["label"]
 		let consume = {
@@ -208,10 +200,6 @@ extension ServerSession {
 				lineType: lineType,
 				caseMapping: self.supportInfo.caseMapping
 			)
-		}
-		if message.messageTags?[Self.unprintedMessageTag] != nil {
-			_ = consume()
-			return true
 		}
 		guard message.isReplayed == false, isCapabilityEnabled(.echoMessage), unprintedEchoes.isEmpty == false else {
 			return false

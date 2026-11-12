@@ -138,24 +138,6 @@ struct ServerSessionSelfEchoTests {
 		#expect(session.findConversation("bob") == nil)
 	}
 
-	/** A bouncer or `chathistory` plays the session's own messages back later,
-	 when nothing is waiting for them. The client-only tag the send carried is
-	 what marks them. */
-	@Test("A replayed echo of /smsg carrying the unprinted tag prints nothing")
-	func replayedTaggedSecretMessageIsDropped() throws {
-		let session = makeSession()
-		session.enableCapability(.messageTags)
-
-		session.sendCommand("smsg bob secret", completeTarget: false, target: nil)
-		#expect(sentLines(of: session) == ["@\(ServerSession.unprintedMessageTag) PRIVMSG bob :secret"])
-
-		try receive("@\(ServerSession.unprintedMessageTag) :me!u@h PRIVMSG bob :secret", on: session, replayed: true)
-		try receive("@\(ServerSession.unprintedMessageTag) :me!u@h PRIVMSG bob :secret", on: session)
-
-		#expect(session.printedLines.count == 0)
-		#expect(session.findConversation("bob") == nil)
-	}
-
 	@Test("The echo of the identification sent for a NickServ notice prints nothing")
 	func automaticIdentificationEchoIsDropped() throws {
 		let session = makeSession(nicknamePassword: "hunter2")
