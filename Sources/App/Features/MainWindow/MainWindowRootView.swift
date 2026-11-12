@@ -208,10 +208,7 @@ struct MainWindowRootView: View {
 	}
 
 	private var memberListMaximumWidth: CGFloat {
-		MainWindowConstants.memberListMaximumWidth(
-			inContentWidth: contentWidth,
-			sidebar: columns.isSidebarVisible ? columns.sidebarWidth : nil
-		)
+		columns.memberListMaximumWidth(inContentWidth: contentWidth)
 	}
 
 	private var sidebarVisibility: Binding<NavigationSplitViewVisibility> {

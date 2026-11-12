@@ -170,4 +170,33 @@ struct MainWindowColumnLayoutTests {
 		window.columnModel.isSidebarVisible = false
 		#expect(minimumIs(floor.width), "minimum \(window.contentMinSize)")
 	}
+
+	/** The list's widths are offered against the content the window comes to,
+	 not the content it has. SwiftUI widens a window narrower than its open
+	 columns to their minimum, sometimes only while the list is opening;
+	 offered what the narrower window holds, the list opens at its narrowest
+	 and that width replaces the stored one. */
+	@Test("A member list opening in a window too narrow for it is offered the width the window widens to")
+	func openingMemberListIsOfferedTheWidenedWindow() {
+		let window = makeMainWindow()
+		let columns = window.columnModel
+		columns.recordSidebarWidth(200)
+		columns.applyMemberListAvailability(true)
+		columns.setMemberListVisible(true)
+		columns.recordMemberListWidth(210)
+		let conversation = MainWindowConstants.conversationMinimumWidth
+
+		// The window still has the width it had with the list closed.
+		#expect(columns.memberListMaximumWidth(inContentWidth: 200 + conversation) == 210)
+		// At its minimum the list has its own width and no more.
+		#expect(columns.memberListMaximumWidth(inContentWidth: columns.minimumContentWidth) == 210)
+		// A wider window gives the list what the other columns leave.
+		#expect(columns.memberListMaximumWidth(inContentWidth: 200 + conversation + 260) == 260)
+
+		// A closed list is not counted, so it is offered what the window holds.
+		columns.setMemberListVisible(false)
+		#expect(
+			columns.memberListMaximumWidth(inContentWidth: 200 + conversation) == MemberListLayout.minimumWidth
+		)
+	}
 }

@@ -129,6 +129,20 @@ final class MainWindowColumnModel {
 		)
 	}
 
+	/** The widest the member list may be in content `contentWidth` points wide.
+
+	 The window is never left narrower than its open columns: once the list
+	 is open the minimum counts it, and SwiftUI widens a narrower window to
+	 that minimum either before it opens the list or while it does. Measured
+	 against the width the window still has in the second case, the list
+	 would open at its narrowest and that width would be stored. */
+	func memberListMaximumWidth(inContentWidth contentWidth: CGFloat) -> CGFloat {
+		MainWindowConstants.memberListMaximumWidth(
+			inContentWidth: max(contentWidth, minimumContentWidth),
+			sidebar: isSidebarVisible ? sidebarWidth : nil
+		)
+	}
+
 	/// Restores saved column visibility preferences.
 	func restoreColumns(_ state: MainWindowLayoutState) {
 		isSidebarVisible = state.isSidebarVisible
