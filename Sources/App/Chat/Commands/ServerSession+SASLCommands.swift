@@ -12,6 +12,9 @@ enum SASLCommandRequest: Equatable {
 	/// The name typed after `mechanism` is not one the session speaks.
 	case unknownMechanism(String)
 	case setToken(String)
+	/// `token` alone: the token is asked for in a secure field, so it never
+	/// has to be typed on the command line.
+	case askToken
 	case clearToken
 	/// Sign in again now, with one mechanism or with the usual order.
 	case authenticate(SASLMechanism?)
@@ -39,8 +42,12 @@ enum SASLCommandRequest: Equatable {
 			}
 		case "token":
 			let token = arguments.next()
-			guard token.isEmpty == false, arguments.isEmpty else {
+			guard arguments.isEmpty else {
 				self = .invalid
+				return
+			}
+			guard token.isEmpty == false else {
+				self = .askToken
 				return
 			}
 			self = token.lowercased() == "clear" ? .clearToken : .setToken(token)
@@ -82,6 +89,8 @@ extension ServerSession {
 			}
 			storeSASLBearerToken(.set(token))
 			printDebugInformation(toConsole: String(localized: .IRC.saslTokenSaved))
+		case .askToken:
+			askForSASLBearerToken()
 		case .clearToken:
 			storeSASLBearerToken(.cleared)
 			printDebugInformation(toConsole: String(localized: .IRC.saslTokenCleared))
@@ -91,6 +100,28 @@ extension ServerSession {
 			}
 		case .invalid:
 			printInvalidSyntaxMessage(for: parsed.command)
+		}
+	}
+
+	/** Asks for an OAuth token in a secure field, as an alert or in the
+	 console, and saves it. The token goes from the field to the keychain and
+	 nowhere else. */
+	private func askForSASLBearerToken() {
+		requestAnswer(AlertRequest(
+			title: String(localized: .IRC.saslTokenPromptTitle(config.connectionName)),
+			body: String(localized: .IRC.saslTokenPromptBody),
+			defaultButton: String(localized: .IRC.saslTokenPromptSave),
+			alternateButton: PromptStrings.Action.cancel,
+			field: .secure(placeholder: String(localized: .IRC.saslTokenPromptPlaceholder)),
+			keywords: [.default: .submit, .alternate: .cancel]
+		), boundToConnection: false, unattended: .alternate) { session, answer in
+			guard answer.response == .default, let token = answer.text, token.isEmpty == false else { return }
+			guard OAuthBearerClient.isValidToken(token) else {
+				session.printDebugInformation(toConsole: String(localized: .IRC.saslTokenInvalid))
+				return
+			}
+			session.storeSASLBearerToken(.set(token))
+			session.printDebugInformation(toConsole: String(localized: .IRC.saslTokenSaved))
 		}
 	}
 

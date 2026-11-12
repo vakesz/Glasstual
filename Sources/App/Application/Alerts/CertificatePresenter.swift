@@ -46,14 +46,46 @@ final class CertificatePresenter: CertificatePresenting {
 
 	/// Shows a certificate chain forwarded by a bouncer, without a trust decision.
 	func presentChain(_ trust: SecTrust, title: String, closeButton: String) {
-		TrustPanelPresenter.present(
-			in: NSApp.mainWindow,
-			body: "",
+		show(title: title, body: "", closeButton: closeButton, trust: trust) {
+			NSApp.mainWindow
+		}
+	}
+
+	/** Shows what a secure connection negotiated, without a decision to make.
+
+	 Dialogs open the certificate panel. The conversation states the summary
+	 where the reader asked for it, with a button to the same panel: reading a
+	 certificate chain needs the panel either way. A trust decision is never
+	 made here; that stays the panel's in both styles. */
+	private func show(title: String, body: String, closeButton: String, trust: SecTrust, parent: @escaping () -> NSWindow?) {
+		let openPanel = {
+			_ = TrustPanelPresenter.present(
+				in: parent(),
+				body: body,
+				title: title,
+				defaultButton: closeButton,
+				alternateButton: nil,
+				trust: trust
+			)
+		}
+		guard SettingsKeys.Interaction.style.value == .conversation else {
+			openPanel()
+			return
+		}
+		let request = AlertRequest(
 			title: title,
+			body: body,
 			defaultButton: closeButton,
-			alternateButton: nil,
-			trust: trust
+			alternateButton: String(localized: .InlinePrompts.showCertificate),
+			cancelButton: .default,
+			keywords: [.default: .ok, .alternate: .open]
 		)
+		Task {
+			let answer = await Alerts.ask(request, about: PromptScope(origin: .conversation))
+			if answer.response == .alternate {
+				openPanel()
+			}
+		}
 	}
 
 	/// Shows the negotiated protocol, cipher and certificate chain.
@@ -85,13 +117,13 @@ final class CertificatePresenter: CertificatePresenting {
 			body += PromptStrings.TransportSecurity.trustFailure(failure)
 		}
 
-		TrustPanelPresenter.present(
-			in: NSApp.keyWindow,
-			body: body,
+		show(
 			title: PromptStrings.TransportSecurity.encryptedConnectionTitle(policyName: policyName),
-			defaultButton: PromptStrings.Action.close,
-			alternateButton: nil,
+			body: body,
+			closeButton: PromptStrings.Action.close,
 			trust: trust
-		)
+		) {
+			NSApp.keyWindow
+		}
 	}
 }

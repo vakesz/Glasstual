@@ -35,7 +35,7 @@ struct SASLCommandTests {
 		("auth plain extra", .invalid),
 		("token abc.def", .setToken("abc.def")),
 		("token clear", .clearToken),
-		("token", .invalid),
+		("token", .askToken),
 		("token a b", .invalid),
 		("frobnicate", .invalid),
 	])

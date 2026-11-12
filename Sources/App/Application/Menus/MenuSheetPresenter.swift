@@ -39,6 +39,17 @@ enum MenuSheetPresenter {
 		AppServices.delegate?.mainWindow
 	}
 
+	/** Opens `request` as a command in the message field, when the reader chose
+	 the conversation and there is a conversation to type it in. `false` leaves
+	 the caller to open the sheet. */
+	private static func opensAsCommand(_ request: EditorRequest) -> Bool {
+		guard let window, window.selectedItem != nil,
+		      case let .prefill(command, selection) = EditorRouting.route(request, style: SettingsKeys.Interaction.style.value)
+		else { return false }
+		window.prefillInput(command, selecting: selection)
+		return true
+	}
+
 	/** Opens the connection sheet, on an existing connection or on a new one.
 
 	 A new connection is created once the sheet is accepted; an existing one is
@@ -49,6 +60,9 @@ enum MenuSheetPresenter {
 		for session: ServerSession?,
 		at destination: ServerPropertiesDestination = .default
 	) {
+		if session == nil, case .default = destination, opensAsCommand(.newServer) {
+			return
+		}
 		present(ServerPropertiesSheet(session: session) { [weak session] config in
 			guard let directory = AppServices.chatSession else { return }
 			guard let session else {
@@ -68,8 +82,12 @@ enum MenuSheetPresenter {
 	}
 
 	/// Opens the channel sheet, on an existing channel or on a new one for
-	/// `session`.
+	/// `session`. Adding a channel in the conversation style puts `/join` in
+	/// the message field instead.
 	static func presentChannelProperties(for channel: Conversation?, on session: ServerSession?) {
+		if channel == nil, session != nil, opensAsCommand(.addChannel) {
+			return
+		}
 		let save: (ConversationConfig) -> Void = { [weak session, weak channel] config in
 			guard let directory = AppServices.chatSession, let session else { return }
 			guard let channel else {
@@ -94,6 +112,9 @@ enum MenuSheetPresenter {
 
 	static func presentChannelTopic(for channel: Conversation) {
 		guard ChannelActionPermissions(channel: channel, session: channel.associatedSession).canModifyTopic else { return }
+		if opensAsCommand(.topic(channel: channel.name, current: channel.topic ?? "")) {
+			return
+		}
 		present(ChannelTopicSheet(channel: channel) { [weak channel] topic in
 			guard let channel, let session = channel.associatedSession,
 			      ChannelActionPermissions(channel: channel, session: session).canModifyTopic
@@ -104,6 +125,9 @@ enum MenuSheetPresenter {
 
 	static func presentChannelModes(for channel: Conversation) {
 		guard ChannelActionPermissions(channel: channel, session: channel.associatedSession).canChangeModes else { return }
+		if opensAsCommand(.modes(channel: channel.name)) {
+			return
+		}
 		present(ChannelModesSheet(channel: channel) { [weak channel] modes in
 			guard let channel, let session = channel.associatedSession,
 			      ChannelActionPermissions(channel: channel, session: session).canChangeModes,
@@ -117,6 +141,9 @@ enum MenuSheetPresenter {
 	/// Invites `nicknames` to one of `channels`, which are the other channels the
 	/// connection is in.
 	static func presentChannelInvite(for nicknames: [String], on session: ServerSession, to channels: [String]) {
+		if opensAsCommand(.invite(nicknames: nicknames)) {
+			return
+		}
 		present(ChannelInviteSheet(nicknames: nicknames, on: session) { [weak session] channelName in
 			guard let session, session.isLoggedIn else { return }
 			for nickname in nicknames {
@@ -126,6 +153,9 @@ enum MenuSheetPresenter {
 	}
 
 	static func presentNicknameChange(for session: ServerSession) {
+		if opensAsCommand(.nickname(current: session.userNickname)) {
+			return
+		}
 		present(ServerNicknameChangeSheet(session: session) { [weak session] nickname in
 			guard let session, session.isConnected else { return }
 			session.changeNickname(nickname)
@@ -133,11 +163,17 @@ enum MenuSheetPresenter {
 	}
 
 	static func presentSASLSignIn(for session: ServerSession) {
+		if opensAsCommand(.saslSignIn) {
+			return
+		}
 		present(SASLSignInSheet(session: session)) { $0.startSheet() }
 	}
 
 	/// Registers an account on `session`, connecting first when it is not.
 	static func presentAccountRegistration(for session: ServerSession) {
+		if opensAsCommand(.registerAccount) {
+			return
+		}
 		present(AccountRegistrationSheet(session: session)) { $0.startSheet() }
 	}
 

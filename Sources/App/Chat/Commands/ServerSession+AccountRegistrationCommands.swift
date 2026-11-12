@@ -10,13 +10,17 @@ nonisolated enum AccountRegistrationCommandRequest: Equatable {
 	case describe
 	case cancel
 	case register(AccountRegistrationRequest)
+	/// An account and an email without a password: the password is asked for
+	/// in a secure field, so it never has to be typed on the command line.
+	case askPassword(account: AccountRegistrationRequest.AccountName, email: String?)
 	case verify(account: String?, code: String)
 	case invalidSyntax
 
 	/** Reads the arguments of `/register` or `/verify`.
 
-	 A `/register` request needs three tokens, so a lone `cancel` is never a
-	 request; the password is the rest of the line and may hold spaces. */
+	 A `/register` request names an account and an email, so a lone `cancel` is
+	 never a request; the password is the rest of the line and may hold spaces.
+	 Without one, the password is asked for in a secure field. */
 	init(command: LocalCommand, arguments: String) {
 		var tokenizer = CommandTokenizer(arguments)
 		let first = tokenizer.nextToken()
@@ -29,13 +33,16 @@ nonisolated enum AccountRegistrationCommandRequest: Equatable {
 			}
 			let second = tokenizer.nextToken()
 			let password = String(tokenizer.remainder)
+			let account: AccountRegistrationRequest.AccountName = first == "*" ? .currentNickname : .named(first)
 			if second.isEmpty, first.caseInsensitiveCompare("cancel") == .orderedSame {
 				self = .cancel
-			} else if second.isEmpty || password.isEmpty {
+			} else if second.isEmpty || first.caseInsensitiveCompare("cancel") == .orderedSame {
 				self = .invalidSyntax
+			} else if password.isEmpty {
+				self = .askPassword(account: account, email: second == "*" ? nil : second)
 			} else {
 				self = .register(AccountRegistrationRequest(
-					account: first == "*" ? .currentNickname : .named(first),
+					account: account,
 					email: second == "*" ? nil : second,
 					password: password
 				))
@@ -74,10 +81,9 @@ extension ServerSession {
 				printDebugInformation(toConsole: String(localized: .AccountRegistration.nothingToCancel))
 			}
 		case let .register(request):
-			printDebugInformation(toConsole: String(localized: .AccountRegistration.registeringAccount(
-				request.account == .currentNickname ? userNickname : request.wireAccount
-			)))
-			registerAccount(request, observer: transcriptAccountRegistrationObserver(savesPassword: true))
+			dispatchAccountRegistrationRequest(request)
+		case let .askPassword(account, email):
+			askForRegistrationPassword(account: account, email: email)
 		case let .verify(account, code):
 			let savesPassword = accountRegistration.phase.request != nil
 			verifyAccount(
@@ -88,6 +94,35 @@ extension ServerSession {
 		case .invalidSyntax:
 			printInvalidSyntaxMessage(for: parsed.command)
 		}
+	}
+
+	/** Asks for the new account's password in a secure field, as an alert or
+	 in the console, and registers with it. The password goes from the field to
+	 the registration and nowhere else: not the transcript, not input history. */
+	private func askForRegistrationPassword(account: AccountRegistrationRequest.AccountName, email: String?) {
+		let name = account == .currentNickname ? userNickname : (AccountRegistrationRequest(
+			account: account, email: email, password: ""
+		).wireAccount)
+		requestAnswer(AlertRequest(
+			title: String(localized: .AccountRegistration.passwordPromptTitle(name)),
+			body: String(localized: .AccountRegistration.passwordPromptBody(config.connectionName)),
+			defaultButton: String(localized: .AccountRegistration.passwordPromptRegister),
+			alternateButton: PromptStrings.Action.cancel,
+			field: .secure(placeholder: String(localized: .AccountRegistration.passwordPromptPlaceholder)),
+			keywords: [.default: .submit, .alternate: .cancel]
+		), boundToConnection: false, unattended: .alternate) { session, answer in
+			guard answer.response == .default, let password = answer.text, password.isEmpty == false else { return }
+			session.dispatchAccountRegistrationRequest(AccountRegistrationRequest(
+				account: account, email: email, password: password
+			))
+		}
+	}
+
+	private func dispatchAccountRegistrationRequest(_ request: AccountRegistrationRequest) {
+		printDebugInformation(toConsole: String(localized: .AccountRegistration.registeringAccount(
+			request.account == .currentNickname ? userNickname : request.wireAccount
+		)))
+		registerAccount(request, observer: transcriptAccountRegistrationObserver(savesPassword: true))
 	}
 
 	/// What `/register` alone prints: the server's rules, or why it cannot.

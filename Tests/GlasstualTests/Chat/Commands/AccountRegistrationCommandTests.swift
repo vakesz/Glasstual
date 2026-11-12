@@ -20,12 +20,20 @@ struct AccountRegistrationCommandTests {
 		)
 	}
 
-	@Test("A lone cancel cancels, and two tokens are not a request")
+	@Test("A lone cancel cancels, and a single token is not a request")
 	func cancelAndShortForms() {
 		#expect(AccountRegistrationCommandRequest(command: .register, arguments: "") == .describe)
 		#expect(AccountRegistrationCommandRequest(command: .register, arguments: "CANCEL") == .cancel)
 		#expect(AccountRegistrationCommandRequest(command: .register, arguments: "cancel me") == .invalidSyntax)
 		#expect(AccountRegistrationCommandRequest(command: .register, arguments: "ada") == .invalidSyntax)
+	}
+
+	@Test("An account and an email without a password ask for it in a secure field")
+	func passwordIsAskedFor() {
+		#expect(AccountRegistrationCommandRequest(command: .register, arguments: "ada ada@example.org")
+			== .askPassword(account: .named("ada"), email: "ada@example.org"))
+		#expect(AccountRegistrationCommandRequest(command: .register, arguments: "* *")
+			== .askPassword(account: .currentNickname, email: nil))
 	}
 
 	@Test("/verify takes a code, or an account and a code")

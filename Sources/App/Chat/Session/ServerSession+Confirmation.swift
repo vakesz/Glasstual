@@ -75,6 +75,7 @@ extension ServerSession {
 		_ request: AlertRequest,
 		in conversation: Conversation? = nil,
 		origin: PromptOrigin = .conversation,
+		boundToConnection: Bool = true,
 		isCurrent: @escaping @MainActor (ServerSession) -> Bool = { _ in true },
 		unattended: AlertResponse,
 		revealsMainWindow: Bool = true,
@@ -89,7 +90,9 @@ extension ServerSession {
 		let identifier = UUID()
 		let startupIdentifier = startup.identifier
 		let connection = socket?.uniqueIdentifier
-		let scope = promptScope(in: conversation, origin: origin, revealsMainWindow: revealsMainWindow)
+		let scope = promptScope(
+			in: conversation, boundToConnection: boundToConnection, origin: origin, revealsMainWindow: revealsMainWindow
+		)
 		scheduled.confirmations[identifier] = Task { [weak self, weak prompts] in
 			guard let prompts else {
 				self?.scheduled.confirmations.removeValue(forKey: identifier)

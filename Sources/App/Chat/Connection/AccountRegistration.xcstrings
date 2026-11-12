@@ -2688,6 +2688,198 @@
           }
         }
       }
+    },
+    "password-prompt-title": {
+      "comment": "Title of the question asking for the new account's password after /register with an account and email. %@ is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a password for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort für %@ wählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una contraseña para %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un mot de passe pour %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz jelszót ehhez: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のパスワードを設定"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha uma senha para %@"
+          }
+        }
+      }
+    },
+    "password-prompt-body": {
+      "comment": "Explanation in the question asking for the new account's password. %@ is the server name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is sent to %@ to register the account, and saved in your keychain once it succeeds. It is never shown in the conversation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort wird an %@ gesendet, um den Account zu registrieren, und nach Erfolg in deinem Schlüsselbund gesichert. Es wird nie in der Unterhaltung angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La contraseña se envía a %@ para registrar la cuenta y se guarda en tu llavero cuando lo consigue. Nunca se muestra en la conversación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe est envoyé à %@ pour enregistrer le compte, puis enregistré dans votre trousseau en cas de réussite. Il n’apparaît jamais dans la conversation."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszót a fiók regisztrálásához elküldi az app ide: %@, és siker esetén a kulcskarikádba menti. Soha nem jelenik meg a beszélgetésben."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードはアカウント登録のために %@ に送信され、成功するとキーチェーンに保存されます。会話に表示されることはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha é enviada a %@ para registrar a conta e guardada nas suas chaves quando der certo. Ela nunca aparece na conversa."
+          }
+        }
+      }
+    },
+    "password-prompt-register": {
+      "comment": "Button that registers the account with the password typed into the question.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regisztrálás"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登録"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar"
+          }
+        }
+      }
+    },
+    "password-prompt-placeholder": {
+      "comment": "Placeholder of the secure field for the new account's password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelszó"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senha"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

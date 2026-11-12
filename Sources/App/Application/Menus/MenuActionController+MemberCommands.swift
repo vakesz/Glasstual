@@ -413,6 +413,16 @@ private extension MenuActionController {
 		context.deselectMembers(for: sender)
 		let session = target.session
 		let nicknames = target.nicknames
+		/* One member's virtual host is a command the reader finishes; several
+		 members share one answer, asked once. */
+		if nicknames.count == 1, let nickname = nicknames.first, mainWindow.selectedItem != nil,
+		   case let .prefill(command, selection) = EditorRouting.route(
+		   	.virtualHost(nickname: nickname), style: SettingsKeys.Interaction.style.value
+		   )
+		{
+			mainWindow.prefillInput(command, selecting: selection)
+			return
+		}
 		Alerts.present(AlertRequest(
 			title: PromptStrings.VirtualHost.title,
 			body: PromptStrings.VirtualHost.body,

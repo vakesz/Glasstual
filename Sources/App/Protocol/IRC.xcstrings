@@ -18508,6 +18508,198 @@
           }
         }
       }
+    },
+    "sasl-token-prompt-title": {
+      "comment": "Title of the question asking for an OAuth token after /sasl token. %@ is the server name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OAuth token for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OAuth-Token für %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token OAuth para %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeton OAuth pour %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OAuth-token ehhez: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ の OAuth トークン"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token OAuth para %@"
+          }
+        }
+      }
+    },
+    "sasl-token-prompt-body": {
+      "comment": "Explanation in the question asking for an OAuth token after /sasl token. OAUTHBEARER is a mechanism name and stays untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The token is saved in your keychain for this server and used to sign in with OAUTHBEARER. It is never shown in the conversation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Token wird für diesen Server in deinem Schlüsselbund gesichert und zur Anmeldung mit OAUTHBEARER verwendet. Es wird nie in der Unterhaltung angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El token se guarda en tu llavero para este servidor y se usa para iniciar sesión con OAUTHBEARER. Nunca se muestra en la conversación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le jeton est enregistré dans votre trousseau pour ce serveur et sert à vous connecter avec OAUTHBEARER. Il n’apparaît jamais dans la conversation."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A token a kulcskarikádba kerül ehhez a szerverhez, és az OAUTHBEARER bejelentkezéshez használja az app. Soha nem jelenik meg a beszélgetésben."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トークンはこのサーバ用にキーチェーンに保存され、OAUTHBEARER でのサインインに使われます。会話に表示されることはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O token é guardado nas suas chaves para este servidor e usado para entrar com OAUTHBEARER. Ele nunca aparece na conversa."
+          }
+        }
+      }
+    },
+    "sasl-token-prompt-save": {
+      "comment": "Button that saves the OAuth token typed into the question after /sasl token.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token sichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar token"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer le jeton"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token mentése"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トークンを保存"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvar token"
+          }
+        }
+      }
+    },
+    "sasl-token-prompt-placeholder": {
+      "comment": "Placeholder of the secure field for an OAuth token after /sasl token.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeton"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トークン"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

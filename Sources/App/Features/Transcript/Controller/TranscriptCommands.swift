@@ -462,6 +462,12 @@ final class TranscriptCommands: NSObject {
 		guard let request = (sender as? NSMenuItem)?.representedObject as? TranscriptMessageDeletionRequest else {
 			return
 		}
+		if case let .prefill(command, selection) = EditorRouting.route(
+			.redact(messageID: request.messageIdentifier), style: SettingsKeys.Interaction.style.value
+		), let window = AppServices.delegate?.mainWindow, window.selectedItem === request.conversation {
+			window.prefillInput(command, selecting: selection)
+			return
+		}
 		deletingMessageTask?.cancel()
 		deletingMessageTask = Task {
 			guard let session = request.session, let conversation = request.conversation,

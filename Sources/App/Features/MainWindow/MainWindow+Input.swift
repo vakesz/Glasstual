@@ -206,6 +206,26 @@ extension MainWindow {
 		inputTextAsCommand(.privmsg)
 	}
 
+	/** Puts `command` in the message field for the reader to finish and send,
+	 the way an editor opens in the conversation style.
+
+	 A draft already in the field goes into input history first, as it would
+	 if the reader had sent it, so nothing they typed is lost. `selection` is
+	 what typing replaces; without one the caret goes to the end. */
+	func prefillInput(_ command: String, selecting selection: NSRange?) {
+		let draft = NSAttributedString(attributedString: inputTextField.attributedStringValue)
+		if draft.length > 0, draft.string != command, LocalCommand.lineCarriesSecret(draft.string) == false {
+			inputHistory.add(draft)
+		}
+		nicknameCompletionStatus.clear()
+		inputTextField.attributedStringValue = NSAttributedString(string: command)
+		if isVisible == false || isKeyWindow == false {
+			makeKeyAndOrderFront(nil)
+		}
+		inputTextField.focus()
+		inputTextField.setSelectedRange(selection ?? NSRange(location: (command as NSString).length, length: 0))
+	}
+
 	private func inputTextAsCommand(_ command: RemoteCommand) {
 		nicknameCompletionStatus.clear()
 		/* NSTextView returns its live mutable text storage. Snapshot it before
