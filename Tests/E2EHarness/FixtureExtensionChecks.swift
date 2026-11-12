@@ -263,14 +263,14 @@ enum FixtureExtensionChecks {
 			listener.newConnectionHandler = { [weak self] connection in
 				Task { @MainActor in self?.accept(connection) }
 			}
-			listener.start(queue: .global())
+			listener.start(queue: .main)
 		}
 
 		private func accept(_ peer: NWConnection) {
 			connection = peer
 			received = Data()
 			closed = false
-			peer.start(queue: .global())
+			peer.start(queue: .main)
 			receive(peer)
 		}
 

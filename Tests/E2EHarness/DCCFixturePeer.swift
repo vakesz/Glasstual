@@ -122,7 +122,7 @@ final class DCCFixturePeer {
 		listener.newConnectionHandler = { [weak self] connection in
 			Task { @MainActor in self?.accept(connection) }
 		}
-		listener.start(queue: .global())
+		listener.start(queue: .main)
 		try await Wait.until("DCC listener ready", timeout: .seconds(8)) { listener.state == .ready }
 		guard let port = listener.port else { throw HarnessFailure.assertion("DCC listener has no port") }
 		self.port = port.rawValue
@@ -187,7 +187,7 @@ final class DCCFixturePeer {
 				}
 			}
 		}
-		peer.start(queue: .global())
+		peer.start(queue: .main)
 	}
 
 	private func begin() {
@@ -207,7 +207,7 @@ final class DCCFixturePeer {
 		}
 		begin()
 		connection = peer
-		peer.start(queue: .global())
+		peer.start(queue: .main)
 		sendPayload(on: peer)
 	}
 

@@ -44,7 +44,14 @@ struct PeerEvidence {
 
  Network callbacks hand their events to the main actor, which owns the peer's
  state. A protocol violation is recorded as ``failure`` and stops the peer
- answering; scenarios check it on every wait. */
+ answering; scenarios check it on every wait.
+
+ Every listener and connection in the harness delivers on the main queue. A
+ connection applies its state changes on the queue it is started with, and
+ the waits here read `state`: on a concurrent queue two changes are applied
+ at once, `ready` can be overwritten by the `preparing` before it, and a wait
+ on a connection that is up times out. One serial queue also hands the events
+ to the main actor in the order they happened. */
 final class LoopbackPeer {
 	let mode: FixtureMode
 	private let listener: NWListener
@@ -113,7 +120,7 @@ final class LoopbackPeer {
 		listener.newConnectionHandler = { [weak self] connection in
 			Task { @MainActor in self?.accept(connection) }
 		}
-		listener.start(queue: .global())
+		listener.start(queue: .main)
 		try await Wait.until("loopback listener ready", timeout: .seconds(10)) { self.listener.state == .ready }
 		guard let port = listener.port?.rawValue else { throw HarnessFailure.setup("Loopback port missing") }
 		self.port = port
@@ -162,7 +169,7 @@ final class LoopbackPeer {
 				}
 			}
 		}
-		peer.start(queue: .global())
+		peer.start(queue: .main)
 		receive(peer)
 	}
 

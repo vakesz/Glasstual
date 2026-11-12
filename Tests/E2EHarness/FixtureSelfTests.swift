@@ -451,7 +451,7 @@ enum FixtureSelfTests {
 		}
 
 		func start() {
-			connection.start(queue: .global())
+			connection.start(queue: .main)
 			receive()
 		}
 
