@@ -45,6 +45,24 @@ struct MemberListDisplayNameTests {
 		#expect(try MemberRowProfile(spoof, presentation: presentation(on: session)).displayName == nil)
 	}
 
+	/** Folding every nickname is the cost of a display name check, and the
+	 member list builds a presentation each time its members change: during a
+	 join burst that fold over the whole channel ran on every change. */
+	@Test("The collision set is folded only once a member with a display name is drawn")
+	func collisionsFoldOnlyForDisplayNames() throws {
+		let session = try makeMetadataSession()
+		let presentation = try presentation(on: session)
+		let peer = try #require(session.findUser("peer"))
+
+		#expect(presentation.displayName(for: peer) == nil)
+		#expect(presentation.hasFoldedCollisions == false)
+
+		try session.receive(":irc.example.net METADATA peer display-name * :Peer Display")
+		let named = try #require(session.findUser("peer"))
+		#expect(presentation.displayName(for: named) == "Peer Display")
+		#expect(presentation.hasFoldedCollisions)
+	}
+
 	@Test("Nothing is shown with Show Server Profiles off")
 	func settingOff() throws {
 		let session = try makeMetadataSession()

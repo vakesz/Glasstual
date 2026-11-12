@@ -20,7 +20,7 @@ struct ServerProfilePresentation {
 	let fetchesAvatars: Bool
 	private let route: InlineImageRoute
 	private let owner: String
-	private let collisions: Set<String>
+	private let collisions: CollisionForms
 	private let casefold: (String) -> String
 	private let images: RemoteImageStore
 
@@ -30,7 +30,7 @@ struct ServerProfilePresentation {
 		fetchesAvatars = false
 		route = .unavailable
 		owner = ""
-		collisions = []
+		collisions = CollisionForms(nicknames: [], localNickname: "", casefold: { $0 })
 		casefold = { $0 }
 		images = .avatars
 	}
@@ -54,9 +54,7 @@ struct ServerProfilePresentation {
 		route = InlineImageRoute(session: session)
 		owner = session.uniqueIdentifier
 		casefold = fold
-		collisions = ProfileNamePresentation.collisionForms(
-			nicknames: nicknames, localNickname: session.userNickname, casefold: fold
-		)
+		collisions = CollisionForms(nicknames: Array(nicknames), localNickname: session.userNickname, casefold: fold)
 		self.images = images
 	}
 
@@ -82,18 +80,22 @@ struct ServerProfilePresentation {
 		return session.userIndex.values.map(\.nickname)
 	}
 
-	/// The display name drawn beside `user`'s nickname, if any.
-	func displayName(for user: User) -> String? {
-		guard showsProfiles else { return nil }
+	/** The display name drawn beside `user`'s nickname, if any.
 
-		/* The person's own nickname is in the member list too; leaving it in
-		 would hide every display name as colliding with itself. */
-		var others = collisions
-		others.remove(ProfileNamePresentation.comparisonForm(user.nickname, casefold: casefold))
+	 The person's own nickname is in the collision set too. That needs no
+	 exception here: a display name equal to it is refused as redundant before
+	 the set is consulted, and any other name is not their nickname. */
+	func displayName(for user: User) -> String? {
+		guard showsProfiles, user.profile.displayName != nil else { return nil }
 
 		return ProfileNamePresentation.displayName(
-			for: user.profile, nickname: user.nickname, collisions: others, casefold: casefold
+			for: user.profile, nickname: user.nickname, collisions: collisions.forms, casefold: casefold
 		)
+	}
+
+	/// Whether the collision set has been folded. For tests.
+	var hasFoldedCollisions: Bool {
+		collisions.isFolded
 	}
 
 	/// The colour the person chose, when profiles are shown.
@@ -111,5 +113,38 @@ struct ServerProfilePresentation {
 		images.request(url, route: route, owner: owner)
 
 		return nil
+	}
+}
+
+/** The names a display name must not pass for, folded on first use. Only a
+ member who set a display name needs them, and folding every nickname of a
+ large channel each time its list changed held up the main actor through a
+ join burst. A class, so the copies of one presentation share one fold. */
+@MainActor
+private final class CollisionForms {
+	private let nicknames: [String]
+	private let localNickname: String
+	private let casefold: (String) -> String
+	private var folded: Set<String>?
+
+	init(nicknames: [String], localNickname: String, casefold: @escaping (String) -> String) {
+		self.nicknames = nicknames
+		self.localNickname = localNickname
+		self.casefold = casefold
+	}
+
+	var isFolded: Bool {
+		folded != nil
+	}
+
+	var forms: Set<String> {
+		if let folded {
+			return folded
+		}
+		let forms = ProfileNamePresentation.collisionForms(
+			nicknames: nicknames, localNickname: localNickname, casefold: casefold
+		)
+		folded = forms
+		return forms
 	}
 }
