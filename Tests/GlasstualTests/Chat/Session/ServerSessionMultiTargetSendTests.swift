@@ -22,6 +22,7 @@ struct ServerSessionMultiTargetSendTests {
 		session.recordedOutput.selectedConversation = targets[0]
 		let admission = RenderAdmission(capacity: 1)
 		session.renderAdmission = admission
+		session.outboundTextProducer = Self.waitingProducer(admission)
 		let ticket = admission.submit(for: "existing")
 		defer { session.cancelPendingSessionTasks(); admission.finish(ticket) }
 		session.inputText("/me hello", destination: targets[0])
@@ -41,6 +42,7 @@ struct ServerSessionMultiTargetSendTests {
 		session.recordedOutput.selectedConversation = nil
 		let admission = RenderAdmission(capacity: 1)
 		session.renderAdmission = admission
+		session.outboundTextProducer = Self.waitingProducer(admission)
 		let ticket = admission.submit(for: "existing")
 		defer { session.cancelPendingSessionTasks(); admission.finish(ticket) }
 		session.inputText("/part", destination: session)
@@ -49,6 +51,12 @@ struct ServerSessionMultiTargetSendTests {
 		admission.finish(ticket)
 		await drainProducer(on: session)
 		#expect(session.sentLines.count == 0)
+	}
+
+	/// A producer that waits for capacity before every step, as the later lines
+	/// of a long paste do, so the tests below reach what happens after a wait.
+	static func waitingProducer(_ admission: RenderAdmission) -> OutboundTextProducer {
+		OutboundTextProducer(admission: admission, idleAdmissionSteps: 0)
 	}
 
 	private func drainProducer(on session: ServerSession) async {
@@ -65,6 +73,7 @@ struct ServerSessionMultiTargetSendTests {
 		let channel = try #require(channels(["#one"], on: session).first)
 		let admission = RenderAdmission(capacity: 2)
 		session.renderAdmission = admission
+		session.outboundTextProducer = Self.waitingProducer(admission)
 		let initial = [admission.submit(for: "existing"), admission.submit(for: "existing")]
 		var tickets: [UUID] = []
 		let (printed, continuation) = AsyncStream<String>.makeStream()
@@ -106,6 +115,7 @@ struct ServerSessionMultiTargetSendTests {
 		channel.activate()
 		let admission = RenderAdmission(capacity: 1)
 		session.renderAdmission = admission
+		session.outboundTextProducer = Self.waitingProducer(admission)
 		let ticket = admission.submit(for: "existing")
 		defer { session.cancelPendingSessionTasks(); admission.finish(ticket) }
 		session.sendText(NSAttributedString(string: "must not cross the boundary"), as: .privmsg, to: channel)

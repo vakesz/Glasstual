@@ -190,6 +190,7 @@ struct MessageTagsTests {
 		let channel = try addChannel(named: "#chat", to: session)
 		let admission = RenderAdmission(capacity: 1)
 		session.renderAdmission = admission
+		session.outboundTextProducer = ServerSessionMultiTargetSendTests.waitingProducer(admission)
 		let ticket = admission.submit(for: "existing")
 		defer { session.cancelPendingSessionTasks(); admission.finish(ticket) }
 		session.replies.nextMessage = "first-reply"

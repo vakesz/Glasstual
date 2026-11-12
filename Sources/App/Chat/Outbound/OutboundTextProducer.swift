@@ -12,18 +12,30 @@ protocol OutboundTextAdmission: AnyObject {
 	func waitForCapacity() async
 }
 
-/// Produces one wire chunk at a time, retaining the original input while the
-/// transcript is full. Nested commands finish before the next input line.
+/** Produces one wire chunk at a time, retaining the original input while the
+ transcript is full. Nested commands finish before the next input line.
+
+ Input entered while nothing is queued starts at once, for a few steps, even
+ when inbound traffic holds the transcript at capacity: the reader's own line
+ waiting seconds behind a join burst is the delay the budget exists to avoid,
+ and the inbound reader would otherwise win every slot that frees. Everything
+ still goes out in the order it was entered; only the wait is skipped. */
 @MainActor
 final class OutboundTextProducer {
 	private let admission: any OutboundTextAdmission
+	/** How many steps input entered into an idle producer takes before it waits
+	 for capacity: a typed line, the command a slash prefix expands to, and a
+	 line split into a few wire chunks. A long paste waits after these, so the
+	 transcript is overfilled by a bounded amount per entry. */
+	private let idleAdmissionSteps: Int
 	private var producers: [() -> Bool] = []
 	private var nestedInsertionIndex: Int?
 	private var task: Task<Void, Never>?
 	private var generation = UUID()
 
-	init(admission: any OutboundTextAdmission) {
+	init(admission: any OutboundTextAdmission, idleAdmissionSteps: Int = 8) {
 		self.admission = admission
+		self.idleAdmissionSteps = idleAdmissionSteps
 	}
 
 	isolated deinit { task?.cancel() }
@@ -42,7 +54,7 @@ final class OutboundTextProducer {
 		}
 		producers.append(step)
 		guard task == nil else { return }
-		drain()
+		drain(admittingWithoutCapacity: idleAdmissionSteps)
 	}
 
 	func cancel() {
@@ -53,10 +65,10 @@ final class OutboundTextProducer {
 		nestedInsertionIndex = nil
 	}
 
-	private func drain() {
+	private func drain(admittingWithoutCapacity uncheckedSteps: Int = 0) {
 		let admittedGeneration = generation
 		var steps = 0
-		while !producers.isEmpty, admission.hasCapacity, steps < 64 {
+		while !producers.isEmpty, steps < uncheckedSteps || admission.hasCapacity, steps < 64 {
 			let step = producers.removeFirst()
 			nestedInsertionIndex = 0
 			let hasMore = step()
