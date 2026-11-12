@@ -87,8 +87,21 @@ struct ScrollbackSearchView: View {
 		}
 	}
 
-	@ViewBuilder
+	/** The result list, with whatever stands in for results over it.
+
+	 The list is in the window from the start rather than put there when the
+	 first results arrive. Built at that moment, with the search scopes just
+	 added to the toolbar, it drew its first group header as tall as the
+	 toolbar is, which left a gap two rows high above the first result
+	 whenever the results did not fill the window. */
 	private var results: some View {
+		resultList
+			.overlay { status }
+	}
+
+	/// What the window says while there are no results to list.
+	@ViewBuilder
+	private var status: some View {
 		switch model.phase {
 		case .idle:
 			ContentUnavailableView(
@@ -99,7 +112,6 @@ struct ScrollbackSearchView: View {
 		case .searching where model.groups.isEmpty:
 			ProgressView()
 				.controlSize(.small)
-				.frame(maxWidth: .infinity, maxHeight: .infinity)
 		case let .failed(reason):
 			ContentUnavailableView(
 				String(localized: .ScrollbackSearch.failedTitle),
@@ -109,7 +121,7 @@ struct ScrollbackSearchView: View {
 		case .finished where model.groups.isEmpty:
 			ContentUnavailableView.search(text: model.text)
 		case .searching, .finished:
-			resultList
+			EmptyView()
 		}
 	}
 
