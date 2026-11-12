@@ -382,12 +382,27 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 	 reloading is the destructive one, because it throws them away. */
 	private func underlyingConfigurationChanged(_ message: ServerSessionConfigWasUpdated) {
 		let session = message.subject
-		guard session.config != model.config else { return }
+		/* Compared with what the window last loaded or saved, not with the
+		 edits: the edits always differ, and are not what changed. */
+		let saved = model.savedEditState?.config ?? model.config
+		guard Self.changesEditedConfiguration(from: saved, to: session.config) else { return }
 		guard model.hasUnsavedChanges else {
 			reload(from: session)
 			return
 		}
 		asksToReload = true
+	}
+
+	/** Whether `updated` changes anything this window edits, from the
+	 configuration it last loaded or saved. The address book
+	 is the People window's and the server profile is the Profile pane's, and
+	 both change live, outside Save, which keeps whatever the connection holds;
+	 a change to either alone is not a change to the configuration here. */
+	static func changesEditedConfiguration(from saved: ServerConfig, to updated: ServerConfig) -> Bool {
+		var updated = updated
+		updated.ignoreList = saved.ignoreList
+		updated.serverProfile = saved.serverProfile
+		return updated != saved
 	}
 
 	/// The answer to the reload question: `true` throws the edits away.

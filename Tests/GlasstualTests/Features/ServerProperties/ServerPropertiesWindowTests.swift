@@ -256,6 +256,33 @@ struct ServerPropertiesWindowTests {
 		#expect(editor.model.hasUnsavedChanges == false)
 	}
 
+	@Test("An address book edit made in the People window is not a configuration change here")
+	func addressBookChangeDoesNotAsk() {
+		let session = ServerSession(config: Self.savedConfiguration())
+		let editor = ServerPropertiesEditor(session: session) { _, _ in }
+		defer { editor.windowDidClose() }
+		editor.model.config.nickname = "someone-else"
+
+		session.config.ignoreList.append(.newIgnoreEntry(forHostmask: "troll!*@*"))
+		ServerSessionConfigWasUpdated(subject: session).post()
+
+		#expect(editor.asksToReload == false)
+		#expect(editor.model.config.nickname == "someone-else")
+		#expect(editor.model.hasUnsavedChanges)
+	}
+
+	@Test("Only what the window edits counts as a change to its configuration")
+	func editedConfigurationChange() {
+		let saved = Self.savedConfiguration()
+		var addressBook = saved
+		addressBook.ignoreList = [.newIgnoreEntry(forHostmask: "troll!*@*")]
+		#expect(ServerPropertiesEditor.changesEditedConfiguration(from: saved, to: addressBook) == false)
+
+		var both = addressBook
+		both.realName = "Changed Elsewhere"
+		#expect(ServerPropertiesEditor.changesEditedConfiguration(from: saved, to: both))
+	}
+
 	@Test("A restored window reopens on the pane it was left on, if the connection still lists it")
 	func storedPane() {
 		for pane in ServerPropertiesSelection.allCases {
