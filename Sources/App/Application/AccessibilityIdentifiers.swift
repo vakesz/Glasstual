@@ -111,6 +111,7 @@ enum AccessibilityIdentifier {
 	// MARK: - Settings
 
 	static let settingsConfirmQuit = "settings-confirm-quit"
+	static let settingsTranscriptFont = "settings-transcript-font"
 	static let settingsInteractionStyle = "settings-interaction-style"
 	static let settingsImport = "settings-import"
 	static let settingsExport = "settings-export"

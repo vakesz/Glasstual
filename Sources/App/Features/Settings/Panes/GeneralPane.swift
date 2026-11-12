@@ -45,6 +45,14 @@ struct GeneralPane: View {
 			)
 			.accessibilityIdentifier(AccessibilityIdentifier.settingsConfirmQuit)
 			SettingsToggle(
+				title: .Settings.preventSleepWhileConnected,
+				note: .Settings.preventSleepExplanation,
+				isOn: model.settings.binding(for: SettingsKeys.Connection.preventSleepWhileConnected)
+			)
+		}
+
+		Section {
+			SettingsToggle(
 				title: .Settings.generalAwayOnScreenSleep,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.awayOnScreenSleep)
 			)
@@ -54,11 +62,8 @@ struct GeneralPane: View {
 				isOn: model.settings.binding(for: SettingsKeys.Connection.awayOnIdle)
 			)
 			idleAwayRows
-			SettingsToggle(
-				title: .Settings.preventSleepWhileConnected,
-				note: .Settings.preventSleepExplanation,
-				isOn: model.settings.binding(for: SettingsKeys.Connection.preventSleepWhileConnected)
-			)
+		} header: {
+			Text(.Settings.generalHeadingAway)
 		}
 
 		Section {

@@ -16,8 +16,13 @@ struct ControlsPane: View {
 					for: SettingsKeys.Appearance.conversationNavigationIsServerSpecific
 				)
 			)
-			doubleClickPicker
 			commandWPicker
+		} header: {
+			Text(.Settings.controlsHeadingKeyboard)
+		}
+
+		Section {
+			doubleClickPicker
 			doubleClickToggles
 			SettingsToggle(
 				title: .Settings.controlsCopyOnSelect,
@@ -29,7 +34,7 @@ struct ControlsPane: View {
 				isOn: model.settings.binding(for: SettingsKeys.Messages.openBrowserInBackground)
 			)
 		} header: {
-			Text(.Settings.controlsHeadingKeyboardMouse)
+			Text(.Settings.controlsHeadingMouse)
 		}
 
 		Section {
@@ -151,25 +156,14 @@ struct ControlsPane: View {
 		}
 	}
 
+	/// The suffix, with what a completed name looks like as the row's subtitle.
 	private var completionSuffixRow: some View {
-		LabeledContent {
-			HStack(spacing: UISpacing.regular) {
-				TextField(
-					"",
-					text: model.settings.binding(for: SettingsKeys.Input.tabCompletionSuffix)
-				)
-				.labelsHidden()
-				.accessibilityLabel(Text(.Settings.controlsCompletionSuffixAccessibility))
-				Divider()
-				Text(.Settings.controlsCompletionPreviewLabel)
-					.bold()
-				Text(.Settings.controlsCompletionPreview(
-					model.settings[SettingsKeys.Input.tabCompletionSuffix]
-				))
-				.foregroundStyle(.secondary)
-			}
-		} label: {
+		TextField(text: model.settings.binding(for: SettingsKeys.Input.tabCompletionSuffix)) {
 			Text(.Settings.controlsCompletionSuffixLabel)
+			Text(.Settings.controlsCompletionPreview(
+				model.settings[SettingsKeys.Input.tabCompletionSuffix]
+			))
 		}
+		.accessibilityLabel(Text(.Settings.controlsCompletionSuffixAccessibility))
 	}
 }

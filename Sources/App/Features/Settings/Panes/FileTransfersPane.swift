@@ -6,6 +6,9 @@ import SwiftUI
 /// The File Transfers row: what happens when a file is offered, the address
 /// and ports the other end is given, and where downloads land.
 struct FileTransfersPane: View {
+	/// Wide enough for five digits at the body size.
+	private static let portFieldWidth = 64.0
+
 	let model: SettingsModel
 	@State private var showsKnownCertificates = false
 
@@ -16,9 +19,23 @@ struct FileTransfersPane: View {
 	var body: some View {
 		Section {
 			replyActionPicker
+			SettingsToggle(
+				title: .Settings.fileTransfersReverseDcc,
+				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.requestsAreReversed)
+			)
+		} header: {
+			Text(.Settings.fileTransfersHeadingRequests)
+		}
+
+		Section {
 			detectionPicker
 			manualAddressField
 			portRange
+		} header: {
+			Text(.Settings.fileTransfersHeadingNetwork)
+		}
+
+		Section {
 			SettingsFolderPicker(
 				label: .Settings.fileTransfersDestinationLabel,
 				accessibilityLabel: .Settings.downloadDestination,
@@ -29,15 +46,14 @@ struct FileTransfersPane: View {
 				select: { model.selectDownloadFolder() },
 				clear: { model.clearDownloadFolder() }
 			)
-			SettingsNote(.Settings.fileTransfersDestinationNote)
-			SettingsToggle(
-				title: .Settings.fileTransfersReverseDcc,
-				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.requestsAreReversed)
-			)
 			SettingsToggle(
 				title: .Settings.fileTransfersPreventSleep,
 				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.preventIdleSystemSleep)
 			)
+		} header: {
+			Text(.Settings.fileTransfersHeadingDownloads)
+		} footer: {
+			Text(.Settings.fileTransfersDestinationNote)
 		}
 
 		secureConnections
@@ -72,11 +88,9 @@ struct FileTransfersPane: View {
 				note: .Settings.fileTransfersRequirePeerCertificateNote,
 				isOn: model.settings.binding(for: SettingsKeys.FileTransfers.requirePeerCertificate)
 			)
-			HStack {
-				Spacer()
-				Button(.Settings.fileTransfersKnownCertificatesButton) { showsKnownCertificates = true }
-					.accessibilityIdentifier("settings-known-certificates")
-			}
+			Button(.Settings.fileTransfersKnownCertificatesButton) { showsKnownCertificates = true }
+				.frame(maxWidth: .infinity, alignment: .trailing)
+				.accessibilityIdentifier("settings-known-certificates")
 		} header: {
 			Text(.Settings.fileTransfersHeadingSecureConnections)
 		}
@@ -130,7 +144,7 @@ struct FileTransfersPane: View {
 
 	private var portRange: some View {
 		LabeledContent {
-			HStack(spacing: 6) {
+			HStack(spacing: UISpacing.tight) {
 				SettingsCommittedField(
 					title: .Settings.fileTransfersPortRangeFirst,
 					value: model.settings.portField(
@@ -139,7 +153,9 @@ struct FileTransfersPane: View {
 					),
 					rejectionMessage: .SettingsTransfer.enterAValidWholeNumber
 				)
-				.frame(width: 80)
+				.monospacedDigit()
+				.frame(idealWidth: Self.portFieldWidth)
+				.fixedSize()
 				Text(.Settings.fileTransfersPortRangeSeparator)
 				SettingsCommittedField(
 					title: .Settings.fileTransfersPortRangeLast,
@@ -149,8 +165,9 @@ struct FileTransfersPane: View {
 					),
 					rejectionMessage: .SettingsTransfer.enterAValidWholeNumber
 				)
-				.frame(width: 80)
-				Spacer()
+				.monospacedDigit()
+				.frame(idealWidth: Self.portFieldWidth)
+				.fixedSize()
 			}
 		} label: {
 			Text(.Settings.fileTransfersPortRangeLabel)

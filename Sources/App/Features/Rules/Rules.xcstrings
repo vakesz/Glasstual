@@ -1060,54 +1060,6 @@
         }
       }
     },
-    "more-actions-button": {
-      "comment": "Menu containing additional chat-rule actions.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More Actions"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "További műveletek"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weitere Aktionen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Más acciones"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plus d’actions"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "その他の操作"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mais ações"
-          }
-        }
-      }
-    },
     "no-rules-description": {
       "comment": "Explanation shown when no rules exist.",
       "extractionState": "manual",
@@ -1259,7 +1211,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Action Message"
+            "value": "Action message"
           }
         },
         "hu": {
@@ -1595,7 +1547,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel Mode Changed"
+            "value": "Channel mode changed"
           }
         },
         "hu": {
@@ -1643,7 +1595,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel Mode Received"
+            "value": "Channel mode received"
           }
         },
         "hu": {
@@ -1691,7 +1643,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel Topic Changed"
+            "value": "Channel topic changed"
           }
         },
         "hu": {
@@ -1739,7 +1691,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channel Topic Received"
+            "value": "Channel topic received"
           }
         },
         "hu": {
@@ -1787,7 +1739,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Channels Only"
+            "value": "Channels only"
           }
         },
         "hu": {
@@ -2315,7 +2267,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Greater Than"
+            "value": "Greater than"
           }
         },
         "hu": {
@@ -2363,7 +2315,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hide Original Message"
+            "value": "Hide original message"
           }
         },
         "hu": {
@@ -2411,7 +2363,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ignore Channel Operators"
+            "value": "Ignore channel operators"
           }
         },
         "hu": {
@@ -2507,7 +2459,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Less Than"
+            "value": "Less than"
           }
         },
         "hu": {
@@ -2603,7 +2555,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Log Rule Match and Action"
+            "value": "Log rule match and action"
           }
         },
         "hu": {
@@ -2843,7 +2795,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notice Message"
+            "value": "Notice message"
           }
         },
         "hu": {
@@ -2891,7 +2843,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only My Messages"
+            "value": "Only my messages"
           }
         },
         "hu": {
@@ -2939,7 +2891,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plain Text Message"
+            "value": "Plain text message"
           }
         },
         "hu": {
@@ -2987,7 +2939,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private Messages Only"
+            "value": "Private messages only"
           }
         },
         "hu": {
@@ -3131,7 +3083,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Specific Items"
+            "value": "Specific items"
           }
         },
         "hu": {
@@ -3323,7 +3275,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User Changed Nickname"
+            "value": "User changed nickname"
           }
         },
         "hu": {
@@ -3371,7 +3323,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User Disconnected"
+            "value": "User disconnected"
           }
         },
         "hu": {
@@ -3419,7 +3371,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User Joined Channel"
+            "value": "User joined channel"
           }
         },
         "hu": {
@@ -3467,7 +3419,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User Kicked from Channel"
+            "value": "User kicked from channel"
           }
         },
         "hu": {
@@ -3515,7 +3467,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User Left Channel"
+            "value": "User left channel"
           }
         },
         "hu": {
@@ -3611,7 +3563,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a properly formatted list of commands.\n\n• Commands must be a comma (,) separated list.\n• Commands must only contain the characters: a-z, A-Z, 0-9\n• Numerics must be whole numbers that are greater than zero (0) and less than or equal to 999."
+            "value": "Enter a list of commands separated by commas (,).\n\n• Commands can contain only the characters a-z, A-Z and 0-9.\n• Numerics must be whole numbers greater than zero (0) and less than or equal to 999."
           }
         },
         "hu": {
@@ -3659,7 +3611,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a properly formatted destination.\n\nAccepted characters: a-z, A-Z, 0-9, dashes (-), underscores (_), and spaces."
+            "value": "Enter a destination in the correct format.\n\nAccepted characters: a-z, A-Z, 0-9, hyphens (-), underscores (_) and spaces."
           }
         },
         "hu": {
@@ -3707,43 +3659,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a shorter destination"
+            "value": "Enter a shorter destination."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adj meg rövidebb célt"
+            "value": "Adj meg rövidebb célt."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib ein kürzeres Ziel ein"
+            "value": "Gib ein kürzeres Ziel ein."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Introduce un destino más corto"
+            "value": "Introduce un destino más corto."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saisissez une destination plus courte"
+            "value": "Saisissez une destination plus courte."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "宛先を短くしてください"
+            "value": "宛先を短くしてください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Insira um destino mais curto"
+            "value": "Insira um destino mais curto."
           }
         }
       }
@@ -3755,7 +3707,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a valid regular expression.\n\n%@"
+            "value": "Enter a valid regular expression.\n\n%@"
           }
         },
         "hu": {

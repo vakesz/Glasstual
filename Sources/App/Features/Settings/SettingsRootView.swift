@@ -32,9 +32,9 @@ struct SettingsScene: Scene {
 		Settings {
 			SettingsSceneRoot(request: request)
 		}
-		/* The pages declare their own minimum, and the window used to let
-		 itself be dragged narrower than any of them could lay out. */
-		.windowResizability(.contentMinSize)
+		/* Like System Settings, the window keeps one width and grows only
+		 taller: the root view fixes the width and bounds the height. */
+		.windowResizability(.contentSize)
 	}
 }
 
@@ -109,14 +109,15 @@ struct SettingsRootView: View {
 		}
 		.modifier(SettingsTransferPresentation(session: .shared, host: .settings))
 		/* The Settings window takes its size from here and nowhere else: one
-		 ideal size for every pane, so moving between them does not resize the
-		 window, and a floor the shortest form still draws inside. Each pane's
-		 own height comes from its form, which scrolls. */
+		 width for every pane, so moving between them does not resize the
+		 window, and a height that can grow from a floor the shortest form
+		 still draws inside. Each pane's own height comes from its form, which
+		 scrolls. */
+		.frame(width: SettingsWindowMetrics.windowSize.width)
 		.frame(
-			minWidth: SettingsWindowMetrics.minimumWindowSize.width,
-			idealWidth: SettingsWindowMetrics.windowSize.width,
-			minHeight: SettingsWindowMetrics.minimumWindowSize.height,
-			idealHeight: SettingsWindowMetrics.windowSize.height
+			minHeight: SettingsWindowMetrics.minimumHeight,
+			idealHeight: SettingsWindowMetrics.windowSize.height,
+			maxHeight: .infinity
 		)
 		.fileImporter(
 			isPresented: PendingFileRequest<SettingsImportRequest>.presentation($model.fileRequest),
@@ -144,13 +145,6 @@ struct SettingsRootView: View {
 			Button(PromptStrings.Action.confirmation) { model.presentationFailure = nil }
 		} message: { failure in
 			Text(verbatim: failure.message)
-		}
-		.sheet(isPresented: $model.showsFontPicker) {
-			SettingsFontPicker(
-				fontName: model.transcriptTheme.fontName,
-				fontSize: model.transcriptTheme.fontSize,
-				apply: model.applyTranscriptFont
-			)
 		}
 		.onChange(of: model.externalURL) { _, url in
 			guard let url else { return }
@@ -229,7 +223,5 @@ private struct SettingsDestinationView: View {
 			}
 		}
 		.formStyle(.grouped)
-		.scrollContentBackground(.hidden)
-		.contentMargins(.top, UISpacing.regular, for: .scrollContent)
 	}
 }

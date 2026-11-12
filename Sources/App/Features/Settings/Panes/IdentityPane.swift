@@ -10,7 +10,6 @@ struct IdentityPane: View {
 
 	var body: some View {
 		Section {
-			SettingsNote(.Settings.defaultIdentityNote)
 			identityField(
 				.Settings.defaultIdentityNickname,
 				key: SettingsKeys.Identity.nickname,
@@ -35,9 +34,10 @@ struct IdentityPane: View {
 				rule: .realName,
 				rejection: .CommonErrors.realNameInvalid
 			)
-			SettingsNote(.Settings.defaultIdentityAllOptional)
 		} header: {
 			Text(SettingsPane.defaultIdentity.title)
+		} footer: {
+			Text(.Settings.defaultIdentityNote)
 		}
 
 		Section {

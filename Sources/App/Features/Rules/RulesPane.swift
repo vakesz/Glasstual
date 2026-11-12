@@ -82,6 +82,15 @@ struct RulesPane: View {
 						controller.selection = ids.first
 						editSelection()
 					}
+					Button(String(localized: .Rules.duplicateRuleButton)) {
+						controller.selection = ids.first
+						duplicateSelection()
+					}
+					Button(String(localized: .Rules.exportRuleButton)) {
+						controller.selection = ids.first
+						exportSelection()
+					}
+					Divider()
 					Button(String(localized: .Rules.deleteRuleButton), role: .destructive) {
 						controller.selection = ids.first
 						showsDeleteConfirmation = true
@@ -186,31 +195,23 @@ struct RulesPane: View {
 		)
 	}
 
+	/// Add and remove under the list, and the rule's other commands in the
+	/// action menu. A rule is edited by double-clicking it or pressing Return.
 	private var commands: some View {
-		HStack(spacing: UISpacing.regular) {
-			Button {
+		ListEditingControls(
+			addLabel: Text(String(localized: .Rules.addRuleButton)),
+			removeLabel: Text(String(localized: .Rules.deleteRuleButton)),
+			canRemove: controller.selectedRule != nil,
+			add: {
 				editor = RuleEditorPresentation(rule: MessageRule(), replacingIdentifier: nil)
-			} label: {
-				Label(String(localized: .Rules.addRuleButton), systemImage: "plus")
-			}
+			},
+			remove: { showsDeleteConfirmation = true },
+			actions: {
+				Button(String(localized: .Rules.editRuleButton)) {
+					editSelection()
+				}
+				.disabled(controller.selectedRule == nil)
 
-			Button {
-				showsDeleteConfirmation = true
-			} label: {
-				Label(String(localized: .Rules.deleteRuleButton), systemImage: "minus")
-			}
-			.disabled(controller.selectedRule == nil)
-
-			Button {
-				editSelection()
-			} label: {
-				Label(String(localized: .Rules.editRuleButton), systemImage: "pencil")
-			}
-			.disabled(controller.selectedRule == nil)
-
-			Spacer()
-
-			Menu {
 				Button(String(localized: .Rules.duplicateRuleButton)) {
 					duplicateSelection()
 				}
@@ -225,12 +226,8 @@ struct RulesPane: View {
 					exportSelection()
 				}
 				.disabled(controller.selectedRule == nil)
-			} label: {
-				Label(String(localized: .Rules.moreActionsButton), systemImage: "ellipsis.circle")
 			}
-			.menuStyle(.borderlessButton)
-			.fixedSize()
-		}
+		)
 	}
 
 	private func editSelection() {

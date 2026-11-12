@@ -56,8 +56,8 @@ struct AdvancedPane: View {
 			Text(SettingsPane.hidden.title)
 		} footer: {
 			VStack(alignment: .leading, spacing: UISpacing.tight) {
-				SettingsNote(.Settings.hiddenWarning)
-				SettingsNote(.Settings.hiddenRestartNote)
+				Text(.Settings.hiddenWarning)
+				Text(.Settings.hiddenRestartNote)
 			}
 		}
 	}

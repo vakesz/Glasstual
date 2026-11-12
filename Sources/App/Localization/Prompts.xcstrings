@@ -1352,43 +1352,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter desired vHost (e.g. “apple.vhost”)"
+            "value": "Enter a virtual host, for example “apple.vhost”."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add meg a kívánt virtuális gépnevet (például \"apple.vhost\")"
+            "value": "Adj meg egy virtuális gépnevet, például „apple.vhost”."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib den gewünschten vHost ein (z. B. \"apple.vhost\")"
+            "value": "Gib einen virtuellen Host ein, zum Beispiel „apple.vhost“."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Introduce el vHost que quieras (p. ej. «apple.vhost»)"
+            "value": "Introduce un host virtual, por ejemplo, «apple.vhost»."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saisissez le vHost souhaité (par exemple « apple.vhost »)"
+            "value": "Saisissez un hôte virtuel, par exemple « apple.vhost »."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用したいvHostを入力してください(例: 「apple.vhost」)"
+            "value": "仮想ホストを入力してください(例: 「apple.vhost」)。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Insira o vHost desejado (por exemplo, “apple.vhost”)"
+            "value": "Insira um host virtual, por exemplo, “apple.vhost”."
           }
         }
       }

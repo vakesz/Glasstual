@@ -119,9 +119,10 @@ struct IRCv3Pane: View {
 				title: .Settings.ircv3ShowChannelContextInChannel,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.showChannelContextMessagesInChannel)
 			)
-			SettingsNote(.Settings.ircv3ReconnectNote)
 		} header: {
 			Text(.Settings.ircv3Messages)
+		} footer: {
+			Text(.Settings.ircv3ReconnectNote)
 		}
 
 		Section {
@@ -138,14 +139,16 @@ struct IRCv3Pane: View {
 				title: .Settings.ircv3SynchronizeReadMarkers,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.synchronizeReadMarkers)
 			)
-			SettingsNote(.Settings.ircv3HistoryNote)
 		} header: {
 			Text(.Settings.ircv3History)
+		} footer: {
+			Text(.Settings.ircv3HistoryNote)
 		}
 
 		Section {
 			if model.ircv3Connections.isEmpty {
-				SettingsNote(.Settings.ircv3NoConnections)
+				Text(.Settings.ircv3NoConnections)
+					.foregroundStyle(.secondary)
 			} else {
 				ForEach(model.ircv3Connections) { connection in
 					connectionRow(connection)
@@ -159,9 +162,10 @@ struct IRCv3Pane: View {
 			ForEach(switchableCapabilities, id: \.name) { capability in
 				capabilityRow(capability)
 			}
-			SettingsNote(.Settings.ircv3ReconnectNote)
 		} header: {
 			Text(.Settings.ircv3Capabilities)
+		} footer: {
+			Text(.Settings.ircv3ReconnectNote)
 		}
 	}
 
@@ -182,14 +186,13 @@ struct IRCv3Pane: View {
 	}
 
 	private func connectionRow(_ connection: IRCv3ConnectionSummary) -> some View {
-		VStack(alignment: .leading, spacing: 4) {
-			HStack {
-				Label(connection.name, systemImage: connection.isConnected ? "network" : "network.slash")
-				Spacer()
+		VStack(alignment: .leading, spacing: UISpacing.tight) {
+			LabeledContent {
 				if connection.isConnected == false {
 					Text(.Settings.ircv3Disconnected)
-						.foregroundStyle(.secondary)
 				}
+			} label: {
+				Label(connection.name, systemImage: connection.isConnected ? "network" : "network.slash")
 			}
 			if connection.capabilities.isEmpty {
 				Text(.Settings.ircv3NoCapabilities)

@@ -24,15 +24,15 @@ struct ValidationMessageLabel: View {
 	}
 
 	var body: some View {
-		/* The icon carries the red; the words stay in the primary label colour
-		 at the body size, because small red text does not hold contrast on
-		 every ground a sheet is drawn on. */
+		/* The system's multicolour warning glyph carries the colour; the words
+		 stay in the primary label colour, because small coloured text does not
+		 hold contrast on every ground a sheet is drawn on. */
 		Label {
 			Text(message)
 				.foregroundStyle(.primary)
 		} icon: {
-			Image(systemName: "exclamationmark.circle.fill")
-				.foregroundStyle(.red)
+			Image(systemName: "exclamationmark.triangle.fill")
+				.symbolRenderingMode(.multicolor)
 		}
 		.font(.callout)
 		.accessibilityElement(children: .ignore)

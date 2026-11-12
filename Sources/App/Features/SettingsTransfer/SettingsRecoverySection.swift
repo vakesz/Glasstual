@@ -43,15 +43,15 @@ struct SettingsRecoverySection: View {
 					|| exportData != nil || choosingExportOptions
 			)
 			ForEach(session.backups) { backup in
-				HStack {
-					Text(backup.created, format: .dateTime.year().month().day().hour().minute().second())
-					Spacer()
+				LabeledContent {
 					Button(.SettingsTransfer.previewBackup) {
 						session.host = .settings
 						Task { await session.prepareRecovery(backup) }
 					}
 					.disabled(session.canStart == false)
 					.accessibilityIdentifier(AccessibilityIdentifier.settingsRecoveryPreview)
+				} label: {
+					Text(backup.created, format: .dateTime.year().month().day().hour().minute().second())
 				}
 			}
 			if let newest = session.backups.first {
@@ -65,7 +65,7 @@ struct SettingsRecoverySection: View {
 		} header: {
 			Text(.SettingsTransfer.settingsAndRecovery)
 		} footer: {
-			Text(.SettingsTransfer.backupsNotice).font(.callout).foregroundStyle(.secondary)
+			Text(.SettingsTransfer.backupsNotice)
 		}
 		.task { await session.refreshBackups() }
 		.modifier(SettingsExportOptionsPresentation(

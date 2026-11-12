@@ -49,6 +49,11 @@ struct HighlightsPane: View {
 				keywords: model.settings.binding(for: SettingsKeys.Highlights.matchKeywords),
 				usesRegularExpression: usesRegularExpression
 			)
+		} header: {
+			Text(.Settings.highlightsWordsLabel)
+		}
+
+		Section {
 			SettingsKeywordList(
 				title: .Settings.highlightsExcludeWordsLabel,
 				addLabel: .Settings.highlightsAddExcluded,
@@ -56,12 +61,14 @@ struct HighlightsPane: View {
 				keywords: model.settings.binding(for: SettingsKeys.Highlights.excludeKeywords)
 			)
 			.disabled(usesRegularExpression)
+		} header: {
+			Text(.Settings.highlightsExcludeWordsLabel)
 		}
 	}
 }
 
-/// One of the two keyword tables in the Highlights pane, with its add and
-/// remove buttons.
+/// One of the two keyword tables in the Highlights pane, with the add and
+/// remove buttons every editable list has. The section around it names it.
 struct SettingsKeywordList: View {
 	private static let listHeight = 140.0
 	@Environment(\.isEnabled) private var isEnabled
@@ -84,8 +91,6 @@ struct SettingsKeywordList: View {
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: UISpacing.regular) {
-			Text(title)
-
 			List(selection: $selection) {
 				ForEach(rowIdentities.identities, id: \.self) { identity in
 					HStack(spacing: UISpacing.tight) {
@@ -102,7 +107,7 @@ struct SettingsKeywordList: View {
 
 						if let error = patternError(for: identity) {
 							Image(systemName: "exclamationmark.triangle.fill")
-								.foregroundStyle(.orange)
+								.symbolRenderingMode(.multicolor)
 								.help(Text(verbatim: error))
 								.accessibilityLabel(Text(verbatim: error))
 						}
@@ -123,20 +128,13 @@ struct SettingsKeywordList: View {
 				removeRow(at: index)
 			}
 
-			HStack(spacing: UISpacing.regular) {
-				Button(action: add) {
-					Label(String(localized: addLabel), systemImage: "plus")
-						.labelStyle(.iconOnly)
-				}
-				.help(Text(addLabel))
-
-				Button(role: .destructive, action: remove) {
-					Label(String(localized: removeLabel), systemImage: "minus")
-						.labelStyle(.iconOnly)
-				}
-				.help(Text(removeLabel))
-				.disabled(selection == nil)
-			}
+			ListEditingControls(
+				addLabel: Text(addLabel),
+				removeLabel: Text(removeLabel),
+				canRemove: selection != nil,
+				add: add,
+				remove: remove
+			)
 		}
 	}
 

@@ -14,8 +14,9 @@ enum SettingsWindowMetrics {
 	/// column short of the forms it has to draw.
 	static let sidebarWidth = 200.0
 	/// What the window opens at: the sidebar plus a detail column that fits the
-	/// widest pane without wrapping its labels.
+	/// widest pane without wrapping its labels. The width is fixed, as System
+	/// Settings' is; only the height can change.
 	static let windowSize = CGSize(width: 820, height: 640)
-	/// How far it can be taken in: every pane still draws, with scrolling.
-	static let minimumWindowSize = CGSize(width: 720, height: 520)
+	/// How short it can be made: every pane still draws, with scrolling.
+	static let minimumHeight = 520.0
 }

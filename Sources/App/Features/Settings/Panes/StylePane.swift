@@ -44,7 +44,7 @@ struct StylePane: View {
 		 .TranscriptTheme.colors, .TranscriptTheme.light, .TranscriptTheme.dark,
 		 .TranscriptTheme.lineSpacing, .TranscriptTheme.messageSpacing, .TranscriptTheme.horizontalPadding,
 		 .Settings.styleFontLabel, .Settings.styleFontChange, .Settings.styleNicknameFormatLabel,
-		 .Settings.styleTimestampFormatLabel, .Settings.interfaceResetToDefaults]
+		 .Settings.styleTimestampFormatLabel, .Settings.restoreDefaults]
 			+ TranscriptThemeColorRole.all.map(\.title)
 	}
 
@@ -87,7 +87,7 @@ struct StylePane: View {
 				Button(.TranscriptTheme.importTheme) { model.importTranscriptTheme() }
 				Button(.TranscriptTheme.exportTheme) { model.exportTranscriptTheme() }
 				Spacer()
-				Button(.Settings.interfaceResetToDefaults, role: .destructive) {
+				Button(.Settings.restoreDefaults) {
 					confirmResetTranscriptTheme()
 				}
 				.help(Text(.Settings.interfaceResetThemeConfirmation))
@@ -117,9 +117,9 @@ struct StylePane: View {
 		} header: {
 			Text(.TranscriptTheme.colors)
 		} footer: {
-			VStack(alignment: .leading, spacing: 4) {
-				SettingsNote(.TranscriptTheme.roleColorNote)
-				SettingsNote(.TranscriptTheme.roleColorSystemNote)
+			VStack(alignment: .leading, spacing: UISpacing.tight) {
+				Text(.TranscriptTheme.roleColorNote)
+				Text(.TranscriptTheme.roleColorSystemNote)
 			}
 		}
 
@@ -180,7 +180,7 @@ struct StylePane: View {
 		} header: {
 			Text(.Settings.styleHeadingScrollback)
 		} footer: {
-			SettingsNote(.Settings.styleScrollbackSaveLimitNote)
+			Text(.Settings.styleScrollbackSaveLimitNote)
 		}
 	}
 
@@ -295,14 +295,15 @@ struct StylePane: View {
 
 	private var fontRow: some View {
 		LabeledContent {
-			HStack {
+			HStack(spacing: UISpacing.regular) {
 				Text(.Settings.styleFontDescription(
-					SettingsFontPicker.displayName(for: model.transcriptTheme.fontName),
+					TranscriptFontChoice.displayName(for: model.transcriptTheme.fontName),
 					Double(model.transcriptTheme.fontSize)
 						.formatted(.number.precision(.fractionLength(0 ... 1)))
 				))
-				Spacer()
+				.foregroundStyle(.secondary)
 				Button(.Settings.styleFontChange) { model.selectTranscriptFont() }
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsTranscriptFont)
 			}
 		} label: {
 			Text(.Settings.styleFontLabel)

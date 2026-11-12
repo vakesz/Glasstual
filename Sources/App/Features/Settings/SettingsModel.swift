@@ -2,6 +2,7 @@
 // Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppKit
 import CocoaExtensions
 import Foundation
 import Observation
@@ -158,7 +159,8 @@ final class SettingsModel {
 	var exportedThemeFilename = ""
 	var presentationFailure: SettingsOperationFailure?
 	var externalURL: URL?
-	var showsFontPicker = false
+	/// The system Fonts panel, while it is choosing the transcript font.
+	@ObservationIgnored private let fontPanel = TranscriptFontPanel()
 	/// The read and import of a chosen theme file, for whoever needs to wait
 	/// for its outcome; the view does not.
 	@ObservationIgnored private(set) var themeImportTask: Task<Void, Never>?
@@ -201,6 +203,7 @@ final class SettingsModel {
 	func deactivate() {
 		SettingsEditingSession.shared.finishEditing()
 		cancelThemeImport()
+		fontPanel.release()
 		notifications.cancelAll()
 		notificationsAreActive = false
 		SettingsReload.perform([.highlightKeywords, .settingsChanged])
@@ -351,14 +354,20 @@ extension SettingsModel {
 		_ = themeStore.apply(preset.theme())
 	}
 
+	/// Opens the system Fonts panel on the transcript font. Every font the
+	/// reader picks there is applied as it is picked, as in TextEdit.
 	func selectTranscriptFont() {
-		showsFontPicker = true
+		SettingsEditingSession.shared.finishEditing()
+		fontPanel.present(selecting: themeStore.font) { [weak self] font in
+			self?.applyTranscriptFont(font)
+		}
 	}
 
-	func applyTranscriptFont(name: String, size: CGFloat) {
+	func applyTranscriptFont(_ font: NSFont) {
+		let choice = TranscriptFontChoice(font)
 		updateTheme {
-			$0.fontName = name
-			$0.fontSize = size
+			$0.fontName = choice.name
+			$0.fontSize = choice.size
 		}
 	}
 

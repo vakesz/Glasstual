@@ -45,7 +45,7 @@ struct InterfacePane: View {
 					Text(badge.displayName)
 				}
 			}
-			Button(.Settings.interfaceResetToDefaults, role: .destructive) {
+			Button(.Settings.restoreDefaults) {
 				confirmResetUserListColors()
 			}
 			.help(Text(.Settings.interfaceResetUserListColors))
@@ -64,7 +64,7 @@ struct InterfacePane: View {
 		} header: {
 			Text(.Settings.interfaceHeadingUserListColors)
 		} footer: {
-			SettingsNote(.Settings.interfaceUserListColorsNote)
+			Text(.Settings.interfaceUserListColorsNote)
 		}
 	}
 
@@ -82,21 +82,25 @@ struct InterfacePane: View {
 	}
 
 	private var sidebarBadgeColor: some View {
-		HStack {
-			ColorPicker(
-				selection: model.settings.storedColorBinding(
-					for: SettingsKeys.Badges.sidebarUnreadHighlight
-				),
-				supportsOpacity: false
-			) {
-				Text(.Settings.interfaceUnreadHighlightColorLabel)
+		LabeledContent {
+			HStack(spacing: UISpacing.regular) {
+				ColorPicker(
+					selection: model.settings.storedColorBinding(
+						for: SettingsKeys.Badges.sidebarUnreadHighlight
+					),
+					supportsOpacity: false
+				) {
+					Text(.Settings.interfaceUnreadHighlightColorLabel)
+				}
+				.labelsHidden()
+				Button(.Settings.interfaceReset) {
+					model.settings.reset(SettingsKeys.Badges.sidebarUnreadHighlight)
+				}
+				.help(Text(.Settings.interfaceResetUnreadHighlightColor))
+				.accessibilityLabel(Text(.Settings.interfaceResetUnreadHighlightColor))
 			}
-			Spacer()
-			Button(.Settings.interfaceReset) {
-				model.settings.reset(SettingsKeys.Badges.sidebarUnreadHighlight)
-			}
-			.help(Text(.Settings.interfaceResetUnreadHighlightColor))
-			.accessibilityLabel(Text(.Settings.interfaceResetUnreadHighlightColor))
+		} label: {
+			Text(.Settings.interfaceUnreadHighlightColorLabel)
 		}
 	}
 

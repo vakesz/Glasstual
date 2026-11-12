@@ -95,6 +95,7 @@ enum AXID {
 	static let settingsWindow = settingsSidebar
 	static let settingsSidebar = "settings-sidebar"
 	static let settingsConfirmQuit = "settings-confirm-quit"
+	static let settingsTranscriptFont = "settings-transcript-font"
 	static let settingsImport = "settings-import"
 	static let settingsExport = "settings-export"
 	static let settingsRecoveryPreview = "settings-recovery-preview"

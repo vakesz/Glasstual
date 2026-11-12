@@ -11,8 +11,9 @@ and main-actor default isolation. Write all source code in Swift.
   own domain state. AppKit adapters own native views, reuse and interaction.
 - Keep these AppKit adapters: main-window responder and restoration shell,
   `NSMenu` commands, TextKit input and transcript, reaction popover,
-  sidebar outline, member and channel tables, search-window geometry probe,
-  dock tile and blocking alerts before scene creation.
+  transcript-font `NSFontPanel`, sidebar outline, member and channel tables,
+  search-window geometry probe, dock tile and blocking alerts before scene
+  creation.
 - Adapter changes must preserve keyboard commands, focus, selection, drag and
   drop, accessibility and restoration.
 - Model closed state with enums, option sets and value types. Use `Codable`

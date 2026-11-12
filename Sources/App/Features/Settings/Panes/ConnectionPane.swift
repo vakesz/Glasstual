@@ -17,12 +17,15 @@ struct ConnectionPane: View {
 	var body: some View {
 		Section {
 			delayRow
-			SettingsNote(.Settings.floodControlIdentifyDelayNote)
 			channelSizeRow
-			SettingsNote(.Settings.floodControlWhoLimitNote)
-			SettingsNote(.Settings.floodControlNote)
 		} header: {
 			Text(SettingsPane.floodControl.title)
+		} footer: {
+			VStack(alignment: .leading, spacing: UISpacing.regular) {
+				Text(.Settings.floodControlIdentifyDelayNote)
+				Text(.Settings.floodControlWhoLimitNote)
+				Text(.Settings.floodControlNote)
+			}
 		}
 
 		Section {

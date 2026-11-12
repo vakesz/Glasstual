@@ -66,13 +66,14 @@ struct CommandsPane: View {
 			} label: {
 				Text(.Settings.channelManagementBanFormatLabel)
 			}
-			SettingsNote(.Settings.channelManagementBanFormatNote)
 			TextField(text: model.settings.binding(for: SettingsKeys.Commands.kickMessage)) {
 				Text(.Settings.channelManagementKickReasonLabel)
 			}
 			.accessibilityLabel(Text(.Settings.channelManagementKickReasonLabel))
 		} header: {
 			Text(SettingsPane.channelManagement.title)
+		} footer: {
+			Text(.Settings.channelManagementBanFormatNote)
 		}
 	}
 }

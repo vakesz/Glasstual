@@ -1160,7 +1160,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private Message"
+            "value": "Private message"
           }
         },
         "hu": {
@@ -1208,7 +1208,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected Channel"
+            "value": "Selected channel"
           }
         },
         "hu": {
@@ -1256,7 +1256,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server Console"
+            "value": "Server console"
           }
         },
         "hu": {
@@ -1352,7 +1352,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close Main Window"
+            "value": "Close main window"
           }
         },
         "hu": {
@@ -1400,7 +1400,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnect from Selected Server"
+            "value": "Disconnect from selected server"
           }
         },
         "hu": {
@@ -1496,7 +1496,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close Selected Query or Part Selected Channel"
+            "value": "Close selected conversation or leave selected channel"
           }
         },
         "hu": {
@@ -1544,7 +1544,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnect and Quit Application"
+            "value": "Disconnect and quit"
           }
         },
         "hu": {
@@ -1629,54 +1629,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "JohnDoe%@…"
-          }
-        }
-      }
-    },
-    "controls-completion-preview-label": {
-      "comment": "Label before the tab completion suffix preview.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preview"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Előnézet"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vorschau"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vista previa"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aperçu"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "プレビュー"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prévia"
           }
         }
       }
@@ -2061,54 +2013,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verificar gramática ao digitar"
-          }
-        }
-      }
-    },
-    "controls-heading-keyboard-mouse": {
-      "comment": "Section heading in the Controls pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keyboard & Mouse"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Billentyűzet és egér"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tastatur und Maus"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teclado y ratón"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clavier et souris"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キーボードとマウス"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teclado e mouse"
           }
         }
       }
@@ -2696,7 +2600,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Extra Large"
+            "value": "Extra large"
           }
         },
         "hu": {
@@ -2936,7 +2840,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Insert Name Into Text Field"
+            "value": "Insert name into text field"
           }
         },
         "hu": {
@@ -3032,7 +2936,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Query"
+            "value": "Open private conversation"
           }
         },
         "hu": {
@@ -3080,7 +2984,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whois User"
+            "value": "Get info (WHOIS)"
           }
         },
         "hu": {
@@ -3165,54 +3069,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Identidade padrão"
-          }
-        }
-      }
-    },
-    "default-identity-all-optional": {
-      "comment": "Explanation at the bottom of the Default Identity pane.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All fields are optional"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Minden mező kitöltése opcionális"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle Felder sind optional"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Todos los campos son opcionales"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tous les champs sont facultatifs"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "すべての項目は任意です"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Todos os campos são opcionais"
           }
         }
       }
@@ -4280,7 +4136,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manually Enter Address"
+            "value": "Enter address manually"
           }
         },
         "hu": {
@@ -4904,7 +4760,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatically Download"
+            "value": "Download automatically"
           }
         },
         "hu": {
@@ -5000,43 +4856,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Dialog"
+            "value": "Ask what to do"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Párbeszédablak megnyitása"
+            "value": "Rákérdezés"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dialog öffnen"
+            "value": "Nachfragen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir diálogo"
+            "value": "Preguntar qué hacer"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir la boîte de dialogue"
+            "value": "Demander quoi faire"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダイアログを開く"
+            "value": "対応を確認"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir diálogo"
+            "value": "Perguntar o que fazer"
           }
         }
       }
@@ -5624,43 +5480,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toggle away status when your display goes to sleep"
+            "value": "Set away status when the display sleeps"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Távolléti állapot váltása a kijelző elalvásakor"
+            "value": "Távollét beállítása a kijelző elalvásakor"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abwesenheitsstatus beim Ruhezustand des Displays umschalten"
+            "value": "Abwesend melden, wenn das Display in den Ruhezustand wechselt"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activar o desactivar el estado de ausencia cuando la pantalla entre en reposo"
+            "value": "Establecer el estado de ausencia cuando la pantalla entre en reposo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Basculer le statut d’absence lorsque l’écran se met en veille"
+            "value": "Passer en absent lorsque l’écran se met en veille"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ディスプレイがスリープしたときに不在ステータスを切り替える"
+            "value": "ディスプレイがスリープしたときに不在に設定"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alternar o status de ausência quando a tela entrar em repouso"
+            "value": "Definir o status de ausência quando a tela entrar em repouso"
           }
         }
       }
@@ -6584,7 +6440,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Full Word Matches"
+            "value": "Full word matches"
           }
         },
         "hu": {
@@ -6680,7 +6536,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Partial Matches"
+            "value": "Partial matches"
           }
         },
         "hu": {
@@ -6728,7 +6584,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Regular Expression (ICU)"
+            "value": "Regular expression (ICU)"
           }
         },
         "hu": {
@@ -7208,7 +7064,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Removes formatting such as bold, colors, underline, etc."
+            "value": "Removes formatting such as bold, color and underline."
           }
         },
         "hu": {
@@ -7226,13 +7082,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elimina el formato, como negrita, colores, subrayado, etc."
+            "value": "Elimina el formato, como la negrita, los colores y el subrayado."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Supprime la mise en forme : gras, couleurs, soulignement, etc."
+            "value": "Supprime la mise en forme, comme le gras, les couleurs et le soulignement."
           }
         },
         "ja": {
@@ -7244,7 +7100,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove formatações como negrito, cores, sublinhado etc."
+            "value": "Remove formatações como negrito, cores e sublinhado."
           }
         }
       }
@@ -7880,7 +7736,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset to Defaults"
+            "value": "Restore Defaults"
           }
         },
         "hu": {
@@ -8264,43 +8120,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "(Includes Ban Length)"
+            "value": "Includes the ban length."
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "(A kitiltás időtartamával együtt)"
+            "value": "Tartalmazza a kitiltás időtartamát."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "(Einschließlich Banndauer)"
+            "value": "Enthält die Banndauer."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "(Incluye la duración del bloqueo)"
+            "value": "Incluye la duración del bloqueo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "(Inclut la durée du bannissement)"
+            "value": "Inclut la durée du bannissement."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "(BANの期間を含む)"
+            "value": "BANの期間を含みます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "(Inclui a duração do banimento)"
+            "value": "Inclui a duração do banimento."
           }
         }
       }
@@ -11282,49 +11138,49 @@
       }
     },
     "style-font-change": {
-      "comment": "Button that opens the font panel.",
+      "comment": "Button that opens the system Fonts panel to choose the transcript font.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change"
+            "value": "Change…"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Módosítás"
+            "value": "Módosítás…"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ändern"
+            "value": "Ändern …"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cambiar"
+            "value": "Cambiar…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifier"
+            "value": "Modifier…"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "変更"
+            "value": "変更…"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alterar"
+            "value": "Alterar…"
           }
         }
       }
@@ -11425,102 +11281,6 @@
         }
       }
     },
-    "style-font-picker-choose": {
-      "comment": "Button that applies the font chosen in the font sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kiválasztás"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auswählen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegir"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisir"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選択"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolher"
-          }
-        }
-      }
-    },
-    "style-font-picker-title": {
-      "comment": "Title of the sheet that chooses the transcript font.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose Font"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Betűtípus kiválasztása"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schrift auswählen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegir fuente"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisir la police"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "フォントを選択"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Escolher fonte"
-          }
-        }
-      }
-    },
     "style-font-system": {
       "comment": "The default macOS system font, shown in the transcript font setting and font chooser.",
       "extractionState": "manual",
@@ -11565,54 +11325,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sistema"
-          }
-        }
-      }
-    },
-    "style-font-size-label": {
-      "comment": "Label of the point-size field in the font sheet.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Size"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Méret"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Größe"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamaño"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Taille"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サイズ"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tamanho"
           }
         }
       }
@@ -12152,7 +11864,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show server Message of the Day (MOTD)"
+            "value": "Show server message of the day (MOTD)"
           }
         },
         "hu": {
@@ -14360,7 +14072,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use Theme Colors for Window Chrome"
+            "value": "Use theme colors for window chrome"
           }
         },
         "hu": {
@@ -16413,6 +16125,342 @@
           "stringUnit": {
             "state": "translated",
             "value": "Na conversa, as perguntas aparecem acima do campo de mensagem. Responda com um botão ou digitando um comando como /yes. Editores como Editar tópico abrem como um comando no campo de mensagem. Perguntas sobre senhas, certificados e links ainda precisam da resposta escrita por extenso."
+          }
+        }
+      }
+    },
+    "restore-defaults": {
+      "comment": "Button in Settings that restores a group of settings, such as the transcript theme or the member list colors, to their defaults. Asks for confirmation when customizations would be lost.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore Defaults…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardwerte wiederherstellen …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar valores predeterminados…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer les valeurs par défaut…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alapértékek visszaállítása…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルトに戻す…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar Padrões…"
+          }
+        }
+      }
+    },
+    "general-heading-away": {
+      "comment": "Section header in Settings ▸ General for the settings that mark the user away.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abwesenheit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausencia"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Absence"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Távollét"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不在"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausência"
+          }
+        }
+      }
+    },
+    "controls-heading-keyboard": {
+      "comment": "Section header in Settings ▸ Controls for keyboard behavior.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tastatur"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teclado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clavier"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Billentyűzet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キーボード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teclado"
+          }
+        }
+      }
+    },
+    "controls-heading-mouse": {
+      "comment": "Section header in Settings ▸ Controls for what clicking and double-clicking do.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mouse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ratón"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Souris"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egér"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マウス"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mouse"
+          }
+        }
+      }
+    },
+    "file-transfers-heading-requests": {
+      "comment": "Section header in Settings ▸ File Transfers for what happens when someone offers a file.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfragen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitudes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demandes"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérések"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リクエスト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitações"
+          }
+        }
+      }
+    },
+    "file-transfers-heading-network": {
+      "comment": "Section header in Settings ▸ File Transfers for the address and ports transfers use.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerk"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réseau"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hálózat"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネットワーク"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rede"
+          }
+        }
+      }
+    },
+    "file-transfers-heading-downloads": {
+      "comment": "Section header in Settings ▸ File Transfers for where received files are saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Téléchargements"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letöltések"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads"
           }
         }
       }
