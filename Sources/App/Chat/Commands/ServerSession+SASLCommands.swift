@@ -103,18 +103,24 @@ extension ServerSession {
 		}
 	}
 
-	/** Asks for an OAuth token in a secure field, as an alert or in the
-	 console, and saves it. The token goes from the field to the keychain and
-	 nowhere else. */
-	private func askForSASLBearerToken() {
-		requestAnswer(AlertRequest(
-			title: String(localized: .IRC.saslTokenPromptTitle(config.connectionName)),
+	/// The question asking for an OAuth token, in a secure field.
+	static func saslBearerTokenRequest(connectionName: String) -> AlertRequest {
+		AlertRequest(
+			title: String(localized: .IRC.saslTokenPromptTitle(connectionName)),
 			body: String(localized: .IRC.saslTokenPromptBody),
 			defaultButton: String(localized: .IRC.saslTokenPromptSave),
 			alternateButton: PromptStrings.Action.cancel,
 			field: .secure(placeholder: String(localized: .IRC.saslTokenPromptPlaceholder)),
 			keywords: [.default: .submit, .alternate: .cancel]
-		), boundToConnection: false, unattended: .alternate) { session, answer in
+		)
+	}
+
+	/** Asks for an OAuth token in a secure field, as an alert or in the
+	 console, and saves it. The token goes from the field to the keychain and
+	 nowhere else. */
+	private func askForSASLBearerToken() {
+		let request = Self.saslBearerTokenRequest(connectionName: config.connectionName)
+		requestAnswer(request, boundToConnection: false, unattended: .alternate) { session, answer in
 			guard answer.response == .default, let token = answer.text, token.isEmpty == false else { return }
 			guard OAuthBearerClient.isValidToken(token) else {
 				session.printDebugInformation(toConsole: String(localized: .IRC.saslTokenInvalid))

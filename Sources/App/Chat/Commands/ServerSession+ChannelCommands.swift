@@ -384,6 +384,20 @@ extension ServerSession {
 		sendModes(arguments.isEmpty ? nil : arguments.rest, withParametersString: nil, inChannelNamed: channelName)
 	}
 
+	/// The question asked before a conversation is deleted to make room for a
+	/// renamed one. Delete is destructive, so no button is on Return.
+	static func existingQueryDeletionRequest(name: String) -> AlertRequest {
+		AlertRequest(
+			title: PromptStrings.Deletion.existingQueryTitle(name: name),
+			body: PromptStrings.Deletion.warning(for: .query),
+			defaultButton: PromptStrings.Action.delete,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default,
+			style: .warning,
+			keywords: [.default: .delete, .alternate: .cancel]
+		)
+	}
+
 	private func retitleCommandDirectConversation(_ parsed: ParsedUserCommand, targetConversation: Conversation?) {
 		guard let targetConversation, targetConversation.isDirect else {
 			printDebugInformation(String(localized: .IRC.thisCommandCanOnlyBeUsedWithAQuery))
@@ -404,15 +418,7 @@ extension ServerSession {
 			 existing conversation is not coming back. */
 			let originalName = targetConversation.name
 			requestConfirmation(
-				AlertRequest(
-					title: PromptStrings.Deletion.existingQueryTitle(name: existingConversation.name),
-					body: PromptStrings.Deletion.warning(for: .query),
-					defaultButton: PromptStrings.Action.delete,
-					alternateButton: PromptStrings.Action.cancel,
-					destructiveButton: .default,
-					style: .warning,
-					keywords: [.default: .delete, .alternate: .cancel]
-				),
+				Self.existingQueryDeletionRequest(name: existingConversation.name),
 				in: targetConversation,
 				isCurrent: { session in
 					session.conversationList.contains { $0 === targetConversation }

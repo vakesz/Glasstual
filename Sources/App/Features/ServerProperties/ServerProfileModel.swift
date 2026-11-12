@@ -234,14 +234,9 @@ final class ServerProfileModel {
 		announce(statusText)
 	}
 
-	/// Asks before removing every key from the server, through the session's
-	/// own prompt. Cancel is the default and the Escape button. The question is
-	/// raised inside the Profile pane, so it stays an alert there; typing
-	/// `/metadata clear` is the conversation's way to the same thing.
-	func confirmRemoval() {
-		guard let session else { return }
-
-		session.requestResponse(AlertRequest(
+	/// The question asked before every key is removed from the server.
+	static func removalRequest(networkName: String) -> AlertRequest {
+		AlertRequest(
 			title: String(localized: .ServerProperties.profileRemoveTitle(networkName)),
 			body: String(localized: .ServerProperties.profileRemoveBody),
 			defaultButton: PromptStrings.Action.cancel,
@@ -250,7 +245,17 @@ final class ServerProfileModel {
 			cancelButton: .default,
 			style: .warning,
 			keywords: [.default: .cancel, .alternate: .remove]
-		), origin: .guiSurface) { [weak self] session, response in
+		)
+	}
+
+	/// Asks before removing every key from the server, through the session's
+	/// own prompt. Cancel is the default and the Escape button. The question is
+	/// raised inside the Profile pane, so it stays an alert there; typing
+	/// `/metadata clear` is the conversation's way to the same thing.
+	func confirmRemoval() {
+		guard let session else { return }
+
+		session.requestResponse(Self.removalRequest(networkName: networkName), origin: .guiSurface) { [weak self] session, response in
 			guard response == .alternate else { return }
 			self?.removeProfile(on: session)
 		}

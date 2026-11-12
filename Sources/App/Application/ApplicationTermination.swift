@@ -131,6 +131,16 @@ final class ApplicationTermination {
 		return .terminateLater
 	}
 
+	/// The question asked before quitting with connections open.
+	static var quitConfirmationRequest: AlertRequest {
+		AlertRequest(
+			title: PromptStrings.Application.quitTitle,
+			body: PromptStrings.Application.quitBody,
+			defaultButton: PromptStrings.Application.quitButtonTitle,
+			alternateButton: PromptStrings.Action.cancel
+		)
+	}
+
 	/** The sheet's answer reports to NSApp and begins termination itself.
 
 	 Sheets stack, so a second ⌘Q while this one is up would queue a second
@@ -147,12 +157,7 @@ final class ApplicationTermination {
 
 		ApplicationForeground.bringForward(delegate.mainWindow)
 
-		let request = AlertRequest(
-			title: PromptStrings.Application.quitTitle,
-			body: PromptStrings.Application.quitBody,
-			defaultButton: PromptStrings.Application.quitButtonTitle,
-			alternateButton: PromptStrings.Action.cancel
-		)
+		let request = Self.quitConfirmationRequest
 
 		confirmation = Task { [weak self] in
 			let outcome = await Alerts.run(request, on: .mainWindow)

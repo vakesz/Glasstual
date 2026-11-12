@@ -125,6 +125,20 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 		notifications.cancelAll()
 	}
 
+	/// The question asked when the channel was reconfigured elsewhere.
+	/// Reloading throws the edits away, so it is destructive and no button is
+	/// on Return.
+	static var configurationChangedRequest: AlertRequest {
+		AlertRequest(
+			title: String(localized: .ChannelProperties.thisChannelsConfigurationHasChangedDo),
+			body: String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf),
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: String(localized: .ChannelProperties.reloadButton),
+			destructiveButton: .alternate,
+			cancelButton: .default
+		)
+	}
+
 	/** The channel was reconfigured from somewhere else while the sheet is open.
 
 	 The alert is a sheet on the window this sheet is already on, so it arrives
@@ -133,14 +147,7 @@ final class ChannelPropertiesSheet: SheetSession, ChannelScoped {
 	 destructive answer, because it throws those edits away. */
 	private func underlyingConfigurationChanged(_ message: ConversationConfigWasUpdated) {
 		let channel = message.subject
-		Alerts.present(AlertRequest(
-			title: String(localized: .ChannelProperties.thisChannelsConfigurationHasChangedDo),
-			body: String(localized: .ChannelProperties.youWillLooseUnsavedChangesIf),
-			defaultButton: PromptStrings.Action.cancel,
-			alternateButton: String(localized: .ChannelProperties.reloadButton),
-			destructiveButton: .alternate,
-			cancelButton: .default
-		)) { [weak self] outcome in
+		Alerts.present(Self.configurationChangedRequest) { [weak self] outcome in
 			guard let self, outcome.response == .alternate else { return }
 			model.replace(with: channel.config)
 		}

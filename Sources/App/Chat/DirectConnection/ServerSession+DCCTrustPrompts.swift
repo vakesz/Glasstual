@@ -234,31 +234,9 @@ extension ServerSession {
 		}
 		let fingerprint = certificate.fingerprint
 		let request = if let saved = previous.first {
-			AlertRequest(
-				title: PromptStrings.DCC.changedTitle(peer: nickname),
-				body: PromptStrings.DCC.changedBody(
-					peer: nickname, trustedOn: saved.firstTrusted, saved: saved.fingerprint, presented: fingerprint
-				),
-				defaultButton: PromptStrings.Action.cancel,
-				alternateButton: PromptStrings.DCC.replaceSavedCertificate,
-				destructiveButton: .alternate,
-				cancelButton: .default,
-				style: .critical,
-				sensitivity: .security,
-				keywords: [.default: .reject, .alternate: .replace],
-				reference: id
-			)
+			Self.dccChangedCertificateRequest(id, peer: nickname, saved: saved, presented: fingerprint)
 		} else {
-			AlertRequest(
-				title: PromptStrings.DCC.verifyTitle(peer: nickname),
-				body: PromptStrings.DCC.verifyBody(peer: nickname, network: config.connectionName, fingerprint: fingerprint),
-				defaultButton: PromptStrings.DCC.trustAndRemember,
-				alternateButton: PromptStrings.Action.cancel,
-				otherButton: PromptStrings.DCC.trustOnce,
-				sensitivity: .security,
-				keywords: [.default: .remember, .alternate: .reject, .other: .once],
-				reference: id
-			)
+			Self.dccFirstUseRequest(id, peer: nickname, network: config.connectionName, fingerprint: fingerprint)
 		}
 
 		let kind: DCCTrustQuestion.Kind = previous.isEmpty ? .firstUse : .changed
@@ -304,7 +282,54 @@ extension ServerSession {
 			answerDCCTrustQuestion(id, with: .reject)
 			return
 		}
-		let request = AlertRequest(
+		let request = Self.dccUnidentifiedPeerRequest(id, peer: nickname, saved: pin)
+		askDCCQuestion(id, request, in: conversation) { session, response in
+			session.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: response, kind: .unidentified))
+		}
+	}
+
+	/// The question about a peer whose certificate differs from the saved one.
+	/// Cancel is the default and the way out; replacing the saved certificate
+	/// is destructive and never on Return.
+	static func dccChangedCertificateRequest(
+		_ id: String, peer nickname: String, saved: DCCPeerPin, presented fingerprint: DCCCertificateFingerprint
+	) -> AlertRequest {
+		AlertRequest(
+			title: PromptStrings.DCC.changedTitle(peer: nickname),
+			body: PromptStrings.DCC.changedBody(
+				peer: nickname, trustedOn: saved.firstTrusted, saved: saved.fingerprint, presented: fingerprint
+			),
+			defaultButton: PromptStrings.Action.cancel,
+			alternateButton: PromptStrings.DCC.replaceSavedCertificate,
+			destructiveButton: .alternate,
+			cancelButton: .default,
+			style: .critical,
+			sensitivity: .security,
+			keywords: [.default: .reject, .alternate: .replace],
+			reference: id
+		)
+	}
+
+	/// The question about a peer seen for the first time.
+	static func dccFirstUseRequest(
+		_ id: String, peer nickname: String, network: String, fingerprint: DCCCertificateFingerprint
+	) -> AlertRequest {
+		AlertRequest(
+			title: PromptStrings.DCC.verifyTitle(peer: nickname),
+			body: PromptStrings.DCC.verifyBody(peer: nickname, network: network, fingerprint: fingerprint),
+			defaultButton: PromptStrings.DCC.trustAndRemember,
+			alternateButton: PromptStrings.Action.cancel,
+			otherButton: PromptStrings.DCC.trustOnce,
+			sensitivity: .security,
+			keywords: [.default: .remember, .alternate: .reject, .other: .once],
+			reference: id
+		)
+	}
+
+	/// The question about a peer that presented no certificate although one is
+	/// saved for its nickname.
+	static func dccUnidentifiedPeerRequest(_ id: String, peer nickname: String, saved pin: DCCPeerPin) -> AlertRequest {
+		AlertRequest(
 			title: PromptStrings.DCC.unidentifiedTitle(peer: nickname),
 			body: PromptStrings.DCC.unidentifiedBody(peer: nickname, trustedOn: pin.firstTrusted, saved: pin.fingerprint),
 			defaultButton: PromptStrings.Action.cancel,
@@ -316,9 +341,6 @@ extension ServerSession {
 			keywords: [.default: .reject, .alternate: .once],
 			reference: id
 		)
-		askDCCQuestion(id, request, in: conversation) { session, response in
-			session.answerDCCTrustQuestion(id, with: ServerSession.trustAnswer(for: response, kind: .unidentified))
-		}
 	}
 
 	/** The answer an alert button stands for.

@@ -25,7 +25,8 @@ struct ApplicationPromptRequestTests {
 		let request = TranscriptMessageDeletion.request
 		#expect(request.field?.isRequired == false)
 		#expect(request.isDestructive(.default))
-		#expect(request.returnButton == .alternate)
+		#expect(request.returnButton == nil)
+		#expect(request.escapeButton == .alternate)
 		#expect(request.keyword(for: .default) == .delete)
 	}
 

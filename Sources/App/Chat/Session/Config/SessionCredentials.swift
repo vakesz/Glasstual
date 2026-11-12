@@ -178,7 +178,8 @@ extension ServerSession {
 	}
 
 	/// The question about sending the password to a server whose certificate
-	/// nobody checked. "Don't Send" is the default and the Escape button.
+	/// nobody checked. "Don't Send" is the default and the Escape button;
+	/// "Send" is destructive, because the password cannot be taken back.
 	/// `certificateChanged` says the host was allowed before with another certificate.
 	static func credentialConsentAlert(host: String, certificateChanged: Bool = false) -> AlertRequest {
 		var request = AlertRequest(
@@ -188,6 +189,7 @@ extension ServerSession {
 				: ConnectionSafetyStrings.Credentials.unverifiedCertificateBody(host: host),
 			defaultButton: ConnectionSafetyStrings.Credentials.dontSend,
 			alternateButton: ConnectionSafetyStrings.Credentials.send,
+			destructiveButton: .alternate,
 			cancelButton: .default,
 			style: .warning,
 			sensitivity: .security,

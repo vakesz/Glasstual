@@ -292,51 +292,6 @@ private extension MenuActionController {
 		)
 	}
 
-	/// The channel moderation commands that remove someone, which is why each
-	/// one asks before it acts.
-	enum ChannelModeration {
-		case kick
-		case ban
-		case banAccount
-		case kickban
-
-		func title(members: String, channel: String) -> String {
-			switch self {
-			case .kick: String(localized: .Prompts.moderationKickTitle(members, channel))
-			case .ban: String(localized: .Prompts.moderationBanTitle(members, channel))
-			case .banAccount: String(localized: .Prompts.moderationBanAccountTitle(members, channel))
-			case .kickban: String(localized: .Prompts.moderationKickbanTitle(members, channel))
-			}
-		}
-
-		var body: String {
-			switch self {
-			case .kick: String(localized: .Prompts.moderationKickBody)
-			case .ban, .kickban: String(localized: .Prompts.moderationBanBody)
-			case .banAccount: String(localized: .Prompts.moderationBanAccountBody)
-			}
-		}
-
-		/// The word the confirming button is typed as in the conversation.
-		var keyword: PromptKeyword {
-			switch self {
-			case .kick: .kick
-			case .ban: .ban
-			case .banAccount: .banAccount
-			case .kickban: .kickban
-			}
-		}
-
-		var button: String {
-			switch self {
-			case .kick: String(localized: .Prompts.moderationKickButton)
-			case .ban: String(localized: .Prompts.moderationBanButton)
-			case .banAccount: String(localized: .Prompts.moderationBanAccountButton)
-			case .kickban: String(localized: .Prompts.moderationKickbanButton)
-			}
-		}
-	}
-
 	/** Asks, then applies `action` to each selected member. Kick, ban and kickban
 	 only mean anything inside a `#channel`, so the one guard they share sits here.
 
@@ -355,17 +310,7 @@ private extension MenuActionController {
 		let nicknames = target.nicknames
 		guard nicknames.isEmpty == false else { return }
 
-		/* Cancel is the Return key: a confirmation whose default removes
-		 someone turns a reflex into a ban. */
-		var request = AlertRequest(
-			title: kind.title(members: nicknames.formatted(.list(type: .and)), channel: channel.name),
-			body: kind.body,
-			defaultButton: kind.button,
-			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default,
-			keywords: [.default: kind.keyword, .alternate: .cancel]
-		)
-		request.accessibilityIdentifier = AccessibilityIdentifier.moderationConfirmation
+		let request = kind.request(members: nicknames.formatted(.list(type: .and)), channel: channel.name)
 		Alerts.present(
 			request, about: session.promptScope(in: channel, boundToConnection: false, revealsMainWindow: false)
 		) { answer in
@@ -423,14 +368,7 @@ private extension MenuActionController {
 			mainWindow.prefillInput(command, selecting: selection)
 			return
 		}
-		Alerts.present(AlertRequest(
-			title: PromptStrings.VirtualHost.title,
-			body: PromptStrings.VirtualHost.body,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: PromptStrings.Action.cancel,
-			field: .text(placeholder: PromptStrings.VirtualHost.placeholder, initialValue: ""),
-			keywords: [.default: .submit, .alternate: .cancel]
-		), about: session.promptScope(in: target.conversation, boundToConnection: false)) { answer in
+		Alerts.present(Self.virtualHostRequest, about: session.promptScope(in: target.conversation, boundToConnection: false)) { answer in
 			guard answer.response == .default, let input = answer.text else { return }
 			let vhost = input.firstToken
 			guard vhost.isEmpty == false else { return }
@@ -464,6 +402,81 @@ private extension MenuActionController {
 						secure: secure || session.environment.settings.fileTransferOffersAreSecure
 					)
 				}
+			}
+		}
+	}
+}
+
+extension MenuActionController {
+	/// The question asking for the virtual host to give several members.
+	static var virtualHostRequest: AlertRequest {
+		AlertRequest(
+			title: PromptStrings.VirtualHost.title,
+			body: PromptStrings.VirtualHost.body,
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: PromptStrings.Action.cancel,
+			field: .text(placeholder: PromptStrings.VirtualHost.placeholder, initialValue: ""),
+			keywords: [.default: .submit, .alternate: .cancel]
+		)
+	}
+
+	/// The channel moderation commands that remove someone, which is why each
+	/// one asks before it acts.
+	enum ChannelModeration {
+		case kick
+		case ban
+		case banAccount
+		case kickban
+
+		func title(members: String, channel: String) -> String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickTitle(members, channel))
+			case .ban: String(localized: .Prompts.moderationBanTitle(members, channel))
+			case .banAccount: String(localized: .Prompts.moderationBanAccountTitle(members, channel))
+			case .kickban: String(localized: .Prompts.moderationKickbanTitle(members, channel))
+			}
+		}
+
+		var body: String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickBody)
+			case .ban, .kickban: String(localized: .Prompts.moderationBanBody)
+			case .banAccount: String(localized: .Prompts.moderationBanAccountBody)
+			}
+		}
+
+		/// The word the confirming button is typed as in the conversation.
+		var keyword: PromptKeyword {
+			switch self {
+			case .kick: .kick
+			case .ban: .ban
+			case .banAccount: .banAccount
+			case .kickban: .kickban
+			}
+		}
+
+		/** The confirmation. Removing someone is destructive and not what the
+		 reader is asked about by reflex, so no button is on Return and Escape
+		 cancels. */
+		func request(members: String, channel: String) -> AlertRequest {
+			var request = AlertRequest(
+				title: title(members: members, channel: channel),
+				body: body,
+				defaultButton: button,
+				alternateButton: PromptStrings.Action.cancel,
+				destructiveButton: .default,
+				keywords: [.default: keyword, .alternate: .cancel]
+			)
+			request.accessibilityIdentifier = AccessibilityIdentifier.moderationConfirmation
+			return request
+		}
+
+		var button: String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickButton)
+			case .ban: String(localized: .Prompts.moderationBanButton)
+			case .banAccount: String(localized: .Prompts.moderationBanAccountButton)
+			case .kickban: String(localized: .Prompts.moderationKickbanButton)
 			}
 		}
 	}

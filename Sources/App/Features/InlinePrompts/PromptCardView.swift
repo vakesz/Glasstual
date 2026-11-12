@@ -178,8 +178,12 @@ struct PromptCardView: View {
 		return prompt.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 	}
 
+	/// Return in the field answers as Return does in the alert: with the
+	/// default button, and never with one that destroys something.
 	private func submitField() {
-		guard request.sensitivity == .routine, fieldBlocksSubmit == false else { return }
+		guard request.sensitivity == .routine, request.returnButton == .default, fieldBlocksSubmit == false else {
+			return
+		}
 		answered(registry.answer(prompt, with: .default, text: prompt.text, remember: prompt.remembers))
 	}
 

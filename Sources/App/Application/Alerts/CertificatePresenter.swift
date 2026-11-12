@@ -51,6 +51,19 @@ final class CertificatePresenter: CertificatePresenting {
 		}
 	}
 
+	/// The summary of a secure connection, stated in the conversation. Close
+	/// is the default and the way out.
+	static func summaryRequest(title: String, body: String, closeButton: String) -> AlertRequest {
+		AlertRequest(
+			title: title,
+			body: body,
+			defaultButton: closeButton,
+			alternateButton: String(localized: .InlinePrompts.showCertificate),
+			cancelButton: .default,
+			keywords: [.default: .ok, .alternate: .open]
+		)
+	}
+
 	/** Shows what a secure connection negotiated, without a decision to make.
 
 	 Dialogs open the certificate panel. The conversation states the summary
@@ -72,14 +85,7 @@ final class CertificatePresenter: CertificatePresenting {
 			openPanel()
 			return
 		}
-		let request = AlertRequest(
-			title: title,
-			body: body,
-			defaultButton: closeButton,
-			alternateButton: String(localized: .InlinePrompts.showCertificate),
-			cancelButton: .default,
-			keywords: [.default: .ok, .alternate: .open]
-		)
+		let request = Self.summaryRequest(title: title, body: body, closeButton: closeButton)
 		Task {
 			let answer = await Alerts.ask(request, about: PromptScope(origin: .conversation))
 			if answer.response == .alternate {

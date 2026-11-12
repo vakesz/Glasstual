@@ -168,6 +168,18 @@ final class ConfigurationCommands: ConfigurationCommanding {
 
 	// MARK: - Shared
 
+	/// The question asking for a secret setting, in a secure field.
+	static func secretRequest(title: String, connectionName: String) -> AlertRequest {
+		AlertRequest(
+			title: title,
+			body: String(localized: .IRC.configSecretPromptBody(connectionName)),
+			defaultButton: PromptStrings.Action.save,
+			alternateButton: PromptStrings.Action.cancel,
+			field: .secure(placeholder: title),
+			keywords: [.default: .submit, .alternate: .cancel]
+		)
+	}
+
 	/// Asks for a secret setting in a secure field and saves what comes back.
 	private func askForSecret(
 		named _: String,
@@ -175,14 +187,11 @@ final class ConfigurationCommands: ConfigurationCommanding {
 		on session: ServerSession,
 		save: @escaping @MainActor (ServerSession, String) -> [String]
 	) {
-		session.requestAnswer(AlertRequest(
-			title: title,
-			body: String(localized: .IRC.configSecretPromptBody(session.config.connectionName)),
-			defaultButton: PromptStrings.Action.save,
-			alternateButton: PromptStrings.Action.cancel,
-			field: .secure(placeholder: title),
-			keywords: [.default: .submit, .alternate: .cancel]
-		), boundToConnection: false, unattended: .alternate) { session, answer in
+		session.requestAnswer(
+			Self.secretRequest(title: title, connectionName: session.config.connectionName),
+			boundToConnection: false,
+			unattended: .alternate
+		) { session, answer in
 			guard answer.response == .default, let secret = answer.text else { return }
 			for line in save(session, secret) {
 				session.printDebugInformation(line)

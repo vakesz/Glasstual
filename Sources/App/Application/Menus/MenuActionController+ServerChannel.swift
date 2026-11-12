@@ -73,6 +73,20 @@ extension MenuActionController {
 		}
 	}
 
+	/** The confirmation before a server is deleted. Delete/Cancel, not Yes/No:
+	 the default button says what it does. It is destructive, so no button is
+	 on Return and Escape cancels. */
+	static func deleteServerRequest(name: String, body: String) -> AlertRequest {
+		AlertRequest(
+			title: PromptStrings.Deletion.confirmationTitle(named: name),
+			body: body,
+			defaultButton: PromptStrings.Action.delete,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default,
+			keywords: [.default: .delete, .alternate: .cancel]
+		)
+	}
+
 	@objc func deleteServer(_: Any?) {
 		guard isRunning, let session = context.selectedSession,
 		      let chatSession,
@@ -91,17 +105,11 @@ extension MenuActionController {
 			let names = networks.map(\.label).formatted(.list(type: .and))
 			body += "\n\n" + String(localized: .Bouncer.deleteAccountNetworksNotice(names))
 		}
-		/* Delete/Cancel, not Yes/No: the default button says what it does, which
-		 is what makes a destructive confirmation readable at a glance. The
-		 Return key still belongs to Cancel — see `AlertRequest`. */
-		Alerts.present(AlertRequest(
-			title: PromptStrings.Deletion.confirmationTitle(named: session.name),
-			body: body,
-			defaultButton: PromptStrings.Action.delete,
-			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default,
-			keywords: [.default: .delete, .alternate: .cancel]
-		), about: session.promptScope(boundToConnection: false, revealsMainWindow: false), completion: completion)
+		Alerts.present(
+			Self.deleteServerRequest(name: session.name, body: body),
+			about: session.promptScope(boundToConnection: false, revealsMainWindow: false),
+			completion: completion
+		)
 	}
 
 	@objc func joinChannel(_: Any?) {
@@ -131,6 +139,19 @@ extension MenuActionController {
 		MenuSheetPresenter.presentChannelProperties(for: nil, on: session)
 	}
 
+	/// The confirmation before a channel is deleted.
+	static func deleteChannelRequest(name: String) -> AlertRequest {
+		AlertRequest(
+			title: PromptStrings.Deletion.confirmationTitle(named: name),
+			body: PromptStrings.Deletion.warning(for: .channel),
+			defaultButton: PromptStrings.Action.delete,
+			alternateButton: PromptStrings.Action.cancel,
+			destructiveButton: .default,
+			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue,
+			keywords: [.default: .delete, .alternate: .cancel]
+		)
+	}
+
 	/// Removes the selected conversation for good. Only a `#channel` is worth
 	/// confirming: anything else is closed without asking.
 	@objc func deleteConversation(_: Any?) {
@@ -148,15 +169,7 @@ extension MenuActionController {
 		let scope = conversation.associatedSession?.promptScope(
 			in: conversation, boundToConnection: false, revealsMainWindow: false
 		) ?? PromptScope(origin: .application, revealsMainWindow: false)
-		Alerts.present(AlertRequest(
-			title: PromptStrings.Deletion.confirmationTitle(named: conversation.name),
-			body: PromptStrings.Deletion.warning(for: .channel),
-			defaultButton: PromptStrings.Action.delete,
-			alternateButton: PromptStrings.Action.cancel,
-			destructiveButton: .default,
-			suppressionKey: MenuServerSuppressionKey.deleteChannel.rawValue,
-			keywords: [.default: .delete, .alternate: .cancel]
-		), about: scope, completion: completion)
+		Alerts.present(Self.deleteChannelRequest(name: conversation.name), about: scope, completion: completion)
 	}
 
 	@objc func copyUniqueIdentifier(_: Any?) {

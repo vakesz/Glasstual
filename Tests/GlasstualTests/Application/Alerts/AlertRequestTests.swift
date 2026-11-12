@@ -39,7 +39,7 @@ struct AlertRequestTests {
 
 	/** Escape has to answer every alert, and Return must never be the button
 	 that destroys something. */
-	@Test("Every alert has a way out, and a destructive alert has no Return default")
+	@Test("Every alert has a way out, and a destructive alert has no default button")
 	func keyboardAnswersAreSafe() {
 		let twoButtons = AlertRequest(
 			title: "Title", body: "Body", defaultButton: "OK", alternateButton: "Cancel"
@@ -64,8 +64,10 @@ struct AlertRequestTests {
 			title: "Title", body: "Body", defaultButton: "Delete",
 			alternateButton: "Cancel", destructiveButton: .default
 		)
+		/* Cancel answers Escape; it is not also made the default, so Escape
+		 keeps working and the reader has to choose. */
 		#expect(destructive.escapeButton == .alternate)
-		#expect(destructive.returnButton == .alternate)
+		#expect(destructive.returnButton == nil)
 
 		/* Nothing safe to fall back to means nothing is defaulted. */
 		let unavoidable = AlertRequest(

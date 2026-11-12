@@ -151,7 +151,7 @@ extension ServerSession {
 			printDebugInformation(toConsole: String(localized: .IRC.dccTooManyQuestions(sender)))
 			return
 		}
-		askDCCQuestion(id, directChatOfferRequest(offer, from: sender, id: id), in: nil) { session, response in
+		askDCCQuestion(id, Self.directChatOfferRequest(offer, from: sender, id: id), in: nil) { session, response in
 			session.answerDCCChatOffer(id, accept: response == .default)
 		}
 	}
@@ -159,7 +159,7 @@ extension ServerSession {
 	/// The alert a chat offer is put to the user with. The address is what the
 	/// user is actually being asked to approve: the nickname alone says nothing
 	/// about where the connection would go.
-	private func directChatOfferRequest(_ offer: DirectChatOffer, from sender: String, id: String) -> AlertRequest {
+	static func directChatOfferRequest(_ offer: DirectChatOffer, from sender: String, id: String) -> AlertRequest {
 		let body = switch (offer.isPassive, offer.isSecure) {
 		case (true, false): PromptStrings.DirectChat.body(sender: sender)
 		case (true, true): PromptStrings.DirectChat.secureBody(sender: sender)

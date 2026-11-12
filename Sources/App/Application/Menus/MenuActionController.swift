@@ -111,6 +111,18 @@ extension MenuActionController {
 		confirmSendDroppedFiles(files, to: conversation.name)
 	}
 
+	/// The question asked before dropped files are sent to someone.
+	static func dropSendRequest(names: [String], nickname: String) -> AlertRequest {
+		AlertRequest(
+			title: String(localized: .Prompts.dropSendTitle(names.formatted(.list(type: .and)), nickname)),
+			body: String(localized: .Prompts.dropSendBody(nickname)),
+			defaultButton: PromptStrings.Action.send,
+			alternateButton: PromptStrings.Action.cancel,
+			sensitivity: .security,
+			keywords: [.default: .send, .alternate: .cancel]
+		)
+	}
+
 	/** The same confirmation for a drop on a member row, whose recipient is the
 	 member rather than the selected conversation. */
 	func confirmSendDroppedFiles(_ files: [String], to nickname: String) {
@@ -118,14 +130,10 @@ extension MenuActionController {
 		let names = files.map { URL(fileURLWithPath: $0).lastPathComponent }
 		guard names.isEmpty == false else { return }
 
-		Alerts.present(AlertRequest(
-			title: String(localized: .Prompts.dropSendTitle(names.formatted(.list(type: .and)), nickname)),
-			body: String(localized: .Prompts.dropSendBody(nickname)),
-			defaultButton: PromptStrings.Action.send,
-			alternateButton: PromptStrings.Action.cancel,
-			sensitivity: .security,
-			keywords: [.default: .send, .alternate: .cancel]
-		), about: session.promptScope(in: context.selectedConversation, boundToConnection: false)) { [weak self] answer in
+		Alerts.present(
+			Self.dropSendRequest(names: names, nickname: nickname),
+			about: session.promptScope(in: context.selectedConversation, boundToConnection: false)
+		) { [weak self] answer in
 			guard answer.response == .default, let self,
 			      context.selectedSession === session, session.isLoggedIn
 			else { return }

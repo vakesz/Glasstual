@@ -101,6 +101,7 @@ private final class AlertSession {
 	/// The field a request with one is answered in: plain text, or a secure
 	/// field that turns on Secure Event Input while it is focused.
 	private var field: NSTextField?
+	private var escapeRoute: EscapeKeyRoute?
 
 	init(request: AlertRequest) {
 		self.request = request
@@ -109,17 +110,22 @@ private final class AlertSession {
 	}
 
 	func runModal() -> AlertPresenterResult {
-		result(for: alert.runModal())
+		beginEscapeRoute()
+		let code = alert.runModal()
+		endEscapeRoute()
+		return result(for: code)
 	}
 
 	func beginSheet(on parent: NSWindow) async -> AlertPresenterResult {
 		self.parent = parent
+		beginEscapeRoute()
 
 		let code = await withCheckedContinuation { continuation in
 			alert.beginSheetModal(for: parent) { continuation.resume(returning: $0) }
 		}
 
 		hasAnswered = true
+		endEscapeRoute()
 		parentDidFinish()
 
 		return result(for: code)
@@ -221,10 +227,10 @@ private final class AlertSession {
 	 makes: Return is never the destructive button, and Escape answers whichever
 	 button the request names as the way out whatever it is called.
 
-	 Return wins where a request names one button as both, because a button
-	 carries one key equivalent. Escape then does nothing, which is what the
-	 system does with an alert that has no way out other than its own action,
-	 and the reader reaches the same answer with Return. */
+	 A button carries one key equivalent. Where Return and Escape press the
+	 same button -- a notice, or a security question whose Return is its way
+	 out -- the button takes Return, which also draws it as the default, and
+	 Escape and Command-period reach it through ``EscapeKeyRoute``. */
 	private func applyKeyEquivalents() {
 		let returnButton = request.returnButton
 
@@ -239,6 +245,23 @@ private final class AlertSession {
 				""
 			}
 		}
+	}
+
+	/// Starts routing Escape to the button that already holds Return, while
+	/// the alert is up.
+	private func beginEscapeRoute() {
+		guard request.returnIsEscape,
+		      let index = buttonResponses.firstIndex(of: request.escapeButton)
+		else { return }
+		let button = alert.buttons[index]
+		escapeRoute = EscapeKeyRoute(window: alert.window) { [weak button] in
+			button?.performClick(nil)
+		}
+	}
+
+	private func endEscapeRoute() {
+		escapeRoute?.end()
+		escapeRoute = nil
 	}
 
 	private func result(for code: NSApplication.ModalResponse) -> AlertPresenterResult {
@@ -264,5 +287,43 @@ private final class AlertSession {
 		}
 
 		return buttonResponses[index]
+	}
+}
+
+/** Presses the way out when Escape or Command-period is typed in one window.
+
+ The system answers those keys with the button whose key equivalent is Escape.
+ An alert whose way out also holds Return has no such button, so this stands in
+ for it, for as long as the alert is up and only in the alert's own window. */
+@MainActor
+final class EscapeKeyRoute {
+	private var monitor: Any?
+
+	/// `press` clicks the button Escape stands for.
+	init(window: NSWindow, press: @escaping @MainActor () -> Void) {
+		monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak window] event in
+			guard let window, event.window === window, Self.isCancelKey(event) else {
+				return event
+			}
+			press()
+			return nil
+		}
+	}
+
+	func end() {
+		if let monitor {
+			NSEvent.removeMonitor(monitor)
+		}
+		monitor = nil
+	}
+
+	/// Escape, or Command-period, the other key that means "cancel" on macOS.
+	static func isCancelKey(_ event: NSEvent) -> Bool {
+		let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+		switch event.charactersIgnoringModifiers {
+		case "\u{1b}": return modifiers.subtracting(.function).isEmpty
+		case ".": return modifiers == .command
+		default: return false
+		}
 	}
 }

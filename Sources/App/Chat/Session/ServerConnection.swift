@@ -61,6 +61,28 @@ enum ServerConnection {
 		}
 	}
 
+	/// The question asked when a link names a server already connected.
+	static func mergeChoiceRequest(
+		address: String, channelNames: String, includesMultipleChannels hasMultipleChannels: Bool, sessionName: String
+	) -> AlertRequest {
+		AlertRequest(
+			title: PromptStrings.ConnectionLink.title(
+				serverAddress: address,
+				channelNames: channelNames,
+				includesMultipleChannels: hasMultipleChannels
+			),
+			body: PromptStrings.ConnectionLink.existingConnectionBody(
+				name: sessionName,
+				includesMultipleChannels: hasMultipleChannels
+			),
+			defaultButton: PromptStrings.ConnectionLink.useExistingConnectionButtonTitle,
+			alternateButton: PromptStrings.Action.cancel,
+			otherButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle,
+			style: .warning,
+			keywords: [.default: .existing, .alternate: .cancel, .other: .new]
+		)
+	}
+
 	private static func mergeChoice(
 		_ session: ServerSession,
 		address: String,
@@ -79,21 +101,9 @@ enum ServerConnection {
 		 "Create New Connection" the Escape button meant dismissing the alert
 		 connected somewhere the reader had not agreed to go. */
 		guard let prompts = session.prompts else { return .cancel }
-		let answer = await prompts.ask(AlertRequest(
-			title: PromptStrings.ConnectionLink.title(
-				serverAddress: address,
-				channelNames: channelNames,
-				includesMultipleChannels: hasMultipleChannels
-			),
-			body: PromptStrings.ConnectionLink.existingConnectionBody(
-				name: session.name,
-				includesMultipleChannels: hasMultipleChannels
-			),
-			defaultButton: PromptStrings.ConnectionLink.useExistingConnectionButtonTitle,
-			alternateButton: PromptStrings.Action.cancel,
-			otherButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle,
-			style: .warning,
-			keywords: [.default: .existing, .alternate: .cancel, .other: .new]
+		let answer = await prompts.ask(mergeChoiceRequest(
+			address: address, channelNames: channelNames,
+			includesMultipleChannels: hasMultipleChannels, sessionName: session.name
 		), about: session.promptScope(boundToConnection: false))
 
 		return switch answer.response {

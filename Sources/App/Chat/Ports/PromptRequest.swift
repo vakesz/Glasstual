@@ -120,18 +120,34 @@ nonisolated struct AlertRequest: Sendable {
 	/** The button Return presses, if any.
 
 	 Never the destructive one: a confirmation whose Return key erases something
-	 turns a reflex into a loss. Where the destructive button is the only one,
-	 nothing is defaulted and the reader has to choose. A security question's
-	 Return presses only its way out, so a password, a file or a connection is
-	 never let through by a reflex. */
+	 turns a reflex into a loss. Nor is Cancel made the default of a routine
+	 question to stand in for it, because Cancel already answers Escape and a
+	 button carries one key equivalent: a destructive confirmation has no
+	 default button at all, so the reader has to choose, as the Human Interface
+	 Guidelines ask.
+
+	 A security question is the deliberate exception: its Return presses only
+	 its way out, so a password, a file or a connection is never let through by
+	 a reflex, and that button answers Escape as well. */
 	var returnButton: AlertResponse? {
 		if sensitivity == .security {
 			return isDestructive(escapeButton) ? nil : escapeButton
 		}
-		guard destructiveButton == .default else {
-			return .default
+		if isDestructive(.default) {
+			return nil
 		}
-		return alternateButton == nil ? nil : .alternate
+		/* A routine question whose way out is its first button and which can
+		 destroy something has Cancel in the default's place. */
+		if destructiveButton != nil, escapeButton == .default {
+			return nil
+		}
+		return .default
+	}
+
+	/// Whether Return and Escape press the same button, as they do for a notice
+	/// and for a security question.
+	var returnIsEscape: Bool {
+		returnButton == escapeButton
 	}
 
 	/// The buttons the question offers, in the order they read.

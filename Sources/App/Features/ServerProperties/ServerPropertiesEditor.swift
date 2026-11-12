@@ -283,13 +283,18 @@ final class ServerPropertiesEditor: NSObject, SessionScoped, ServerPropertiesCom
 		}
 	}
 
+	/// The notice that the keychain holds no certificate to choose.
+	static var noCertificatesRequest: AlertRequest {
+		AlertRequest(
+			title: String(localized: .ServerProperties.noCertificatesAvailable),
+			body: String(localized: .ServerProperties.thereAreNoCertificates),
+			defaultButton: PromptStrings.Action.confirmation
+		)
+	}
+
 	private func presentCertificatePicker(_ identities: [SecIdentity]) {
 		guard !identities.isEmpty else {
-			Alerts.present(AlertRequest(
-				title: String(localized: .ServerProperties.noCertificatesAvailable),
-				body: String(localized: .ServerProperties.thereAreNoCertificates),
-				defaultButton: PromptStrings.Action.confirmation
-			))
+			Alerts.present(Self.noCertificatesRequest)
 			return
 		}
 		guard let panel = SFChooseIdentityPanel.shared() else { return }

@@ -96,6 +96,18 @@ extension ServerSession {
 		}
 	}
 
+	/// The question asking for a new account's password, in a secure field.
+	static func registrationPasswordRequest(account name: String, connectionName: String) -> AlertRequest {
+		AlertRequest(
+			title: String(localized: .AccountRegistration.passwordPromptTitle(name)),
+			body: String(localized: .AccountRegistration.passwordPromptBody(connectionName)),
+			defaultButton: String(localized: .AccountRegistration.passwordPromptRegister),
+			alternateButton: PromptStrings.Action.cancel,
+			field: .secure(placeholder: String(localized: .AccountRegistration.passwordPromptPlaceholder)),
+			keywords: [.default: .submit, .alternate: .cancel]
+		)
+	}
+
 	/** Asks for the new account's password in a secure field, as an alert or
 	 in the console, and registers with it. The password goes from the field to
 	 the registration and nowhere else: not the transcript, not input history. */
@@ -103,14 +115,11 @@ extension ServerSession {
 		let name = account == .currentNickname ? userNickname : (AccountRegistrationRequest(
 			account: account, email: email, password: ""
 		).wireAccount)
-		requestAnswer(AlertRequest(
-			title: String(localized: .AccountRegistration.passwordPromptTitle(name)),
-			body: String(localized: .AccountRegistration.passwordPromptBody(config.connectionName)),
-			defaultButton: String(localized: .AccountRegistration.passwordPromptRegister),
-			alternateButton: PromptStrings.Action.cancel,
-			field: .secure(placeholder: String(localized: .AccountRegistration.passwordPromptPlaceholder)),
-			keywords: [.default: .submit, .alternate: .cancel]
-		), boundToConnection: false, unattended: .alternate) { session, answer in
+		requestAnswer(
+			Self.registrationPasswordRequest(account: name, connectionName: config.connectionName),
+			boundToConnection: false,
+			unattended: .alternate
+		) { session, answer in
 			guard answer.response == .default, let password = answer.text, password.isEmpty == false else { return }
 			session.dispatchAccountRegistrationRequest(AccountRegistrationRequest(
 				account: account, email: email, password: password

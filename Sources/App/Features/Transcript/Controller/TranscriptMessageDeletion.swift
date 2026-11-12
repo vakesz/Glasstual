@@ -28,7 +28,7 @@ enum TranscriptMessageDeletion {
 	}
 
 	/// The question asked before a message is deleted, with a field for the
-	/// reason. Cancel is the Return key: the default deletes.
+	/// reason. The default deletes, so no button is on Return; Escape cancels.
 	static var request: AlertRequest {
 		AlertRequest(
 			title: String(localized: .Transcript.deleteMessageTitle),
