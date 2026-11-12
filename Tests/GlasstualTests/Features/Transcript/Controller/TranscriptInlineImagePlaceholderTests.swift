@@ -64,6 +64,21 @@ private final class ProxiedChannelFixture {
 		(view.document.inlineMedia[lineNumber] ?? []).count(where: { $0.placeholder == nil })
 	}
 
+	/// Where the first placeholder character sits in the text storage.
+	func placeholderCharacter() throws -> Int {
+		let storage = try #require(view.textView.textStorage)
+		var location: Int?
+		storage.enumerateAttribute(
+			.transcriptInlineImagePlaceholder, in: NSRange(location: 0, length: storage.length)
+		) { value, range, stop in
+			if value != nil {
+				location = range.location
+				stop.pointee = true
+			}
+		}
+		return try #require(location)
+	}
+
 	/// Placeholder characters the text storage holds.
 	func drawnPlaceholders() throws -> Int {
 		let storage = try #require(view.textView.textStorage)
@@ -138,6 +153,64 @@ struct TranscriptInlineImagePlaceholderTests {
 		#expect(InlineImageTestProtocol.startCount(url) == 1)
 		// The system route looks a name up here; the proxy route never does.
 		#expect(await fixture.lookups.callCount == 0)
+	}
+
+	@Test("A placeholder is drawn with square corners, as the image that replaces it is")
+	func placeholderHasSquareCorners() async throws {
+		let fixture = ProxiedChannelFixture()
+		defer { fixture.controller.tearDown(.permanentRemoval) }
+		let url = try InlineImageTestProtocol.register(.init(headers: ["Content-Type": "image/png"], chunk: pngData()))
+		defer { InlineImageTestProtocol.remove(url) }
+		_ = await fixture.printLink(to: url)
+
+		let storage = try #require(fixture.view.textView.textStorage)
+		let attachment = try #require(
+			storage.attribute(.attachment, at: fixture.placeholderCharacter(), effectiveRange: nil) as? NSTextAttachment
+		)
+		let bitmap = try #require(attachment.image?.representations.first as? NSBitmapImageRep)
+
+		// A rounded box leaves its corner pixels clear; the outline reaches them.
+		let corners = [
+			(0, 0), (bitmap.pixelsWide - 1, 0), (0, bitmap.pixelsHigh - 1),
+			(bitmap.pixelsWide - 1, bitmap.pixelsHigh - 1),
+		]
+		for (x, y) in corners {
+			let alpha = try #require(bitmap.colorAt(x: x, y: y)).alphaComponent
+			#expect(alpha > 0, "The corner at \(x), \(y) is clear")
+		}
+	}
+
+	@Test("The focus ring is on the placeholder under the caret, only while the transcript has the keyboard")
+	func focusRingFollowsCaretAndKeyboard() async throws {
+		let fixture = ProxiedChannelFixture()
+		defer { fixture.controller.tearDown(.permanentRemoval) }
+		let url = try InlineImageTestProtocol.register(.init(headers: ["Content-Type": "image/png"], chunk: pngData()))
+		defer { InlineImageTestProtocol.remove(url) }
+		_ = await fixture.printLink(to: url)
+		let view = fixture.view
+		let location = try fixture.placeholderCharacter()
+		func focused(hasKeyboard: Bool, _ selection: NSRange) -> Int? {
+			TranscriptView.focusedInlineImagePlaceholderCharacter(
+				hasKeyboard: hasKeyboard,
+				selection: selection,
+				isPlaceholder: { view.inlineImagePlaceholderKey(atCharacterIndex: $0) != nil }
+			)
+		}
+
+		#expect(focused(hasKeyboard: true, NSRange(location: location, length: 0)) == location)
+		// Selecting the placeholder alone still focuses it; a longer selection is text.
+		#expect(focused(hasKeyboard: true, NSRange(location: location, length: 1)) == location)
+		#expect(focused(hasKeyboard: true, NSRange(location: location - 1, length: 2)) == nil)
+		// The caret on ordinary text, or past the end, rings nothing.
+		#expect(focused(hasKeyboard: true, NSRange(location: 0, length: 0)) == nil)
+		#expect(focused(hasKeyboard: true, NSRange(location: NSNotFound, length: 0)) == nil)
+		// Without the keyboard there is no ring, wherever the caret is.
+		#expect(focused(hasKeyboard: false, NSRange(location: location, length: 0)) == nil)
+
+		// The text view draws the ring the decision names, and none here:
+		// this transcript does not have the keyboard.
+		#expect(view.textView.focusRingType == .exterior)
+		#expect(view.textView.focusRingMaskBounds == .zero)
 	}
 
 	@Test("A literal private address is refused even when the reader asks for it", arguments: [

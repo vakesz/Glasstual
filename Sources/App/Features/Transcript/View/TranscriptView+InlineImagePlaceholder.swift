@@ -66,17 +66,30 @@ extension TranscriptView {
 		return activateInlineImagePlaceholder(key)
 	}
 
-	/** Where the placeholder under the caret is drawn, in the text view's
-	 coordinates, while the transcript has the keyboard; `nil` otherwise. The
-	 text view draws the system focus ring around it, so a keyboard reader can
-	 see which placeholder Return and Space will load. */
+	/** The character of the placeholder that wears the focus ring: the one
+	 under the caret, while the transcript has the keyboard; `nil` otherwise.
+	 It is the placeholder Return and Space load, and a longer selection is
+	 text being selected, not a control being focused. */
+	static func focusedInlineImagePlaceholderCharacter(
+		hasKeyboard: Bool,
+		selection: NSRange,
+		isPlaceholder: (Int) -> Bool
+	) -> Int? {
+		guard hasKeyboard, selection.length <= 1, isPlaceholder(selection.location) else { return nil }
+		return selection.location
+	}
+
+	/** Where the focused placeholder is drawn, in the text view's coordinates.
+	 The text view draws the system focus ring around it, so a keyboard reader
+	 can see which placeholder Return and Space will load. */
 	func focusedInlineImagePlaceholderRect() -> NSRect? {
-		guard let window, window.firstResponder === textView else { return nil }
-		let selection = textView.selectedRange()
-		guard selection.length <= 1, inlineImagePlaceholderKey(atCharacterIndex: selection.location) != nil
-		else { return nil }
+		guard let window, let location = Self.focusedInlineImagePlaceholderCharacter(
+			hasKeyboard: window.firstResponder === textView,
+			selection: textView.selectedRange(),
+			isPlaceholder: { inlineImagePlaceholderKey(atCharacterIndex: $0) != nil }
+		) else { return nil }
 		let screenRect = textView.firstRect(
-			forCharacterRange: NSRange(location: selection.location, length: 1), actualRange: nil
+			forCharacterRange: NSRange(location: location, length: 1), actualRange: nil
 		)
 		guard screenRect.isEmpty == false else { return nil }
 		return textView.convert(window.convertFromScreen(screenRect), from: nil)
