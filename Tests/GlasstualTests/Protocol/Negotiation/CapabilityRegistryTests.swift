@@ -218,6 +218,38 @@ struct CapabilityRegistryTests {
 		#expect(CapabilityRegistry.defaultRegistry.capability(named: name) != nil, "\(name) is missing")
 	}
 
+	/** A bit two capabilities shared would turn one on whenever the other was
+	 acknowledged. Only an alias carries its primary's bits, and only a vendor
+	 variant carries the bit of the standard capability it stands in for. */
+	@Test("Every capability owns a bit no unrelated capability or session fact uses")
+	func capabilityBitsAreDistinct() {
+		let entries = CapabilityRegistry.defaultRegistry.capabilities.filter { $0.identifier.isEmpty == false }
+		let standalone = Set(entries.map(\.identifier.rawValue))
+		for (index, first) in entries.enumerated() {
+			for second in entries[(index + 1)...] where first.identifier.isDisjoint(with: second.identifier) == false {
+				let shared = first.identifier.intersection(second.identifier)
+				let isAlias = first.identifier == second.identifier
+					&& (first.aliasOf == second.name || second.aliasOf == first.name
+						|| (first.aliasOf != nil && first.aliasOf == second.aliasOf))
+				let isVariant = first.identifier != second.identifier && standalone.contains(shared.rawValue)
+				#expect(isAlias || isVariant, "\(first.name) and \(second.name) share a bit")
+			}
+		}
+		let facts: CapabilitySet = [.isIdentifiedWithSASL, .isInSASLNegotiation, .monitorCommand, .watchCommand]
+		#expect(entries.allSatisfy { $0.identifier.isDisjoint(with: facts) })
+	}
+
+	@Test("Account registration, metadata and extended ISUPPORT each own one bit")
+	func recentCapabilitiesOwnTheirBits() throws {
+		let registry = CapabilityRegistry.defaultRegistry
+		let names = ["draft/account-registration", "draft/metadata-2", "draft/extended-isupport"]
+		let identifiers = try names.map { try #require(registry.capability(named: $0)).identifier }
+
+		#expect(identifiers == [.accountRegistration, .metadata, .extendedISupport])
+		#expect(identifiers.allSatisfy { $0.rawValue.nonzeroBitCount == 1 })
+		#expect(Set(identifiers.map(\.rawValue)).count == names.count)
+	}
+
 	@Test("Channel rename depends on nothing and owns a bit no other capability uses")
 	func channelRenameIsIndependent() throws {
 		let registry = CapabilityRegistry.defaultRegistry
