@@ -141,8 +141,10 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	 `GLASSTUAL_UI_REVIEW_DIRECTORY` to keep off the user's real settings and
 	 files, and the prefix does the same for secrets: the tests run inside the
 	 application and share its access group, so without it a test item and a
-	 real one with the same identifier would be one item. ``service`` is what a
-	 shipping build writes, and what every other reader of these names asks for. */
+	 real one with the same identifier would be one item. The review directory's
+	 name is part of the prefix, so two runs never share an item either.
+	 ``service`` is what a shipping build writes, and what every other reader of
+	 these names asks for. */
 	public var storedService: String {
 		KeychainStore.isolatedServicePrefix + service
 	}
@@ -162,6 +164,15 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 	public func delete() -> Bool {
 		KeychainStore.deleteItem(service: storedService) == errSecSuccess
 	}
+
+	#if DEBUG
+		/// Deletes every item a test or review run stored under its own prefix,
+		/// and nothing else. Returns whether every such item is gone.
+		@discardableResult
+		public static func deleteIsolatedItems() -> Bool {
+			KeychainStore.deleteIsolatedItems()
+		}
+	#endif
 
 	/// Writes or deletes the item so it matches `secret`. `.unchanged` leaves
 	/// whatever is stored alone.
@@ -225,19 +236,51 @@ public actor KeychainWriter {
 /// group, ``accessGroup``. The application declares its own group, and the IRC
 /// connection host — which holds only its own — cannot read any of them.
 enum KeychainStore {
-	/// Prepended to every stored service name in a Debug test or UI-review run;
-	/// empty otherwise, and always empty in a Release build.
+	/// Prepended to every stored service name in a Debug test or UI-review run:
+	/// `glasstual.tests.`, then the review directory's name and a dot when one
+	/// is set. Empty otherwise, and always empty in a Release build.
 	static let isolatedServicePrefix: String = {
 		#if DEBUG
 			let environment = ProcessInfo.processInfo.environment
 			let isIsolatedRun = ["GLASSTUAL_UI_REVIEW_SUITE", "GLASSTUAL_UI_REVIEW_DIRECTORY"].contains {
 				environment[$0]?.isEmpty == false
 			}
-			return isIsolatedRun ? "glasstual.tests." : ""
+			guard isIsolatedRun else { return "" }
+			let run = environment["GLASSTUAL_UI_REVIEW_DIRECTORY"].map { ($0 as NSString).lastPathComponent } ?? ""
+			return "glasstual.tests." + (run.isEmpty ? "" : run + ".")
 		#else
 			return ""
 		#endif
 	}()
+
+	#if DEBUG
+		/** Deletes every item this run stored, found by ``isolatedServicePrefix``.
+		 Does nothing outside a test or review run. Returns whether every
+		 matching item is gone. */
+		@discardableResult
+		static func deleteIsolatedItems() -> Bool {
+			guard isolatedServicePrefix.isEmpty == false else { return true }
+			var query: [CFString: Any] = [
+				kSecClass: kSecClassGenericPassword,
+				kSecUseDataProtectionKeychain: true,
+				kSecMatchLimit: kSecMatchLimitAll,
+				kSecReturnAttributes: true,
+			]
+			if let accessGroup {
+				query[kSecAttrAccessGroup] = accessGroup
+			}
+			var result: CFTypeRef?
+			let status = SecItemCopyMatching(query as CFDictionary, &result)
+			guard status == errSecSuccess else { return status == errSecItemNotFound }
+			let services = (result as? [[CFString: Any]] ?? []).compactMap { $0[kSecAttrService] as? String }
+			var removedAll = true
+			for service in Set(services) where service.hasPrefix(isolatedServicePrefix) {
+				let deleted = deleteItem(service: service)
+				removedAll = removedAll && (deleted == errSecSuccess || deleted == errSecItemNotFound)
+			}
+			return removedAll
+		}
+	#endif
 
 	/** The one keychain access group these calls name, on every operation.
 

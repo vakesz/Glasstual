@@ -60,6 +60,7 @@ public final class TrustPanelPresenter: NSObject {
 		defaultButton: String,
 		alternateButton: String?,
 		trust: SecTrust,
+		accessibilityIdentifier: String? = nil,
 		completion: ((Bool) -> Void)? = nil
 	) -> TrustPanelPresenter {
 		let presenter = TrustPanelPresenter(trust: trust, completion: completion)
@@ -68,7 +69,8 @@ public final class TrustPanelPresenter: NSObject {
 			body: body,
 			title: title,
 			defaultButton: defaultButton,
-			alternateButton: alternateButton
+			alternateButton: alternateButton,
+			accessibilityIdentifier: accessibilityIdentifier
 		)
 		return presenter
 	}
@@ -116,11 +118,20 @@ public final class TrustPanelPresenter: NSObject {
 		body: String,
 		title: String,
 		defaultButton: String,
-		alternateButton: String?
+		alternateButton: String?,
+		accessibilityIdentifier: String?
 	) {
 		panel.setDefaultButtonTitle(defaultButton)
 		panel.setAlternateButtonTitle(alternateButton)
 		panel.setInformativeText(body)
+		/* The panel loads its views as the sheet begins, and without a window
+		 the sheet is a modal panel whose session this call runs; the task runs
+		 inside that session, once the views exist. */
+		if let accessibilityIdentifier {
+			Task { [weak self] in
+				self?.identify(accessibilityIdentifier, defaultButton: defaultButton, alternateButton: alternateButton)
+			}
+		}
 		panel.beginSheet(
 			for: window,
 			modalDelegate: self,
@@ -144,5 +155,27 @@ public final class TrustPanelPresenter: NSObject {
 	private func finish() {
 		completion = nil
 		whileOnScreen = nil
+	}
+
+	/** Names the panel and its two answer buttons for an Accessibility client:
+	 `identifier`, then `identifier-default` and `identifier-alternate`.
+
+	 The panel owns its window and buttons, so the buttons are found by the
+	 titles this presenter just gave them. */
+	private func identify(_ identifier: String, defaultButton: String, alternateButton: String?) {
+		/* `SFCertificateTrustPanel` puts up a window of its own: the sheet on a
+		 parent, or without one the session's modal window. */
+		let shown = panel.sheetParent?.attachedSheet ?? NSApp.modalWindow ?? panel
+		shown.setAccessibilityIdentifier(identifier)
+		var pending = shown.contentView.map { [$0] } ?? []
+		while let view = pending.popLast() {
+			pending.append(contentsOf: view.subviews)
+			guard let button = view as? NSButton else { continue }
+			if button.title == defaultButton {
+				button.setAccessibilityIdentifier(identifier + "-default")
+			} else if let alternateButton, button.title == alternateButton {
+				button.setAccessibilityIdentifier(identifier + "-alternate")
+			}
+		}
 	}
 }

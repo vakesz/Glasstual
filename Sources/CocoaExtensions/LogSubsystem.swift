@@ -6,9 +6,9 @@ import Foundation
 /// The `os.Logger` subsystem every logger in the application and in the
 /// connection host names.
 ///
-/// One declaration rather than a literal per logger: `scripts/smoke.sh` gates a
-/// run on `subsystem BEGINSWITH "com.vakesz"`, and a fallback spelled anything
-/// else would hide an error or fault from it. The bundle identifier is the
+/// One declaration rather than a literal per logger: log queries select the
+/// product's messages with `subsystem BEGINSWITH "com.vakesz"`, and a fallback
+/// spelled anything else would hide an error or fault from them. The bundle identifier is the
 /// running product's own, so the app and the host stay apart in the log; the
 /// fallback is only reached by a process with no `Info.plist`.
 public nonisolated enum LogSubsystem {

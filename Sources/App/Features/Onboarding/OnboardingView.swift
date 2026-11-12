@@ -61,6 +61,7 @@ struct OnboardingView: View {
 							.padding(.bottom, UISpacing.loose)
 					}
 					.scrollBounceBehavior(.basedOnSize)
+					.accessibilityIdentifier(AccessibilityIdentifier.onboardingStep(String(describing: model.currentStep)))
 					.id(model.currentStep)
 					.transition(
 						reduceMotion ? .opacity : .asymmetric(
@@ -77,6 +78,8 @@ struct OnboardingView: View {
 			footer
 		}
 		.frame(minWidth: 720, idealWidth: 720, minHeight: 620, idealHeight: 700)
+		.accessibilityElement(children: .contain)
+		.accessibilityIdentifier(AccessibilityIdentifier.onboardingWindow)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.currentStep)
 		.animation(reduceMotion ? nil : .snappy(duration: 0.2), value: model.isCompleting)
 		.alert(
@@ -144,6 +147,7 @@ struct OnboardingView: View {
 				if model.isFirstStep == false {
 					Button(.Onboarding.windowChromeBack, action: model.moveBack)
 						.keyboardShortcut(.leftArrow, modifiers: .command)
+						.accessibilityIdentifier(AccessibilityIdentifier.onboardingBack)
 				}
 
 				/* Onboarding has to be dismissible without answering it, and
@@ -157,11 +161,15 @@ struct OnboardingView: View {
 				if model.currentStep.isSkippable {
 					Button(.Onboarding.windowChromeSkip) { model.skip() }
 						.buttonStyle(.borderless)
+						.accessibilityIdentifier(AccessibilityIdentifier.onboardingSkip)
 				}
 
 				Button(model.primaryButtonTitle, action: advance)
 					.keyboardShortcut(.defaultAction)
 					.disabled(model.isCurrentStepValid == false)
+					.accessibilityIdentifier(
+						model.isLastStep ? AccessibilityIdentifier.onboardingFinish : AccessibilityIdentifier.onboardingContinue
+					)
 			}
 		}
 		.disabled(model.isCompleting)

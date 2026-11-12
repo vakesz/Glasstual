@@ -347,13 +347,15 @@ private extension MenuActionController {
 
 		/* Cancel is the Return key: a confirmation whose default removes
 		 someone turns a reflex into a ban. */
-		Alerts.present(AlertRequest(
+		var request = AlertRequest(
 			title: kind.title(members: nicknames.formatted(.list(type: .and)), channel: channel.name),
 			body: kind.body,
 			defaultButton: kind.button,
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default
-		), on: .anyVisibleWindow) { outcome in
+		)
+		request.accessibilityIdentifier = AccessibilityIdentifier.moderationConfirmation
+		Alerts.present(request, on: .anyVisibleWindow) { outcome in
 			guard outcome.response == .default, session.isLoggedIn else { return }
 			for nickname in nicknames {
 				action(session, channel, nickname)

@@ -31,10 +31,12 @@ struct SettingsRecoverySection: View {
 					session.host = .settings
 					importRequest.present()
 				}
+				.accessibilityIdentifier(AccessibilityIdentifier.settingsImport)
 				Button(.SettingsTransfer.exportConfiguration) {
 					session.host = .settings
 					choosingExportOptions = true
 				}
+				.accessibilityIdentifier(AccessibilityIdentifier.settingsExport)
 			}
 			.disabled(
 				session.canStart == false || importRequest.request != nil
@@ -49,6 +51,7 @@ struct SettingsRecoverySection: View {
 						Task { await session.prepareRecovery(backup) }
 					}
 					.disabled(session.canStart == false)
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsRecoveryPreview)
 				}
 			}
 			if let newest = session.backups.first {
@@ -94,5 +97,6 @@ struct SettingsRecoverySection: View {
 			exportData = nil
 			session.completeExport(.failure(CocoaError(.userCancelled)))
 		}
+		.fileDialogDefaultDirectory(ApplicationPaths.reviewFileDialogURL)
 	}
 }

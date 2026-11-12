@@ -181,7 +181,7 @@ extension ServerSession {
 	/// nobody checked. "Don't Send" is the default and the Escape button.
 	/// `certificateChanged` says the host was allowed before with another certificate.
 	static func credentialConsentAlert(host: String, certificateChanged: Bool = false) -> AlertRequest {
-		AlertRequest(
+		var request = AlertRequest(
 			title: ConnectionSafetyStrings.Credentials.unverifiedCertificateTitle,
 			body: certificateChanged
 				? ConnectionSafetyStrings.Credentials.changedCertificateBody(host: host)
@@ -191,6 +191,8 @@ extension ServerSession {
 			cancelButton: .default,
 			style: .warning
 		)
+		request.accessibilityIdentifier = AccessibilityIdentifier.credentialConsent
+		return request
 	}
 }
 

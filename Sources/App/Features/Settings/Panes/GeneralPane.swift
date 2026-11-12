@@ -27,6 +27,7 @@ struct GeneralPane: View {
 				title: .Settings.generalConfirmQuit,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.confirmQuit)
 			)
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsConfirmQuit)
 			SettingsToggle(
 				title: .Settings.generalAwayOnScreenSleep,
 				isOn: model.settings.binding(for: SettingsKeys.Connection.awayOnScreenSleep)

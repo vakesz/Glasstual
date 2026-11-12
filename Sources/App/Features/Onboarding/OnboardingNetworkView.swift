@@ -50,6 +50,7 @@ struct OnboardingNetworkView: View {
 			}
 
 			Toggle(.Onboarding.connectWhenFinished, isOn: $settings.network.connectWhenFinished)
+				.accessibilityIdentifier(AccessibilityIdentifier.onboardingConnectWhenFinished)
 		}
 		.padding(.bottom, 10)
 	}
@@ -97,6 +98,7 @@ private struct OnboardingNetworkDetailView: View {
 					get: { picker.draft.prefersSecuredConnection },
 					set: picker.setPrefersSecuredConnection
 				))
+				.accessibilityIdentifier(AccessibilityIdentifier.onboardingNetworkTLS)
 			}
 			.formStyle(.columns)
 
@@ -148,6 +150,7 @@ private struct OnboardingNetworkDetailView: View {
 				.formStyle(.columns)
 
 				Toggle(.Onboarding.signInWithSasl, isOn: $picker.draft.usesSASL)
+					.accessibilityIdentifier(AccessibilityIdentifier.onboardingNetworkSASL)
 					.disabled(picker.saslIsSupported == false)
 				Text(.Onboarding.accountIdentityHelp)
 					.font(.caption)

@@ -15,6 +15,8 @@ struct MemberListView: View {
 			HStack {
 				Text(.MemberList.sectionMembers)
 					.font(.headline)
+					.accessibilityIdentifier(AccessibilityIdentifier.memberCount)
+					.accessibilityValue(Text(verbatim: String(model.groups.reduce(0) { $0 + $1.members.count })))
 				Spacer()
 				Button(.MemberList.showProfileAction, systemImage: "info.circle") {
 					guard let member = model.selectedProfileMember else { return }

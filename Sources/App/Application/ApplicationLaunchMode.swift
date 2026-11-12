@@ -9,23 +9,40 @@ import AppKit
  The unit tests run inside a full launch of Glasstual.app. That launch used to
  activate the application, raise the main window and the welcome window, and
  take the person's focus on every run. The test host does everything else a
- launch does, but stays in the background with its windows off screen. The
- smoke and end-to-end runs drive the real application through Accessibility,
- so they launch without the variable and keep the interactive behaviour. */
+ launch does, but stays in the background with its windows off screen.
+
+ The end-to-end harness drives the real application through Accessibility, so
+ its launch is interactive, but it neither restores nor saves window state:
+ the run shares the application's container with the person's own copy. */
 enum ApplicationLaunchMode: Equatable {
 	case interactive
 	case unitTestHost
+	/// A launch by `Tests/E2EHarness`. `keepsRunState` is set for a launch the
+	/// harness relaunches against the same run; otherwise the application
+	/// removes the run's settings, files and secrets as it quits.
+	case endToEnd(keepsRunState: Bool)
 
 	/// Set by the Glasstual scheme's test action in `project.yml`. Read in
 	/// Debug builds only; a Release build is always interactive.
 	static let unitTestHostVariable = "GLASSTUAL_UNIT_TEST_HOST"
 
+	/// Set by the end-to-end harness: `1`, or `keep` for a launch whose state
+	/// the next launch of the same run reads. Debug builds only.
+	static let endToEndVariable = "GLASSTUAL_E2E"
+
 	static let current = Self(environment: ProcessInfo.processInfo.environment)
 
 	init(environment: [String: String]) {
 		#if DEBUG
-			let value = environment[Self.unitTestHostVariable] ?? ""
-			self = value.isEmpty ? .interactive : .unitTestHost
+			if (environment[Self.unitTestHostVariable] ?? "").isEmpty == false {
+				self = .unitTestHost
+				return
+			}
+			switch environment[Self.endToEndVariable] ?? "" {
+			case "": self = .interactive
+			case "keep": self = .endToEnd(keepsRunState: true)
+			default: self = .endToEnd(keepsRunState: false)
+			}
 		#else
 			self = .interactive
 		#endif
@@ -38,21 +55,26 @@ enum ApplicationLaunchMode: Equatable {
 	 keep first responders and take part in menu validation. */
 	var activationPolicy: NSApplication.ActivationPolicy? {
 		switch self {
-		case .interactive: nil
+		case .interactive, .endToEnd: nil
 		case .unitTestHost: .prohibited
 		}
 	}
 
 	/// Whether the application may activate itself and raise its windows.
 	var takesForeground: Bool {
+		self != .unitTestHost
+	}
+
+	/// Whether AppKit may restore and save window state. The test host and
+	/// the harness share the application's container, so they would otherwise
+	/// reopen the person's windows and record their own over them.
+	var restoresWindows: Bool {
 		self == .interactive
 	}
 
-	/// Whether AppKit may restore saved windows. The test host shares the
-	/// application's container, so it would otherwise reopen the person's
-	/// windows and record its own over them.
-	var restoresWindows: Bool {
-		self == .interactive
+	/// Whether quitting removes the run's settings suite, files and secrets.
+	var removesRunStateOnQuit: Bool {
+		self == .endToEnd(keepsRunState: false)
 	}
 }
 

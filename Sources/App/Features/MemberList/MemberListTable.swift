@@ -208,6 +208,18 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 			},
 			activate: { [weak self] in self?.activateMember(at: index) }
 		)
+		cell.showMenu = row.member == nil ? nil : { [weak self, weak cell] in
+			guard let self, let cell else { return false }
+			return showContextMenu(forRowOf: cell)
+		}
+	}
+
+	/// The context menu a secondary click on the cell's row opens, at the row.
+	private func showContextMenu(forRowOf cell: NSView) -> Bool {
+		let row = tableView.row(for: cell)
+		guard row >= 0, let menu = contextMenu(at: row) else { return false }
+		let frame = tableView.rect(ofRow: row)
+		return menu.popUp(positioning: nil, at: NSPoint(x: frame.midX, y: frame.maxY), in: tableView)
 	}
 
 	func tableViewSelectionDidChange(_: Notification) {

@@ -340,7 +340,8 @@ extension MenuCommand {
 // MARK: - AppKit bridging
 
 extension NSMenuItem {
-	private static let commandIdentifierPrefix = "com.vakesz.glasstual.command."
+	/// The identifier doubles as the item's accessibility identifier.
+	private static let commandIdentifierPrefix = AccessibilityIdentifier.menuPrefix
 
 	/// The command this item issues. Programmatic menus store this in the item
 	/// identifier so AppKit's numeric tag namespace remains available to controls
@@ -352,7 +353,7 @@ extension NSMenuItem {
 		}
 		set {
 			identifier = newValue.map {
-				NSUserInterfaceItemIdentifier(Self.commandIdentifierPrefix + $0.rawValue)
+				NSUserInterfaceItemIdentifier(AccessibilityIdentifier.menu($0))
 			}
 		}
 	}

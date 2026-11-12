@@ -46,6 +46,7 @@ struct ServerPropertiesGeneralPane: View {
 				}
 				Toggle(.ServerProperties.connectSecurely, isOn: $model.primaryServerIsSecured)
 				SecureField(.ServerProperties.serverPassword, text: model.secretBinding(.serverPassword))
+					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesServerPassword)
 			} footer: {
 				VStack(alignment: .leading) {
 					Text(.ServerProperties.serverPasswordHelp)

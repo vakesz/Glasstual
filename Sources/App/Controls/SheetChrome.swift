@@ -62,16 +62,20 @@ struct SheetActions<Leading: View>: View {
 	private let confirm: () -> Void
 	private let cancel: () -> Void
 	private let leading: Leading
+	/// What an Accessibility client finds the accepting button by.
+	private let confirmIdentifier: String
 
 	init(
 		confirmTitle: Text,
 		confirmIsDisabled: Bool = false,
+		confirmIdentifier: String = "",
 		confirm: @escaping () -> Void,
 		cancel: @escaping () -> Void,
 		@ViewBuilder leading: () -> Leading
 	) {
 		self.confirmTitle = confirmTitle
 		self.confirmIsDisabled = confirmIsDisabled
+		self.confirmIdentifier = confirmIdentifier
 		self.confirm = confirm
 		self.cancel = cancel
 		self.leading = leading()
@@ -88,6 +92,7 @@ struct SheetActions<Leading: View>: View {
 				Button(action: confirm) { confirmTitle }
 					.keyboardShortcut(.defaultAction)
 					.disabled(confirmIsDisabled)
+					.accessibilityIdentifier(confirmIdentifier)
 			}
 			.padding(UISpacing.wide)
 		}

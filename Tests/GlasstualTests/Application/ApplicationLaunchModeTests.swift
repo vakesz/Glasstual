@@ -24,8 +24,8 @@ struct ApplicationLaunchModeTests {
 		#expect(mode == .unitTestHost)
 	}
 
-	/// Smoke and E2E runs set the review variables and drive the visible
-	/// application, so the review variables alone must not hide it.
+	/// The end-to-end harness drives the visible application, so the review
+	/// variables alone must not hide it.
 	@Test("Review isolation alone keeps the interactive launch")
 	func reviewIsolationStaysInteractive() {
 		let mode = ApplicationLaunchMode(environment: [
@@ -34,6 +34,30 @@ struct ApplicationLaunchModeTests {
 		])
 
 		#expect(mode == .interactive)
+	}
+
+	@Test("The harness variable makes an end-to-end launch")
+	func harnessVariableMakesEndToEndLaunch() {
+		#expect(ApplicationLaunchMode(environment: [ApplicationLaunchMode.endToEndVariable: "1"])
+			== .endToEnd(keepsRunState: false))
+		#expect(ApplicationLaunchMode(environment: [ApplicationLaunchMode.endToEndVariable: "keep"])
+			== .endToEnd(keepsRunState: true))
+		#expect(ApplicationLaunchMode(environment: [
+			ApplicationLaunchMode.endToEndVariable: "1",
+			ApplicationLaunchMode.unitTestHostVariable: "1",
+		]) == .unitTestHost)
+	}
+
+	@Test("An end-to-end launch comes forward but neither restores nor saves windows")
+	func endToEndLaunchComesForwardWithoutRestoration() {
+		let mode = ApplicationLaunchMode.endToEnd(keepsRunState: false)
+
+		#expect(mode.activationPolicy == nil)
+		#expect(mode.takesForeground)
+		#expect(mode.restoresWindows == false)
+		#expect(mode.removesRunStateOnQuit)
+		#expect(ApplicationLaunchMode.endToEnd(keepsRunState: true).removesRunStateOnQuit == false)
+		#expect(ApplicationLaunchMode.interactive.removesRunStateOnQuit == false)
 	}
 
 	@Test("An interactive launch comes forward and restores its windows")

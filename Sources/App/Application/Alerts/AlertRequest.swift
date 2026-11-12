@@ -49,6 +49,9 @@ nonisolated struct AlertRequest: Sendable {
 	var suppressionKey: String?
 	var suppressionText: String?
 	var style: AlertStyle
+	/// What an Accessibility client finds the alert by; its buttons take this
+	/// plus the response they give. `nil` leaves the alert unidentified.
+	var accessibilityIdentifier: String?
 
 	init(
 		title: String,

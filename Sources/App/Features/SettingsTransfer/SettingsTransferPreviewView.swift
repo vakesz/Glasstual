@@ -23,6 +23,7 @@ struct SettingsTransferAlert: ViewModifier {
 			presenting: message
 		) { _ in
 			Button(PromptStrings.Action.confirmation, action: acknowledge)
+				.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferResultConfirm)
 		} message: { message in
 			Text(verbatim: message.body)
 		}
@@ -86,6 +87,7 @@ struct SettingsTransferPreviewView: View {
 				}
 				.frame(maxWidth: .infinity, alignment: .leading)
 			}
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferPreview)
 			HStack {
 				if session.isBusy {
 					ProgressView().controlSize(.small)
@@ -93,6 +95,7 @@ struct SettingsTransferPreviewView: View {
 				Spacer()
 				Button(PromptStrings.Action.cancel) { session.cancelPreview(); dismiss() }
 					.keyboardShortcut(.cancelAction)
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferCancel)
 				/* Restore replaces the whole configuration — it resets every
 				 setting the file leaves out and removes every server it does not
 				 list — and a file that adds commands or trusted schemes needs
@@ -106,6 +109,7 @@ struct SettingsTransferPreviewView: View {
 					preview.mode == .merge && plan?.riskyChanges.isEmpty == true ? .defaultAction : nil
 				)
 				.disabled(plan == nil)
+				.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferCommit)
 			}
 		}
 		.padding(SettingsWindowMetrics.sheetInset)
@@ -154,6 +158,7 @@ struct SettingsTransferPreviewView: View {
 			}
 			.font(.caption)
 			.accessibilityLabel(Text(stateDescription(of: setting)))
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsTransferChange(setting.id))
 		}
 	}
 

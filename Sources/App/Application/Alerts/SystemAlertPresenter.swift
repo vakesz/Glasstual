@@ -138,6 +138,9 @@ private final class AlertSession {
 	private func configure() {
 		alert.messageText = request.title
 		alert.informativeText = request.body
+		if let identifier = request.accessibilityIdentifier {
+			alert.window.setAccessibilityIdentifier(identifier)
+		}
 		alert.alertStyle = switch request.style {
 		case .informational: .informational
 		case .warning: .warning
@@ -167,6 +170,9 @@ private final class AlertSession {
 
 	private func addButton(_ title: String, as response: AlertResponse) {
 		let button = alert.addButton(withTitle: title)
+		if let identifier = request.accessibilityIdentifier {
+			button.setAccessibilityIdentifier(AccessibilityIdentifier.alertButton(identifier, response))
+		}
 
 		button.hasDestructiveAction = switch request.destructiveButton {
 		case .default: response == .default

@@ -15,12 +15,13 @@ struct KeychainStoreTests {
 
 	/// The tests run inside the application and share its access group, so
 	/// every item they touch carries the prefix that keeps it apart from the
-	/// user's real secrets.
+	/// user's real secrets, and from another run's: the scheme names the review
+	/// directory `GlasstualTests`.
 	@Test("Items written by the tests are kept apart from real secrets")
 	func itemsAreIsolated() {
 		let item = uniqueItem()
 
-		#expect(item.storedService == "glasstual.tests." + item.service)
+		#expect(item.storedService == "glasstual.tests.GlasstualTests." + item.service)
 	}
 
 	@Test("A password written to the data-protection keychain reads back")

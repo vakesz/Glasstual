@@ -70,6 +70,7 @@ struct IdentityPane: View {
 				rejectionMessage: rejection,
 				prompt: .Settings.defaultIdentityOptional
 			)
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsField(key.name))
 		} label: {
 			Text(label)
 		}

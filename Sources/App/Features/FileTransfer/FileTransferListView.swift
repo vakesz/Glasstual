@@ -95,6 +95,7 @@ struct FileTransferListView: View {
 				}
 				.help(model.startActionTitle())
 				.disabled(model.canPerform(.start) == false)
+				.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersStart)
 
 				Button {
 					center.perform(.downloadTo, on: model.selection)
@@ -111,6 +112,7 @@ struct FileTransferListView: View {
 				}
 				.help(Text(.FileTransfer.cancelTransfer))
 				.disabled(model.canPerform(.stop) == false)
+				.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersStop)
 
 				Button {
 					center.perform(.preview, on: model.selection)
@@ -323,6 +325,8 @@ struct FileTransferListScene: Scene {
 			for: SingletonSceneValue.self
 		) { _ in
 			FileTransferListView(center: center)
+				.accessibilityElement(children: .contain)
+				.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersWindow)
 				.frame(
 					minWidth: 620,
 					idealWidth: 680,

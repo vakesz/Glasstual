@@ -89,6 +89,7 @@ struct ServerPropertiesView: View {
 			SheetActions(
 				confirmTitle: Text(PromptStrings.Action.save),
 				confirmIsDisabled: model.validationMessage != nil,
+				confirmIdentifier: AccessibilityIdentifier.serverPropertiesSave,
 				confirm: { commands?.submit() },
 				cancel: { commands?.cancel() },
 				leading: {
@@ -145,6 +146,7 @@ struct ServerPropertiesView: View {
 					.accessibilityIdentifier("server-properties-profile")
 			} else {
 				Label(pane.title, systemImage: pane.symbol).tag(pane)
+					.accessibilityIdentifier(AccessibilityIdentifier.serverPropertiesPane(String(describing: pane)))
 			}
 		}
 	}

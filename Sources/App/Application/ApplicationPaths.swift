@@ -173,8 +173,35 @@ nonisolated enum ApplicationPaths {
 		userHomeURL.appendingPathComponent("/Library/Logs/DiagnosticReports")
 	}
 
+	/// The Downloads folder, or in a Debug review run a `Downloads` folder of
+	/// the run's own, so a test transfer never lands among the person's files.
 	static var userDownloadsURL: URL? {
-		firstSearchPath(for: .downloadsDirectory).map { URL(fileURLWithPath: $0, isDirectory: true) }
+		#if DEBUG
+			if uiReviewDirectoryName != nil, let reviewURL = groupContainerURL {
+				let baseURL = reviewURL.appendingPathComponent("Downloads", isDirectory: true)
+				createDirectory(at: baseURL)
+
+				return baseURL
+			}
+		#endif
+
+		return firstSearchPath(for: .downloadsDirectory).map { URL(fileURLWithPath: $0, isDirectory: true) }
+	}
+
+	/// Where file dialogs open in a Debug review run: a `Transfers` folder of
+	/// the run's own, so an Accessibility client driving the dialog never sees
+	/// the person's folders. `nil` otherwise, which leaves the choice to the system.
+	static var reviewFileDialogURL: URL? {
+		#if DEBUG
+			if uiReviewDirectoryName != nil, let reviewURL = groupContainerURL {
+				let baseURL = reviewURL.appendingPathComponent("Transfers", isDirectory: true)
+				createDirectory(at: baseURL)
+
+				return baseURL
+			}
+		#endif
+
+		return nil
 	}
 
 	private static var userHomeURL: URL {
@@ -349,6 +376,36 @@ nonisolated enum ApplicationPaths {
 	}
 
 	#if DEBUG
+		/** Removes the review run's directories from the group container and
+		 Application Support. Returns whether both are gone; does nothing
+		 outside a review run. */
+		@discardableResult
+		static func removeUIReviewDirectories() -> Bool {
+			guard let reviewDirectory = uiReviewDirectoryName else { return true }
+			var directories: [URL] = []
+			if let container = fileManager.containerURL(
+				forSecurityApplicationGroupIdentifier: ApplicationGroup.identifier
+			) {
+				directories.append(
+					container
+						.appendingPathComponent("UI Reviews", isDirectory: true)
+						.appendingPathComponent(reviewDirectory, isDirectory: true)
+				)
+			}
+			if let supportPath = firstSearchPath(for: .applicationSupportDirectory, appending: "/Glasstual/") {
+				directories.append(URL(fileURLWithPath: applyUIReviewDirectory(toPath: supportPath), isDirectory: true))
+			}
+			var removedAll = true
+			for directory in directories where fileManager.fileExists(atPath: directory.path) {
+				do {
+					try fileManager.removeItem(at: directory)
+				} catch {
+					removedAll = false
+				}
+			}
+			return removedAll
+		}
+
 		private static var uiReviewDirectoryName: String? {
 			let reviewDirectory = ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_DIRECTORY"] ?? ""
 

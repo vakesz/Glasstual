@@ -38,6 +38,7 @@ final class CertificatePresenter: CertificatePresenting {
 			defaultButton: PromptStrings.Action.continueAction,
 			alternateButton: PromptStrings.Action.cancel,
 			trust: trust,
+			accessibilityIdentifier: AccessibilityIdentifier.certificateTrust,
 			completion: decided
 		)
 		return { panel.dismiss() }

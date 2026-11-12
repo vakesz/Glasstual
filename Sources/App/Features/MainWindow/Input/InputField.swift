@@ -288,6 +288,23 @@ final class InputField: FormattedTextView {
 		refreshSlashCommands()
 	}
 
+	/// Return: accepts the slash command being typed, or sends the field.
+	private func submit() {
+		if acceptIncompleteSlashCommand() {
+			return
+		}
+		(window as? MainWindow)?.textEntered()
+	}
+
+	/** Return for assistive technology. Voice Control, Switch Control and
+	 other Accessibility clients confirm the field the way the key does, without
+	 having to give the application the keyboard first. */
+	override func accessibilityPerformConfirm() -> Bool {
+		guard hasMarkedText() == false, window is MainWindow else { return false }
+		submit()
+		return true
+	}
+
 	func textView(_: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
 		if commandSelector == #selector(NSResponder.insertNewline(_:)) {
 			/* AppKit's standard key bindings send `insertNewline:` for Return
@@ -298,10 +315,7 @@ final class InputField: FormattedTextView {
 			if hasMarkedText() || NSApp.currentEvent?.modifierFlags.contains(.shift) == true {
 				return false
 			}
-			if acceptIncompleteSlashCommand() {
-				return true
-			}
-			(window as? MainWindow)?.textEntered()
+			submit()
 			return true
 		}
 

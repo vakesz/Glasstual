@@ -71,12 +71,14 @@ private struct SettingsExportOptionsView: View {
 		VStack(alignment: .leading, spacing: UISpacing.loose) {
 			Text(.SettingsTransfer.exportOptions).font(.title2)
 			Toggle(.SettingsTransfer.includeConnectCommands, isOn: $includeConnectCommands)
+				.accessibilityIdentifier(AccessibilityIdentifier.settingsExportIncludeCommands)
 			Text(.SettingsTransfer.connectCommandsWarning).font(.callout).foregroundStyle(.secondary)
 			HStack {
 				Spacer()
 				Button(PromptStrings.Action.cancel) { dismiss() }.keyboardShortcut(.cancelAction)
 				Button(PromptStrings.Action.saveFile) { confirm(includeConnectCommands) }
 					.keyboardShortcut(.defaultAction)
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsExportSave)
 			}
 		}
 		.padding(SettingsWindowMetrics.sheetInset)

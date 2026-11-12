@@ -346,6 +346,8 @@ final class ApplicationTermination {
 		Self.logger.debug("Saving running internal")
 		ApplicationInfo.saveTimeIntervalSinceApplicationInstall()
 
+		EndToEndRunState.removeIfRequested()
+
 		Self.logger.debug("Terminate")
 		NSApp.reply(toApplicationShouldTerminate: true)
 	}

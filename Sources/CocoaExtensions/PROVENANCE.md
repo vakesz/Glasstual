@@ -20,13 +20,13 @@ String Catalog attribution is in
 | `FoundationExtensions.swift` | Foundation and file-system extensions. |
 | `StringExtensions.swift` | String, character-set and address utilities. |
 | `CommandTokenizer.swift` | Command token parsing. |
-| `KeychainStore.swift` | Generic-password storage in the process's entitled access group, including the SASL ECDSA signing key, the SASL OAuth bearer token and secure DCC identity items. |
+| `KeychainStore.swift` | Generic-password storage in the process's entitled access group, including the SASL ECDSA signing key, the SASL OAuth bearer token and secure DCC identity items, and the per-run prefix of Debug test and review runs. |
 | `Logging.swift` | Framework log identifier. |
 | `PortMapper.swift` | Port mapping through DNS-SD. |
 | `RegularExpression.swift` | Cached expressions with bounded matching. |
 | `SecureTransport.swift` | TLS cipher policy, client-certificate chains, names and error descriptions. |
 | `SystemSleepState.swift` | System sleep observation. |
-| `TrustPanelPresenter.swift` | Certificate trust sheet. |
+| `TrustPanelPresenter.swift` | Certificate trust sheet and the accessibility identifiers of its answer buttons. |
 
 The following files are maintained by this project:
 

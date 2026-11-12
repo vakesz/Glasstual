@@ -10,6 +10,12 @@ final class Application: NSApplication, CustomKeyboardEventResponder {
 
 	override init() {
 		super.init()
+		/* Before AppKit reads it: `ApplePersistence` off stops saved state being
+		 written as well as restored. The registration domain is not stored, so
+		 this changes nothing for the person's own launches. */
+		if ApplicationForeground.mode.restoresWindows == false {
+			UserDefaults.standard.register(defaults: ["ApplePersistence": false])
+		}
 
 		let applicationController = ApplicationDelegate()
 		let menuController = MenuActionController()
@@ -24,15 +30,16 @@ final class Application: NSApplication, CustomKeyboardEventResponder {
 		fatalError("Application does not support decoding")
 	}
 
-	/// The funnel for every restored window. The test host restores none, so a
-	/// saved window cannot come on screen in front of the person's work.
+	/// The funnel for every restored window. The test host and the harness
+	/// restore none, so a saved window cannot come on screen in front of the
+	/// person's work.
 	override func restoreWindow(
 		withIdentifier identifier: NSUserInterfaceItemIdentifier,
 		state: NSCoder,
 		completionHandler: @escaping (NSWindow?, (any Error)?) -> Void
 	) -> Bool {
 		guard ApplicationForeground.mode.restoresWindows else {
-			assert(ApplicationForeground.mode == .unitTestHost, "Only the test host suppresses restoration")
+			assert(ApplicationForeground.mode != .interactive, "Only a test launch suppresses restoration")
 			completionHandler(nil, nil)
 			return true
 		}

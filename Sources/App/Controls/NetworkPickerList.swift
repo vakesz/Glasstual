@@ -161,6 +161,7 @@ struct NetworkPickerListView: View {
 
 				Section {
 					networkRow(model.customOption).tag(model.customOption.id)
+						.accessibilityIdentifier(AccessibilityIdentifier.networkPickerCustomServer)
 				}
 			}
 			.listStyle(.inset)

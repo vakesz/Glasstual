@@ -162,12 +162,14 @@ final class SidebarCellView: NSTableCellView {
 	/// Native outline proxies expose the cell's metadata. Keep disclosure and
 	/// selection on AppKit's rows, and place secondary actions on this cell.
 	func configureAccessibilityActions(with node: SidebarOutlineNode, canMoveUp: Bool, canMoveDown: Bool) {
-		let prefix = if case .favorite = node.identity {
-			"sidebar-favorite-"
+		if case .favorite = node.identity {
+			setAccessibilityIdentifier("sidebar-favorite-" + node.identity.itemIdentifier)
+			setAccessibilityValue(nil)
 		} else {
-			"sidebar-row-"
+			let (identifier, state) = Self.accessibilityIdentity(of: node.content)
+			setAccessibilityIdentifier(identifier)
+			setAccessibilityValue(state.rawValue)
 		}
-		setAccessibilityIdentifier(prefix + node.identity.itemIdentifier)
 		var actions: [NSAccessibilityCustomAction] = []
 		if canMoveUp {
 			actions.append(NSAccessibilityCustomAction(name: String(localized: .MainWindow.sidebarMoveUp),
@@ -178,6 +180,31 @@ final class SidebarCellView: NSTableCellView {
 			                                           target: self, selector: #selector(moveSidebarDown)))
 		}
 		setAccessibilityCustomActions(actions)
+	}
+
+	/// `sidebar-row-<kind>-<name>`, and whether the server is connected or the
+	/// conversation joined.
+	private static func accessibilityIdentity(of content: SidebarOutlineNode.Content)
+		-> (identifier: String, state: SidebarRowState)
+	{
+		switch content {
+		case let .server(server):
+			return (
+				AccessibilityIdentifier.sidebarRow("server", server.title),
+				server.isActive ? .connected : .disconnected
+			)
+		case let .conversation(conversation):
+			let kind = switch conversation.kind {
+			case .channel: "channel"
+			case .direct: "direct"
+			case .directChat: "direct-chat"
+			case .console: "console"
+			}
+			return (
+				AccessibilityIdentifier.sidebarRow(kind, conversation.title),
+				conversation.isActive ? .joined : .notJoined
+			)
+		}
 	}
 
 	override func accessibilityPerformShowMenu() -> Bool {

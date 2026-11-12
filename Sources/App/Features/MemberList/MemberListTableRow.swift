@@ -90,6 +90,9 @@ final class MemberListTableCell: NSTableCellView {
 	private var content: MemberListTableRowContent?
 	private var showProfile: (() -> Void)?
 	private var activate: (() -> Void)?
+	/// Opens the member's context menu, for VoiceOver's and other
+	/// Accessibility clients' show-menu action.
+	var showMenu: (() -> Bool)?
 
 	override var backgroundStyle: NSView.BackgroundStyle {
 		didSet {
@@ -113,6 +116,7 @@ final class MemberListTableCell: NSTableCellView {
 		setAccessibilityElement(true)
 		setAccessibilityRole(.staticText)
 		setAccessibilityLabel(row.accessibilityDescription(style: style, displayName: profile.displayName))
+		setAccessibilityIdentifier(row.member.map { AccessibilityIdentifier.memberRow($0.user.nickname) })
 		setAccessibilityChildren([])
 		self.showProfile = row.member == nil ? nil : showProfile
 		self.activate = row.member == nil ? nil : activate
@@ -147,6 +151,10 @@ final class MemberListTableCell: NSTableCellView {
 			])
 			hostingView = host
 		}
+	}
+
+	override func accessibilityPerformShowMenu() -> Bool {
+		showMenu?() ?? false
 	}
 
 	@objc private func openProfile() -> Bool {

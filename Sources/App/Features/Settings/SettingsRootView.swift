@@ -81,6 +81,7 @@ struct SettingsRootView: View {
 			 tags: choosing one hands back the destination it stands for. */
 			List(model.matchingDestinations, selection: selection) { destination in
 				Label(destination.title, systemImage: destination.symbolName)
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsPage(destination.id.rawValue))
 			}
 			.listStyle(.sidebar)
 			.scrollEdgeEffectStyle(.soft, for: .all)
