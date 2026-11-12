@@ -72,7 +72,7 @@ struct MemberListTableTests {
 		#expect(fixture.controller.tableView.selectedRowIndexes == IndexSet(integer: 2))
 		fixture.presentOffscreen()
 		let row = NativeTableAccessibility.rows(in: fixture.controller.tableView)[2]
-		let entry = try #require(NativeTableAccessibility.descendants(of: row).first { $0.accessibilityRole() == .staticText })
+		let entry = try #require(NativeTableAccessibility.descendants(of: row).first { $0.accessibilityRole() == .cell })
 		#expect(entry.accessibilityLabel()?.contains("renamed") == true)
 		#expect(entry.accessibilityCustomActions()?.first?.name == String(localized: .MemberList.showProfileAction))
 	}
@@ -90,7 +90,7 @@ struct MemberListTableTests {
 		table.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
 		let rows = NativeTableAccessibility.rows(in: table)
 		try #require(rows.count == 4)
-		let entries = NativeTableAccessibility.descendants(of: rows[2]).filter { $0.accessibilityRole() == .staticText }
+		let entries = NativeTableAccessibility.descendants(of: rows[2]).filter { $0.accessibilityRole() == .cell }
 		try #require(entries.count == 1)
 		let entry = try #require(entries.first)
 		#expect(entry.accessibilityLabel() == MemberListTableRow.member(members[1]).accessibilityDescription(
@@ -104,7 +104,7 @@ struct MemberListTableTests {
 		#expect(fixture.model.selectedMemberIDs == [members[0].id])
 		#expect(NativeTableAccessibility.isSelected(rows[1]))
 		#expect(NativeTableAccessibility.isSelected(rows[2]) == false)
-		let headings = NativeTableAccessibility.descendants(of: rows[0]).filter { $0.accessibilityRole() == .staticText }
+		let headings = NativeTableAccessibility.descendants(of: rows[0]).filter { $0.accessibilityRole() == .cell }
 		try #require(headings.count == 1)
 		#expect(headings[0].accessibilityLabel()?.isEmpty == false)
 		#expect(headings[0].accessibilityCustomActions()?.isEmpty != false)

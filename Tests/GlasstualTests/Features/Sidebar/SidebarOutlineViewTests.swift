@@ -185,7 +185,7 @@ struct SidebarOutlineViewTests {
 		#expect(!fixture.outline.isItemExpanded(parent))
 	}
 
-	@Test("Reused cells clear failed-join icons, badges and security state")
+	@Test("Reused cells clear failed-join icons, unread counts and security state")
 	func reusedCellsResetPresentation() throws {
 		let fixture = Fixture()
 		defer { fixture.close() }
@@ -198,14 +198,14 @@ struct SidebarOutlineViewTests {
 		let cell = SidebarCellView(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
 		cell.configure(with: failed)
 		#expect(!cell.leadingImage.isHidden)
-		#expect(!cell.badge.isHidden)
+		#expect(!cell.unreadCountField.isHidden)
 		#expect(failed.accessibilityDescription.contains(String(localized: .MainWindow.sidebarJoinFailed)))
 		cell.configure(with: normal)
 		#expect(cell.leadingImage.isHidden)
 		#expect(cell.leadingImage.image == nil)
 		#expect(cell.leadingImage.toolTip == nil)
-		#expect(cell.badge.isHidden)
-		#expect(cell.badge.toolTip == nil)
+		#expect(cell.unreadCountField.isHidden)
+		#expect(cell.unreadCountField.toolTip == nil)
 		#expect(cell.securityImage.isHidden)
 		#expect(cell.titleField.stringValue == "#linux")
 	}
@@ -244,7 +244,7 @@ struct SidebarOutlineViewTests {
 		fixture.window.displayIfNeeded()
 		let rows = NativeTableAccessibility.rows(in: fixture.outline)
 		try #require(rows.count == fixture.outline.numberOfRows)
-		let entries = NativeTableAccessibility.descendants(of: rows[2]).filter { $0.accessibilityRole() == .staticText }
+		let entries = NativeTableAccessibility.descendants(of: rows[2]).filter { $0.accessibilityRole() == .cell }
 		try #require(entries.count == 1)
 		let entry = try #require(entries.first)
 		let identity = SidebarNodeID.conversation(fixture.channels[1].uniqueIdentifier)
@@ -264,14 +264,14 @@ struct SidebarOutlineViewTests {
 		#expect(fixture.outline.selectedRow == 1)
 		#expect(NativeTableAccessibility.isSelected(reorderedRows[1]))
 		let reorderedEntry = try #require(NativeTableAccessibility.descendants(of: reorderedRows[1]).first {
-			$0.accessibilityRole() == .staticText
+			$0.accessibilityRole() == .cell
 		})
 		#expect(reorderedEntry.accessibilityCustomActions()?.map(\.name) == [String(localized: .MainWindow.sidebarMoveDown)])
 		fixture.model.filterText = "second"
 		fixture.apply()
 		let filteredRows = NativeTableAccessibility.rows(in: fixture.outline)
 		let filteredEntry = try #require(NativeTableAccessibility.descendants(of: filteredRows[1]).first {
-			$0.accessibilityRole() == .staticText
+			$0.accessibilityRole() == .cell
 		})
 		#expect(filteredEntry.accessibilityCustomActions()?.isEmpty == true)
 	}
@@ -321,8 +321,8 @@ struct SidebarOutlineViewTests {
 			let title = cell.convert(cell.titleField.alignmentRect(forFrame: cell.titleField.frame), from: cell.titleField.superview)
 			#expect(title.minX >= -0.5)
 			#expect(title.maxX <= cell.bounds.maxX + 0.5)
-			if !cell.badge.isHidden {
-				let badge = cell.badge.convert(cell.badge.bounds, to: cell)
+			if !cell.unreadCountField.isHidden {
+				let badge = cell.unreadCountField.convert(cell.unreadCountField.bounds, to: cell)
 				#expect(title.maxX < badge.minX)
 			}
 		}

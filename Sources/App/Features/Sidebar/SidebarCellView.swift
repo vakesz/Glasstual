@@ -13,8 +13,12 @@ final class SidebarCellView: NSTableCellView {
 	private let subtitleStack = NSStackView()
 	let leadingImage = NSImageView()
 	let securityImage = NSImageView()
-	let badge = SidebarUnreadBadge()
+	/// The unread count: plain trailing text, as a source list draws it.
+	let unreadCountField = NSTextField(labelWithString: "")
 	private var content: SidebarOutlineNode.Content?
+	private var metrics = ListRowMetrics(.medium)
+	private var leadingWidth: NSLayoutConstraint?
+	private var leadingHeight: NSLayoutConstraint?
 	var showMenu: (() -> Bool)?
 	var move: ((Bool) -> Bool)?
 
@@ -26,10 +30,13 @@ final class SidebarCellView: NSTableCellView {
 		titleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 		let spacer = NSView()
 		spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-		subtitleField.font = .preferredFont(forTextStyle: .subheadline)
 		subtitleField.lineBreakMode = .byTruncatingTail
 		subtitleField.maximumNumberOfLines = 1
 		subtitleField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+		unreadCountField.alignment = .right
+		unreadCountField.setContentHuggingPriority(.required, for: .horizontal)
+		unreadCountField.setContentCompressionResistancePriority(.required, for: .horizontal)
+		leadingImage.imageScaling = .scaleProportionallyDown
 		subtitleStack.addArrangedSubview(networkImage)
 		subtitleStack.addArrangedSubview(subtitleField)
 		subtitleStack.orientation = .horizontal
@@ -40,7 +47,7 @@ final class SidebarCellView: NSTableCellView {
 		labels.alignment = .leading
 		labels.spacing = 1
 		labels.detachesHiddenViews = true
-		let stack = NSStackView(views: [leadingImage, labels, securityImage, spacer, badge])
+		let stack = NSStackView(views: [leadingImage, labels, securityImage, spacer, unreadCountField])
 		stack.orientation = .horizontal
 		stack.alignment = .centerY
 		stack.spacing = UISpacing.regular
@@ -48,28 +55,71 @@ final class SidebarCellView: NSTableCellView {
 		stack.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(stack)
 		textField = titleField
+		let leadingWidth = leadingImage.widthAnchor.constraint(equalToConstant: metrics.glyphWidth)
+		let leadingHeight = leadingImage.heightAnchor.constraint(equalToConstant: metrics.glyphWidth)
+		self.leadingWidth = leadingWidth
+		self.leadingHeight = leadingHeight
 		NSLayoutConstraint.activate([
 			stack.leadingAnchor.constraint(equalTo: leadingAnchor),
 			stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -UISpacing.tight),
 			stack.centerYAnchor.constraint(equalTo: centerYAnchor),
-			leadingImage.widthAnchor.constraint(equalToConstant: UIListMetrics.glyphWidth),
-			leadingImage.heightAnchor.constraint(equalToConstant: 14),
-			networkImage.widthAnchor.constraint(equalToConstant: 10),
-			networkImage.heightAnchor.constraint(equalToConstant: 10),
-			securityImage.widthAnchor.constraint(equalToConstant: 10),
-			securityImage.heightAnchor.constraint(equalToConstant: 12),
+			leadingWidth,
+			leadingHeight,
 		])
-		for view in [titleField, subtitleField, networkImage, subtitleStack, leadingImage, securityImage, badge] {
+		for view in [titleField, subtitleField, networkImage, subtitleStack, leadingImage, securityImage, unreadCountField] {
 			view.setAccessibilityElement(false)
 		}
+		/* One element per row, as a cell: the row's name, state and counts are
+		 its label; its value is the state the end-to-end harness reads. */
 		setAccessibilityElement(true)
-		setAccessibilityRole(.staticText)
+		setAccessibilityRole(.cell)
 		setAccessibilityChildren([])
+		applyMetrics()
 	}
 
 	@available(*, unavailable)
 	required init?(coder _: NSCoder) {
 		fatalError("SidebarCellView is programmatic")
+	}
+
+	/// AppKit sets the table's effective row size here, which follows
+	/// System Settings › Appearance › Sidebar icon size.
+	override var rowSizeStyle: NSTableView.RowSizeStyle {
+		didSet {
+			let next = ListRowMetrics(ListRowMetrics.Size(rowSizeStyle))
+			guard next != metrics else { return }
+			metrics = next
+			applyMetrics()
+		}
+	}
+
+	private func applyMetrics() {
+		leadingWidth?.constant = metrics.glyphWidth
+		leadingHeight?.constant = metrics.glyphWidth
+		leadingImage.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: metrics.textPointSize, weight: .regular)
+		let secondary = NSImage.SymbolConfiguration(pointSize: metrics.secondaryPointSize, weight: .regular)
+		networkImage.symbolConfiguration = secondary
+		securityImage.symbolConfiguration = secondary
+		subtitleField.font = .systemFont(ofSize: metrics.secondaryPointSize)
+		applyFonts()
+	}
+
+	private func applyFonts() {
+		let isServer = if case .server = content {
+			true
+		} else {
+			false
+		}
+		titleField.font = .systemFont(ofSize: metrics.textPointSize, weight: isServer ? .semibold : .regular)
+		let countIsEmphasized = if case let .conversation(conversation) = content {
+			conversation.isEmphasized
+		} else {
+			false
+		}
+		unreadCountField.font = .monospacedDigitSystemFont(
+			ofSize: metrics.textPointSize,
+			weight: countIsEmphasized ? .semibold : .regular
+		)
 	}
 
 	func configure(with node: SidebarOutlineNode) {
@@ -86,16 +136,13 @@ final class SidebarCellView: NSTableCellView {
 		securityImage.image = nil
 		securityImage.isHidden = true
 		securityImage.toolTip = nil
-		badge.configure(count: 0, emphasized: false, tint: nil)
-		badge.isHidden = true
-		badge.toolTip = nil
+		unreadCountField.stringValue = ""
+		unreadCountField.isHidden = true
+		unreadCountField.toolTip = nil
+		applyFonts()
 		switch node.content {
 		case let .server(server):
 			titleField.stringValue = server.title
-			titleField.font = .systemFont(
-				ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize,
-				weight: .semibold
-			)
 			if server.isFavoritesGroup {
 				leadingImage.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
 				leadingImage.isHidden = false
@@ -125,7 +172,6 @@ final class SidebarCellView: NSTableCellView {
 					networkImage.isHidden = false
 				}
 			}
-			titleField.font = .preferredFont(forTextStyle: .body)
 			let symbol: String? = if conversation.hasJoinError {
 				"exclamationmark.triangle.fill"
 			} else {
@@ -149,11 +195,11 @@ final class SidebarCellView: NSTableCellView {
 				securityImage.toolTip = description
 				securityImage.isHidden = false
 			}
-			badge.configure(count: conversation.unreadCount, emphasized: conversation.isEmphasized,
-			                tint: conversation.unreadBadgeTint)
-			badge.isHidden = !conversation.showsUnreadBadge
-			badge.toolTip = conversation.showsUnreadBadge
-				? String(localized: .ChannelSpotlight.unreadMessageCount(conversation.unreadCount)) : nil
+			if conversation.showsUnreadBadge {
+				unreadCountField.stringValue = conversation.unreadCount.formatted()
+				unreadCountField.isHidden = false
+				unreadCountField.toolTip = String(localized: .ChannelSpotlight.unreadMessageCount(conversation.unreadCount))
+			}
 		}
 		titleField.toolTip = titleField.stringValue
 		updateColors()
@@ -226,22 +272,24 @@ final class SidebarCellView: NSTableCellView {
 	private func updateColors() {
 		// NSTableCellView forwards backgroundStyle to direct controls. The
 		// stack owns these controls, so forward the native style through it.
-		titleField.cell?.backgroundStyle = backgroundStyle
-		badge.isOnSelectedRow = backgroundStyle == .emphasized
-		subtitleField.cell?.backgroundStyle = backgroundStyle
+		for field in [titleField, subtitleField, unreadCountField] {
+			field.cell?.backgroundStyle = backgroundStyle
+		}
+		for image in [leadingImage, securityImage, networkImage] {
+			image.cell?.backgroundStyle = backgroundStyle
+		}
 		subtitleField.textColor = backgroundStyle == .emphasized ? .labelColor : .secondaryLabelColor
-		leadingImage.cell?.backgroundStyle = backgroundStyle
-		securityImage.cell?.backgroundStyle = backgroundStyle
-		networkImage.cell?.backgroundStyle = backgroundStyle
 		networkImage.contentTintColor = .secondaryLabelColor
 		securityImage.contentTintColor = .secondaryLabelColor
 		leadingImage.contentTintColor = .secondaryLabelColor
+		unreadCountField.textColor = .secondaryLabelColor
 		leadingImage.alphaValue = 1
 		if backgroundStyle == .emphasized {
 			titleField.textColor = .labelColor
 			leadingImage.contentTintColor = .labelColor
 			securityImage.contentTintColor = .labelColor
 			networkImage.contentTintColor = .labelColor
+			unreadCountField.textColor = .labelColor
 			return
 		}
 		switch content {
@@ -252,6 +300,7 @@ final class SidebarCellView: NSTableCellView {
 		case let .conversation(conversation):
 			leadingImage.alphaValue = 1
 			networkImage.contentTintColor = conversation.networkIdentityStyle?.color.nsColor ?? .secondaryLabelColor
+			unreadCountField.textColor = Self.unreadCountColor(for: conversation)
 			if conversation.hasJoinError {
 				titleField.textColor = .systemRed
 				leadingImage.contentTintColor = .systemRed
@@ -264,83 +313,23 @@ final class SidebarCellView: NSTableCellView {
 			titleField.textColor = .labelColor
 		}
 	}
+
+	/// An ordinary count is secondary text. A count that asks for attention
+	/// takes the colour the reader chose for it, or the accent colour.
+	static func unreadCountColor(for conversation: ConversationRow) -> NSColor {
+		conversation.isEmphasized ? (conversation.unreadBadgeTint ?? .controlAccentColor) : .secondaryLabelColor
+	}
 }
 
-final class SidebarUnreadBadge: NSView {
-	private let label = NSTextField(labelWithString: "")
-	private var emphasized = false
-	private var tint: NSColor?
-
-	/** Whether the badge sits on a selected, emphasized row. The row's own fill
-	 is the accent colour, so a badge filled with it -- or with the grey that
-	 stands for an ordinary count -- disappears; as in a source list, the badge
-	 turns white with accent text there. */
-	var isOnSelectedRow = false {
-		didSet {
-			guard isOnSelectedRow != oldValue else { return }
-			updateColors()
+extension ListRowMetrics.Size {
+	/// A table's effective row size. A table's own `.default` and a custom
+	/// height read as medium, the size AppKit gives a table that sets neither.
+	init(_ style: NSTableView.RowSizeStyle) {
+		switch style {
+		case .small: self = .small
+		case .large: self = .large
+		case .default, .medium, .custom: self = .medium
+		@unknown default: self = .medium
 		}
-	}
-
-	override init(frame frameRect: NSRect) {
-		super.init(frame: frameRect)
-		label.font = .monospacedDigitSystemFont(
-			ofSize: NSFont.preferredFont(forTextStyle: .subheadline).pointSize,
-			weight: .semibold
-		)
-		label.alignment = .center
-		label.translatesAutoresizingMaskIntoConstraints = false
-		label.setAccessibilityElement(false)
-		addSubview(label)
-		NSLayoutConstraint.activate([
-			label.centerXAnchor.constraint(equalTo: centerXAnchor),
-			label.centerYAnchor.constraint(equalTo: centerYAnchor),
-		])
-		setContentHuggingPriority(.required, for: .horizontal)
-		setContentCompressionResistancePriority(.required, for: .horizontal)
-	}
-
-	@available(*, unavailable)
-	required init?(coder _: NSCoder) {
-		fatalError("SidebarUnreadBadge is programmatic")
-	}
-
-	func configure(count: Int, emphasized: Bool, tint: NSColor?) {
-		label.stringValue = count.formatted()
-		self.emphasized = emphasized
-		self.tint = tint
-		updateColors()
-		invalidateIntrinsicContentSize()
-	}
-
-	override var intrinsicContentSize: NSSize {
-		NSSize(width: max(24, label.intrinsicContentSize.width + UISpacing.wide), height: 18)
-	}
-
-	private var fillColor: NSColor {
-		if isOnSelectedRow {
-			return .alternateSelectedControlTextColor
-		}
-		return emphasized ? (tint ?? .selectedContentBackgroundColor) : .quaternaryLabelColor
-	}
-
-	private func updateColors() {
-		if isOnSelectedRow {
-			label.textColor = .controlAccentColor
-		} else {
-			label.textColor = emphasized ? fillColor.legibleForeground : .labelColor
-		}
-		needsDisplay = true
-	}
-
-	override func viewDidChangeEffectiveAppearance() {
-		super.viewDidChangeEffectiveAppearance()
-		updateColors()
-	}
-
-	override func draw(_ dirtyRect: NSRect) {
-		super.draw(dirtyRect)
-		fillColor.setFill()
-		NSBezierPath(roundedRect: bounds, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
 	}
 }

@@ -4,19 +4,14 @@
 import CoreGraphics
 
 /// What the member list draws that nothing else does. The spacings and the row
-/// metrics it shares with the rest of the window are `UISpacing` and
-/// `UIListMetrics`; only the avatar and the profile popover are its own.
+/// metrics it shares with the sidebar are `UISpacing` and `ListRowMetrics`;
+/// only the column widths and the profile popover are its own.
 nonisolated enum MemberListLayout {
 	/// The native inspector's initial width and resize bounds.
 	static let minimumWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidthRange.lowerBound)
 	static let idealWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidth.defaultValue)
 	static let maximumWidth: CGFloat = .init(SettingsKeys.MainWindow.memberListWidthRange.upperBound)
-	static let avatarSize: CGFloat = 24
-	/// A section header's row: one line of caption text and the group row's own
-	/// padding, compact beside the member rows it introduces.
-	static let sectionRowHeight: CGFloat = 22
 	static let profileAvatarSize: CGFloat = 64
-	static let profileLabelWidth: CGFloat = 72
 	static let profileMinimumWidth: CGFloat = 280
 	static let profileIdealWidth: CGFloat = 340
 	static let profileMaximumWidth: CGFloat = 420

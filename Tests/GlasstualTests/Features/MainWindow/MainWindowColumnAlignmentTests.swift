@@ -46,7 +46,7 @@ struct MainWindowColumnAlignmentTests {
 		}
 	}
 
-	@Test("The transcript and member rail respect the safe area and fixed member header")
+	@Test("The transcript and member rail both start at the safe area, with no member title band")
 	func columnsStartAtTheSafeAreaTop() throws {
 		let session = ServerSession(config: ServerConfig())
 		let window = MainWindow(
@@ -88,7 +88,9 @@ struct MainWindowColumnAlignmentTests {
 			descendants(of: NSScrollView.self, in: host.view).first { $0 !== transcript }
 		)
 		let listFrame = list.convert(list.bounds, to: host.view)
-		#expect(listFrame.minY > safeTop, "The persistent member header needs room above the table")
+		/* No title band: the inspector's actions are in the toolbar, so the
+		 list starts where the transcript does. */
+		#expect(abs(listFrame.minY - safeTop) < 0.5, "list at \(listFrame)")
 		#expect(list.contentInsets.top == 0)
 		#expect(abs(listFrame.maxY - transcriptFrame.maxY) < 0.5, "list at \(listFrame)")
 	}

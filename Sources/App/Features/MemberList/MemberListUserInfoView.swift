@@ -52,7 +52,7 @@ struct MemberListUserInfoContent {
 			return AttributedString((value as NSString).stripIRCEffects)
 		}
 		guard let formatted = (value as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+			withIRCFormatting: NSFont.preferredFont(forTextStyle: .body),
 			preferredFontColor: nil,
 			honorFormattingSetting: false
 		) else {
@@ -97,7 +97,7 @@ struct MemberListUserInfoView: View {
 						Text(.MemberList.profileColorRow)
 							.font(.caption.weight(.semibold))
 							.foregroundStyle(.secondary)
-							.frame(width: MemberListLayout.profileLabelWidth, alignment: .trailing)
+							.gridColumnAlignment(.trailing)
 						HStack(spacing: UISpacing.tight) {
 							Circle()
 								.fill(Color(nsColor: NicknameColors.relit(color, lightness: 0.6)))
@@ -145,7 +145,7 @@ struct MemberListUserInfoView: View {
 			Text(label)
 				.font(.caption.weight(.semibold))
 				.foregroundStyle(.secondary)
-				.frame(width: MemberListLayout.profileLabelWidth, alignment: .trailing)
+				.gridColumnAlignment(.trailing)
 			Text(value)
 				.lineLimit(1 ... MemberListLayout.profileValueLineLimit)
 				.truncationMode(.tail)

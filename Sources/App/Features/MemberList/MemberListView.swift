@@ -11,23 +11,30 @@ struct MemberListView: View {
 	private let settings = ObservableSettings.shared
 
 	var body: some View {
-		VStack(spacing: 0) {
-			HStack {
-				Text(.MemberList.sectionMembers)
-					.font(.headline)
-					.accessibilityIdentifier(AccessibilityIdentifier.memberCount)
-					.accessibilityValue(Text(verbatim: String(model.groups.reduce(0) { $0 + $1.members.count })))
-				Spacer()
+		MemberListTable(
+			model: model,
+			revision: model.presentationRevision,
+			selection: model.selectedMemberIDs,
+			followsProfileOnScroll: settings[SettingsKeys.Appearance.memberListUpdatesPopoverOnScroll],
+			redirectTyping: redirectTyping
+		)
+		/* No title band: an inspector carries its actions in its part of the
+		 toolbar. The list's group is what names it and counts its members for
+		 Accessibility clients. */
+		.accessibilityElement(children: .contain)
+		.accessibilityLabel(Text(.MemberList.sectionMembers))
+		.accessibilityIdentifier(AccessibilityIdentifier.memberCount)
+		.accessibilityValue(Text(verbatim: String(model.groups.reduce(0) { $0 + $1.members.count })))
+		.toolbar {
+			ToolbarItem(placement: .automatic) {
 				Button(.MemberList.showProfileAction, systemImage: "info.circle") {
 					guard let member = model.selectedProfileMember else { return }
 					model.showProfile(for: member.id)
 				}
-				.labelStyle(.iconOnly)
-				.buttonStyle(.borderless)
 				.disabled(model.selectedProfileMember == nil)
 				.help(Text(.MemberList.showProfileAction))
 				.accessibilityIdentifier("member-list-show-profile")
-				.popover(isPresented: profileIsPresented, arrowEdge: .leading) {
+				.popover(isPresented: profileIsPresented, arrowEdge: .bottom) {
 					if let member = model.profileMember {
 						MemberListUserInfoView(content: MemberListUserInfoContent(
 							member: member,
@@ -40,16 +47,6 @@ struct MemberListView: View {
 					}
 				}
 			}
-			.padding(.horizontal, UISpacing.wide)
-			.padding(.vertical, UISpacing.regular)
-
-			MemberListTable(
-				model: model,
-				revision: model.presentationRevision,
-				selection: model.selectedMemberIDs,
-				followsProfileOnScroll: settings[SettingsKeys.Appearance.memberListUpdatesPopoverOnScroll],
-				redirectTyping: redirectTyping
-			)
 		}
 		/* The system's inspector material by default, showing through the
 		 table's clear rows. The theme's opaque chrome ground is drawn only when

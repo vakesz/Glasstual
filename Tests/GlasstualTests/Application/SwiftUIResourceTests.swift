@@ -94,6 +94,7 @@ struct SwiftUIResourceTests {
 				"Features/MemberList/MemberListTable.swift",
 				"Features/MemberList/MemberListTableCommands.swift",
 				"Features/ServerChannelList/ServerChannelListTable.swift",
+				"Features/Sidebar/SidebarCellView.swift",
 			],
 		]
 		var nativeListSources = approvedListSources.mapValues { _ in Set<String>() }

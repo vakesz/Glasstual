@@ -105,6 +105,7 @@ final class MemberListTableCell: NSTableCellView {
 	func configure(
 		row: MemberListTableRow,
 		style: MemberListPresentationStyle,
+		avatarSize: CGFloat,
 		overrides: NicknameColorOverrides,
 		profile: MemberRowProfile = MemberRowProfile(),
 		activationName: String,
@@ -114,7 +115,7 @@ final class MemberListTableCell: NSTableCellView {
 		// The table exports proxy rows, whose children come from these cells.
 		// Row-view metadata is not part of that exported accessibility tree.
 		setAccessibilityElement(true)
-		setAccessibilityRole(.staticText)
+		setAccessibilityRole(.cell)
 		setAccessibilityLabel(row.accessibilityDescription(style: style, displayName: profile.displayName))
 		setAccessibilityIdentifier(row.member.map { AccessibilityIdentifier.memberRow($0.user.nickname) })
 		setAccessibilityChildren([])
@@ -131,7 +132,8 @@ final class MemberListTableCell: NSTableCellView {
 			),
 		])
 		let content = MemberListTableRowContent(
-			row: row, style: style, overrides: overrides, profile: profile, isSelected: backgroundStyle == .emphasized
+			row: row, style: style, avatarSize: avatarSize, overrides: overrides, profile: profile,
+			isSelected: backgroundStyle == .emphasized
 		)
 		self.content = content
 		if let hostingView {
@@ -186,6 +188,7 @@ extension UserDoubleClickAction {
 private struct MemberListTableRowContent: View {
 	let row: MemberListTableRow
 	let style: MemberListPresentationStyle
+	let avatarSize: CGFloat
 	let overrides: NicknameColorOverrides
 	let profile: MemberRowProfile
 	var isSelected: Bool
@@ -214,7 +217,7 @@ private struct MemberListTableRowContent: View {
 		return HStack(spacing: UISpacing.regular) {
 			MemberAvatar(
 				nickname: user.nickname,
-				size: MemberListLayout.avatarSize,
+				size: avatarSize,
 				overrides: overrides,
 				profileColor: profile.color,
 				image: profile.avatar
@@ -239,11 +242,12 @@ private struct MemberListTableRowContent: View {
 					.foregroundStyle(primaryColor(isAway: user.isAway))
 			}
 			if user.isBot {
+				// A plain secondary caption, as list rows mark a kind of item.
 				Text(.MemberList.botCaption)
-					.font(.caption2.weight(.medium))
+					.font(.caption)
+					.lineLimit(1)
+					.fixedSize()
 					.foregroundStyle(Color(nsColor: isSelected ? .alternateSelectedControlTextColor : .secondaryLabelColor))
-					.padding(.horizontal, UISpacing.tight)
-					.background(.quaternary, in: Capsule())
 			}
 			Spacer(minLength: UISpacing.tight)
 			if let symbol = style.symbolName(for: rank) {

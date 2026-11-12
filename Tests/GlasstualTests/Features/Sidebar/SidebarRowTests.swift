@@ -47,4 +47,12 @@ struct SidebarRowTests {
 		#expect(channel(unread: 0).showsUnreadBadge == false)
 		#expect(channel(unread: 3, showsUnreadCount: false).showsUnreadBadge == false)
 	}
+
+	@Test("An ordinary unread count is secondary text; one asking for attention takes the chosen colour or the accent")
+	func unreadCountColor() {
+		#expect(SidebarCellView.unreadCountColor(for: channel(unread: 3)) == .secondaryLabelColor)
+		#expect(SidebarCellView.unreadCountColor(for: channel(unread: 3, highlights: 1)) == .controlAccentColor)
+		#expect(SidebarCellView.unreadCountColor(for: channel(kind: .direct, unread: 1, badgeTint: .systemPink)) == .systemPink)
+		#expect(SidebarCellView.unreadCountColor(for: channel(unread: 3, badgeTint: .systemPink)) == .secondaryLabelColor)
+	}
 }

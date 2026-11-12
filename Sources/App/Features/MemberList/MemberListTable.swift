@@ -64,6 +64,8 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		tableView.addTableColumn(column)
 		tableView.headerView = nil
 		tableView.style = .inset
+		// Rows follow System Settings › Appearance › Sidebar icon size, as the sidebar's do.
+		tableView.rowSizeStyle = .default
 		tableView.floatsGroupRows = false
 		tableView.backgroundColor = .clear
 		tableView.autoresizingMask = [.width]
@@ -72,7 +74,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		tableView.allowsColumnReordering = false
 		tableView.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
 		tableView.intercellSpacing = NSSize(width: 0, height: 2)
-		tableView.rowHeight = MemberListLayout.avatarSize + 8
+		tableView.rowHeight = ListRowMetrics(ListRowMetrics.Size(tableView.effectiveRowSizeStyle)).avatarRowHeight
 		tableView.dataSource = self
 		tableView.delegate = self
 		tableView.target = self
@@ -180,8 +182,9 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		member(at: row) != nil
 	}
 
-	func tableView(_: NSTableView, heightOfRow row: Int) -> CGFloat {
-		member(at: row) == nil ? MemberListLayout.sectionRowHeight : MemberListLayout.avatarSize + 8
+	func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+		member(at: row) == nil ? ListRowMetrics.sectionRowHeight : ListRowMetrics(ListRowMetrics.Size(tableView.effectiveRowSizeStyle))
+			.avatarRowHeight
 	}
 
 	func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
@@ -199,6 +202,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		cell.configure(
 			row: row,
 			style: model.presentationStyle,
+			avatarSize: ListRowMetrics(ListRowMetrics.Size(tableView.effectiveRowSizeStyle)).avatarSize,
 			overrides: model.nicknameColorOverrides,
 			profile: row.member.map { MemberRowProfile($0.user, presentation: model.profilePresentation) } ?? MemberRowProfile(),
 			activationName: SettingsKeys.Input.userDoubleClickAction.value.accessibilityActionTitle,

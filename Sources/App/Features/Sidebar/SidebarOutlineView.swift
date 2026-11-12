@@ -228,8 +228,8 @@ final class SidebarOutlineView: NSOutlineView, NSOutlineViewDataSource, NSOutlin
 	func outlineView(_: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
 		guard let node = item as? SidebarOutlineNode else { return rowHeight }
 		if case .favorite = node.identity {
-			// A favorite draws two lines; measured for the source-list style.
-			return 40
+			// A favorite sets its network under its name, at the system's row size.
+			return ListRowMetrics(ListRowMetrics.Size(effectiveRowSizeStyle)).twoLineRowHeight(oneLineRowHeight: rowHeight)
 		}
 		return rowHeight
 	}
