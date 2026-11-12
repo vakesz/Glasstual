@@ -322,9 +322,16 @@ actor LoopbackWebSocketServer {
 		barrier.stateUpdateHandler = { state in
 			if case .ready = state, case let .hostPort(_, localPort)? = barrier.currentPath?.localEndpoint {
 				readiness.yield(localPort.rawValue)
+				readiness.finish()
 			}
 		}
 		barrier.start(queue: .global())
+
+		let readinessDeadline = Task {
+			try? await Task.sleep(for: .seconds(5), clock: .continuous)
+			readiness.finish()
+		}
+		defer { readinessDeadline.cancel() }
 
 		var readyPorts = ready.makeAsyncIterator()
 		guard let localPort = await readyPorts.next() else {

@@ -254,9 +254,18 @@ private actor LegacyCipherSuiteListener {
 		barrier.stateUpdateHandler = { state in
 			if case .ready = state, case let .hostPort(_, localPort)? = barrier.currentPath?.localEndpoint {
 				readiness.yield(localPort.rawValue)
+				readiness.finish()
 			}
 		}
 		barrier.start(queue: .global())
+
+		/* The barrier is plain TCP on loopback. If it never becomes ready the
+		 gate below never runs, so this wait needs its own deadline. */
+		let readinessDeadline = Task {
+			try? await Task.sleep(for: LoopbackTimeouts.standard, clock: .continuous)
+			readiness.finish()
+		}
+		defer { readinessDeadline.cancel() }
 
 		var readyPorts = ready.makeAsyncIterator()
 		guard let barrierPort = await readyPorts.next() else {
