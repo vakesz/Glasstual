@@ -113,7 +113,7 @@ struct SettingsTransferPreviewView: View {
 		.disabled(session.isBusy)
 		.interactiveDismissDisabled(session.isBusy)
 		.modifier(SettingsTransferAlert(
-			message: session.pendingMessage,
+			message: session.previewMessage,
 			acknowledge: session.acknowledge
 		))
 	}

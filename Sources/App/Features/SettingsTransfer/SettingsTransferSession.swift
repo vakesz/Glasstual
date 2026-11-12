@@ -254,6 +254,16 @@ final class SettingsTransferSession {
 		}
 	}
 
+	/** The message the preview sheet answers for: a failure that leaves the
+	 preview open. Finishing an import closes the sheet, so its outcome is the
+	 window's to show once the sheet is gone. An alert raised in a sheet that is
+	 closing is refused, and the refusal reads as the alert being dismissed,
+	 which acknowledged the outcome before anyone saw it. */
+	var previewMessage: SettingsTransferMessage? {
+		guard case .failed(_, .some) = state else { return nil }
+		return pendingMessage
+	}
+
 	/// Whether a new import or export may begin. A prepared preview is still
 	/// waiting on the user, so it holds the workflow just as a busy one does.
 	var canStart: Bool {
