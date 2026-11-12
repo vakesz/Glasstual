@@ -107,11 +107,19 @@ final class DCCFixturePeer {
 		outcomes.count == filenames.count
 	}
 
-	init(cancel: Bool, transfers: Int = 1, tls: DCCFixtureTLS? = nil, chat: Bool = false) {
+	/// `filenames` names the files offered; left out, each of `transfers` files
+	/// gets a name of its own.
+	init(
+		cancel: Bool,
+		transfers: Int = 1,
+		tls: DCCFixtureTLS? = nil,
+		chat: Bool = false,
+		filenames: [String]? = nil
+	) {
 		self.cancel = cancel
 		self.tls = tls
 		self.chat = chat
-		filenames = (0 ..< transfers).map { _ in "e2e-transfer-\(UUID().uuidString).bin" }
+		self.filenames = filenames ?? (0 ..< transfers).map { _ in "e2e-transfer-\(UUID().uuidString).bin" }
 	}
 
 	func start() async throws -> UInt16 {

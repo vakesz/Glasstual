@@ -6,12 +6,14 @@ import Foundation
 
      glasstual-e2e run [--only a,b] [--keep-artifacts] [--app <Glasstual.app>]
      glasstual-e2e fixtures [--only a,b]
+     glasstual-e2e screenshots [--only windows,prompt,welcome] [--output <directory>]
      glasstual-e2e list
 
  `run` drives the Debug application through Accessibility and inherits the
  Accessibility grant of the app running the command. `fixtures` checks the
  loopback peers with synthetic clients; it never launches the application or
- uses Accessibility. Exit status: 0 all passed, 1 any failed, 2 setup error. */
+ uses Accessibility. `screenshots` regenerates the website's pictures from a
+ seeded demo and also needs Screen Recording. Exit status: 0 all passed, 1 any failed, 2 setup error. */
 @main
 enum HarnessMain {
 	static func main() async {
@@ -29,8 +31,11 @@ enum HarnessMain {
 				await exit(FixtureSelfTests.run(corpora: options.corpora, only: options.only) ? 0 : 1)
 			case "run":
 				try await exit(run(options))
+			case "screenshots":
+				let runDirectory = options.logs.appendingPathComponent("screenshots-" + timestamp(), isDirectory: true)
+				try await exit(ScreenshotRun.run(options, runDirectory: runDirectory))
 			default:
-				throw HarnessFailure.setup("Usage: glasstual-e2e run [--only a,b] [--keep-artifacts] | fixtures | list")
+				throw HarnessFailure.setup(Options.usage)
 			}
 		} catch {
 			FileHandle.standardError.write(Data("glasstual-e2e: \(error)\n".utf8))
@@ -86,14 +91,19 @@ struct Options {
 	let keepArtifacts: Bool
 	let app: URL
 	let checkout: URL
+	/// Where `screenshots` writes: the website's assets unless `--output` says otherwise.
+	let output: URL
+
+	static let usage = "Usage: glasstual-e2e run [--only a,b] [--keep-artifacts] | fixtures | screenshots | list"
 
 	init(_ arguments: [String]) throws {
 		guard let command = arguments.first else {
-			throw HarnessFailure.setup("Usage: glasstual-e2e run [--only a,b] [--keep-artifacts] | fixtures | list")
+			throw HarnessFailure.setup(Self.usage)
 		}
 		self.command = command
 		var only: Set<String>?
 		var keepArtifacts = false
+		var output: URL?
 		// The Debug app is built beside the harness, in the same products folder.
 		var app = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
 			.deletingLastPathComponent().appendingPathComponent("Glasstual.app", isDirectory: true)
@@ -108,6 +118,9 @@ struct Options {
 			case "--app":
 				guard let path = remaining.popFirst() else { throw HarnessFailure.setup("--app needs a path") }
 				app = URL(fileURLWithPath: path, isDirectory: true)
+			case "--output":
+				guard let path = remaining.popFirst() else { throw HarnessFailure.setup("--output needs a directory") }
+				output = URL(fileURLWithPath: path, isDirectory: true)
 			default:
 				throw HarnessFailure.setup("Unknown option \(argument)")
 			}
@@ -118,6 +131,7 @@ struct Options {
 		// The checkout this harness was compiled from: Tests/E2EHarness/HarnessMain.swift.
 		checkout = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
 			.deletingLastPathComponent()
+		self.output = output ?? checkout.appendingPathComponent(".github/website/assets", isDirectory: true)
 	}
 
 	var corpora: URL {

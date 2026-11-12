@@ -332,6 +332,10 @@ struct SettingsKeyNamingTests {
 		/* The end-to-end harness reads these two back from a run's settings. */
 		#expect(SettingsKeys.Interaction.style.name == "Interaction -> Style")
 		#expect(SettingsKeys.Theme.transcriptTheme.name == "Theme -> Transcript Theme")
+		/* And seeds these three for the website screenshots. */
+		#expect(SettingsKeys.Appearance.preferredAppearance.name == "Appearance -> Preferred Appearance")
+		#expect(SettingsKeys.Notifications.notifyAboutMentions.name == "Notifications -> Notify About Mentions")
+		#expect(SettingsKeys.Notifications.displayDockBadge.name == "Notifications -> Display Dock Badge")
 	}
 
 	// MARK: - The plist fixture that holds literals

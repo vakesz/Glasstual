@@ -64,9 +64,6 @@ tsan: generate ## Run the test suite under ThreadSanitizer
 	$(XCODEBUILD) -configuration Debug -enableThreadSanitizer YES \
 		$(if $(TSAN_RESULT_BUNDLE),-resultBundlePath "$(TSAN_RESULT_BUNDLE)") test
 
-website-screenshots: build ## Regenerate .github/website/assets screenshots from a seeded demo (needs Screen Recording + Accessibility, an unlocked screen)
-	CONFIG=Debug bash scripts/website-screenshots.sh
-
 # The GlasstualE2E scheme builds the Debug app and glasstual-e2e beside it.
 # glasstual-e2e runs from this shell, so it has the terminal app's
 # Accessibility grant. Pass E2E_ARGS="--only a,b --keep-artifacts" to narrow a run.
@@ -81,6 +78,15 @@ e2e: generate ## Drive the Debug app through Accessibility (a few minutes; keep 
 e2e-fixtures: generate ## Check the loopback peers with synthetic clients; no app launch, no Accessibility
 	$(E2E_BUILD)
 	@set -e; CONFIG=Debug; source scripts/build-paths.sh; "$$BUILD_PRODUCTS/glasstual-e2e" fixtures
+
+# The same harness takes the website's pictures: it seeds a fictional demo,
+# arranges each scene in light and dark and captures the windows. Pass
+# SCREENSHOT_ARGS="--only windows,prompt,welcome --output <directory>" to narrow a run.
+SCREENSHOT_ARGS ?=
+
+website-screenshots: generate ## Regenerate .github/website/assets from a seeded demo (needs Accessibility + Screen Recording, an unlocked screen)
+	$(E2E_BUILD)
+	@set -e; CONFIG=Debug; source scripts/build-paths.sh; "$$BUILD_PRODUCTS/glasstual-e2e" screenshots $(SCREENSHOT_ARGS)
 
 ensure-formatters:
 	@scripts/ensure-tool.sh swiftformat

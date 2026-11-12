@@ -240,6 +240,8 @@ enum AccessibilityIdentifier {
 
 	/// The toolbar button that shows the sender and date filters.
 	static let scrollbackSearchFilters = "scrollback-search-filters"
+	/// The list of messages a search found.
+	static let scrollbackSearchResults = "scrollback-search-results"
 
 	// MARK: - Channel list
 

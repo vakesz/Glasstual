@@ -513,6 +513,15 @@ final class AXDriver {
 		}
 	}
 
+	/// Moves and resizes a window: `frame` is in screen points, top-left origin.
+	func setFrame(_ window: AXUIElement, to frame: CGRect) throws {
+		var origin = frame.origin
+		var size = frame.size
+		guard let position = AXValueCreate(.cgPoint, &origin), let extent = AXValueCreate(.cgSize, &size) else { return }
+		try set(window, kAXPositionAttribute, to: position)
+		try set(window, kAXSizeAttribute, to: extent)
+	}
+
 	/// Selects `range` of a text element's characters, which is where a
 	/// keyboard context menu opens.
 	func select(_ range: NSRange, in element: AXUIElement) throws {
@@ -522,7 +531,16 @@ final class AXDriver {
 	}
 
 	func selectedRange(in element: AXUIElement) throws -> NSRange? {
-		guard let value = try attribute(element, kAXSelectedTextRangeAttribute), CFGetTypeID(value) == AXValueGetTypeID()
+		try range(kAXSelectedTextRangeAttribute, of: element)
+	}
+
+	/// The characters of a text element that are scrolled into view.
+	func visibleRange(in element: AXUIElement) throws -> NSRange? {
+		try range(kAXVisibleCharacterRangeAttribute, of: element)
+	}
+
+	private func range(_ name: String, of element: AXUIElement) throws -> NSRange? {
+		guard let value = try attribute(element, name), CFGetTypeID(value) == AXValueGetTypeID()
 		else { return nil }
 		var range = CFRange()
 		guard AXValueGetValue(unsafeDowncast(value, to: AXValue.self), .cfRange, &range) else { return nil }

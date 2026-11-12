@@ -46,6 +46,12 @@ enum AXID {
 	/// What the last typed answering command had to say.
 	static let promptFeedback = "prompt-feedback"
 
+	/// The line of question `number`'s card that names the commands
+	/// answering it, when the question is not also an alert.
+	static func promptCardHint(_ number: Int) -> String {
+		"prompt-card-\(number)-hint"
+	}
+
 	// MARK: Main window
 
 	static let mainWindow = "main-window"
@@ -218,6 +224,8 @@ enum AXID {
 	}
 
 	static let fileTransferFilenamePrefix = "file-transfer-filename-"
+	/// The lock beside a secure transfer's name.
+	static let fileTransferSecurityPrefix = "file-transfer-security-"
 	/// A pack asked of an XDCC bot that has not offered it yet.
 	static let xdccRequestRowPrefix = "xdcc-request-row-"
 
@@ -230,7 +238,11 @@ enum AXID {
 
 	// MARK: History search
 
+	/// SwiftUI names the search window itself, so the harness knows it as
+	/// the window that holds the filters button.
+	static let scrollbackSearchWindow = scrollbackSearchFilters
 	static let scrollbackSearchFilters = "scrollback-search-filters"
+	static let scrollbackSearchResults = "scrollback-search-results"
 
 	// MARK: Channel list
 
@@ -268,4 +280,7 @@ enum SettingsKey {
 	static let username = "Identity -> Username"
 	static let interactionStyle = "Interaction -> Style"
 	static let transcriptTheme = "Theme -> Transcript Theme"
+	static let preferredAppearance = "Appearance -> Preferred Appearance"
+	static let notifyAboutMentions = "Notifications -> Notify About Mentions"
+	static let displayDockBadge = "Notifications -> Display Dock Badge"
 }

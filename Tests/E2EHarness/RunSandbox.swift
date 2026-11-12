@@ -210,7 +210,7 @@ enum Seed {
 		return try encode(fixture)
 	}
 
-	private static func startup(corpora: URL) throws -> [String: Any] {
+	static func startup(corpora: URL) throws -> [String: Any] {
 		let data = try Data(contentsOf: corpora.appendingPathComponent("E2E/Startup.plist"))
 		guard let fixture = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else {
 			throw HarnessFailure.setup("Malformed synthetic startup fixture")
@@ -218,7 +218,7 @@ enum Seed {
 		return fixture
 	}
 
-	private static func encode(_ fixture: [String: Any]) throws -> Data {
+	static func encode(_ fixture: [String: Any]) throws -> Data {
 		try PropertyListSerialization.data(fromPropertyList: fixture, format: .xml, options: 0)
 	}
 }

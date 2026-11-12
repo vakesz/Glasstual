@@ -200,6 +200,7 @@ struct AccessibilityIdentifiersTests {
 		#expect(AccessibilityIdentifier.fileTransfersStart == "file-transfers-start")
 		#expect(AccessibilityIdentifier.fileTransfersStop == "file-transfers-stop")
 		#expect(AccessibilityIdentifier.scrollbackSearchFilters == "scrollback-search-filters")
+		#expect(AccessibilityIdentifier.scrollbackSearchResults == "scrollback-search-results")
 		#expect(AccessibilityIdentifier.serverChannelListUpdate == "server-channel-list-update")
 		#expect(AccessibilityIdentifier.serverChannelListJoin == "server-channel-list-join")
 		#expect(AccessibilityIdentifier.serverChannelListFilters == "server-channel-list-filters")

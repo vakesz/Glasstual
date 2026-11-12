@@ -66,6 +66,8 @@ final class ScenarioContext {
 	let artifacts: URL
 	private(set) var launches: [AppProcess] = []
 	private(set) var peer: LoopbackPeer?
+	/// The demo servers of a screenshot scene.
+	private(set) var demo: DemoServer?
 	/// Lines for `notes.txt` when the scenario fails.
 	private(set) var notes: [String] = []
 
@@ -100,6 +102,15 @@ final class ScenarioContext {
 		_ = try await peer.start()
 		note("peer \(mode.rawValue) on port \(peer.port)")
 		return peer
+	}
+
+	/// Starts the demo servers the screenshot scenes connect to.
+	func startDemo() async throws -> DemoServer {
+		let demo = try DemoServer(corpora: corpora)
+		self.demo = demo
+		try await demo.start()
+		note("demo servers on ports \(demo.directPort) and \(demo.bouncerPort)")
+		return demo
 	}
 
 	/// The peer, which a connection scenario has started.
@@ -158,6 +169,7 @@ final class ScenarioContext {
 			await launch.stop()
 		}
 		peer?.stop()
+		demo?.stop()
 	}
 }
 

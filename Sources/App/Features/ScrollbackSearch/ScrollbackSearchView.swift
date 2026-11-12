@@ -133,6 +133,7 @@ struct ScrollbackSearchView: View {
 			Task { await model.openSelection() }
 		}
 		.accessibilityLabel(Text(.ScrollbackSearch.resultsAccessibilityLabel))
+		.accessibilityIdentifier(AccessibilityIdentifier.scrollbackSearchResults)
 	}
 }
 
