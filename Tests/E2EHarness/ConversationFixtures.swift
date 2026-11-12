@@ -74,6 +74,9 @@ struct HistoryFixture: ScriptedFixture {
 	/// The messages a rejoining client cannot reach by paging forward.
 	static let gapMarkers = (22 ... 27).map { "E2E_HISTORY_\($0)_" }
 	static let liveEndMarker = "E2E_HISTORY_29_"
+	/// Every message the channel gained while the client was away, oldest
+	/// first: the catch-up, the gap and the live end.
+	static let rejoinMarkers = (2 ... 29).map { "E2E_HISTORY_\($0)_" }
 	static let firstMarker = "E2E_HISTORY_1_"
 	static let replyMarker = "E2E_REPLY_MESSAGE"
 	static let originalMarker = "E2E_ORIGINAL_MESSAGE"

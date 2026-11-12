@@ -3,8 +3,8 @@ import Foundation
 
 /// Rejoining a channel that went on without the user: the catch-up pages
 /// forward as far as it goes, fetches the live end and says messages are
-/// missing between. Loading them from the banner fetches what lies between
-/// and takes the banner down.
+/// missing between. Loading them from the banner fetches what lies between,
+/// draws it between the catch-up and the live end, and takes the banner down.
 struct HistoryGapBannerScenario: Scenario {
 	let name = "historyGapBanner"
 	let budget = Duration.seconds(150)
@@ -46,11 +46,39 @@ struct HistoryGapBannerScenario: Scenario {
 		try await context.until("the transcript shows the messages from the gap") {
 			try fixture.gapMarkers.allSatisfy { try context.transcriptContains($0) }
 		}
+		try await context.until("the messages from the gap are drawn between the catch-up and the live end") {
+			try Self.isInOrder(fixture.rejoinMarkers, in: context.transcriptText())
+		}
+		guard try context.banner(AXID.missingHistoryBanner) == nil else {
+			throw HarnessFailure.assertion("The missing-messages banner came back after the gap was loaded")
+		}
 		try await context.quit(peerSeesQuit: true)
 	}
 }
 
+extension HistoryGapBannerScenario {
+	/// Whether every marker is in `text` exactly once, in the order given.
+	static func isInOrder(_ markers: [String], in text: String?) -> Bool {
+		guard let text else { return false }
+		var searchStart = text.startIndex
+		for marker in markers {
+			guard let range = text.range(of: marker, range: searchStart ..< text.endIndex),
+			      text.range(of: marker, range: range.upperBound ..< text.endIndex) == nil,
+			      text.range(of: marker, range: text.startIndex ..< range.lowerBound) == nil
+			else { return false }
+			searchStart = range.upperBound
+		}
+		return true
+	}
+}
+
 extension ScenarioContext {
+	/// Everything the main window's transcript draws, oldest line first.
+	func transcriptText() throws -> String? {
+		guard let window = try mainWindow(), let transcript = try driver.find(AXID.transcript, in: window) else { return nil }
+		return try driver.value(transcript)
+	}
+
 	/// The banner identified `identifier` over the main window's transcript.
 	func banner(_ identifier: String) throws -> AXUIElement? {
 		try mainWindow().flatMap { try driver.find(identifier, in: $0) }
