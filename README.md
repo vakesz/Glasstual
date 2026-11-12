@@ -56,9 +56,13 @@ make lint
 ```
 
 `make e2e-fixtures` checks loopback peers without launching the app.
-`make e2e` runs Accessibility tests in a disposable GUI login with consent
-and an Accessibility grant.
-Use `make tsan` and `make smoke` for concurrency changes.
+`make e2e` drives the Debug app through Accessibility. It runs from your
+terminal and uses the terminal app's Accessibility permission: grant it once
+in System Settings > Privacy & Security > Accessibility. It sends no key or
+mouse events, so you can keep working in other apps; keep the screen unlocked
+and leave Glasstual's windows alone for the few minutes it runs. Pass `E2E_ARGS="--only a,b --keep-artifacts"` to narrow a run.
+Failure artifacts go to `~/Library/Logs/Glasstual`.
+Use `make tsan` for concurrency changes.
 Run `make help` for all commands.
 
 ## Contribute

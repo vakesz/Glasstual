@@ -3,7 +3,7 @@
 # disposable demo.
 #
 # The Debug app runs against a throwaway defaults suite and review directory
-# (the same GLASSTUAL_UI_REVIEW_* overrides the E2E harness uses), connected
+# (the GLASSTUAL_UI_REVIEW_* overrides `make e2e` also uses), connected
 # to loopback IRC servers that script a fictional conversation. The real
 # preferences, keychain and servers are never touched. Appearance is chosen
 # with the app's own Preferred Appearance setting inside that disposable suite;

@@ -11,7 +11,7 @@ RESULT_BUNDLE ?=
 TSAN_RESULT_BUNDLE ?=
 ARCHIVE_PATH ?=
 GENERATED_XCODE_DIR := Generated/Xcode
-export DERIVED_DATA CONFIG E2E_APP E2E_OUTPUT E2E_HELPER
+export DERIVED_DATA CONFIG
 # Extra build settings for every xcodebuild call, such as the signing overrides
 # the Signed Release workflow passes. The shell parses the value, so quote any setting
 # that contains a space.
@@ -23,7 +23,7 @@ GLASSTUAL_TOOLS_DIR ?= $(HOME)/Library/Caches/Glasstual/Tools
 export GLASSTUAL_TOOLS_DIR
 TOOLS_BIN := $(GLASSTUAL_TOOLS_DIR)/bin
 
-.PHONY: help generate validate-generated-metadata build archive run test tsan smoke website-screenshots e2e e2e-build e2e-fixtures lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build archive run test tsan website-screenshots e2e e2e-fixtures lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[1m%-27s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -64,23 +64,23 @@ tsan: generate ## Run the test suite under ThreadSanitizer
 	$(XCODEBUILD) -configuration Debug -enableThreadSanitizer YES \
 		$(if $(TSAN_RESULT_BUNDLE),-resultBundlePath "$(TSAN_RESULT_BUNDLE)") test
 
-smoke: ## Seeded launch of about a minute with an accessibility probe (see scripts/smoke.sh)
-	CONFIG=Debug bash scripts/smoke.sh
-
 website-screenshots: build ## Regenerate .github/website/assets screenshots from a seeded demo (needs Screen Recording + Accessibility, an unlocked screen)
 	CONFIG=Debug bash scripts/website-screenshots.sh
 
-e2e: e2e-build ## Real-app Swift Testing gate (disposable GUI login + AX grant)
-	CONFIG=Debug bash scripts/e2e.sh
+# The GlasstualE2E scheme builds the Debug app and glasstual-e2e beside it.
+# glasstual-e2e runs from this shell, so it has the terminal app's
+# Accessibility grant. Pass E2E_ARGS="--only a,b --keep-artifacts" to narrow a run.
+E2E_ARGS ?=
+E2E_BUILD := xcodebuild -quiet -project "$(PROJECT)" -scheme GlasstualE2E -destination '$(DESTINATION)' \
+	$(if $(DERIVED_DATA),-derivedDataPath "$(DERIVED_DATA)") -configuration Debug $(XCODEBUILD_FLAGS) build
 
-# Both E2E entry points need the harness binary before anything runs: the
-# fixtures execute it directly, and scripts/e2e.sh copies it as the supervisor.
-e2e-build: generate ## Build the GlasstualE2E scheme (app, harness and E2E tests) for testing
-	xcodebuild -quiet -project "$(PROJECT)" -scheme GlasstualE2E -destination '$(DESTINATION)' \
-		$(if $(DERIVED_DATA),-derivedDataPath "$(DERIVED_DATA)") -configuration Debug $(XCODEBUILD_FLAGS) build-for-testing
+e2e: generate ## Drive the Debug app through Accessibility (a few minutes; keep the screen unlocked)
+	$(E2E_BUILD)
+	@set -e; CONFIG=Debug; source scripts/build-paths.sh; "$$BUILD_PRODUCTS/glasstual-e2e" run $(E2E_ARGS)
 
-e2e-fixtures: e2e-build ## Build and check loopback peers without launching the app or using Accessibility
-	CONFIG=Debug bash scripts/e2e-fixtures.sh
+e2e-fixtures: generate ## Check the loopback peers with synthetic clients; no app launch, no Accessibility
+	$(E2E_BUILD)
+	@set -e; CONFIG=Debug; source scripts/build-paths.sh; "$$BUILD_PRODUCTS/glasstual-e2e" fixtures
 
 ensure-formatters:
 	@scripts/ensure-tool.sh swiftformat

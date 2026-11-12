@@ -1,11 +1,12 @@
 name: Quality
 
 # Lint and formatting only. Building and testing on a hosted macOS runner is
-# too expensive for the free tier, so `make build`, `make test` and
-# `make e2e-fixtures` stay local (see AGENTS.md), and the Signed Release
-# workflow does its own build. The Signed Release workflow accepts a commit
-# only after a push run of this workflow passed. scripts/release-validation.sh
-# lists the required job and step by name, so rename a step in both places.
+# too expensive for the free tier, so `make build`, `make test`,
+# `make e2e-fixtures` and `make e2e` stay local (see AGENTS.md), and the
+# Signed Release workflow does its own build. The Signed Release workflow
+# accepts a commit only after a push run of this workflow passed.
+# scripts/release-validation.sh lists the required job and step by name, so
+# rename a step in both places.
 on:
   push:
     branches: [master]

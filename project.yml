@@ -434,14 +434,19 @@ targets:
       - target: CocoaExtensions
         embed: false
 
-  # Public AX/NSWorkspace driver and scripted loopback peer, outside the app sandbox.
+  # `glasstual-e2e`: the end-to-end suite. It drives the Debug app through
+  # Accessibility and plays the IRC server on loopback, outside the app
+  # sandbox. `make e2e` runs it from the terminal, whose Accessibility grant it
+  # inherits.
   GlasstualE2EHarness:
     templates: [GlasstualMainActorTarget]
     type: tool
+    productName: glasstual-e2e
     sources:
       - path: Tests/E2EHarness
     settings:
       base:
+        PRODUCT_NAME: glasstual-e2e
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-harness
         CREATE_INFOPLIST_SECTION_IN_BINARY: YES
         ENABLE_APP_SANDBOX: NO
@@ -452,48 +457,20 @@ targets:
       - sdk: Network.framework
       - sdk: Security.framework
 
-  # A Swift Testing bundle loaded by the test runner, not Glasstual.app.
-  GlasstualE2ETests:
-    templates: [GlasstualMainActorTarget]
-    type: bundle.unit-test
-    sources:
-      - path: Tests/GlasstualE2ETests
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-tests
-        TEST_HOST: ""
-        BUNDLE_LOADER: ""
-        ENABLE_APP_SANDBOX: NO
-
 # ---------------------------------------------------------------------------
 # Schemes
 # ---------------------------------------------------------------------------
 
 schemes:
+  # Build-only: the Debug app and `glasstual-e2e` beside it in the same
+  # products folder, where the harness looks for the app.
   GlasstualE2E:
     build:
       parallelizeBuild: true
       buildImplicitDependencies: true
       targets:
-        Glasstual: [build, testing]
-        GlasstualE2EHarness: [build, testing]
-        GlasstualE2ETests: [testing]
-    test:
-      config: Debug
-      gatherCoverageData: false
-      # Every value here is stable across runs, so the supervisor can pass them as
-      # build settings without changing the build description. The per-run
-      # directory is read from $E2E_OUTPUT/current-run instead.
-      environmentVariables:
-        E2E_APP: $(E2E_APP)
-        E2E_HELPER: $(E2E_HELPER)
-        E2E_FIXTURE: $(E2E_FIXTURE)
-        E2E_OUTPUT: $(E2E_OUTPUT)
-        E2E_DISPOSABLE_USER_CONSENT: $(E2E_DISPOSABLE_USER_CONSENT)
-      targets:
-        - name: GlasstualE2ETests
-          parallelizable: false
-          randomExecutionOrder: false
+        Glasstual: all
+        GlasstualE2EHarness: all
 
   Glasstual:
     build:
@@ -514,7 +491,7 @@ schemes:
       # run, from Xcode or from `make test`. Keep its arguments equal to the
       # two values below. GLASSTUAL_UNIT_TEST_HOST keeps that launch in the
       # background: no activation, no windows raised or restored, no welcome
-      # flow. Smoke and E2E runs launch the app without it.
+      # flow. `make e2e` launches the app with GLASSTUAL_E2E instead.
       environmentVariables:
         - variable: GLASSTUAL_UI_REVIEW_SUITE
           value: com.vakesz.glasstual.tests

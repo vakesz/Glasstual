@@ -85,11 +85,17 @@ Keep isolation lint findings at zero by fixing ownership.
   their subject. Test decisions and runtime contracts. Test runtime names only
   when archives, saved window frames, KVO or protocol constants depend on them.
 - Use `Tests/E2EHarness` for Accessibility tests, not XCTest UI automation.
+  Each scenario is one file in `Tests/E2EHarness/Scenarios` plus its line in
+  `Registry`. Find controls by accessibility identifier only; declare app
+  identifiers in `Sources/App/Application/AccessibilityIdentifiers.swift` and
+  mirror them in `Tests/E2EHarness/Identifiers.swift`.
   Every test must run. Fix or remove failures; no `.disabled` or `withKnownIssue`.
 - Before handoff, run `make generate`, `make build`, `make test`,
-  `make e2e-fixtures` and `make lint`. Report untested signing, network, runtime
-  and release boundaries. Run `make tsan` and `make smoke` when concurrency
-  changes warrant them.
+  `make e2e-fixtures` and `make lint`. Run `make e2e` when a change touches UI,
+  AppKit adapters or the connection lifecycle; it is optional otherwise. Report
+  untested signing, network, runtime and release boundaries. Run `make tsan`
+  and `make e2e`, whose `launchIdle` scenario samples an idle launch's
+  responsiveness, when concurrency changes warrant them.
 
 ## Skills
 
