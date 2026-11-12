@@ -1,15 +1,22 @@
 import Foundation
 
-/** The server side of the credential-consent prompt: SASL PLAIN is offered over
- TLS to a client that does not validate the certificate, so the client has to ask
- its user before the password goes anywhere.
+/** The server side of the credential-consent prompt.
 
- It owns registration for these scenarios, because the fixed list in
- `FixtureProtocol.registration` has no room for the capability exchange. What it
- records is what the server actually received: how many `AUTHENTICATE` payloads
- arrived and whether the client aborted instead. The secret is synthetic and no
- line, payload or failure message is ever printed; a failure names the shape of
- what went wrong and nothing it carried. */
+ The client has a server password and a SASL password and does not validate
+ the certificate, so before anything that would carry a password goes out it
+ asks its user (`ServerSession+RegistrationGate.swift`). Nothing is sent before
+ the answer, not even `CAP LS`: the GUI scenario checks that the peer has
+ received no line while the question is on screen, and this fixture checks the
+ order and content of what follows.
+
+ - Send Password: `CAP LS`, `PASS` with the server secret, `NICK`, `USER`, then
+ SASL `PLAIN` with the account secret, then `CAP END`.
+ - Don't Send: `CAP LS`, `NICK`, `USER` and `CAP END`; no `PASS` and no SASL.
+
+ It owns registration for these modes, because the fixed list in
+ `FixtureProtocol.registration` has no room for either. The secrets are
+ synthetic and no line, payload or failure message is ever printed; a failure
+ names the shape of what went wrong and nothing it carried. */
 struct SASLConsentFixture {
 	/// What the user is expected to answer when the client asks.
 	enum Answer {
@@ -17,9 +24,10 @@ struct SASLConsentFixture {
 		case send
 	}
 
-	/// Not a credential for anything. The harness types it into the client's
-	/// settings and this fixture looks for it on the wire.
+	/// Not credentials for anything. The harness types them into the client's
+	/// Server Properties and this fixture looks for them on the wire.
 	static let secret = "E2E_SASL_SYNTHETIC_SECRET"
+	static let serverSecret = "E2E_SERVER_SYNTHETIC_SECRET"
 	static let account = "e2euser"
 
 	/// What `AUTHENTICATE` carries when PLAIN sends the secret: authorization
@@ -32,7 +40,7 @@ struct SASLConsentFixture {
 		case awaitingCapabilityList
 		case negotiating
 		case awaitingMechanism
-		case awaitingAnswer
+		case awaitingPayload
 		case authenticationEnded
 		case registered
 	}
@@ -41,9 +49,9 @@ struct SASLConsentFixture {
 	private var phase = Phase.awaitingCapabilityList
 	private var sawNick = false
 	private var sawUser = false
+	private(set) var passCount = 0
 	private(set) var payloadCount = 0
 	private(set) var payloadMatched = false
-	private(set) var aborted = false
 
 	/// Whether registration finished, after which the ordinary fixture takes over.
 	var isRegistered: Bool {
@@ -54,54 +62,58 @@ struct SASLConsentFixture {
 		self.answer = answer
 	}
 
-	/// What the harness checks after the client has quit, in one line with no
-	/// payload in it.
+	/// What the scenario checks once the client has registered, in one line
+	/// with no payload in it.
 	var evidence: String {
-		"payloads=\(payloadCount) matched=\(payloadMatched) aborted=\(aborted)"
+		"pass=\(passCount) payloads=\(payloadCount) matched=\(payloadMatched)"
 	}
 
 	var expectedEvidence: String {
 		switch answer {
-		case .decline: "payloads=0 matched=false aborted=true"
-		case .send: "payloads=1 matched=true aborted=false"
+		case .decline: "pass=0 payloads=0 matched=false"
+		case .send: "pass=1 payloads=1 matched=true"
 		}
 	}
 
 	mutating func receive(_ line: String) throws -> [String] {
-		/* The secret anywhere but in the one payload the Send answer allows is a
-		 leak, whatever command carried it. */
-		let carriesSecret = line.contains(Self.secret) || line.contains(Self.expectedPayload)
-		if carriesSecret, !(answer == .send && phase == .awaitingAnswer && line.hasPrefix("AUTHENTICATE ")) {
-			throw HarnessFailure.assertion("The account secret reached the peer outside the permitted payload; payload withheld")
-		}
+		try checkForLeaks(line)
 		switch line {
 		case "CAP LS 302", "CAP LS :302":
 			guard phase == .awaitingCapabilityList else { throw Self.unexpected("capability list") }
 			phase = .negotiating
 			return [":e2e.local CAP * LS :sasl=PLAIN"]
+		case "PASS \(Self.serverSecret)", "PASS :\(Self.serverSecret)":
+			guard answer == .send, phase == .negotiating, sawNick == false, passCount == 0 else {
+				throw HarnessFailure.assertion("PASS reached the peer out of order or without consent; payload withheld")
+			}
+			passCount += 1
+			return []
 		case "NICK e2euser", "NICK :e2euser":
-			guard phase != .awaitingCapabilityList, !sawNick else { throw Self.unexpected("NICK") }
+			guard phase == .negotiating, sawNick == false, answer == .decline || passCount == 1 else {
+				throw Self.unexpected("NICK")
+			}
 			sawNick = true
 			return []
 		case "USER e2euser 0 * :Synthetic E2E User":
-			guard phase != .awaitingCapabilityList, !sawUser else { throw Self.unexpected("USER") }
+			guard sawNick, sawUser == false else { throw Self.unexpected("USER") }
 			sawUser = true
 			return []
 		case "CAP REQ :sasl", "CAP REQ sasl":
-			guard phase == .negotiating else { throw Self.unexpected("capability request") }
+			guard answer == .send, phase == .negotiating, sawUser else {
+				throw HarnessFailure.assertion("SASL was requested after the user declined; payload withheld")
+			}
 			phase = .awaitingMechanism
 			return [":e2e.local CAP * ACK :sasl"]
 		case "AUTHENTICATE PLAIN":
 			guard phase == .awaitingMechanism else { throw Self.unexpected("mechanism") }
-			phase = .awaitingAnswer
+			phase = .awaitingPayload
 			return ["AUTHENTICATE +"]
-		case "AUTHENTICATE *":
-			guard phase == .awaitingAnswer, answer == .decline else { throw Self.unexpected("abort") }
-			aborted = true
-			phase = .authenticationEnded
-			return [":e2e.local 906 e2euser :SASL authentication aborted"]
 		case "CAP END", "CAP :END":
-			guard phase == .authenticationEnded, sawNick, sawUser else { throw Self.unexpected("CAP END") }
+			let ready = switch answer {
+			case .decline: phase == .negotiating
+			case .send: phase == .authenticationEnded
+			}
+			guard ready, sawNick, sawUser else { throw Self.unexpected("CAP END") }
 			phase = .registered
 			return FixtureProtocol.welcome
 		default:
@@ -110,17 +122,23 @@ struct SASLConsentFixture {
 		}
 	}
 
+	/// A secret anywhere but in the one place the Send answer allows it is a
+	/// leak, whatever command carried it.
+	private func checkForLeaks(_ line: String) throws {
+		let carriesAccountSecret = line.contains(Self.secret) || line.contains(Self.expectedPayload)
+		if carriesAccountSecret, !(answer == .send && phase == .awaitingPayload && line.hasPrefix("AUTHENTICATE ")) {
+			throw HarnessFailure.assertion("The account secret reached the peer outside the permitted payload; payload withheld")
+		}
+		if line.contains(Self.serverSecret), !(answer == .send && line.hasPrefix("PASS ")) {
+			throw HarnessFailure.assertion("The server secret reached the peer outside PASS; payload withheld")
+		}
+	}
+
 	/// Any `AUTHENTICATE` line that names neither the mechanism nor an abort.
 	private mutating func receivePayload(_ line: String) throws -> [String] {
-		guard phase == .awaitingAnswer else { throw Self.unexpected("payload") }
+		guard phase == .awaitingPayload else { throw Self.unexpected("payload") }
 		payloadCount += 1
-		guard answer == .send else {
-			throw HarnessFailure.assertion("An AUTHENTICATE payload reached the peer after the user declined; payload withheld")
-		}
-		guard payloadCount == 1 else {
-			throw HarnessFailure.assertion("More than one AUTHENTICATE payload reached the peer; payload withheld")
-		}
-		guard line == "AUTHENTICATE " + Self.expectedPayload else {
+		guard payloadCount == 1, line == "AUTHENTICATE " + Self.expectedPayload else {
 			throw HarnessFailure.assertion("The AUTHENTICATE payload was not the expected credentials; payload withheld")
 		}
 		payloadMatched = true
@@ -132,6 +150,6 @@ struct SASLConsentFixture {
 	}
 
 	private static func unexpected(_ what: String) -> HarnessFailure {
-		.assertion("Unexpected \(what) in the SASL consent exchange; payload withheld")
+		.assertion("Unexpected \(what) in the credential consent exchange; payload withheld")
 	}
 }

@@ -2,171 +2,240 @@ import Foundation
 import Network
 import Security
 
-/// Safe without a GUI account: synthetic clients talk only to this helper's loopback listener.
-@MainActor
+/// Safe without a GUI session: synthetic clients talk only to an in-process loopback peer.
 enum FixtureSelfTests {
-	/// One monotonic bound for the whole fixture run, so `make e2e-fixtures` needs
-	/// no external `timeout` command to stop a mode that stops making progress.
-	private static var runDeadline = Double.infinity
+	/// Runs the pure protocol checks, then one synthetic client per mode.
+	/// Prints one line per mode and returns whether all passed.
+	static func run(corpora: URL, only: Set<String>? = nil) async -> Bool {
+		do {
+			try protocolChecks()
+		} catch {
+			print("FAIL fixture protocol checks: \(error)")
+			return false
+		}
+		var passed = true
+		for mode in FixtureMode.allCases where only?.contains(mode.rawValue) ?? true {
+			let start = ContinuousClock.now
+			do {
+				try await check(mode, corpora: corpora)
+				print(String(format: "PASS fixture.%@ %.1fs", mode.rawValue, (ContinuousClock.now - start).inSeconds))
+			} catch {
+				passed = false
+				print(String(format: "FAIL fixture.%@ %.1fs: %@", mode.rawValue, (ContinuousClock.now - start).inSeconds,
+				             String(describing: error)))
+			}
+		}
+		return passed
+	}
 
-	static func run() async throws {
-		runDeadline = HarnessFiles.now + 90
-		try protocolChecks()
-		let kind = try ScenarioKind.current
-		guard kind.hasFixtureTest else { throw HarnessFailure.setup("This scenario has no network fixture self-test") }
-		let peer = try LoopbackPeer(kind: kind)
-		let task = Task { try await peer.run() }
-		defer { task.cancel() }
-		try await wait { try HarnessFiles.exists("port") }
-		guard let rawPort = try UInt16(HarnessFiles.read("port")), let port = NWEndpoint.Port(rawValue: rawPort) else {
+	private static func check(_ mode: FixtureMode, corpora: URL) async throws {
+		let peer = try LoopbackPeer(mode: mode, corpora: corpora)
+		defer { peer.stop() }
+		guard let port = try await NWEndpoint.Port(rawValue: peer.start()) else {
 			throw HarnessFailure.assertion("Self-test port missing")
 		}
-		let attempts = kind == .tlsRejectRetry ? 2 : kind.rejectionCount + 1
+		let attempts = mode == .tlsRejectRetry ? 2 : mode.rejectionCount + 1
 		for attempt in 1 ... attempts {
-			let rejectTLS = kind == .tlsRejectRetry && attempt == 1
+			let rejectTLS = mode == .tlsRejectRetry && attempt == 1
 			let client = Client(
 				port: port,
-				tls: kind.secured,
+				tls: mode.secured,
 				trust: !rejectTLS,
-				maximumBytes: kind == .burstResponsiveness ? 2 * 1024 * 1024 : 65536
+				maximumBytes: mode == .burstResponsiveness ? 2 * 1024 * 1024 : 65536
 			)
 			defer { client.connection.cancel() }
 			client.start()
-			if kind == .tlsStall {
-				try await wait { try HarnessFiles.exists("tls-stalled") }
+			if mode == .tlsStall {
+				try await wait(peer, "peer holds the ClientHello") { peer.evidence.tlsStalled }
 				try await Task.sleep(for: .milliseconds(200))
 				guard client.received.isEmpty else { throw HarnessFailure.assertion("Stall emitted bytes") }
 				client.connection.cancel()
 				break
 			}
 			if rejectTLS {
-				try await wait { try HarnessFiles.exists("tls-rejected") }
+				try await wait(peer, "peer saw the rejected handshake close") { peer.evidence.tlsRejected }
 				guard client.received.isEmpty else { throw HarnessFailure.assertion("Rejected TLS emitted IRC") }
 				continue
 			}
-			try await wait { client.connection.state == .ready }
+			try await wait(peer, "client connected") { client.connection.state == .ready }
 			// Exercise line framing across writes as well as several commands in one write.
-			if let answer = kind.saslConsent {
+			if let answer = mode.saslConsent {
 				try await consentRegistration(answer: answer, client: client)
+			} else if mode == .banAccount {
+				try await banAccountRegistration(client: client)
 			} else {
 				try await client.send("CAP LS ")
 				try await client.send("302\r\n")
-				try await wait { client.contains(":e2e.local CAP * LS :\r\n") }
+				try await wait(peer, "CAP LS reply") { client.contains(":e2e.local CAP * LS :\r\n") }
 				try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\nCAP END\r\n")
 			}
-			if attempt <= kind.rejectionCount {
-				try await wait { client.contains("ERROR :E2E_REGISTRATION_REJECTED\r\n") && client.ended }
+			if attempt <= mode.rejectionCount {
+				try await wait(peer, "registration rejected") {
+					client.contains("ERROR :E2E_REGISTRATION_REJECTED\r\n") && client.ended
+				}
 				continue
 			}
-			try await wait { client.contains("E2E_TRANSCRIPT_READY\r\n") }
+			try await wait(peer, "welcome") { client.contains("E2E_TRANSCRIPT_READY\r\n") }
 			try await client.send("PONG E2E_PING\r\n")
-			if kind.messaging {
+			if mode.messaging {
 				try await client.send("JOIN #e2e\r\n")
-				try await wait { client.contains("E2E_CHANNEL_READY\r\n") }
+				try await wait(peer, "channel ready") { client.contains("E2E_CHANNEL_READY\r\n") }
 				try await client.send("PRIVMSG #e2e :E2E_TYPED_MESSAGE\r\n")
-				try await wait { client.contains("E2E_SERVER_REPLY\r\n") }
+				try await wait(peer, "server reply") { client.contains("E2E_SERVER_REPLY\r\n") }
 				try await client.send("PRIVMSG #e2e :fixture: E2E_TYPED_REPLY\r\n")
-				try await wait { client.contains("E2E_REPLY_ACK\r\n") }
+				try await wait(peer, "reply acknowledged") { client.contains("E2E_REPLY_ACK\r\n") }
 			}
-			if kind == .channelDenied {
-				try await client.send("JOIN #other\r\n")
-				try await wait { client.contains("E2E_OTHER_READY\r\n") }
-				try await client.send("JOIN #retry\r\n")
-				try await wait { client.contains("477 e2euser #retry :E2E_JOIN_DENIED") }
-				try await client.send("PRIVMSG NickServ :IDENTIFY E2E_SYNTHETIC\r\n")
-				try await wait { client.contains("E2E_IDENTIFIED_READY\r\n") }
-				guard client.contains("900 e2euser"), client.contains("ACCOUNT e2eaccount"),
-				      client.contains("MODE e2euser :+r")
-				else {
-					throw HarnessFailure.assertion("Fixture identification signals missing")
+			if mode == .channelDenied {
+				try await deniedJoinChecks(peer: peer, client: client)
+			}
+			if mode == .banAccount {
+				try await client.send("JOIN #e2e\r\n")
+				try await wait(peer, "channel with accounts") { client.contains("ACCOUNT \(BanAccountFixture.account)\r\n") }
+				try await client.send(BanAccountFixture.expectedBan + "\r\n")
+				try await wait(peer, "ban echoed") { client.contains(BanAccountFixture.expectedBan + "\r\n") }
+				guard peer.evidence.banLine == BanAccountFixture.expectedBan else {
+					throw HarnessFailure.assertion("Ban Account evidence missing")
 				}
-				try await client.send("JOIN #retry\r\n")
-				try await wait { client.contains("E2E_RETRY_JOINED\r\n") }
 			}
-			if kind.interactive {
-				try await interactiveChecks(kind: kind, client: client)
+			if mode.interactive {
+				try await interactiveChecks(mode: mode, peer: peer, client: client)
 			}
 			try await client.send("QUIT E2E_QUIT\r\n", final: true)
-			try await wait { try HarnessFiles.exists("quit-wire") }
-			if let answer = kind.saslConsent {
-				let expected = SASLConsentFixture(answer: answer).expectedEvidence
-				guard try HarnessFiles.read("sasl-evidence") == expected
-				else { throw HarnessFailure.assertion("SASL consent evidence did not match the answer") }
+			try await wait(peer, "peer saw QUIT") { peer.evidence.quitSeen }
+			if let answer = mode.saslConsent {
+				guard peer.evidence.consent == SASLConsentFixture(answer: answer).expectedEvidence
+				else { throw HarnessFailure.assertion("Consent evidence did not match the answer") }
 			}
 			client.connection.cancel()
 		}
 		// Every path out of the loop ends here, including the TLS stall break and
-		// the rejection continues, so one wait covers the peer's observed exit.
-		try await wait { try HarnessFiles.exists("peer-complete") }
-		try await task.value
-		try HarnessFiles.write("protocol and local network assertions passed", to: "fixture-selftests-passed")
+		// the rejection continues, so one wait covers the peer's observed end.
+		try await wait(peer, "peer complete") { peer.evidence.complete }
 	}
 
-	/// A synthetic client doing what the app does when it is offered PLAIN and its
-	/// user answers: the answer is what the peer then has to have seen on the wire.
+	/// `Wait.until` that fails at once when the peer recorded a violation.
+	private static func wait(
+		_ peer: LoopbackPeer,
+		_ description: String,
+		_ condition: () throws -> Bool
+	) async throws {
+		try await Wait.until(description, timeout: .seconds(20)) {
+			try peer.check()
+			return try condition()
+		}
+	}
+
+	private static func deniedJoinChecks(peer: LoopbackPeer, client: Client) async throws {
+		try await client.send("JOIN #other\r\n")
+		try await wait(peer, "other channel") { client.contains("E2E_OTHER_READY\r\n") }
+		try await client.send("JOIN #retry\r\n")
+		try await wait(peer, "denied JOIN") { client.contains("477 e2euser #retry :E2E_JOIN_DENIED") }
+		try await client.send("PRIVMSG NickServ :IDENTIFY E2E_SYNTHETIC\r\n")
+		try await wait(peer, "identified") { client.contains("E2E_IDENTIFIED_READY\r\n") }
+		guard client.contains("900 e2euser"), client.contains("ACCOUNT e2eaccount"), client.contains("MODE e2euser :+r")
+		else { throw HarnessFailure.assertion("Fixture identification signals missing") }
+		try await client.send("JOIN #retry\r\n")
+		try await wait(peer, "retry joined") { client.contains("E2E_RETRY_JOINED\r\n") }
+	}
+
+	private static func banAccountRegistration(client: Client) async throws {
+		try await client.send("CAP LS 302\r\n")
+		try await Wait.until("account-notify offered") { client.contains("CAP * LS :account-notify\r\n") }
+		try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\nCAP REQ :account-notify\r\n")
+		try await Wait.until("account-notify acknowledged") { client.contains("CAP * ACK :account-notify\r\n") }
+		try await client.send("CAP END\r\n")
+		try await Wait.until("account bans announced") { client.contains("ACCOUNTEXTBAN=account") }
+	}
+
+	/// A synthetic client doing what the app does once its user has answered:
+	/// what the peer then has to have seen on the wire.
 	private static func consentRegistration(answer: SASLConsentFixture.Answer, client: Client) async throws {
 		try await client.send("CAP LS 302\r\n")
-		try await wait { client.contains(":e2e.local CAP * LS :sasl=PLAIN\r\n") }
-		try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\n")
-		try await client.send("CAP REQ :sasl\r\n")
-		try await wait { client.contains(":e2e.local CAP * ACK :sasl\r\n") }
-		try await client.send("AUTHENTICATE PLAIN\r\n")
-		try await wait { client.contains("AUTHENTICATE +\r\n") }
+		try await Wait.until("SASL offered") { client.contains(":e2e.local CAP * LS :sasl=PLAIN\r\n") }
 		switch answer {
 		case .decline:
-			try await client.send("AUTHENTICATE *\r\n")
-			try await wait { client.contains(" 906 e2euser ") }
+			try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\n")
 		case .send:
+			try await client.send("PASS \(SASLConsentFixture.serverSecret)\r\n")
+			try await client.send("NICK e2euser\r\nUSER e2euser 0 * :Synthetic E2E User\r\n")
+			try await client.send("CAP REQ :sasl\r\n")
+			try await Wait.until("SASL acknowledged") { client.contains(":e2e.local CAP * ACK :sasl\r\n") }
+			try await client.send("AUTHENTICATE PLAIN\r\n")
+			try await Wait.until("PLAIN accepted") { client.contains("AUTHENTICATE +\r\n") }
 			try await client.send("AUTHENTICATE \(SASLConsentFixture.expectedPayload)\r\n")
-			try await wait { client.contains(" 903 e2euser ") }
+			try await Wait.until("SASL succeeded") { client.contains(" 903 e2euser ") }
 		}
 		try await client.send("CAP END\r\n")
 	}
 
 	private static func consentChecks() throws {
-		func registered(_ answer: SASLConsentFixture.Answer) throws -> SASLConsentFixture {
+		let pass = "PASS " + SASLConsentFixture.serverSecret
+		let payload = "AUTHENTICATE " + SASLConsentFixture.expectedPayload
+		let identity = ["NICK e2euser", "USER e2euser 0 * :Synthetic E2E User"]
+		func feed(_ answer: SASLConsentFixture.Answer, _ lines: [String]) throws -> SASLConsentFixture {
 			var fixture = SASLConsentFixture(answer: answer)
-			for line in ["CAP LS 302", "NICK e2euser", "USER e2euser 0 * :Synthetic E2E User", "CAP REQ :sasl",
-			             "AUTHENTICATE PLAIN"]
-			{
+			for line in lines {
 				_ = try fixture.receive(line)
 			}
 			return fixture
 		}
-		let payload = "AUTHENTICATE " + SASLConsentFixture.expectedPayload
 
-		var declined = try registered(.decline)
-		_ = try declined.receive("AUTHENTICATE *")
-		_ = try declined.receive("CAP END")
+		// Don't Send: registration without PASS or SASL.
+		let declined = try feed(.decline, ["CAP LS 302"] + identity + ["CAP END"])
 		guard declined.isRegistered, declined.evidence == declined.expectedEvidence
-		else { throw HarnessFailure.assertion("Declined SASL consent self-test failed") }
-		var payloadAfterDecline = try registered(.decline)
-		try mustReject { _ = try payloadAfterDecline.receive(payload) }
-		var otherPayload = try registered(.decline)
-		try mustReject { _ = try otherPayload.receive("AUTHENTICATE aGVsbG8=") }
-		var secretOnAnotherCommand = try registered(.send)
-		try mustReject { _ = try secretOnAnotherCommand.receive("PRIVMSG x :" + SASLConsentFixture.secret) }
+		else { throw HarnessFailure.assertion("Declined consent self-test failed") }
+		var passAfterDecline = try feed(.decline, ["CAP LS 302"])
+		try mustReject { _ = try passAfterDecline.receive(pass) }
+		var saslAfterDecline = try feed(.decline, ["CAP LS 302"] + identity)
+		try mustReject { _ = try saslAfterDecline.receive("CAP REQ :sasl") }
+		var nothingBeforeCapabilities = SASLConsentFixture(answer: .decline)
+		try mustReject { _ = try nothingBeforeCapabilities.receive("NICK e2euser") }
 
-		var sent = try registered(.send)
-		try mustReject { _ = try sent.receive("AUTHENTICATE *") }
-		var wrong = try registered(.send)
-		try mustReject { _ = try wrong.receive("AUTHENTICATE aGVsbG8=") }
-		_ = try sent.receive(payload)
-		try mustReject { _ = try sent.receive(payload) }
-		var early = SASLConsentFixture(answer: .send)
-		try mustReject { _ = try early.receive("AUTHENTICATE PLAIN") }
-		var endedTooSoon = try registered(.send)
+		// Send Password: PASS before NICK, then SASL PLAIN with the account secret.
+		let sasl = ["CAP LS 302", pass] + identity + ["CAP REQ :sasl", "AUTHENTICATE PLAIN"]
+		var sent = try feed(.send, sasl)
+		try mustReject { _ = try sent.receive("AUTHENTICATE aGVsbG8=") }
+		var sentAgain = try feed(.send, sasl)
+		_ = try sentAgain.receive(payload)
+		try mustReject { _ = try sentAgain.receive(payload) }
+		var nickBeforePass = try feed(.send, ["CAP LS 302"])
+		try mustReject { _ = try nickBeforePass.receive("NICK e2euser") }
+		var passBeforeCapabilities = SASLConsentFixture(answer: .send)
+		try mustReject { _ = try passBeforeCapabilities.receive(pass) }
+		var secretOnAnotherCommand = try feed(.send, sasl)
+		try mustReject { _ = try secretOnAnotherCommand.receive("PRIVMSG x :" + SASLConsentFixture.secret) }
+		var serverSecretElsewhere = try feed(.send, ["CAP LS 302"])
+		try mustReject { _ = try serverSecretElsewhere.receive("PRIVMSG x :" + SASLConsentFixture.serverSecret) }
+		var endedTooSoon = try feed(.send, sasl)
 		try mustReject { _ = try endedTooSoon.receive("CAP END") }
-		var afterPayload = try registered(.send)
-		_ = try afterPayload.receive(payload)
-		_ = try afterPayload.receive("CAP END")
-		guard afterPayload.isRegistered, afterPayload.evidence == afterPayload.expectedEvidence
-		else { throw HarnessFailure.assertion("Sent SASL consent self-test failed") }
+		let complete = try feed(.send, sasl + [payload, "CAP END"])
+		guard complete.isRegistered, complete.evidence == complete.expectedEvidence
+		else { throw HarnessFailure.assertion("Sent consent self-test failed") }
+	}
+
+	private static func banAccountChecks() throws {
+		var fixture = BanAccountFixture()
+		for line in ["CAP LS 302", "NICK e2euser", "USER e2euser 0 * :Synthetic E2E User", "CAP REQ :account-notify"] {
+			_ = try fixture.register(line)
+		}
+		let welcome = try fixture.register("CAP END")
+		guard fixture.isRegistered, welcome.contains(where: { $0.contains("ACCOUNTEXTBAN=account") })
+		else { throw HarnessFailure.assertion("Ban Account registration self-test failed") }
+		try mustReject { _ = try fixture.receive("JOIN #e2e", pongSeen: false) }
+		_ = try fixture.receive("JOIN #e2e", pongSeen: true)
+		var wrongBan = fixture
+		try mustReject { _ = try wrongBan.receive("MODE #e2e +b fixture!*@*", pongSeen: true) }
+		var otherAccount = fixture
+		try mustReject { _ = try otherAccount.receive("MODE #e2e +b ~account:noaccount", pongSeen: true) }
+		_ = try fixture.receive(BanAccountFixture.expectedBan, pongSeen: true)
+		guard fixture.banned else { throw HarnessFailure.assertion("Ban Account self-test failed") }
+		try mustReject { _ = try fixture.receive(BanAccountFixture.expectedBan, pongSeen: true) }
 	}
 
 	private static func protocolChecks() throws {
 		try consentChecks()
-		let sample = ProcessDiagnostics.summary(Data("""
+		try banAccountChecks()
+		let sample = Diagnostics.mainThreadSummary(Data("""
 		Path: /Users/private/Glasstual
 		Thread_1 DispatchQueue_1: com.apple.main-thread
 		+ 10 -[NSApplication run] (in AppKit) + 123 [0x123]
@@ -228,26 +297,24 @@ enum FixtureSelfTests {
 	}
 
 	private static func interactionValidatorChecks() throws {
-		var burst = InteractiveFixture(kind: .burstResponsiveness)
+		var burst = InteractiveFixture(mode: .burstResponsiveness)
 		try mustReject { _ = try burst.receive("PRIVMSG fixture :E2E_BURST_SWITCH_1", joined: true) }
 		_ = try burst.receive("PRIVMSG fixture :E2E_BURST_START", joined: true)
 		try mustReject { _ = try burst.receive("PRIVMSG fixture :E2E_BURST_SWITCH_2", joined: true) }
 	}
 
-	private static func interactiveChecks(kind: ScenarioKind, client: Client) async throws {
-		if kind.usesChannel {
+	private static func interactiveChecks(mode: FixtureMode, peer: LoopbackPeer, client: Client) async throws {
+		if mode.usesChannel {
 			try await client.send("JOIN #e2e\r\n")
-			try await wait { client.contains("E2E_CHANNEL_READY\r\n") }
+			try await wait(peer, "channel ready") { client.contains("E2E_CHANNEL_READY\r\n") }
 		}
-		if kind == .burstResponsiveness {
+		if mode == .burstResponsiveness {
 			try await client.send("PRIVMSG fixture :E2E_BURST_START\r\n")
 			for index in 1 ... 3 {
 				try await client.send("PRIVMSG fixture :E2E_BURST_SWITCH_\(index)\r\n")
-				try await wait { client.contains("E2E_BURST_SWITCH_\(index)_ACK\r\n") }
+				try await wait(peer, "switch \(index) acknowledged") { client.contains("E2E_BURST_SWITCH_\(index)_ACK\r\n") }
 			}
-			try await wait(seconds: 20) {
-				try client.contains("E2E_BURST_END\r\n") && (HarnessFiles.exists("burst-complete"))
-			}
+			try await wait(peer, "burst complete") { client.contains("E2E_BURST_END\r\n") && peer.evidence.burstComplete }
 			let text = String(data: client.received, encoding: .utf8) ?? ""
 			guard text.components(separatedBy: "E2E_BURST_MESSAGE_").count - 1 == 5000
 			else { throw HarnessFailure.assertion("Burst message count mismatch") }
@@ -256,24 +323,23 @@ enum FixtureSelfTests {
 				.filter { $0.hasPrefix("member") }
 			guard names.count == 10000,
 			      Set(names).count == 10000 else { throw HarnessFailure.assertion("Burst NAMES count mismatch") }
-		} else if kind.dcc {
+		} else if mode.dcc, let dcc = peer.dcc {
 			try await client.send("PRIVMSG fixture :E2E_DCC_OFFER\r\n")
-			let filename = try HarnessFiles.read("dcc-filename")
-			try await wait { client.contains("DCC SEND \(filename) 2130706433") }
-			guard let raw = try UInt16(HarnessFiles.read("dcc-port")),
-			      let port = NWEndpoint.Port(rawValue: raw)
-			else { throw HarnessFailure.assertion("DCC fixture port missing") }
+			try await wait(peer, "DCC offer") { client.contains("DCC SEND \(dcc.filename) 2130706433") }
+			guard let port = NWEndpoint.Port(rawValue: dcc.port) else {
+				throw HarnessFailure.assertion("DCC fixture port missing")
+			}
 			let receiver = Client(port: port, tls: false, trust: false, maximumBytes: DCCFixturePeer.size + 1)
 			receiver.start()
 			defer { receiver.connection.cancel() }
-			let expected = kind == .dccCancel ? DCCFixturePeer.partialSize : DCCFixturePeer.size
-			try await wait { receiver.received.count == expected }
+			let expected = mode == .dccCancel ? DCCFixturePeer.partialSize : DCCFixturePeer.size
+			try await wait(peer, "DCC bytes") { receiver.received.count == expected }
 			guard receiver.received == DCCFixturePeer.bytes.prefix(expected)
 			else { throw HarnessFailure.assertion("DCC fixture bytes mismatch") }
 			var acknowledgement = UInt32(expected).bigEndian
 			try await receiver.send(withUnsafeBytes(of: &acknowledgement) { Data($0) })
 			receiver.connection.cancel()
-			try await wait { try HarnessFiles.exists("dcc-peer-complete") }
+			try await wait(peer, "DCC peer complete") { dcc.outcome != nil }
 			try await client.send("PRIVMSG fixture :E2E_DCC_DONE\r\n")
 		}
 	}
@@ -334,14 +400,6 @@ enum FixtureSelfTests {
 		throw HarnessFailure.assertion("Invalid fixture input was accepted")
 	}
 
-	private static func wait(seconds: Double = 8, _ condition: () throws -> Bool) async throws {
-		let deadline = min(HarnessFiles.now + seconds, runDeadline)
-		while try !condition() {
-			try HarnessFiles.check(deadline)
-			try await Task.sleep(for: .milliseconds(25))
-		}
-	}
-
 	private final class Client {
 		let connection: NWConnection
 		let maximumBytes: Int
@@ -400,7 +458,7 @@ enum FixtureSelfTests {
 			                		self?.sendFinished = true
 			                	}
 			                })
-			try await FixtureSelfTests.wait { self.sendFinished }
+			try await Wait.until("self-test send", timeout: .seconds(8)) { self.sendFinished }
 			guard !sendFailed else { throw HarnessFailure.assertion("Self-test send failed") }
 		}
 	}

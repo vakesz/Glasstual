@@ -1,13 +1,16 @@
 import Foundation
 
-enum ScenarioKind: String, CaseIterable {
+/** What the loopback peer plays. Each mode is one server behaviour a GUI
+ scenario drives the application against, and one synthetic-client self-test
+ `glasstual-e2e fixtures` runs without the application. */
+enum FixtureMode: String, CaseIterable {
+	/// Registers, answers PING, and takes QUIT; nothing else.
+	case registration
 	case rejectionRetry
 	case repeatedRejection
 	case channelMessaging
 	case channelDenied
 	case historyRelaunch
-	case settingsSnapshot
-	case onboardingSkip
 	case onboardingFinish
 	case dccSuccess
 	case dccCancel
@@ -17,6 +20,7 @@ enum ScenarioKind: String, CaseIterable {
 	case tlsStall
 	case credentialConsentDecline
 	case credentialConsentSend
+	case banAccount
 
 	var rejectionCount: Int {
 		switch self {
@@ -30,42 +34,19 @@ enum ScenarioKind: String, CaseIterable {
 		[.tlsAccept, .tlsRejectRetry, .tlsStall, .credentialConsentDecline, .credentialConsentSend].contains(self)
 	}
 
-	var connectedQuit: Bool {
-		![.rejectionRetry, .tlsStall, .settingsSnapshot].contains(self)
-	}
-
 	var messaging: Bool {
 		self == .channelMessaging || self == .historyRelaunch
 	}
 
-	var finalChannel: String? {
-		if self == .channelDenied {
-			return "#retry"
-		}
-		if dcc {
-			return "fixture"
-		}
-		return usesChannel ? "#e2e" : nil
-	}
-
-	var hasFixtureTest: Bool {
-		self != .settingsSnapshot && self != .onboardingSkip
-	}
-
-	/// What the user answers when the client asks whether to send its password
-	/// to a server whose certificate it did not check; `nil` for every other
-	/// scenario. These run over TLS with chain validation off and SASL PLAIN
-	/// offered.
+	/// What the user answers when the client asks whether to send its
+	/// passwords to a server whose certificate it did not check; `nil` for
+	/// every other mode. These run over TLS with chain validation off.
 	var saslConsent: SASLConsentFixture.Answer? {
 		switch self {
 		case .credentialConsentDecline: .decline
 		case .credentialConsentSend: .send
 		default: nil
 		}
-	}
-
-	var onboarding: Bool {
-		self == .onboardingSkip || self == .onboardingFinish
 	}
 
 	var dcc: Bool {
@@ -77,22 +58,7 @@ enum ScenarioKind: String, CaseIterable {
 	}
 
 	var usesChannel: Bool {
-		messaging || self == .burstResponsiveness
-	}
-
-	/// The single list of modes `make e2e-fixtures` runs; the script asks the
-	/// helper for it rather than repeating the names.
-	static var fixtureModes: [String] {
-		allCases.filter(\.hasFixtureTest).map(\.rawValue)
-	}
-
-	static var current: Self {
-		get throws {
-			guard let kind = try Self(rawValue: HarnessFiles.required("E2E_SCENARIO")) else {
-				throw HarnessFailure.setup("Unknown scenario")
-			}
-			return kind
-		}
+		messaging || self == .burstResponsiveness || self == .banAccount
 	}
 }
 
@@ -128,6 +94,8 @@ struct FixtureProtocol {
 	let acceptsOnboardingQuit: Bool
 	/// Owns registration until it completes, for the credential-consent scenarios.
 	var consent: SASLConsentFixture?
+	/// Owns registration, the channel and the ban, for Ban Account.
+	var banAccount: BanAccountFixture?
 
 	init(
 		reject: Bool,
@@ -135,7 +103,8 @@ struct FixtureProtocol {
 		deniedJoin: DeniedJoinFixture? = nil,
 		interaction: InteractiveFixture? = nil,
 		acceptsOnboardingQuit: Bool = false,
-		consent: SASLConsentFixture? = nil
+		consent: SASLConsentFixture? = nil,
+		banAccount: BanAccountFixture? = nil
 	) {
 		self.reject = reject
 		self.messaging = messaging
@@ -143,10 +112,33 @@ struct FixtureProtocol {
 		self.interaction = interaction
 		self.acceptsOnboardingQuit = acceptsOnboardingQuit
 		self.consent = consent
+		self.banAccount = banAccount
+	}
+
+	/// The peer for `mode`, on connection attempt `attempt` (from 1).
+	init(mode: FixtureMode, attempt: Int, interaction: InteractiveFixture? = nil) {
+		self.init(
+			reject: attempt <= mode.rejectionCount,
+			messaging: mode.messaging,
+			deniedJoin: mode == .channelDenied ? DeniedJoinFixture() : nil,
+			interaction: interaction,
+			acceptsOnboardingQuit: mode == .onboardingFinish,
+			consent: mode.saslConsent.map(SASLConsentFixture.init(answer:)),
+			banAccount: mode == .banAccount ? BanAccountFixture() : nil
+		)
 	}
 
 	mutating func receive(_ line: String) throws -> [String] {
 		guard !quitSeen else { throw HarnessFailure.assertion("Command after QUIT; payload withheld") }
+		if var banAccount, !banAccount.isRegistered {
+			defer {
+				self.banAccount = banAccount
+				if banAccount.isRegistered {
+					registrationIndex = Self.registration.count
+				}
+			}
+			return try banAccount.register(line)
+		}
 		if var consent, !consent.isRegistered {
 			defer {
 				self.consent = consent
@@ -195,6 +187,12 @@ struct FixtureProtocol {
 				return response
 			}
 		}
+		if var banAccount {
+			defer { self.banAccount = banAccount }
+			if let response = try banAccount.receive(line, pongSeen: pongSeen) {
+				return response
+			}
+		}
 		return nil
 	}
 
@@ -206,13 +204,14 @@ struct FixtureProtocol {
 		case "PONG E2E_PING", "PONG :E2E_PING":
 			guard !pongSeen else { throw HarnessFailure.assertion("Duplicate PONG") }
 			pongSeen = true
-		case "ISON fixture":
-			return [":e2e.local 303 e2euser :fixture"]
+		case let line where line.hasPrefix("ISON ") && line.split(separator: " ").count == 2:
+			// Queries ask whether their nickname is online; it is.
+			return [":e2e.local 303 e2euser :\(line.dropFirst("ISON ".count))"]
 		case "MODE e2euser", "MODE :e2euser":
 			let modes = deniedJoin?.phase == .identified || deniedJoin?.phase == .joined ? "+r" : "+"
 			return [":e2e.local 221 e2euser :\(modes)"]
 		case "JOIN #e2e", "JOIN :#e2e":
-			guard messaging || interaction?.kind.usesChannel == true, pongSeen,
+			guard messaging || interaction?.mode.usesChannel == true, pongSeen,
 			      !joined else { throw HarnessFailure.assertion("Unexpected JOIN") }
 			joined = true
 			return [
@@ -240,17 +239,24 @@ struct FixtureProtocol {
 			return [":fixture!fixture@localhost PRIVMSG #e2e :E2E_REPLY_ACK"]
 		case let line where Self.e2eQuitLines.contains(line) ||
 			(acceptsOnboardingQuit && Self.onboardingQuitLines.contains(line)):
-			guard pongSeen, !messaging || replySeen else { throw HarnessFailure.assertion("Premature QUIT") }
-			guard deniedJoin == nil || deniedJoin?.phase == .joined else {
-				throw HarnessFailure.assertion("QUIT before denied-channel recovery")
-			}
-			guard interaction == nil || interaction?.finished == true
-			else { throw HarnessFailure.assertion("QUIT before fixture interaction completed") }
+			try requireReadyToQuit()
 			quitSeen = true
 		default:
 			throw HarnessFailure.assertion("Unexpected \(Self.redactedShape(of: line)); payload withheld")
 		}
 		return []
+	}
+
+	/// QUIT is accepted only once everything the mode exercises has happened.
+	private func requireReadyToQuit() throws {
+		guard pongSeen, !messaging || replySeen else { throw HarnessFailure.assertion("Premature QUIT") }
+		guard deniedJoin == nil || deniedJoin?.phase == .joined else {
+			throw HarnessFailure.assertion("QUIT before denied-channel recovery")
+		}
+		guard interaction == nil || interaction?.finished == true
+		else { throw HarnessFailure.assertion("QUIT before fixture interaction completed") }
+		guard banAccount == nil || banAccount?.banned == true
+		else { throw HarnessFailure.assertion("QUIT before the account ban") }
 	}
 
 	private static func redactedShape(of line: String) -> String {

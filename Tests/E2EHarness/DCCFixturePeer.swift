@@ -21,7 +21,8 @@ struct FixtureACKParser {
 	}
 }
 
-@MainActor
+/// The other end of a DCC SEND: it offers the fixture bytes and checks the
+/// application's cumulative acknowledgements.
 final class DCCFixturePeer {
 	static let size = 100_003
 	static let partialSize = 37003
@@ -40,6 +41,11 @@ final class DCCFixturePeer {
 	private var acknowledgements = FixtureACKParser()
 	private(set) var complete = false
 	private(set) var failure: Error?
+	private(set) var port: UInt16 = 0
+	/// The byte count the application acknowledged in full, once it has.
+	private(set) var acknowledged: Int?
+	/// How the transfer ended, from the peer's side.
+	private(set) var outcome: String?
 
 	init(cancel: Bool, filename: String = "e2e-transfer-\(UUID().uuidString).bin") {
 		self.cancel = cancel
@@ -47,7 +53,6 @@ final class DCCFixturePeer {
 	}
 
 	func start() async throws -> UInt16 {
-		try HarnessFiles.write(filename, to: "dcc-filename")
 		let parameters = NWParameters.tcp
 		parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: .any)
 		let listener = try NWListener(using: parameters)
@@ -56,13 +61,9 @@ final class DCCFixturePeer {
 			Task { @MainActor in self?.accept(connection) }
 		}
 		listener.start(queue: .global())
-		let deadline = HarnessFiles.now + 8
-		while listener.state != .ready {
-			try HarnessFiles.check(deadline)
-			try await Task.sleep(for: .milliseconds(25))
-		}
+		try await Wait.until("DCC listener ready", timeout: .seconds(8)) { listener.state == .ready }
 		guard let port = listener.port else { throw HarnessFailure.assertion("DCC listener has no port") }
-		try HarnessFiles.write(String(port.rawValue), to: "dcc-port")
+		self.port = port.rawValue
 		return port.rawValue
 	}
 
@@ -126,17 +127,14 @@ final class DCCFixturePeer {
 						try self.acknowledgements.receive(data, sent: UInt32(expected))
 					}
 					if self.acknowledgements.acknowledged == expected {
-						try HarnessFiles.write(String(expected), to: "dcc-acknowledged")
+						self.acknowledged = expected
 					}
 					if done || error != nil {
 						guard self.acknowledgements.acknowledged == expected, self.acknowledgements.pending.isEmpty,
 						      self.cancel || error == nil
 						else { throw HarnessFailure.assertion("DCC closed before expected bytes/ACK") }
 						self.complete = true
-						try HarnessFiles.write(
-							self.cancel ? "cancelled after 37003 bytes" : "completed 100003 bytes",
-							to: "dcc-peer-complete"
-						)
+						self.outcome = self.cancel ? "cancelled after 37003 bytes" : "completed 100003 bytes"
 					} else {
 						self.receive(peer)
 					}

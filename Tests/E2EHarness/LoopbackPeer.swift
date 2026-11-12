@@ -2,35 +2,66 @@ import Foundation
 import Network
 import Security
 
-/// Network callbacks only hand events to the actor owning this separate peer process.
-@MainActor
+/** What the peer observed, read by scenarios and self-tests as it changes.
+ Only synthetic values enter it; unexpected wire content never does. */
+struct PeerEvidence {
+	/// Connections accepted so far.
+	var connections = 0
+	/// IRC lines received over all connections.
+	var linesReceived = 0
+	/// The registration lines each attempt sent, by attempt number from 1.
+	var registrations: [Int: String] = [:]
+	var pongSeen = false
+	var quitSeen = false
+	var joined = false
+	var messageSeen = false
+	var replySeen = false
+	/// The credential-consent exchange, for those modes.
+	var consent: String?
+	/// Every phase the denied-JOIN fixture passed through, in order.
+	var deniedJoinPhases: [DeniedJoinFixture.Phase] = []
+	var interactionStage = 0
+	var banLine: String?
+	var tlsStalled = false
+	var tlsRejected = false
+	var stallClosed = false
+	/// How the last connection ended: `QUIT and EOF` when the client quit cleanly.
+	var disconnect: String?
+	var burstBatches = 0
+	var burstComplete = false
+	/// Set when the client's final connection has closed and nothing is pending.
+	var complete = false
+	/// The verb and first parameter of the last lines received, for diagnostics.
+	var recent: [String] = []
+}
+
+/** The scripted IRC server a scenario points the application at, in the
+ harness's own process.
+
+ Network callbacks hand their events to the main actor, which owns the peer's
+ state. A protocol violation is recorded as ``failure`` and stops the peer
+ answering; scenarios check it on every wait. */
 final class LoopbackPeer {
-	private let kind: ScenarioKind
+	let mode: FixtureMode
 	private let listener: NWListener
 	private var connection: NWConnection?
 	private var pending = Data()
 	private var state: FixtureProtocol
-	private var attempt = 0
-	private var failure: Error?
-	private var complete = false
-	private var dcc: DCCFixturePeer?
-	private var dccPort: UInt16 = 0
 	private var burstTask: Task<Void, Never>?
+	private(set) var dcc: DCCFixturePeer?
 	private let usesPassiveDCC: Bool
+	private(set) var evidence = PeerEvidence()
+	private(set) var failure: (any Error)?
+	private(set) var port: UInt16 = 0
 
-	init(kind: ScenarioKind) throws {
-		self.kind = kind
-		usesPassiveDCC = CommandLine.arguments.contains("passive-dcc")
-		state = FixtureProtocol(
-			reject: false,
-			messaging: kind.messaging,
-			acceptsOnboardingQuit: kind == .onboardingFinish,
-			consent: kind.saslConsent.map(SASLConsentFixture.init(answer:))
-		)
+	init(mode: FixtureMode, corpora: URL, passiveDCC: Bool = false) throws {
+		self.mode = mode
+		usesPassiveDCC = passiveDCC
+		state = FixtureProtocol(mode: mode, attempt: 1)
 		let tls: NWProtocolTLS.Options?
-		if kind.secured, kind != .tlsStall {
+		if mode.secured, mode != .tlsStall {
 			let options = NWProtocolTLS.Options()
-			try sec_protocol_options_set_local_identity(options.securityProtocolOptions, Self.identity())
+			try sec_protocol_options_set_local_identity(options.securityProtocolOptions, Self.identity(corpora: corpora))
 			tls = options
 		} else {
 			tls = nil
@@ -40,11 +71,9 @@ final class LoopbackPeer {
 		listener = try NWListener(using: parameters)
 	}
 
-	static func identity() throws -> sec_identity_t {
-		let fixture = try URL(fileURLWithPath: HarnessFiles.required("E2E_FIXTURE"))
-			.deletingLastPathComponent().deletingLastPathComponent()
-			.appendingPathComponent("TLS/LoopbackTestIdentity.p12")
-		let data = try Data(contentsOf: fixture)
+	/// The throwaway loopback identity in `Tests/Corpora/TLS`, imported in memory.
+	static func identity(corpora: URL) throws -> sec_identity_t {
+		let data = try Data(contentsOf: corpora.appendingPathComponent("TLS/LoopbackTestIdentity.p12"))
 		let options: [String: Any] = [
 			kSecImportExportPassphrase as String: "glasstual",
 			kSecImportToMemoryOnly as String: true,
@@ -54,7 +83,7 @@ final class LoopbackPeer {
 		      let items = imported as? [[String: Any]],
 		      let value = items.first?[kSecImportItemIdentity as String],
 		      let identity: SecIdentity = cast(value), let result = sec_identity_create(identity)
-		else { throw HarnessFailure.setup("Cannot import in-memory loopback identity") }
+		else { throw HarnessFailure.setup("Cannot import the in-memory loopback identity") }
 		return result
 	}
 
@@ -62,61 +91,56 @@ final class LoopbackPeer {
 		value as? Value
 	}
 
-	func run() async throws {
-		if kind.dcc {
-			let dcc = DCCFixturePeer(cancel: kind == .dccCancel)
+	/// Starts listening and returns the port.
+	func start() async throws -> UInt16 {
+		if mode.dcc {
+			let dcc = DCCFixturePeer(cancel: mode == .dccCancel)
 			self.dcc = dcc
-			dccPort = try await dcc.start()
+			_ = try await dcc.start()
 		}
 		listener.newConnectionHandler = { [weak self] connection in
 			Task { @MainActor in self?.accept(connection) }
 		}
 		listener.start(queue: .global())
-		defer { burstTask?.cancel(); dcc?.stop(); connection?.cancel(); listener.cancel() }
-		let startup = HarnessFiles.now + 10
-		while listener.state != .ready {
-			try HarnessFiles.check(startup)
-			try await Task.sleep(for: .milliseconds(25))
+		try await Wait.until("loopback listener ready", timeout: .seconds(10)) { self.listener.state == .ready }
+		guard let port = listener.port?.rawValue else { throw HarnessFailure.setup("Loopback port missing") }
+		self.port = port
+		return port
+	}
+
+	func stop() {
+		burstTask?.cancel()
+		dcc?.stop()
+		connection?.cancel()
+		listener.cancel()
+	}
+
+	/// Throws the first protocol violation the peer or its DCC side recorded.
+	func check() throws {
+		if let failure {
+			throw failure
 		}
-		guard let port = listener.port else { throw HarnessFailure.setup("Loopback port missing") }
-		try HarnessFiles.write(String(port.rawValue), to: "port")
-		let deadline = HarnessFiles.now + 230
-		while !complete {
-			if let failure {
-				throw failure
-			}
-			if let failure = dcc?.failure {
-				throw failure
-			}
-			try HarnessFiles.check(deadline)
-			try await Task.sleep(for: .milliseconds(25))
+		if let failure = dcc?.failure {
+			throw failure
 		}
-		try HarnessFiles.write("complete", to: "peer-complete")
 	}
 
 	private func accept(_ peer: NWConnection) {
-		guard connection == nil, !complete else {
+		guard connection == nil, !evidence.complete else {
 			peer.cancel()
-			failure = HarnessFailure.assertion("Unexpected concurrent or extra connection")
+			record(HarnessFailure.assertion("Unexpected concurrent or extra connection"))
 			return
 		}
-		attempt += 1
+		evidence.connections += 1
 		connection = peer
 		pending = Data()
-		let interaction = kind.interactive ? InteractiveFixture(
-			kind: kind,
-			dccPort: dccPort,
+		let interaction = mode.interactive ? InteractiveFixture(
+			mode: mode,
+			dccPort: dcc?.port ?? 0,
 			usesPassiveDCC: usesPassiveDCC,
 			dccFilename: dcc?.filename ?? "e2e-transfer.bin"
 		) : nil
-		state = FixtureProtocol(reject: attempt <= kind.rejectionCount, messaging: kind.messaging,
-		                        deniedJoin: kind == .channelDenied ? DeniedJoinFixture() : nil,
-		                        interaction: interaction,
-		                        acceptsOnboardingQuit: kind == .onboardingFinish,
-		                        consent: kind.saslConsent.map(SASLConsentFixture.init(answer:)))
-		do {
-			try HarnessFiles.write(String(attempt), to: "connection-count")
-		} catch { failure = error }
+		state = FixtureProtocol(mode: mode, attempt: evidence.connections, interaction: interaction)
 		peer.stateUpdateHandler = { [weak self] status in
 			Task { @MainActor in
 				guard let self, self.connection === peer else { return }
@@ -132,12 +156,12 @@ final class LoopbackPeer {
 	private func receive(_ peer: NWConnection) {
 		peer.receive(minimumIncompleteLength: 1, maximumLength: 4096) { [weak self] data, _, done, error in
 			Task { @MainActor in
-				guard let self, self.connection === peer else { return }
+				guard let self, self.connection === peer, self.failure == nil else { return }
 				do {
 					if let data, !data.isEmpty {
-						if self.kind == .tlsStall {
-							// Consume but never answer ClientHello. No TLS bytes enter artifacts.
-							try HarnessFiles.write("ClientHello bytes received", to: "tls-stalled")
+						if self.mode == .tlsStall {
+							// Consume but never answer the ClientHello.
+							self.evidence.tlsStalled = true
 						} else {
 							try self.received(data, on: peer)
 						}
@@ -148,7 +172,7 @@ final class LoopbackPeer {
 					} else {
 						self.receive(peer)
 					}
-				} catch { self.failure = error }
+				} catch { self.record(error) }
 			}
 		}
 	}
@@ -161,6 +185,9 @@ final class LoopbackPeer {
 				throw HarnessFailure.assertion("Non-UTF8 IRC input")
 			}
 			pending.removeSubrange(..<range.upperBound)
+			evidence.linesReceived += 1
+			evidence.recent = Array((evidence.recent + [line.split(separator: " ").prefix(2).joined(separator: " ")])
+				.suffix(12))
 			if line == "PRIVMSG fixture :E2E_DCC_DONE", dcc?.complete != true {
 				throw HarnessFailure.assertion("DCC completion command preceded actual transfer closure")
 			}
@@ -168,114 +195,103 @@ final class LoopbackPeer {
 			if line == "PRIVMSG fixture :E2E_BURST_START" {
 				startBurst(on: peer)
 			}
-			for response in responses {
-				peer.send(content: Data((response + "\r\n").utf8), completion: .contentProcessed { [weak self] error in
-					Task { @MainActor in
-						guard let self else { return }
-						if error != nil {
-							self.failure = HarnessFailure.assertion("Fixture send failed")
-						}
-						if response == "ERROR :E2E_REGISTRATION_REJECTED" {
-							peer.cancel()
-							if self.connection === peer {
-								self.connection = nil
-							}
-						}
-					}
-				})
-			}
-			if state.registrationIndex == FixtureProtocol.registration.count {
-				try HarnessFiles.write(FixtureProtocol.registration.compactMap(\.first).joined(separator: "; "),
-				                       to: "registration-\(attempt)")
-			}
-			for (observed, text, file) in [
-				(state.pongSeen, "PONG E2E_PING", "pong-wire"),
-				(state.quitSeen, "QUIT E2E_QUIT", "quit-wire"),
-				(state.joined, "JOIN #e2e", "join-wire"),
-				(state.messageSeen, "PRIVMSG #e2e :E2E_TYPED_MESSAGE", "message-wire"),
-				(state.replySeen, "PRIVMSG #e2e :fixture: E2E_TYPED_REPLY", "reply-wire"),
-			] where observed {
-				try HarnessFiles.write(text, to: file)
-			}
-			if let consent = state.consent {
-				try HarnessFiles.write(consent.evidence, to: "sasl-evidence")
-			}
-			if let phase = state.deniedJoin?.phase {
-				try HarnessFiles.write(String(describing: phase), to: "denied-join-phase")
-				if phase == .denied {
-					try HarnessFiles.write("JOIN #retry denied 477", to: "denied-join-wire")
-				}
-				if phase == .identified {
-					try HarnessFiles.write(
-						"NickServ IDENTIFY; 900 ACCOUNT MODE +r",
-						to: "identify-wire"
-					)
-				}
-				if phase ==
-					.joined
-				{
-					try HarnessFiles.write("JOIN #retry after identification", to: "retry-join-wire")
-				}
-			}
-			if let interaction = state.interaction {
-				try HarnessFiles.write(String(interaction.stage), to: "interaction-stage")
-				if let port = interaction.dccListeningPort {
-					dcc?.connect(to: port)
-				}
+			send(responses, on: peer)
+			observe()
+			if let port = state.interaction?.dccListeningPort {
+				dcc?.connect(to: port)
 			}
 		}
 	}
 
-	private func startBurst(on peer: NWConnection) {
-		burstTask = Task { @MainActor [weak self] in
-			guard let self else { return }
-			do {
-				for index in 0 ..< 100 {
-					try Task.checkCancellation()
-					for response in InteractiveFixture.burstBatch(index) {
-						peer.send(
-							content: Data((response + "\r\n").utf8),
-							completion: .contentProcessed { [weak self] error in
-								Task { @MainActor in
-									if error != nil {
-										self?.failure = HarnessFailure.assertion("Burst send failed")
-									}
-								}
-							}
-						)
+	private func send(_ responses: [String], on peer: NWConnection) {
+		for response in responses {
+			peer.send(content: Data((response + "\r\n").utf8), completion: .contentProcessed { [weak self] error in
+				Task { @MainActor in
+					guard let self else { return }
+					if error != nil {
+						self.record(HarnessFailure.assertion("Fixture send failed"))
 					}
-					try HarnessFiles.write(String(index + 1), to: "burst-batches")
-					try await Task.sleep(for: .milliseconds(150))
+					if response == "ERROR :E2E_REGISTRATION_REJECTED" {
+						peer.cancel()
+						if self.connection === peer {
+							self.connection = nil
+						}
+					}
 				}
-				try HarnessFiles.write("10000 names; 5000 messages", to: "burst-complete")
-			} catch { failure = error }
+			})
+		}
+	}
+
+	/// Copies what the protocol state has seen into the evidence.
+	private func observe() {
+		if state.registrationIndex == FixtureProtocol.registration.count {
+			evidence.registrations[evidence.connections] = FixtureProtocol.registration.compactMap(\.first)
+				.joined(separator: "; ")
+		}
+		evidence.pongSeen = evidence.pongSeen || state.pongSeen
+		evidence.quitSeen = evidence.quitSeen || state.quitSeen
+		evidence.joined = evidence.joined || state.joined || state.banAccount?.joined == true
+		evidence.messageSeen = evidence.messageSeen || state.messageSeen
+		evidence.replySeen = evidence.replySeen || state.replySeen
+		if let consent = state.consent {
+			evidence.consent = consent.evidence
+		}
+		if let phase = state.deniedJoin?.phase, evidence.deniedJoinPhases.last != phase {
+			evidence.deniedJoinPhases.append(phase)
+		}
+		if let interaction = state.interaction {
+			evidence.interactionStage = interaction.stage
+		}
+		if let ban = state.banAccount?.banLine {
+			evidence.banLine = ban
+		}
+	}
+
+	/// Sends the burst at its own pace, off the main actor: the harness's
+	/// Accessibility reads must not slow the server down.
+	private func startBurst(on peer: NWConnection) {
+		burstTask = Task.detached { [weak self] in
+			for index in 0 ..< 100 {
+				guard Task.isCancelled == false else { return }
+				for line in InteractiveFixture.burstBatch(index) {
+					peer.send(content: Data((line + "\r\n").utf8), completion: .contentProcessed { error in
+						if error != nil {
+							Task { @MainActor in self?.record(HarnessFailure.assertion("Burst send failed")) }
+						}
+					})
+				}
+				Task { @MainActor in self?.evidence.burstBatches = index + 1 }
+				try? await Task.sleep(for: .milliseconds(150))
+			}
+			Task { @MainActor in self?.evidence.burstComplete = true }
 		}
 	}
 
 	private func ended(_ peer: NWConnection, transportFailure: Bool) {
 		do {
-			if kind == .tlsRejectRetry, attempt == 1 {
-				guard state.registrationIndex == 0, pending.isEmpty else {
+			if mode == .tlsRejectRetry, evidence.connections == 1 {
+				guard state.registrationIndex == 0, pending.isEmpty, evidence.linesReceived == 0 else {
 					throw HarnessFailure.assertion("Rejected TLS delivered application data")
 				}
-				try HarnessFiles.write("TLS closed without IRC registration", to: "tls-rejected")
-			} else if kind == .tlsStall {
-				guard try HarnessFiles.exists("tls-stalled") else {
-					throw HarnessFailure.assertion("Stall did not receive ClientHello")
-				}
-				try HarnessFiles.write("Stalled TLS closed", to: "stall-closed")
-				complete = true
+				evidence.tlsRejected = true
+			} else if mode == .tlsStall {
+				guard evidence.tlsStalled else { throw HarnessFailure.assertion("Stall did not receive ClientHello") }
+				evidence.stallClosed = true
+				evidence.complete = true
 			} else {
 				guard !transportFailure else { throw HarnessFailure.assertion("Transport failed instead of clean EOF") }
 				try state.eof(pending: pending)
-				let evidence = kind == .onboardingFinish
-					? "QUIT onboarding default and EOF"
-					: "QUIT E2E_QUIT and EOF"
-				try HarnessFiles.write(evidence, to: "disconnect-wire")
-				complete = true
+				evidence.disconnect = "QUIT and EOF"
+				evidence.complete = true
 			}
 			connection = nil
 			peer.cancel()
-		} catch { failure = error }
+		} catch { record(error) }
+	}
+
+	private func record(_ error: any Error) {
+		if failure == nil {
+			failure = error
+		}
 	}
 }

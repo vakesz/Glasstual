@@ -1,4 +1,4 @@
-import ApplicationServices
+import CoreGraphics
 import Foundation
 
 /** The main window's three columns, measured in the running app.
@@ -30,8 +30,8 @@ enum MainWindowColumnsCheck {
 		}
 	}
 
-	static func run(driver: AccessibilityDriver) async throws {
-		try await expect("member list opens inside the window", driver: driver) { columns in
+	static func run(_ context: ScenarioContext) async throws {
+		try await expect("member list opens inside the window", context) { columns in
 			guard let list = columns.memberList else { return false }
 			return abs(columns.sidebar.width - sidebarWidth) < tolerance
 				&& abs(list.width - memberListWidth) < tolerance
@@ -41,14 +41,14 @@ enum MainWindowColumnsCheck {
 				&& columns.transcript.maxX <= list.minX + tolerance
 				&& columns.transcript.width >= conversationMinimumWidth
 		}
-		try await driver.menu("Hide Member List", in: "View")
-		try await expect("transcript takes the member list's width back", driver: driver) { columns in
+		try await context.driver.menu("toggleMemberList")
+		try await expect("transcript takes the member list's width back", context) { columns in
 			columns.memberList == nil
 				&& abs(columns.transcript.maxX - columns.window.maxX) < tolerance
 				&& columns.transcript.minX >= columns.sidebar.maxX - tolerance
 		}
-		try await driver.menu("Show Member List", in: "View")
-		try await expect("member list opens again at its width", driver: driver) { columns in
+		try await context.driver.menu("toggleMemberList")
+		try await expect("member list opens again at its width", context) { columns in
 			guard let list = columns.memberList else { return false }
 			return abs(list.width - memberListWidth) < tolerance
 				&& list.maxX <= columns.window.maxX + tolerance
@@ -58,26 +58,34 @@ enum MainWindowColumnsCheck {
 
 	/// Waits for the columns to satisfy `condition`, keeping the last
 	/// measurement as evidence for a failure.
-	private static func expect(_ description: String, driver: AccessibilityDriver,
-	                           _ condition: (Columns) -> Bool) async throws
-	{
-		try await driver.wait(description) { deadline in
-			guard let columns = try measure(driver: driver, deadline: deadline) else { return false }
-			try HarnessFiles.write(columns.description, to: "main-window-columns.txt")
-			return condition(columns)
+	private static func expect(
+		_ description: String,
+		_ context: ScenarioContext,
+		_ condition: (Columns) -> Bool
+	) async throws {
+		var last = "not measured"
+		do {
+			try await context.until(description) {
+				guard let columns = try measure(context.driver) else { return false }
+				last = columns.description
+				return condition(columns)
+			}
+		} catch {
+			context.note("main window columns: \(last)")
+			throw error
 		}
 	}
 
-	private static func measure(driver: AccessibilityDriver, deadline: Double) throws -> Columns? {
-		guard let window = try driver.identified("main-window", from: driver.root, deadline: deadline),
-		      let windowFrame = try driver.frame(window, deadline: deadline),
-		      let sidebar = try driver.identified("sidebar", from: window, deadline: deadline),
-		      let sidebarFrame = try driver.frame(sidebar, deadline: deadline),
-		      let transcript = try driver.identified("channel-transcript", from: window, deadline: deadline),
-		      let transcriptFrame = try driver.frame(transcript, deadline: deadline)
+	private static func measure(_ driver: AXDriver) throws -> Columns? {
+		guard let window = try driver.window(AXID.mainWindow),
+		      let windowFrame = try driver.frame(window),
+		      let sidebar = try driver.find(AXID.sidebar, in: window),
+		      let sidebarFrame = try driver.frame(sidebar),
+		      let transcript = try driver.find(AXID.transcript, in: window),
+		      let transcriptFrame = try driver.frame(transcript)
 		else { return nil }
-		let memberList = try driver.identified("member-list", from: window, deadline: deadline)
-		let memberListFrame = try memberList.flatMap { try driver.frame($0, deadline: deadline) }
+		let memberList = try driver.find(AXID.memberList, in: window)
+		let memberListFrame = try memberList.flatMap { try driver.frame($0) }
 		return Columns(
 			window: windowFrame,
 			sidebar: sidebarFrame,

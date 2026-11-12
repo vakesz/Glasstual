@@ -1,14 +1,14 @@
 import Foundation
 
 struct InteractiveFixture {
-	let kind: ScenarioKind
+	let mode: FixtureMode
 	var stage = 0
 	var dccPort: UInt16 = 0
 	var usesPassiveDCC = false
 	var dccFilename = "e2e-transfer.bin"
 	var dccListeningPort: UInt16?
 	var finished: Bool {
-		switch kind {
+		switch mode {
 		case .burstResponsiveness: stage == 4
 		case .dccSuccess, .dccCancel: stage == 2
 		default: false
@@ -17,7 +17,7 @@ struct InteractiveFixture {
 
 	mutating func receive(_ line: String, joined: Bool) throws -> [String]? {
 		guard line.hasPrefix("PRIVMSG fixture :") else { return nil }
-		if kind == .burstResponsiveness {
+		if mode == .burstResponsiveness {
 			let expected = stage == 0 ? "E2E_BURST_START" : "E2E_BURST_SWITCH_\(stage)"
 			guard joined, stage < 4, line == "PRIVMSG fixture :" + expected else {
 				throw HarnessFailure.assertion("Burst switching fixture ordering mismatch")
@@ -25,7 +25,7 @@ struct InteractiveFixture {
 			stage += 1
 			return [":fixture!fixture@localhost PRIVMSG #e2e :\(expected)_ACK"]
 		}
-		if kind.dcc {
+		if mode.dcc {
 			if stage == 0, line == "PRIVMSG fixture :E2E_DCC_OFFER", usesPassiveDCC || dccPort > 0 {
 				stage = 1
 				let port = usesPassiveDCC ? 0 : dccPort
@@ -59,7 +59,7 @@ struct InteractiveFixture {
 		throw HarnessFailure.assertion("Unexpected interactive fixture command")
 	}
 
-	static func burstBatch(_ index: Int) -> [String] {
+	nonisolated static func burstBatch(_ index: Int) -> [String] { // nonisolated: pure
 		let names = (index * 100 ..< (index + 1) * 100).map { "member\($0)" }
 		var lines = stride(from: 0, to: names.count, by: 20).map {
 			":e2e.local 353 e2euser = #e2e :" + names[$0 ..< $0 + 20].joined(separator: " ")
