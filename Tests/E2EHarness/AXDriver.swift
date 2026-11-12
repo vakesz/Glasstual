@@ -369,6 +369,7 @@ final class AXDriver {
 	 away during the request is transient: the action may or may not have
 	 landed, and the caller's wait decides by looking again. */
 	func perform(_ action: String, on element: AXUIElement) throws {
+		try refuseLink(element, action)
 		let status = timed { AXUIElementPerformAction(element, action as CFString) }
 		switch status {
 		case .success: return
@@ -376,6 +377,16 @@ final class AXDriver {
 			throw TransientAXError(code: status.rawValue)
 		default: throw HarnessFailure.assertion("\(action) was refused (AXError \(status.rawValue)) at: \(currentStep)")
 		}
+	}
+
+	/** A link is never acted on. Following one hands its address to another
+	 application, on the login of whoever started the run: a scene that
+	 pressed a transcript link opened it in that person's browser on every
+	 poll. The application refuses the handoff in an end-to-end launch as
+	 well; this keeps a scenario from asking for it at all. */
+	private func refuseLink(_ element: AXUIElement, _ action: String) throws {
+		guard try role(element) == "AXLink" else { return }
+		throw HarnessFailure.assertion("\(action) on a link is not allowed (at: \(currentStep)): the harness never follows links")
 	}
 
 	func press(_ element: AXUIElement) throws {
@@ -387,6 +398,7 @@ final class AXDriver {
 	 closes: it is sent with a short timeout, not measured, and a timeout means
 	 the menu is open. The caller then waits for the item it wants. */
 	func showMenu(_ element: AXUIElement, action: String = kAXShowMenuAction) throws {
+		try refuseLink(element, action)
 		AXUIElementSetMessagingTimeout(element, 0.5)
 		let status = AXUIElementPerformAction(element, action as CFString)
 		guard status == .success || status == .cannotComplete else {

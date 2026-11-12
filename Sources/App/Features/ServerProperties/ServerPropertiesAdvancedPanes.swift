@@ -174,7 +174,6 @@ struct ServerPropertiesNetworkSocketPane: View {
 
 struct ServerPropertiesProxyServerPane: View {
 	@Bindable var model: ServerPropertiesModel
-	@Environment(\.openURL) private var openURL
 
 	private static let proxyTypes: [ConnectionProxyKind] = [.none, .automatic, .socks5, .HTTP, .tor]
 
@@ -205,7 +204,7 @@ struct ServerPropertiesProxyServerPane: View {
 				Section {
 					Button(.ServerProperties.openSystemSettings) {
 						if let url = Self.networkProxySettingsURL {
-							openURL(url)
+							SystemHandoff.open(url)
 						}
 					}
 				}

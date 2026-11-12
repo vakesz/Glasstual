@@ -99,7 +99,7 @@ extension MenuActionController {
 		let pasteboard = NSPasteboard.withUniqueName()
 		defer { pasteboard.releaseGlobally() }
 		pasteboard.stringContent = selection
-		NSPerformService("Search With %WebSearchProvider@", pasteboard)
+		SystemHandoff.performService("Search With %WebSearchProvider@", with: pasteboard)
 	}
 
 	@objc func lookUpInDictionary(_: Any?) {
@@ -142,7 +142,7 @@ extension MenuActionController {
 	private func openLog(at url: URL?) {
 		guard let url else { return }
 		if FileManager.default.fileExists(atPath: url.path) {
-			NSWorkspace.shared.open(url)
+			SystemHandoff.open(url)
 			return
 		}
 		Alerts.present(AlertRequest(

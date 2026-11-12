@@ -14,9 +14,7 @@ final class FileTransferWorkspace {
 	private let acquireAccess: @MainActor (URL) -> FileTransferAccessLease
 
 	init(
-		openFile: @escaping @MainActor (URL) async throws -> Void = {
-			_ = try await NSWorkspace.shared.open($0, configuration: .init())
-		},
+		openFile: @escaping @MainActor (URL) async throws -> Void = { try await SystemHandoff.openFile($0) },
 		acquireAccess: @escaping @MainActor (URL) -> FileTransferAccessLease = { FileTransferAccessLease(url: $0) }
 	) {
 		self.openFile = openFile
@@ -64,7 +62,7 @@ final class FileTransferWorkspace {
 		let leases = files.map { acquireAccess($0.accessURL) }
 
 		withExtendedLifetime(leases) {
-			NSWorkspace.shared.activateFileViewerSelecting(files.map(\.url))
+			SystemHandoff.reveal(files.map(\.url))
 		}
 	}
 }

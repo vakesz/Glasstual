@@ -121,6 +121,7 @@ private struct OnboardingNetworkDetailView: View {
 			if let websiteURL = picker.websiteURL {
 				Link(websiteURL.host() ?? websiteURL.absoluteString, destination: websiteURL)
 					.font(.callout)
+					.environment(\.openURL, SystemHandoff.linkAction)
 			}
 		}
 	}

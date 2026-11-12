@@ -62,7 +62,6 @@ private struct SettingsSceneRoot: View {
 /// routing, pane layout, and presentation.
 struct SettingsRootView: View {
 	@Bindable var model: SettingsModel
-	@Environment(\.openURL) private var openURL
 
 	private var selection: Binding<SettingsPane?> {
 		Binding(
@@ -148,7 +147,7 @@ struct SettingsRootView: View {
 		}
 		.onChange(of: model.externalURL) { _, url in
 			guard let url else { return }
-			openURL(url)
+			SystemHandoff.open(url)
 			model.externalURL = nil
 		}
 	}

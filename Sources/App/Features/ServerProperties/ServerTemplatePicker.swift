@@ -79,6 +79,7 @@ private struct ServerTemplateDetailView: View {
 				if let websiteURL {
 					LabeledContent(.ServerProperties.templateWebsite) {
 						Link(websiteURL.host() ?? websiteURL.absoluteString, destination: websiteURL)
+							.environment(\.openURL, SystemHandoff.linkAction)
 					}
 				}
 			} header: {

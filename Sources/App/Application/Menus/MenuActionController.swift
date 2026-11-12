@@ -262,7 +262,7 @@ extension MenuActionController: ChatSessionPresenting {
 /// The sheets the IRC layer raises, and the one folder it asks to be shown.
 extension MenuActionController: MenuPresenting {
 	func revealInFinder(_ url: URL) {
-		NSWorkspace.shared.open(url)
+		SystemHandoff.open(url)
 	}
 
 	func toggleMuteOnNotificationSoundsShortcut(on muted: Bool) {

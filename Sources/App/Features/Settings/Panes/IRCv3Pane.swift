@@ -245,6 +245,7 @@ private struct SettingsCapabilityToggle: View {
 					Text(specificationTitle)
 				}
 				.font(.callout)
+				.environment(\.openURL, SystemHandoff.linkAction)
 			}
 		}
 		.padding(.vertical, 2)

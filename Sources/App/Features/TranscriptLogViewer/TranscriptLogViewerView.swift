@@ -193,7 +193,7 @@ struct TranscriptLogViewerView: View {
 				.disabled(model.hasMatches == false)
 				Button(.TranscriptLogViewer.showInFinder, systemImage: "folder") {
 					if let url = model.revealURL {
-						NSWorkspace.shared.activateFileViewerSelecting([url])
+						SystemHandoff.reveal([url])
 					}
 				}
 				.disabled(model.revealURL == nil)

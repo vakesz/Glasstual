@@ -14,22 +14,12 @@ private let openLinkLogger = Logger(
 enum OpenLink {
 	/** Hands a URL the allowlist has already cleared to the system.
 
-	 `NSWorkspace` launches whatever app has registered the scheme, so this is
-	 the last step of a launch a remote peer asked for. It is a stored value
+	 The system launches whatever app has registered the scheme, so this is
+	 the last step of a launch a remote peer asked for. ``SystemHandoff`` only
+	 makes it for an interactive launch. It is a stored value
 	 rather than a call so that ``opener`` can stand somewhere else in a test. */
 	static let workspaceOpener: @MainActor (URL, Bool) -> Void = { url, inBackground in
-		guard inBackground else {
-			NSWorkspace.shared.open(url)
-
-			return
-		}
-
-		/* User should not be clicking links frequently enough that
-		 we need to worry about making the configuration static. */
-		let configuration = NSWorkspace.OpenConfiguration()
-		configuration.activates = false
-
-		NSWorkspace.shared.open(url, configuration: configuration)
+		SystemHandoff.open(url, activates: inBackground == false)
 	}
 
 	/** Where a URL goes once ``open(url:inBackground:)`` has cleared it.

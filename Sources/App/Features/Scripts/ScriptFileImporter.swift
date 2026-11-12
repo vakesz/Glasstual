@@ -91,7 +91,7 @@ enum ScriptFileImporter {
 				about: Self.noticeScope
 			)
 			// Application Scripts is read-only to the sandbox. Finder performs the copy.
-			NSWorkspace.shared.activateFileViewerSelecting([url, scriptsURL])
+			SystemHandoff.reveal([url, scriptsURL])
 		} catch {
 			await presentImportError(error)
 		}

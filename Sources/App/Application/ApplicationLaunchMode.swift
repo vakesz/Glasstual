@@ -72,6 +72,13 @@ enum ApplicationLaunchMode: Equatable {
 		self == .interactive
 	}
 
+	/// Whether the application may open a URL or a file in another
+	/// application, reveal one in the Finder or open the Help viewer. The test
+	/// host and the harness run on a person's own login while they work.
+	var handsOffToSystem: Bool {
+		self == .interactive
+	}
+
 	/// Whether quitting removes the run's settings suite, files and secrets.
 	var removesRunStateOnQuit: Bool {
 		self == .endToEnd(keepsRunState: false)

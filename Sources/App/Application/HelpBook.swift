@@ -39,9 +39,6 @@ enum HelpBook {
 
 	/// Opens the Help viewer at `anchor`.
 	static func open(_ anchor: HelpAnchor) {
-		NSHelpManager.shared.openHelpAnchor(
-			NSHelpManager.AnchorName(anchor.rawValue),
-			inBook: name().map { NSHelpManager.BookName($0) }
-		)
+		SystemHandoff.openHelp(anchor: anchor.rawValue, book: name())
 	}
 }

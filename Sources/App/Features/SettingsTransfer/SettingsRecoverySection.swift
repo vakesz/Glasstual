@@ -57,9 +57,9 @@ struct SettingsRecoverySection: View {
 			if let newest = session.backups.first {
 				/* Reveal the newest backup rather than opening the folder: the
 				 Finder window comes up with the file selected, and a folder URL
-				 handed to `openURL` is a document the workspace opens. */
+				 handed to the workspace is a document the workspace opens. */
 				Button(.SettingsTransfer.showBackups) {
-					NSWorkspace.shared.activateFileViewerSelecting([newest.url])
+					SystemHandoff.reveal([newest.url])
 				}
 			}
 		} header: {
