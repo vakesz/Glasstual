@@ -42,6 +42,7 @@ enum Registry {
 		WebSocketSecureScenario(),
 		DCCSecureScenario(),
 		DCCSecureChangedScenario(),
+		DCCSecureChatScenario(),
 		XDCCRequestScenario(),
 		AccountRegistrationScenario(),
 		MetadataEditScenario(),
