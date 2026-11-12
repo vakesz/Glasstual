@@ -153,14 +153,11 @@ final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, CustomK
 
 	private func installWindowChrome() {
 		/* `.fullSizeContentView` is what lets the sidebar material run the full
-		 height of the window, behind the traffic lights, and the transparent
-		 titlebar is what lets the transcript and the member list run up under
-		 the toolbar the way Mail's and Notes' content does. What keeps the
-		 toolbar legible over them is the scroll edge effect the columns declare
-		 in SwiftUI, not an opaque bar: an opaque titlebar draws a hard seam
-		 across the window and forces every column to be inset below it by hand
-		 instead. `.none` for the separator for the same reason -- the edge
-		 effect is the separation. */
+		 height of the window, behind the traffic lights. The titlebar itself
+		 draws nothing: each column draws what sits behind its part of the
+		 toolbar, and the transcript draws an opaque strip in its own background
+		 there so messages never show through the window title. `.none` for the
+		 separator because a line across the window would cut the sidebar. */
 		styleMask.insert(.fullSizeContentView)
 		titlebarAppearsTransparent = true
 		titlebarSeparatorStyle = .none

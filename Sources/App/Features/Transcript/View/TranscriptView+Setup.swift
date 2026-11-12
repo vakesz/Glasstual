@@ -156,13 +156,22 @@ extension TranscriptView {
 	}
 
 	func addSubviewsAndActivateConstraints() {
+		toolbarBackdrop.wantsLayer = true
+		toolbarBackdrop.translatesAutoresizingMaskIntoConstraints = false
 		addSubview(scrollView)
+		addSubview(toolbarBackdrop)
 		addSubview(topicBar)
 		addSubview(jumpToLatest)
 		/* The topic bar is pinned under the toolbar, over the text: the
 		 transcript scrolls beneath both, and the top content inset keeps the
-		 first line clear of them. */
+		 first line clear of them. Both are opaque, in the transcript's
+		 background, so the text passing beneath never shows through the window
+		 title or the topic. */
 		NSLayoutConstraint.activate([
+			toolbarBackdrop.topAnchor.constraint(equalTo: topAnchor),
+			toolbarBackdrop.leadingAnchor.constraint(equalTo: leadingAnchor),
+			toolbarBackdrop.trailingAnchor.constraint(equalTo: trailingAnchor),
+			toolbarBackdrop.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
 			topicBar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
 			topicBar.leadingAnchor.constraint(equalTo: leadingAnchor),
 			topicBar.trailingAnchor.constraint(equalTo: trailingAnchor),

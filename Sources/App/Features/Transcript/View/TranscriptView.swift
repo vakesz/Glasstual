@@ -38,6 +38,10 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 
 	let themeStore: ThemeStore
 	let topicBar: TranscriptTopicBar
+	/// The opaque strip behind the toolbar, in the transcript's own background:
+	/// the window title and its subtitle sit over it, and messages scrolling
+	/// beneath them made both unreadable.
+	let toolbarBackdrop = NSView()
 	let scrollView = NSScrollView()
 	/* SwiftUI owns controls; this adapter only hosts them. */
 	let jumpToLatest = NSHostingView(rootView: TranscriptJumpToLatestButton(action: {}))
@@ -308,6 +312,7 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	private func applyThemeNow() {
 		let controller = themeStore
 		layer?.backgroundColor = controller.backgroundColor.cgColor
+		toolbarBackdrop.layer?.backgroundColor = controller.backgroundColor.cgColor
 		textView.insertionPointColor = controller.resolved(controller.theme.palette.primaryText)
 		refreshTopicBar()
 		rebuild()

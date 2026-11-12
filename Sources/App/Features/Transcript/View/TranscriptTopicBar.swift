@@ -45,14 +45,12 @@ final class TranscriptTopicBar: NSView {
 	private var lineHeightCache: (font: NSFont, height: CGFloat)?
 
 	private let themeStore: ThemeStore
-	/** What the bar is drawn on. The transcript scrolls beneath the bar, so
-	 the bar keeps its text legible the way a table's floating header does:
-	 with the system's header material, which follows Reduce Transparency and
-	 Increase Contrast by itself. It is a material, not glass: glass is for
-	 controls, and the bar is content's own heading. */
-	private let backdrop = NSVisualEffectView()
-	/// The edge under the bar, drawn only when the reader asked for more
-	/// contrast, where the material alone does not separate the bar enough.
+	/** What the bar is drawn on: the transcript's own background, opaque. The
+	 transcript scrolls beneath the bar, and a material let the messages show
+	 through the topic. */
+	private let backdrop = NSView()
+	/// The edge under the bar, which is what separates it from the messages
+	/// now that both are drawn on the same colour.
 	private let separator = NSBox()
 
 	init(themeStore: ThemeStore = AppServices.theme) {
@@ -101,6 +99,7 @@ final class TranscriptTopicBar: NSView {
 	 what somebody actually set. */
 	func refresh(modes: String?) {
 		modeCaption = modes
+		backdrop.layer?.backgroundColor = themeStore.backgroundColor.cgColor
 		let topic = attributedTopic(topicText)
 		let displayed = NSMutableAttributedString()
 		/* Isolated, so the topic's own direction cannot carry the caption after
@@ -138,15 +137,6 @@ final class TranscriptTopicBar: NSView {
 		updateDisclosure()
 	}
 
-	override func viewDidChangeEffectiveAppearance() {
-		super.viewDidChangeEffectiveAppearance()
-		updateSeparator()
-	}
-
-	private func updateSeparator() {
-		separator.isHidden = NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast == false
-	}
-
 	// MARK: - Construction
 
 	private func configure() {
@@ -168,13 +158,10 @@ final class TranscriptTopicBar: NSView {
 		disclosure.setContentCompressionResistancePriority(.required, for: .horizontal)
 		applyExpansion()
 
-		backdrop.material = .headerView
-		backdrop.blendingMode = .withinWindow
-		backdrop.state = .followsWindowActiveState
+		backdrop.wantsLayer = true
 		backdrop.translatesAutoresizingMaskIntoConstraints = false
 		separator.boxType = .separator
 		separator.translatesAutoresizingMaskIntoConstraints = false
-		updateSeparator()
 
 		addSubview(backdrop)
 		addSubview(separator)
