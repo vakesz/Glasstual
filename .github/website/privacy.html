@@ -4,20 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Privacy - Glasstual</title>
-    <meta name="description" content="How Glasstual handles IRC connections, local data, Spotlight, file transfers, and support requests.">
+    <meta name="description" content="What Glasstual stores on your Mac, what it sends to IRC networks, proxies and file-transfer peers, and when it fetches images.">
     <meta name="robots" content="index, follow">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <link rel="canonical" href="https://vakesz.github.io/Glasstual/privacy.html">
-    <link rel="icon" href="assets/app-icon.png">
-    <link rel="apple-touch-icon" href="assets/app-icon.png">
+    <link rel="icon" type="image/png" href="assets/app-icon-64.png">
+    <link rel="apple-touch-icon" href="assets/app-icon-192.png">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Glasstual">
     <meta property="og:title" content="Privacy - Glasstual">
-    <meta property="og:description" content="How Glasstual handles IRC connections, local data, Spotlight, file transfers, and support requests.">
+    <meta property="og:description" content="What Glasstual stores on your Mac, what it sends to IRC networks, proxies and file-transfer peers, and when it fetches images.">
     <meta property="og:url" content="https://vakesz.github.io/Glasstual/privacy.html">
     <meta property="og:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Glasstual, an IRC client for macOS">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Privacy - Glasstual">
+    <meta name="twitter:description" content="What Glasstual stores on your Mac, what it sends to IRC networks, proxies and file-transfer peers, and when it fetches images.">
+    <meta name="twitter:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta name="twitter:image:alt" content="Glasstual, an IRC client for macOS">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -25,7 +33,7 @@
     <header class="site-header">
       <div class="shell">
         <a class="wordmark" href="index.html" aria-label="Glasstual home">
-          <img src="assets/app-icon.png" alt="" width="28" height="28">
+          <img src="assets/app-icon-64.png" alt="" width="28" height="28">
           <span>Glasstual</span>
         </a>
         <nav aria-label="Main navigation">
@@ -41,38 +49,72 @@
       <div class="shell document">
         <p class="eyebrow">Glasstual</p>
         <h1>Privacy</h1>
-        <p class="lead">Glasstual is an IRC client. It has no Glasstual account, advertising, or developer-operated analytics service. It connects to the networks and peers you choose and keeps its settings and chat history on your Mac.</p>
+        <p class="lead">Glasstual is an IRC client. It has no Glasstual account, no advertising, no analytics and no automatic update check. It connects to the networks and peers you choose and keeps its settings and chat history on your Mac.</p>
 
         <section aria-labelledby="local-data">
           <h2 id="local-data">Data on Your Mac</h2>
-          <p>Glasstual stores server settings, preferences, and local conversation history on your Mac. It can also save transcript log files if you turn on logging. Saved server, nickname, proxy, and channel passwords are stored in the macOS Keychain. Commands you configure to run when connecting may contain sensitive text and can remain in local settings or backups. Files you receive are saved in Downloads or a folder you select.</p>
-          <p>You can clear a conversation's scrollback in the app. Turning off transcript logging stops new log files from being written; it does not delete files already saved. Removing the app may leave its local data and Keychain items on your Mac. <a href="support.html">Contact support</a> if you need help removing them.</p>
+          <p>Glasstual stores server settings, preferences and the certificates you have trusted for encrypted file transfers in its own container on your Mac. It also keeps conversation history there, so it can restore conversations between sessions and search them. Transcript log files are written only if you turn logging on, to the folder you choose.</p>
+          <p>Server, account, proxy and channel passwords, OAuth tokens, SASL signing keys and the certificate Glasstual creates for encrypted file transfers are stored in the macOS Keychain. Commands you configure to run when connecting may contain sensitive text and stay in local settings. Files you receive are saved in Downloads or a folder you select, and are marked as downloaded from the internet.</p>
+          <p>An exported settings file never includes Keychain passwords or certificate references, and includes connect commands only if you choose to.</p>
+          <p>You can clear a conversation&#8217;s scrollback in the app. Turning off transcript logging stops new log files from being written; it does not delete files already saved. Removing the app may leave its local data and Keychain items on your Mac. <a href="support.html">Contact support</a> if you need help removing them.</p>
         </section>
 
         <section aria-labelledby="system-data">
           <h2 id="system-data">Spotlight, Shortcuts and Focus</h2>
           <p>By default Glasstual adds the names of your servers and channels, with the server name as a keyword, to the system Spotlight index on your Mac. Names of direct conversations are added only if you turn that setting on. Message text is never added. Turning the settings off removes the items Glasstual indexed.</p>
-          <p>Shortcuts actions run on your Mac and act on the servers and conversations you choose. A Focus filter only changes how Glasstual notifies you while that Focus is active.</p>
+          <p>Shortcuts actions run on your Mac and act on the servers and conversations you choose; sending a message asks you to confirm it first. A Focus filter only changes how Glasstual notifies you and whether it sets you away while that Focus is active.</p>
         </section>
 
         <section aria-labelledby="network-data">
           <h2 id="network-data">IRC Connections</h2>
-          <p>When you connect to an IRC network, Glasstual sends the connection details, nickname, authentication information, and messages needed to use that network. The network and other participants may see or retain what you send according to their own practices. Glasstual does not operate those networks. If you register an account, the email address you enter is sent to that IRC network.</p>
-          <p>Direct chat and file transfers can connect to another participant's computer. That participant may see your network address. If a DCC transfer needs to discover your public address and your router does not provide it, Glasstual contacts api.ipify.org by default. A setting can instead use wtfismyip.com, canhazip.com, or ifconfig.me, or avoid these lookups by using a router-only or manual address.</p>
+          <p>When you connect to an IRC network, Glasstual sends the connection details, nickname, authentication information and messages needed to use that network. The network and other participants may see or retain what you send according to their own practices. Glasstual does not operate those networks.</p>
+          <p>Some information is sent only on servers that support it:</p>
+          <ul>
+            <li>If you register an account, the account name, password and any email address you enter are sent to that network.</li>
+            <li>If you set a profile, its display name, picture address and color are stored by the server and shown to other people.</li>
+            <li>Typing notifications and the position you have read up to are shared by default. You can turn each off in IRCv3 settings.</li>
+            <li>Glasstual answers client-to-client (CTCP) requests such as VERSION by default. You can turn this off in Connection settings.</li>
+          </ul>
+          <p>If the server&#8217;s certificate was not checked, Glasstual asks before it sends your account password. If a connection that should be encrypted is not, the password is not sent.</p>
+        </section>
+
+        <section aria-labelledby="routing-data">
+          <h2 id="routing-data">WebSocket and Proxies</h2>
+          <p>A server set to WebSocket carries the same IRC data through the network&#8217;s WebSocket gateway. With &#8220;Connect securely&#8221; on, the connection is encrypted (<code>wss://</code>); without it, it is not (<code>ws://</code>).</p>
+          <p>A server set to use a SOCKS5 or HTTP proxy, or Tor, connects through it, so the IRC network sees the proxy&#8217;s address instead of yours. The proxy&#8217;s operator can see that you connect and where. Tor connections go through Tor Browser, which must be running. Choosing Connect Without Proxy connects directly that one time.</p>
+        </section>
+
+        <section aria-labelledby="dcc-data">
+          <h2 id="dcc-data">File Transfers and Direct Chats</h2>
+          <p>File transfers and direct chats (DCC) connect your Mac straight to the other participant&#8217;s computer, not through the IRC server and not through a server&#8217;s proxy. That participant sees your IP address. They are unencrypted unless you use the secure options, which encrypt the connection with TLS and identify each side by a certificate you choose whether to trust.</p>
+          <p>To tell the other side where to connect, Glasstual asks your router for your public address. If the router does not provide it, Glasstual contacts api.ipify.org by default. A setting can instead use one of wtfismyip.com, canhazip.com or ifconfig.me, or avoid these lookups by using a router-only or manual address.</p>
         </section>
 
         <section aria-labelledby="media-data">
           <h2 id="media-data">Links and Images</h2>
-          <p>If inline images are enabled, Glasstual may fetch images linked in messages over HTTP or HTTPS. The image host receives the request and may see your IP address. Opening a link sends you to your browser, whose privacy settings and the destination site's policy then apply. If inline images are enabled, Glasstual may also fetch the profile pictures people set on an IRC network, in the same way and through the same proxy.</p>
+          <p>Inline images are off by default. If you turn them on, Glasstual fetches images linked in messages over HTTP or HTTPS, with limits on size. The image host receives the request and can see your IP address. Each channel can turn them off separately. Glasstual does not fetch link previews.</p>
+          <p>Profile pictures that people set on a network are fetched the same way, only when both inline images and server profiles are turned on. If a network advertises its own icon, Glasstual fetches it for the sidebar whether or not inline images are on.</p>
+          <p>Images never go around a server&#8217;s proxy:</p>
+          <ul>
+            <li>With Tor, images, profile pictures and network icons load through Tor.</li>
+            <li>With a SOCKS5 or HTTP proxy, an image linked in a message loads through the proxy only when you click it. Profile pictures and network icons are not loaded.</li>
+            <li>If the proxy has no address, nothing is loaded.</li>
+          </ul>
+          <p>Before a link opens in your browser or another app, Glasstual asks. The app&#8217;s privacy settings and the destination site&#8217;s policy then apply.</p>
+        </section>
+
+        <section aria-labelledby="website-data">
+          <h2 id="website-data">This Website</h2>
+          <p>This site is hosted on GitHub Pages and uses no cookies or analytics. The home page asks GitHub&#8217;s API for the latest release so the download button can link to it. Both requests are subject to <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub&#8217;s privacy statement</a>.</p>
         </section>
 
         <section aria-labelledby="support-data">
           <h2 id="support-data">Support and Your Choices</h2>
-          <p>If you email us or open a GitHub issue, we receive the information you choose to provide. Please do not include passwords, private messages, or unredacted logs in a report. Support correspondence remains in our mailbox or issue history until it is deleted. You can ask us to delete our copy by emailing <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>. Public GitHub issues are also subject to <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub's privacy statement</a>.</p>
+          <p>If you email us or open a GitHub issue, we receive the information you choose to provide. Please do not include passwords, private messages or unredacted logs in a report. Support correspondence remains in our mailbox or issue history until it is deleted. You can ask us to delete our copy by emailing <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>. Public GitHub issues are also subject to GitHub&#8217;s privacy statement.</p>
           <p>Questions about this policy can be sent to <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>.</p>
         </section>
 
-        <p class="updated">Last updated November 7, 2026.</p>
+        <p class="updated">Last updated <time datetime="2026-11-12">November 12, 2026</time>.</p>
       </div>
     </main>
 
