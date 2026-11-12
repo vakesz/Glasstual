@@ -104,6 +104,9 @@ extension TranscriptView {
 		textView.onHeightChange = { [weak self] in
 			self?.documentHeightDidChange()
 		}
+		notifications.observe(.NSSystemTimeZoneDidChange) { [weak self] _ in
+			self?.reloadClock()
+		}
 		notifications.observe(NSView.frameDidChangeNotification, object: scrollView.contentView) { [weak self] _ in
 			guard let self else { return }
 			/* A reader at the end stays at the end when the viewport changes

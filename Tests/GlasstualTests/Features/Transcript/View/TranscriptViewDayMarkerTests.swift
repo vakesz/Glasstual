@@ -177,6 +177,23 @@ struct TranscriptViewDayMarkerTests {
 		view.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
 	}
 
+	@Test("A reader who changes time zone has the days marked again in the new one")
+	func timeZoneChangeMarksTheDaysAgain() throws {
+		let view = makeTranscriptView()
+		let utc = try calendar(in: "UTC")
+		let dates = try [14, 16].map { hour in
+			try #require(utc.date(from: DateComponents(year: 2026, month: 3, day: 10, hour: hour)))
+		}
+		view.appendLines([line("a", at: dates[0]), line("b", at: dates[1])])
+		#expect(datedLines(in: view) == ["a", "b"])
+
+		view.dayCalendar = try calendar(in: "Europe/London")
+		view.reloadClock()
+
+		#expect(datedLines(in: view) == ["a"])
+		#expect(drawnMarkers(in: view).count == 1)
+	}
+
 	@Test("A reader who turned date changes off is shown no marker, whatever a line arrives with")
 	func noMarkersWhenTurnedOff() {
 		var settings = TranscriptSettings.current()

@@ -303,6 +303,15 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 		}
 	}
 
+	/** Draws every line against the clock the reader has now.
+
+	 The time beside a line and the day it falls on are both the reader's time
+	 zone's, and both are worked out when a line is drawn. A reader who
+	 changes zone has the lines redrawn rather than left in the old one. */
+	func reloadClock() {
+		performEditingBatch { rebuild() }
+	}
+
 	/// Renders `body` with every theme role resolved to its light half, which is
 	/// what paper is. The flag is the renderer's only input for it.
 	func renderingForPrint<Output>(_ body: () -> Output) -> Output {
