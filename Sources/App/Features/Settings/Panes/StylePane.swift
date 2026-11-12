@@ -117,7 +117,10 @@ struct StylePane: View {
 		} header: {
 			Text(.TranscriptTheme.colors)
 		} footer: {
-			SettingsNote(.TranscriptTheme.roleColorNote)
+			VStack(alignment: .leading, spacing: 4) {
+				SettingsNote(.TranscriptTheme.roleColorNote)
+				SettingsNote(.TranscriptTheme.roleColorSystemNote)
+			}
 		}
 
 		Section {
@@ -231,7 +234,7 @@ struct StylePane: View {
 		LabeledContent {
 			Menu {
 				ForEach(TranscriptThemePreset.allCases) { preset in
-					Button(preset.title) {
+					Button(preset.displayTitle) {
 						requestPreset(preset)
 					}
 				}
@@ -273,7 +276,7 @@ struct StylePane: View {
 
 	private var pendingPresetTitle: String {
 		guard let preset = pendingPreset else { return "" }
-		return String(localized: .TranscriptTheme.replaceThemeConfirmation(preset.title))
+		return String(localized: .TranscriptTheme.replaceThemeConfirmation(preset.displayTitle))
 	}
 
 	private var currentPresetName: String {
@@ -285,7 +288,7 @@ struct StylePane: View {
 			return String(localized: .TranscriptTheme.bubbles)
 		}
 		if let preset = TranscriptThemePreset.allCases.first(where: { $0.theme() == theme }) {
-			return preset.title
+			return preset.displayTitle
 		}
 		return String(localized: .TranscriptTheme.customTheme)
 	}
@@ -422,18 +425,35 @@ struct StylePane: View {
 		Binding(
 			get: {
 				let pair = model.transcriptTheme.palette[keyPath: role.keyPath]
-				return Color(nsColor: (dark ? pair.dark : pair.light).color)
+				return Color(nsColor: pair.resolved(isDark: dark, systemColors: .standard(isDark: dark)))
 			},
 			set: { value in
 				guard let components = TranscriptThemeColor(NSColor(value)) else { return }
 				model.updateTheme {
+					var pair = Self.ownColors(for: $0.palette[keyPath: role.keyPath])
 					if dark {
-						$0.palette[keyPath: role.keyPath].dark = components
+						pair.dark = components
 					} else {
-						$0.palette[keyPath: role.keyPath].light = components
+						pair.light = components
 					}
+					$0.palette[keyPath: role.keyPath] = pair
 				}
 			}
 		)
+	}
+
+	/** The role as the colours the wells show, ready for one to be replaced.
+
+	 Choosing a colour stops a role following the system colour, so the other
+	 appearance keeps the system colour the reader saw in its well rather than
+	 jumping to the stored stand-in. */
+	private static func ownColors(for pair: AdaptiveTranscriptColor) -> AdaptiveTranscriptColor {
+		guard pair.system != nil,
+		      let light = TranscriptThemeColor(pair.resolved(isDark: false, systemColors: .standard(isDark: false))),
+		      let dark = TranscriptThemeColor(pair.resolved(isDark: true, systemColors: .standard(isDark: true)))
+		else {
+			return pair
+		}
+		return AdaptiveTranscriptColor(light: light, dark: dark)
 	}
 }

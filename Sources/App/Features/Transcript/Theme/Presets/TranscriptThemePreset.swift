@@ -5,6 +5,9 @@ import Foundation
 
 /** The shipped transcript themes beyond Lines and Bubbles.
 
+ Classic is the palette the default shipped before the default followed the
+ system colours, for a reader who preferred it.
+
  A preset is a value, not a format: applying one writes an ordinary versioned
  ``TranscriptTheme`` document, so import, export, validation and the
  increased-contrast pairs work exactly as they do for a hand-built theme. The
@@ -13,6 +16,7 @@ import Foundation
  in dark mode — which is what holds the AAA floors the contrast tests check.
  */
 nonisolated enum TranscriptThemePreset: String, CaseIterable, Identifiable, Sendable {
+	case classic
 	case github
 	case tokyoNight
 	case oneDark
@@ -24,19 +28,29 @@ nonisolated enum TranscriptThemePreset: String, CaseIterable, Identifiable, Send
 		rawValue
 	}
 
-	/** The name shown in the preset menu and stored on the applied theme.
+	/** The name stored on the applied theme.
 
 	 Proper nouns by design — GitHub, Tokyo Night, Dracula and the rest travel
 	 the way product names do — so they are stored verbatim and never
-	 localized. */
+	 localized. Classic is the one common word, so it is stored verbatim like
+	 the rest and shown through ``displayTitle``. */
 	var title: String {
 		switch self {
+		case .classic: "Classic"
 		case .github: "GitHub"
 		case .tokyoNight: "Tokyo Night"
 		case .oneDark: "One Dark"
 		case .dracula: "Dracula"
 		case .nord: "Nord"
 		case .solarized: "Solarized"
+		}
+	}
+
+	/// The name shown in the preset menu.
+	var displayTitle: String {
+		switch self {
+		case .classic: String(localized: .TranscriptTheme.classicPreset)
+		default: title
 		}
 	}
 
@@ -54,6 +68,7 @@ nonisolated enum TranscriptThemePreset: String, CaseIterable, Identifiable, Send
 
 	private var palette: TranscriptThemePalette {
 		switch self {
+		case .classic: .classic
 		case .github: .github
 		case .tokyoNight: .tokyoNight
 		case .oneDark: .oneDark

@@ -47,18 +47,30 @@ nonisolated struct TranscriptThemeColor: Codable, Equatable, Sendable {
  The stronger pair is optional because it is a statement about a colour
  somebody chose: the shipped palette has one for every role, and a colour the
  reader picked themselves speaks for itself in both settings, which is why
- editing `light` or `dark` drops the variant beside it. */
+ editing `light` or `dark` drops the variant beside it.
+
+ A role may instead follow a system colour. The stored pairs then stand in
+ wherever no resolved system colour is at hand, such as a printed copy, and
+ choosing a colour of one's own stops the role following the system. */
 nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable {
 	var light: TranscriptThemeColor {
-		didSet { highContrastLight = nil }
+		didSet {
+			highContrastLight = nil
+			system = nil
+		}
 	}
 
 	var dark: TranscriptThemeColor {
-		didSet { highContrastDark = nil }
+		didSet {
+			highContrastDark = nil
+			system = nil
+		}
 	}
 
 	private(set) var highContrastLight: TranscriptThemeColor?
 	private(set) var highContrastDark: TranscriptThemeColor?
+	/// The system colour this role follows, if any.
+	private(set) var system: TranscriptSystemColor?
 
 	init(light: TranscriptThemeColor, dark: TranscriptThemeColor) {
 		self.light = light
@@ -77,7 +89,22 @@ nonisolated struct AdaptiveTranscriptColor: Codable, Equatable, Sendable {
 		self.highContrastDark = highContrastDark
 	}
 
-	func resolved(isDark: Bool, increasesContrast: Bool = false) -> NSColor {
+	/// The role following `system`, with `fallback` as its stored pairs.
+	init(system: TranscriptSystemColor, fallback: AdaptiveTranscriptColor) {
+		self = fallback
+		self.system = system
+	}
+
+	/// The colour drawn for an appearance. A role that follows a system colour
+	/// draws it whenever `systemColors` has it resolved.
+	func resolved(
+		isDark: Bool,
+		increasesContrast: Bool = false,
+		systemColors: TranscriptSystemColors = .unresolved
+	) -> NSColor {
+		if let system, let resolved = systemColors[system] {
+			return resolved.color
+		}
 		let stronger = increasesContrast ? (isDark ? highContrastDark : highContrastLight) : nil
 		return (stronger ?? (isDark ? dark : light)).color
 	}
@@ -191,8 +218,16 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 
 	 Version 4 adds the window-chrome ground. `decoded(from:)` upgrades a
 	 version-3 document with the chrome copied from its transcript ground,
-	 which is what the columns stood on before they had a colour of their own. */
-	static let currentFormatVersion = 4
+	 which is what the columns stood on before they had a colour of their own.
+
+	 Version 5 lets a role follow a system colour, and the shipped default
+	 does. `decoded(from:)` upgrades an older document whose palette is still
+	 the one the default used to ship — the reader never chose a colour — to
+	 the system palette; any other palette is kept as it was. */
+	static let currentFormatVersion = 5
+
+	/// The versions `decoded(from:)` upgrades rather than refuses.
+	static let upgradableFormatVersions: ClosedRange<Int> = 3 ... 4
 
 	var formatVersion = currentFormatVersion
 	var name: String
@@ -248,41 +283,37 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 		palette: defaultPalette
 	)
 
-	/** The shipped colours.
+	/** The shipped default: the transcript in the system's own colours.
 
-	 Every role carries a second pair for the system's Increase Contrast
-	 setting. Those are not a darker shade for its own sake: each was picked to
-	 clear 7:1 against the ground it is drawn on — the WCAG AAA minimum, one
-	 step above the 4.5:1 the ordinary pair holds — and the dark ground itself
-	 drops to black so the whole transcript gains from it.
-	 `ThemePaletteContrastTests` holds both floors. */
-	static let defaultPalette = TranscriptThemePalette(
-		background: pair(light: 0xFFFFFF, dark: 0x1E1E1E, contrastLight: 0xFFFFFF, contrastDark: 0x000000),
-		primaryText: pair(light: 0x202124, dark: 0xF2F2F2, contrastLight: 0x000000, contrastDark: 0xFFFFFF),
-		secondaryText: pair(light: 0x5F5F64, dark: 0xC2C2C6, contrastLight: 0x3A3A3C, contrastDark: 0xEBEBEF),
-		/* A role of its own, added with the native transcript: timestamps used
-			to be drawn in `secondaryText`. These are deliberately a step quieter
-			than that — a timestamp is the least of what a line says — but the
-			text also sits on the bubble grounds, and the quietest ground is the
-			dark outgoing bubble, so the floor is the 4.5:1 the WCAG AA contrast
-			minimum asks of body text, which this is a point smaller than, measured
-			there: 4.59:1. The increased-contrast pair gives up that quietness,
-			which is the whole point of the setting. */
-		timestampText: pair(light: 0x68686D, dark: 0xB6B6B9, contrastLight: 0x3A3A3C, contrastDark: 0xEBEBEF),
-		eventText: pair(light: 0x65656A, dark: 0xB6B6B9, contrastLight: 0x2C2C2E, contrastDark: 0xEBEBF0),
-		link: pair(light: 0x0065D2, dark: 0x81B9FF, contrastLight: 0x003E9C, contrastDark: 0xDEEDFF),
-		localNickname: pair(light: 0x006B3C, dark: 0x67D99A, contrastLight: 0x004F2B, contrastDark: 0xC4F7DA),
-		remoteNickname: pair(light: 0x5B42A6, dark: 0xBCAAFF, contrastLight: 0x3B2A80, contrastDark: 0xEEE9FF),
-		highlightBackground: pair(
-			light: 0xFFF1B8, dark: 0x5C4710, contrastLight: 0xFFE066, contrastDark: 0x634A00
-		),
-		highlightText: pair(light: 0x202124, dark: 0xFFFFFF, contrastLight: 0x000000, contrastDark: 0xFFFFFF),
-		bubbleIncoming: pair(light: 0xE9E9EB, dark: 0x363638, contrastLight: 0xDCDCDE, contrastDark: 0x48484A),
-		bubbleOutgoing: pair(light: 0xD8ECFF, dark: 0x164A73, contrastLight: 0xC3E1FF, contrastDark: 0x1A5080),
-		unreadMarker: pair(light: 0xD70015, dark: 0xFF6961, contrastLight: 0xA30010, contrastDark: 0xFF8A80),
-		failure: pair(light: 0xB00020, dark: 0xFF9A92, contrastLight: 0x8B0016, contrastDark: 0xFFE6E4),
-		chromeBackground: pair(light: 0xFFFFFF, dark: 0x1E1E1E, contrastLight: 0xFFFFFF, contrastDark: 0x000000)
-	)
+	 The ground, text, links, the outgoing bubble, the highlight and the unread
+	 marker follow AppKit's semantic colours, so the transcript tracks light
+	 and dark, Increase Contrast and the reader's accent colour as Messages and
+	 Notes do. The nickname, incoming bubble and failure roles keep the Classic
+	 colours, which were chosen for the same white and #1E1E1E grounds the
+	 system text background resolves to. The Classic colours are also every
+	 role's stored pair, drawn wherever no system colour is resolved, such as
+	 a printed copy. `ThemePaletteContrastTests` measures the result. */
+	static let defaultPalette: TranscriptThemePalette = {
+		let classic = TranscriptThemePalette.classic
+		var palette = classic
+		let followed: [(WritableKeyPath<TranscriptThemePalette, AdaptiveTranscriptColor>, TranscriptSystemColor)] = [
+			(\.background, .textBackground),
+			(\.primaryText, .label),
+			(\.secondaryText, .secondaryLabel),
+			(\.timestampText, .secondaryLabel),
+			(\.eventText, .secondaryLabel),
+			(\.link, .link),
+			(\.highlightBackground, .findHighlight),
+			(\.highlightText, .textOnFindHighlight),
+			(\.bubbleOutgoing, .accentTint),
+			(\.unreadMarker, .red),
+			(\.chromeBackground, .textBackground),
+		]
+		for (role, system) in followed {
+			palette[keyPath: role] = AdaptiveTranscriptColor(system: system, fallback: classic[keyPath: role])
+		}
+		return palette
+	}()
 
 	static func pair(
 		light: UInt32,
@@ -311,8 +342,8 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 	}
 
 	/** The one way a stored or imported property list becomes a theme: decode,
-	 upgrade a version-3 document, refuse any other version this build does not
-	 write, and refuse anything the renderer could not draw. */
+	 upgrade a version-3 or version-4 document, refuse any other version this
+	 build does not write, and refuse anything the renderer could not draw. */
 	static func decoded(from data: Data) throws -> Self {
 		let decoder = PropertyListDecoder()
 		if (try? decoder.decode(FormatProbe.self, from: data))?.formatVersion == 3 {
@@ -326,8 +357,11 @@ nonisolated struct TranscriptTheme: Codable, Equatable, Sendable {
 			throw TranscriptThemeCodingError.invalidDocument
 		}
 
-		if decoded.formatVersion == 3 {
+		if upgradableFormatVersions.contains(decoded.formatVersion) {
 			decoded.formatVersion = currentFormatVersion
+			if decoded.palette == .classic {
+				decoded.palette = defaultPalette
+			}
 		}
 
 		guard decoded.formatVersion == currentFormatVersion else {

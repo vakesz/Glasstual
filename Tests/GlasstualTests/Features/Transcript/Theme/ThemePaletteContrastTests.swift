@@ -5,7 +5,7 @@ import AppKit
 @testable import Glasstual
 import Testing
 
-/** The shipped palette against the ground it is drawn on.
+/** The Classic palette against the ground it is drawn on.
 
  The transcript draws every one of these roles as text, some of it a point
  smaller than the body, so each has to clear the 4.5:1 the WCAG AA contrast
@@ -13,7 +13,7 @@ import Testing
  it is new — timestamps used to be drawn in `secondaryText` — and it is meant to
  be quieter than the secondary text beside it, which is exactly the choice that
  goes below the minimum if nobody measures it. */
-@Suite("Default transcript palette contrast")
+@Suite("Classic transcript palette contrast")
 struct ThemePaletteContrastTests {
 	private typealias Role = (name: String, color: KeyPath<TranscriptThemePalette, AdaptiveTranscriptColor>)
 
@@ -28,9 +28,9 @@ struct ThemePaletteContrastTests {
 		("failure", \.failure),
 	]
 
-	@Test("Every text role clears AA contrast against the default ground in both appearances")
+	@Test("Every text role clears AA contrast against the Classic ground in both appearances")
 	func textRolesClearAAContrast() {
-		let palette = TranscriptTheme.defaultPalette
+		let palette = TranscriptThemePalette.classic
 
 		for isDark in [false, true] {
 			let ground = palette.background.resolved(isDark: isDark)
@@ -45,7 +45,7 @@ struct ThemePaletteContrastTests {
 	/// Highlighted text is drawn on the highlight, not on the transcript ground.
 	@Test("Highlighted text clears AA contrast against the highlight it sits on")
 	func highlightTextClearsAAContrast() {
-		let palette = TranscriptTheme.defaultPalette
+		let palette = TranscriptThemePalette.classic
 
 		for isDark in [false, true] {
 			let ratio = palette.highlightText.resolved(isDark: isDark)
@@ -60,7 +60,7 @@ struct ThemePaletteContrastTests {
 	 something it does not give. */
 	@Test("Every role clears AAA contrast once increased contrast is asked for")
 	func highContrastRolesClearAAAContrast() {
-		let palette = TranscriptTheme.defaultPalette
+		let palette = TranscriptThemePalette.classic
 
 		for isDark in [false, true] {
 			let ground = palette.background.resolved(isDark: isDark, increasesContrast: true)
@@ -89,7 +89,7 @@ struct ThemePaletteContrastTests {
 	 clears the page can still fail there. */
 	@Test("Every text role clears the contrast floor against both bubble grounds")
 	func textRolesClearContrastOnBubbles() {
-		let palette = TranscriptTheme.defaultPalette
+		let palette = TranscriptThemePalette.classic
 
 		for increasesContrast in [false, true] {
 			let floor = increasesContrast ? 7.0 : 4.5
@@ -114,7 +114,7 @@ struct ThemePaletteContrastTests {
 	/// what it may not do is recede out of legibility.
 	@Test("The timestamp is quieter than the secondary text it used to share")
 	func timestampIsQuieterThanSecondaryText() {
-		let palette = TranscriptTheme.defaultPalette
+		let palette = TranscriptThemePalette.classic
 
 		for isDark in [false, true] {
 			let ground = palette.background.resolved(isDark: isDark)
@@ -146,7 +146,8 @@ struct TranscriptThemeChromeContrastTests {
 				for highContrast in [false, true] {
 					let ground = Self.srgb(palette.chromeBackground.resolved(
 						isDark: isDark,
-						increasesContrast: highContrast
+						increasesContrast: highContrast,
+						systemColors: .resolve(in: appearance, increasesContrast: highContrast)
 					))
 					measured.append(ChromeMeasurement(
 						title: title,

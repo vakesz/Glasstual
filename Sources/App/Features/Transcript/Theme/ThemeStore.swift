@@ -32,6 +32,9 @@ nonisolated struct ThemeSnapshot: Sendable, Equatable {
 	/// Whether the reader has asked the system for increased contrast, which
 	/// picks the stronger half of every colour role.
 	let increasesContrast: Bool
+	/// The system colours resolved for this appearance, which the roles that
+	/// follow a system colour draw.
+	var systemColors: TranscriptSystemColors = .unresolved
 
 	var timestampFormat: String {
 		transcript.timestampFormat
@@ -172,6 +175,12 @@ final class ThemeStore {
 		) { [weak self] _ in
 			self?.appearanceDidChange()
 		}
+
+		/* Choosing another accent or highlight colour in System Settings changes
+		 what the system colours resolve to without any appearance switch. */
+		notifications.observe(NSColor.systemColorsDidChangeNotification) { [weak self] _ in
+			self?.appearanceDidChange()
+		}
 	}
 
 	func reload() {
@@ -242,7 +251,8 @@ final class ThemeStore {
 	func resolved(_ color: AdaptiveTranscriptColor) -> NSColor {
 		color.resolved(
 			isDark: snapshot.isDarkAppearance,
-			increasesContrast: snapshot.increasesContrast
+			increasesContrast: snapshot.increasesContrast,
+			systemColors: snapshot.systemColors
 		)
 	}
 
@@ -270,7 +280,8 @@ final class ThemeStore {
 		let next = ThemeSnapshot(
 			transcript: transcript ?? theme,
 			isDarkAppearance: appearance.isDark,
-			increasesContrast: appearance.increasesContrast
+			increasesContrast: appearance.increasesContrast,
+			systemColors: appearance.systemColors
 		)
 
 		LiveThemeSnapshot.publish(next)
@@ -289,12 +300,17 @@ final class ThemeStore {
 struct ThemeAppearance: Equatable, Sendable {
 	var isDark: Bool
 	var increasesContrast: Bool
+	var systemColors: TranscriptSystemColors = .unresolved
 
-	/// The application's resolved appearance and the system's contrast setting.
+	/// The application's resolved appearance, the system's contrast setting
+	/// and the system colours they resolve to.
 	static func current() -> ThemeAppearance {
-		ThemeAppearance(
-			isDark: AppServices.appearance.properties.isDarkAppearance,
-			increasesContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+		let isDark = AppServices.appearance.properties.isDarkAppearance
+		let increasesContrast = NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+		return ThemeAppearance(
+			isDark: isDark,
+			increasesContrast: increasesContrast,
+			systemColors: .current(isDark: isDark, increasesContrast: increasesContrast)
 		)
 	}
 }

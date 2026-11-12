@@ -97,6 +97,54 @@
         }
       }
     },
+    "classic-preset": {
+      "comment": "Transcript theme preset name: the colors the app used before its default theme followed the system colors.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classic"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klassisch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clásico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classique"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasszikus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クラシック"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clássico"
+          }
+        }
+      }
+    },
     "colors": {
       "comment": "Transcript theme colors section title.",
       "extractionState": "manual",
@@ -1245,6 +1293,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cada função armazena cores sRGB claras e escuras separadas na lista de propriedades exportada, além do par mais forte usado com Aumentar contraste ativado. A cor que você escolhe aqui é a que os dois ajustes usam."
+          }
+        }
+      }
+    },
+    "role-color-system-note": {
+      "comment": "Footer below the transcript color roles, explaining that the default theme follows the system colors.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the default theme, the background, text, links, highlights and your outgoing bubble follow the system colors, including your accent color. Choosing a color for a role replaces its system color."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Standarddesign folgen Hintergrund, Text, Links, Hervorhebungen und Ihre ausgehende Sprechblase den Systemfarben, einschließlich Ihrer Akzentfarbe. Wenn Sie für eine Rolle eine Farbe wählen, ersetzt sie deren Systemfarbe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el tema predeterminado, el fondo, el texto, los enlaces, los resaltados y tu burbuja saliente siguen los colores del sistema, incluido tu color de acento. Si eliges un color para un rol, sustituye su color del sistema."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans le thème par défaut, l’arrière-plan, le texte, les liens, les surlignages et votre bulle sortante suivent les couleurs du système, y compris votre couleur d’accentuation. Choisir une couleur pour un rôle remplace sa couleur système."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az alapértelmezett témában a háttér, a szöveg, a hivatkozások, a kiemelések és a kimenő buborék a rendszerszíneket követi, a kiemelőszínt is beleértve. Ha egy szerephez színt választ, az felváltja a rendszerszínt."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルトのテーマでは、背景、テキスト、リンク、ハイライト、送信したバブルがアクセントカラーを含むシステムカラーに従います。ロールに色を選ぶと、そのシステムカラーの代わりに使われます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tema padrão, o fundo, o texto, os links, os destaques e o seu balão de saída seguem as cores do sistema, incluindo sua cor de destaque. Escolher uma cor para uma função substitui a cor do sistema."
           }
         }
       }
