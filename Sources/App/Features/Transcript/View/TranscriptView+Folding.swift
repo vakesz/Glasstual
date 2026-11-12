@@ -26,11 +26,15 @@ extension TranscriptView {
 		redrawFoldedLines(changed)
 	}
 
-	/// Computes the new rows' presentations before they are drawn. The existing
-	/// summary, if it changed, is the only old row that needs a redraw.
-	func foldInsertedLines(_ newLines: [TranscriptRow], at index: Int) -> Set<String> {
+	/** Computes the new rows' presentations before they are drawn. The existing
+	 summary, if it changed, is the only old row that needs a redraw.
+
+	 `regroups` says a row already held gained or lost a marker with this
+	 insertion. A marker ends a group, so the groups around that row are no
+	 longer the ones the folding state remembers. */
+	func foldInsertedLines(_ newLines: [TranscriptRow], at index: Int, regroups: Bool = false) -> Set<String> {
 		let policy = foldingPolicy(for: newLines)
-		if document.folding.rowCount == document.count, index == 0 || index == document.count {
+		if regroups == false, document.folding.rowCount == document.count, index == 0 || index == document.count {
 			return if index == 0 {
 				document.folding.prepend(
 					rows: newLines, generalEventDisplay: policy.generalEventDisplay,

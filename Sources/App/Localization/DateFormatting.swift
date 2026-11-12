@@ -207,6 +207,17 @@ nonisolated enum DateFormatting {
 		return formatted(date, dateStyle: dateStyle, timeStyle: timeStyle, relative: relative)
 	}
 
+	/// The day `date` falls on in `calendar`, written out in the reader's
+	/// locale: what a transcript prints above the first line of a day.
+	static func dayHeading(_ date: Date, calendar: Calendar) -> String {
+		date.formatted(Date.FormatStyle(
+			date: .long,
+			time: .omitted,
+			calendar: calendar,
+			timeZone: calendar.timeZone
+		))
+	}
+
 	private static func formatStyleDate(for style: DateFormatter.Style) -> Date.FormatStyle.DateStyle {
 		switch style {
 		case .none: .omitted

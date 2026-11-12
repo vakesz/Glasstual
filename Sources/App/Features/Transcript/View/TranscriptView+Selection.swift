@@ -124,10 +124,29 @@ extension TranscriptView {
 		 viewport, and a point above the first line names the end of the
 		 document, not its start. The first line is what they are looking at. */
 		let probe = NSPoint(x: textView.textContainerOrigin.x, y: max(top, textView.textContainerOrigin.y))
-		let index = textView.characterIndexForInsertion(at: probe)
+		let index = indexBelowDateMarker(at: textView.characterIndexForInsertion(at: probe))
 		guard let endpoint = selectionEndpoint(at: index),
 		      let verticalPosition = verticalPosition(at: index) else { return nil }
 		return (endpoint, verticalPosition - top)
+	}
+
+	/** Where the line's own text begins, if `index` is in its date marker.
+
+	 The marker belongs to whichever line is first of its day, and moves off
+	 this one when an older line of the same day goes in above. The line's
+	 text stays, so that is what a viewport is anchored to. A row that draws
+	 nothing but its markers keeps the index it was given. */
+	private func indexBelowDateMarker(at index: Int) -> Int {
+		guard let storage = textView.textStorage, index < storage.length,
+		      let line = lineIndex(containing: index) else { return index }
+		let lineRange = NSRange(location: document.location(ofLineAt: line), length: document.length(ofLineAt: line))
+		var marker = NSRange()
+		let segment = storage.attribute(
+			.transcriptSelectionSegment, at: index, longestEffectiveRange: &marker, in: lineRange
+		) as? String
+		guard segment == TranscriptMarker.date("").selectionSegment, NSMaxRange(marker) < NSMaxRange(lineRange)
+		else { return index }
+		return NSMaxRange(marker)
 	}
 
 	/// The top of the line holding `index`, in the text view's coordinates.
@@ -154,9 +173,14 @@ extension TranscriptView {
 	func restoreViewport(_ anchor: (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)) {
 		/* The line the viewport was anchored to may not have survived the edit.
 		 Keeping the reader where they are beats jumping them to the top of a
-		 transcript they had scrolled away from. */
+		 transcript they had scrolled away from.
+
+		 A date marker is the exception: it moves to another line when a line
+		 of the same day goes in above its own, and the line it stood on is
+		 still where the reader was. */
 		guard window != nil, !isHiddenOrHasHiddenAncestor,
-		      let index = position(anchor.endpoint) else { return }
+		      let index = position(anchor.endpoint) ?? range(ofLine: anchor.endpoint.lineNumber)?.location
+		else { return }
 		/* Until the viewport is laid out again, TextKit 2 answers with where
 		 the line was before the edit: text that went in above it has not
 		 moved it yet. Scrolling to that place leaves the viewport where it

@@ -104,6 +104,26 @@ nonisolated struct TranscriptRow: Equatable, Sendable {
 		)
 	}
 
+	/** Gives the row the date marker `caption`, or none, and answers whether
+	 that changed it. The marker is drawn last, directly above the line: an
+	 unread or session boundary on the same line stays above the date. */
+	@discardableResult
+	mutating func setDateMarker(_ caption: String?) -> Bool {
+		var updated = markers.filter { marker in
+			if case .date = marker {
+				false
+			} else {
+				true
+			}
+		}
+		if let caption {
+			updated.append(.date(caption))
+		}
+		guard updated != markers else { return false }
+		markers = updated
+		return true
+	}
+
 	mutating func mergeReactions(_ delta: [String: [String]]) {
 		for (emoji, nicknames) in delta {
 			for nickname in nicknames where !reactions[emoji, default: []].contains(nickname) {

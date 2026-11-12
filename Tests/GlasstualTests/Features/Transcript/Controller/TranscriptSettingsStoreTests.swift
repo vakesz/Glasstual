@@ -57,7 +57,7 @@ struct TranscriptSettingsStoreTests {
 			first.tearDown(.permanentRemoval)
 			second.tearDown(.permanentRemoval)
 		}
-		#expect(first.makeRenderContext().showsDateChanges)
+		#expect(first.ensureBackingView().dayMarkers != nil)
 
 		source.settings.showsDateChanges = false
 		source.settings.textRules.highlightMatchingMethod = .regularExpression
@@ -66,7 +66,7 @@ struct TranscriptSettingsStoreTests {
 
 		for controller in [first, second] {
 			let context = controller.makeRenderContext()
-			#expect(context.showsDateChanges == false)
+			#expect(controller.ensureBackingView().dayMarkers == nil)
 			#expect(context.textPolicy.highlightMatchingMethod == .regularExpression)
 			#expect(context.textPolicy.linkSchemes.permittedSchemes == ["x-test"])
 		}

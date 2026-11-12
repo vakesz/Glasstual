@@ -186,13 +186,29 @@ extension TranscriptView {
 		document.range(ofLine: lineNumber)
 	}
 
-	/// Renders `newLines` and splices them into the document at `index`.
-	private func insert(_ newLines: [TranscriptRow], at index: Int) {
-		guard let storage = textView.textStorage, newLines.isEmpty == false else { return }
+	/** Renders `newLines` and splices them into the document at `index`.
+
+	 Which of them begins a day depends on the line each one lands under, so
+	 the date markers are settled here rather than taken from the rows: the
+	 new lines are marked against the line above the run, and the line below
+	 the run against the last of them. That line is the only old one whose
+	 marker can change, and it is redrawn when it does. */
+	private func insert(_ rows: [TranscriptRow], at index: Int) {
+		guard let storage = textView.textStorage, rows.isEmpty == false else { return }
 		let signposter = PerformanceSignposts.signposter
 		let interval = signposter.beginInterval("TranscriptInsert")
 		defer { signposter.endInterval("TranscriptInsert", interval) }
-		let changed = foldInsertedLines(newLines, at: index)
+		let dayMarkers = dayMarkers
+		let newLines = TranscriptDayMarkers.marking(
+			rows, after: index > 0 ? document[index - 1].receivedAt : nil, using: dayMarkers
+		)
+		var followingLine: String?
+		if index < document.count, let last = newLines.last,
+		   document.setDateMarker(dayMarkers?.caption(for: document[index].receivedAt, after: last.receivedAt), at: index)
+		{
+			followingLine = document[index].lineNumber
+		}
+		var changed = foldInsertedLines(newLines, at: index, regroups: followingLine != nil)
 		beginNicknameColorBatch()
 		let origin = document.location(ofLineAt: index)
 		var starts: [Int] = []
@@ -210,7 +226,11 @@ extension TranscriptView {
 			location += rendered.length
 		}
 		document.insert(newLines, at: index, starts: starts, totalLength: location - origin)
-		redrawFoldedLines(changed.subtracting(newLines.map(\.lineNumber)))
+		changed.subtract(newLines.map(\.lineNumber))
+		if let followingLine {
+			changed.insert(followingLine)
+		}
+		redrawFoldedLines(changed)
 	}
 
 	/// Removes the oldest `indices` lines and the characters they drew. Only the

@@ -135,7 +135,8 @@ struct TranscriptViewRotorTests {
 		try withTranscript { transcript in
 			#expect(transcript.accessibilityRotorItems(.messages).count == 2)
 			#expect(transcript.accessibilityRotorItems(.mentions).count == 1)
-			#expect(transcript.accessibilityRotorItems(.days).map(\.label) == ["Today"])
+			let day = TranscriptDayMarkers(calendar: transcript.dayCalendar).caption(for: Date(timeIntervalSince1970: 0))
+			#expect(transcript.accessibilityRotorItems(.days).map(\.label) == [day])
 			let mention = try #require(transcript.accessibilityRotorItems(.mentions).first)
 			#expect(mention.label.contains("ping"))
 		}
@@ -153,7 +154,7 @@ struct TranscriptViewRotorTests {
 		let transcript = controller.ensureBackingView()
 		window.contentView = transcript
 		transcript.appendLines([
-			row("one", text: "hello", markers: [.date("Today")]),
+			row("one", text: "hello"),
 			row("two", text: "ping you", isHighlight: true),
 			row("three", text: "joined", lineType: .join),
 		])

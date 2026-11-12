@@ -244,10 +244,9 @@ struct TranscriptViewFoldingTests {
 
 	@Test("Changing Collapse to Hide conceals retained events and preserves their markers until Show restores their bodies")
 	func displayChangesPreserveMarkers() throws {
-		try withTranscript { view, _ in
-			var first = line("first", kind: .join)
-			first.markers = [.date("Date boundary")]
-			view.appendLines([first, line("second", kind: .part), line("visible")])
+		try withTranscript(showsDateChanges: true) { view, _ in
+			let dateBoundary = TranscriptDayMarkers(calendar: view.dayCalendar).caption(for: line("first").receivedAt)
+			view.appendLines([line("first", kind: .join), line("second", kind: .part), line("visible")])
 			view.setUnreadMarker(.line("second"))
 			let conversation = try #require(view.viewController?.associatedConversation)
 			var config = conversation.config
@@ -256,7 +255,7 @@ struct TranscriptViewFoldingTests {
 			view.reloadFolding()
 			#expect(view.textView.string.contains("first body") == false)
 			#expect(view.textView.string.contains("second body") == false)
-			#expect(view.textView.string.contains("Date boundary"))
+			#expect(view.textView.string.contains(dateBoundary))
 			try expectUnreadMarker(in: view, lineNumber: "second")
 			#expect(view.textView.string.contains(String(localized: .Transcript.expandGeneralEvents(1))) == false)
 			#expect(view.textView.string.contains("visible body"))
@@ -265,7 +264,7 @@ struct TranscriptViewFoldingTests {
 			view.reloadFolding()
 			#expect(view.textView.string.contains("first body"))
 			#expect(view.textView.string.contains("second body"))
-			#expect(view.textView.string.components(separatedBy: "Date boundary").count == 2)
+			#expect(view.textView.string.components(separatedBy: dateBoundary).count == 2)
 			try expectUnreadMarker(in: view, lineNumber: "second")
 		}
 	}
@@ -290,8 +289,11 @@ struct TranscriptViewFoldingTests {
 		}
 	}
 
+	/// Date changes are off unless a test is about them: the first line drawn
+	/// carries its day's marker, and these tests read the text from its start.
 	private func withTranscript(
 		commands: TranscriptCommandSink = TranscriptCommandSink(),
+		showsDateChanges: Bool = false,
 		_ body: (TranscriptView, ServerSession) throws -> Void
 	) throws {
 		let session = ServerSession(config: ServerConfig())
@@ -304,7 +306,13 @@ struct TranscriptViewFoldingTests {
 			styleMask: .borderless, backing: .buffered, defer: false
 		)
 		window.isReleasedWhenClosed = false
-		let controller = TranscriptController(conversation: conversation, in: window, commands: commands)
+		var settings = TranscriptSettings.current()
+		settings.showsDateChanges = showsDateChanges
+		let controller = TranscriptController(
+			conversation: conversation, in: window,
+			settings: TranscriptSettingsStore(read: { settings }, center: NotificationCenter()),
+			commands: commands
+		)
 		defer {
 			controller.tearDown(.preservingRemoval)
 			window.close()

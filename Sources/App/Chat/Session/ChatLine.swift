@@ -88,6 +88,9 @@ enum ChatLineDeliveryState: UInt, Codable, Sendable {
  property list. */
 nonisolated struct ChatLine: Codable, Hashable, Sendable, CustomStringConvertible {
 	var isEncrypted = false
+	/// Whether the line fell on another day than the one printed before it.
+	/// Stored with the line; the transcript marks days by the lines it draws
+	/// next to each other, which history can change.
 	var isFirstForDay = false
 	var receivedAt = Date()
 	/// Present only when the server supplied the timestamp. Message identifiers

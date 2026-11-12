@@ -52,6 +52,14 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	/// are this view's, and everything that decides which line an edit reaches
 	/// is the document's.
 	var document = TranscriptDocument()
+	/// The calendar a day is told by: the reader's, and so their time zone.
+	var dayCalendar = Calendar.autoupdatingCurrent
+	/// How the lines are marked with the day they begin, or `nil` while the
+	/// reader has date changes turned off.
+	var dayMarkers: TranscriptDayMarkers? {
+		viewController?.settings.current.showsDateChanges == false ? nil : TranscriptDayMarkers(calendar: dayCalendar)
+	}
+
 	var editDepth = 0
 	var batchSelection: SelectionAnchor?
 	var batchViewport: (endpoint: SelectionAnchor.Endpoint, offset: CGFloat)?

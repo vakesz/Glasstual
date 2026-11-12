@@ -74,7 +74,6 @@ extension TranscriptController {
 			withAttributes: attributes,
 			members: request.context.members
 		)
-		let markers = markers(for: request)
 		let transcriptLine = TranscriptRow(
 			lineNumber: line.uniqueIdentifier,
 			receivedAt: line.receivedAt,
@@ -87,7 +86,7 @@ extension TranscriptController {
 			deliveryState: line.deliveryState,
 			deliveryFailureReason: nil,
 			reactions: request.context.reactions(for: line),
-			markers: markers,
+			markers: [],
 			body: body,
 			modeSymbol: line.modeSymbol,
 			historyCursor: line.historyCursor,
@@ -107,17 +106,5 @@ extension TranscriptController {
 			fromCurrentSession: line.fromCurrentSession,
 			processesInlineMedia: inlineMedia
 		)
-	}
-
-	private nonisolated static func markers( // nonisolated: pure
-		for request: TranscriptRenderRequest
-	)
-		-> [TranscriptMarker]
-	{
-		var result: [TranscriptMarker] = []
-		if request.line.isFirstForDay, request.context.showsDateChanges {
-			result.append(.date(DateFormatting.formatted(request.line.receivedAt, dateStyle: .long, timeStyle: .none, relative: false)))
-		}
-		return result
 	}
 }

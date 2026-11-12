@@ -398,6 +398,12 @@ struct TranscriptDocument {
 		return changed.sorted()
 	}
 
+	/// Gives the line at `index` the date marker `caption`, or none. `true`
+	/// when that changed the line and the caller has to redraw it.
+	mutating func setDateMarker(_ caption: String?, at index: Int) -> Bool {
+		lines[index].setDateMarker(caption)
+	}
+
 	/// Records a decoded image against the line that asked for it, in place of
 	/// the placeholder that stood for it. `nil` when the line has already been
 	/// trimmed, or already carries this image.

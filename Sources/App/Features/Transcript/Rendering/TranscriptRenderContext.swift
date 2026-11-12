@@ -76,12 +76,9 @@ nonisolated struct TranscriptRenderContext: Sendable {
 	/// The name of the conversation the lines are drawn in, which decides how a
 	/// private message that belongs to a channel is labelled.
 	var conversationName = ""
-	/// Whether a day boundary is drawn between lines. It is read from the
-	/// settings on the main actor and carried here, so rendering stays a
+	/// The setting facts the body renderer branches on. They are read from
+	/// the settings on the main actor and carried here, so rendering stays a
 	/// function of the values it was handed.
-	var showsDateChanges = false
-	/// The setting facts the body renderer branches on, taken on the main
-	/// actor for the same reason `showsDateChanges` is.
 	var textPolicy = TranscriptTextRules()
 	/// The conversation's members, for the mentions in a message and the mark
 	/// beside its sender. Empty where the lines rendered need neither.
@@ -133,7 +130,6 @@ nonisolated struct ChatLineSnapshot: Sendable {
 	var highlightKeywords: [String]?
 	var excludeKeywords: [String]?
 	var isEncrypted = false
-	var isFirstForDay = false
 	var fromCurrentSession = true
 	var modeSymbol = ""
 	var historyCursor: ScrollbackRowCursor?
@@ -167,7 +163,6 @@ nonisolated struct ChatLineSnapshot: Sendable {
 		highlightKeywords = chatLine.highlightKeywords
 		excludeKeywords = chatLine.excludeKeywords
 		isEncrypted = chatLine.isEncrypted
-		isFirstForDay = chatLine.isFirstForDay
 		fromCurrentSession = chatLine.fromCurrentSession
 		statusMessageTarget = chatLine.statusMessageTarget
 		channelContext = chatLine.channelContext
