@@ -31,6 +31,7 @@ struct OnboardingNotificationAuthorization {
 enum OnboardingStep: Int, CaseIterable, Identifiable {
 	case identity
 	case appearance
+	case interaction
 	case notifications
 	case network
 	case summary
@@ -43,6 +44,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 		switch self {
 		case .identity: .Onboarding.welcomeToGlasstual
 		case .appearance: .Onboarding.lookAndFeel
+		case .interaction: .Onboarding.howGlasstualAsks
 		case .notifications: .Onboarding.stepNotifications
 		case .network: .Onboarding.yourFirstNetwork
 		case .summary: .Onboarding.summary
@@ -53,6 +55,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
 		switch self {
 		case .identity: .Onboarding.glasstualIsAnIrcClientBuilt
 		case .appearance: .Onboarding.chooseHowConversationsAreDisplayed
+		case .interaction: .Onboarding.chooseHowQuestionsAppear
 		case .notifications: .Onboarding.chooseWhatGlasstualShouldTell
 		case .network: .Onboarding.pickANetworkToJoin
 		case .summary: .Onboarding.summaryReviewYourChoices
@@ -129,6 +132,7 @@ final class OnboardingModel {
 		settings.identity.realName = SettingsKeys.Identity.realName.detachedValue
 		settings.appearance.textSize = OnboardingTextSize(fontSize: AppServices.theme.theme.fontSize)
 		settings.appearance.preferredAppearance = SettingsKeys.Appearance.preferredAppearance.value
+		settings.interaction = SettingsKeys.Interaction.style.value
 
 		self.init(settings: settings)
 	}
@@ -201,7 +205,7 @@ final class OnboardingModel {
 			nicknameProblem == nil && alternateNicknameProblem == nil && realNameProblem == nil
 		case .network:
 			networkPicker.isValid
-		case .appearance, .notifications, .summary:
+		case .appearance, .interaction, .notifications, .summary:
 			true
 		}
 	}
@@ -239,6 +243,7 @@ final class OnboardingModel {
 
 		switch currentStep {
 		case .appearance: accepted.appearance = nil
+		case .interaction: accepted.interaction = nil
 		case .notifications: accepted.notifications = nil
 		case .network: accepted.network = nil
 		case .identity, .summary: break
@@ -292,6 +297,8 @@ final class OnboardingModel {
 			accepted.identity = settings.identity
 		case .appearance:
 			accepted.appearance = settings.appearance
+		case .interaction:
+			accepted.interaction = settings.interaction
 		case .notifications:
 			accepted.notifications = settings.notifications
 			requestNotificationAuthorization()
@@ -404,6 +411,9 @@ final class OnboardingModel {
 				SettingsKeys.Appearance.preferredAppearance.value = appearance.preferredAppearance
 				SettingsReload.perform(.appearance)
 			}
+		}
+		if let interaction = model.accepted.interaction {
+			SettingsKeys.Interaction.style.value = interaction
 		}
 		if let notifications = model.accepted.notifications {
 			SettingsKeys.Notifications.notifyAboutMentions.value = notifications.notifyAboutMentions

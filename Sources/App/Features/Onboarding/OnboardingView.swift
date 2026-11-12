@@ -120,6 +120,8 @@ struct OnboardingView: View {
 			OnboardingIdentityView(model: model, settings: model.settings)
 		case .appearance:
 			OnboardingAppearanceView(settings: model.settings)
+		case .interaction:
+			OnboardingInteractionView(settings: model.settings)
 		case .notifications:
 			OnboardingNotificationsView(model: model, settings: model.settings)
 		case .network:

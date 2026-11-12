@@ -245,13 +245,13 @@ struct OnboardingTests {
 		advance(model, to: .appearance)
 		model.settings.appearance.textSize = .large
 		#expect(model.advance() == false)
-		#expect(model.currentStep == .notifications)
+		#expect(model.currentStep == .interaction)
 		#expect(model.accepted.appearance?.textSize == .large)
 
 		model.moveBack()
 		model.skip()
 
-		#expect(model.currentStep == .notifications)
+		#expect(model.currentStep == .interaction)
 		#expect(model.accepted.appearance == nil)
 	}
 
@@ -430,6 +430,7 @@ struct OnboardingTests {
 			applySettings: { finished in
 				#expect(finished.accepted.identity?.nickname == "alice")
 				#expect(finished.accepted.appearance == nil)
+				#expect(finished.accepted.interaction == nil)
 				#expect(finished.accepted.notifications?.notifyAboutMentions == true)
 				saves += 1
 			},
@@ -437,6 +438,8 @@ struct OnboardingTests {
 		)
 
 		#expect(model.advance() == false)
+		model.skip()
+		#expect(model.currentStep == .interaction)
 		model.skip()
 		#expect(model.currentStep == .notifications)
 		#expect(model.advance() == false)

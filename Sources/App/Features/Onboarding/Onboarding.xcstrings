@@ -3908,6 +3908,438 @@
           }
         }
       }
+    },
+    "how-glasstual-asks": {
+      "comment": "Title of the onboarding step that chooses whether questions open as dialogs or appear in the conversation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How Glasstual Asks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie Glasstual fragt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo pregunta Glasstual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment Glasstual pose les questions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hogyan kérdez a Glasstual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual の質問の仕方"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como o Glasstual pergunta"
+          }
+        }
+      }
+    },
+    "choose-how-questions-appear": {
+      "comment": "Subtitle of the onboarding step that chooses how questions appear.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whether questions open as dialogs or appear in the conversation, where you answer with a button or by typing."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle, ob Fragen als Dialoge erscheinen oder in der Unterhaltung, wo du mit einer Taste oder durch Tippen antwortest."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige si las preguntas se abren como diálogos o aparecen en la conversación, donde respondes con un botón o escribiendo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez si les questions s’ouvrent dans des dialogues ou apparaissent dans la conversation, où vous répondez avec un bouton ou en tapant."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válaszd ki, hogy a kérdések párbeszédablakban nyíljanak meg, vagy a beszélgetésben jelenjenek meg, ahol gombbal vagy gépeléssel válaszolsz."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問をダイアログで開くか、会話内に表示してボタンや入力で答えるかを選びます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha se as perguntas abrem como diálogos ou aparecem na conversa, onde você responde com um botão ou digitando."
+          }
+        }
+      }
+    },
+    "interaction-dialogs-caption": {
+      "comment": "Caption under the As Dialogs preview in onboarding.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions open as alerts and editors as sheets, as in most Mac apps."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen öffnen sich als Hinweise und Editoren als Sheets, wie in den meisten Mac-Apps."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las preguntas se abren como alertas y los editores como hojas, como en la mayoría de las apps de Mac."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les questions s’ouvrent dans des alertes et les éditeurs dans des feuilles, comme dans la plupart des apps Mac."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kérdések figyelmeztetésként, a szerkesztők lapként nyílnak meg, mint a legtöbb Mac-appban."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多くの Mac アプリと同じく、質問はアラートで、エディタはシートで開きます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As perguntas abrem como alertas e os editores como painéis, como na maioria dos apps do Mac."
+          }
+        }
+      }
+    },
+    "interaction-conversation-caption": {
+      "comment": "Caption under the In the Conversation preview in onboarding. /yes is a command and stays untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions appear above the message field. Click a button or type /yes. Editors open as commands."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen erscheinen über dem Nachrichtenfeld. Klicke auf eine Taste oder tippe /yes. Editoren öffnen sich als Befehle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las preguntas aparecen sobre el campo de mensaje. Haz clic en un botón o escribe /yes. Los editores se abren como comandos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les questions apparaissent au-dessus du champ de message. Cliquez sur un bouton ou tapez /yes. Les éditeurs s’ouvrent sous forme de commandes."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kérdések az üzenetmező fölött jelennek meg. Kattints egy gombra, vagy írd be: /yes. A szerkesztők parancsként nyílnak meg."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問はメッセージ欄の上に表示されます。ボタンをクリックするか /yes と入力します。エディタはコマンドとして開きます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As perguntas aparecem acima do campo de mensagem. Clique num botão ou digite /yes. Os editores abrem como comandos."
+          }
+        }
+      }
+    },
+    "interaction-change-later": {
+      "comment": "Note under the two previews of the onboarding step that chooses how questions appear.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change this at any time in Settings ▸ General. Questions about passwords, certificates and links always need their answer spelled out."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du kannst das jederzeit unter Einstellungen ▸ Allgemein ändern. Fragen zu Passwörtern, Zertifikaten und Links müssen immer ausgeschrieben beantwortet werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes cambiarlo en cualquier momento en Ajustes ▸ General. Las preguntas sobre contraseñas, certificados y enlaces siempre necesitan la respuesta completa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez changer cela à tout moment dans Réglages ▸ Général. Les questions sur les mots de passe, les certificats et les liens exigent toujours une réponse en toutes lettres."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezt bármikor módosíthatod a Beállítások ▸ Általános részben. A jelszavakra, tanúsítványokra és hivatkozásokra vonatkozó kérdésekre mindig ki kell írni a választ."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定 ▸ 一般 でいつでも変更できます。パスワード、証明書、リンクに関する質問には、常に答えを省略せずに入力する必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você pode mudar isso a qualquer momento em Ajustes ▸ Geral. Perguntas sobre senhas, certificados e links sempre precisam da resposta por extenso."
+          }
+        }
+      }
+    },
+    "interaction-preview-question": {
+      "comment": "The example question drawn in both onboarding previews of how questions appear.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send 3 lines as one message?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 Zeilen als eine Nachricht senden?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Enviar 3 líneas como un mensaje?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer 3 lignes en un seul message ?"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elküldöd a 3 sort egy üzenetként?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 行を 1 つのメッセージとして送信しますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar 3 linhas como uma mensagem?"
+          }
+        }
+      }
+    },
+    "interaction-preview-cancel": {
+      "comment": "Cancel button drawn in the onboarding previews of how questions appear.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mégsem"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "interaction-preview-send": {
+      "comment": "Send button drawn in the onboarding previews of how questions appear.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küldés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar"
+          }
+        }
+      }
+    },
+    "summary-questions": {
+      "comment": "Onboarding summary row label: how questions appear.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preguntas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kérdések"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perguntas"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

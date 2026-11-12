@@ -108,6 +108,7 @@ struct OnboardingSummaryView: View {
 			(.Onboarding.summaryChatStyle, chatStyleSummary),
 			(.Onboarding.summaryTextSize, textSizeSummary),
 			(.Onboarding.summaryAppearance, appearanceSummary),
+			(.Onboarding.summaryQuestions, interactionSummary),
 			(.Onboarding.summaryNotifications, notificationSummary),
 			(.Onboarding.summaryNetwork, networkSummary),
 			(.Onboarding.summaryChannels, channelSummary),
@@ -151,6 +152,11 @@ struct OnboardingSummaryView: View {
 	private var appearanceSummary: String {
 		guard let appearance = model.accepted.appearance else { return nothingChosen }
 		return String(localized: appearance.preferredAppearance.onboardingTitle)
+	}
+
+	private var interactionSummary: String {
+		guard let interaction = model.accepted.interaction else { return nothingChosen }
+		return String(localized: interaction.displayName)
 	}
 
 	private var networkSummary: String {

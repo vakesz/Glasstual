@@ -4,39 +4,39 @@
 	<meta charset="utf-8">
 	<title>Choose how Glasstual asks you questions</title>
 	<meta name="description" content="Have questions and editors open as dialogs, or appear in the conversation where you answer them.">
-	<meta name="robots" content="noindex">
 	<meta name="keywords" content="interaction, questions, dialogs, prompts, conversation, answer, yes, no">
 	<link rel="stylesheet" href="../../Shared/help.css">
 </head>
 <body>
 <a name="interaction-style"></a>
 <h1>Choose how Glasstual asks you questions</h1>
-<!-- Pending: describes the interaction-style preference being built on another branch.
-     Before publishing, check it against that branch, link it from index.html, remove the
-     robots tag and remove it from HelpBookTests.pendingPages. -->
 <p>Glasstual can ask you things in dialogs, or right in the conversation, where you answer by clicking or typing. One setting covers both questions and editors.</p>
 
 <h2>Choose a style</h2>
 <p>Open Glasstual &gt; Settings, click General, then under Questions and Editors choose As Dialogs or In the Conversation. The Welcome window also asks, after Look and Feel. A change applies to the next question; questions already showing stay where they are.</p>
 
 <h2>Answer a question in the conversation</h2>
-<p>A question appears as a card in the conversation it’s about, or in the server’s console. Click one of its buttons, or type a command in the message field:</p>
+<p>A question appears as a card above the message field, in the conversation it’s about or in the server’s console. If questions are waiting in other conversations, a line above the message field says so, with a Show button. Click one of a card’s buttons, or type a command in the message field:</p>
 <ul>
-	<li><code>/answer</code> followed by the question’s number and your answer, for example <code>/answer 2 send</code>.</li>
-	<li><code>/yes</code> for the usual answer, or <code>/no</code> to decline.</li>
+	<li><code>/answer</code> followed by the question’s number and your answer, for example <code>/answer 2 send</code>. The answer can be its word or the title of its button.</li>
+	<li><code>/yes</code> for the one way forward, or <code>/no</code> to decline. With several questions waiting, add the number, for example <code>/no 3</code>.</li>
 	<li><code>/prompts</code> to list the questions waiting for an answer.</li>
 </ul>
-<p>An answered question leaves no line in the conversation or in your logs. Messages that only tell you something appear as notices.</p>
+<p>Only what you type in the message field answers a question; scripts, timers and connect commands can’t. An answered question leaves no line in the conversation or in your logs. Messages that only tell you something appear as notices; sending a message dismisses them.</p>
 
 <h2>Questions that need care</h2>
-<p>Some questions could cost you if answered by accident: sending your password to a server whose certificate wasn’t checked, accepting a direct chat, sending files you dropped, and opening a link in another app. For these, type the answer’s word, such as <code>send</code>. <code>/yes</code>, a number alone and the Return key never answer them.</p>
-<p>When a password is needed, Glasstual switches the message field to a secure field. A password is never typed as part of a command and is never kept in history.</p>
+<p>Some questions could cost you if answered by accident: sending your password to a server whose certificate wasn’t checked, trusting a direct-connection certificate, accepting a direct chat, sending files you dropped, and opening a link in another app. These cards have an orange border. Type the answer’s word, such as <code>/answer 2 send</code>; <code>/yes</code>, a number alone and the Return key never answer them, and a click counts only once the card has settled on screen.</p>
+<p>When a password or token is needed, the card has its own secure field. A secret is never typed as part of a command, and is never kept in the conversation, your logs or input history. Switching conversations clears a half-typed secret.</p>
+
+<h2>Editors as commands</h2>
+<p>Editors such as Edit Topic, Change Nickname and Server Properties open as a ready-to-edit command in the message field, for example <code>/topic #channel</code> followed by the current topic. Press Return to run it. Server and channel settings have their own commands, <code>/serverconfig</code> and <code>/channelconfig</code>; type <code>list</code> after either to see every setting.</p>
 
 <h2>What stays a window</h2>
 <ul>
 	<li>Deciding whether to trust a server’s certificate always uses the certificate panel.</li>
 	<li>Lists such as the channel list and ban lists stay windows.</li>
-	<li>Editors such as Modify Topic and Change Nickname open as a ready-to-edit command in the message field, for example <code>/topic #channel</code> followed by the current topic.</li>
+	<li>Questions raised inside an open sheet or in Settings are answered there.</li>
+	<li>Choosing a client certificate or a file uses the system panels.</li>
 </ul>
 
 <nav class="related">

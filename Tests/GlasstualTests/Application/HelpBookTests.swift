@@ -122,7 +122,7 @@ struct HelpBookTests {
 	 unlinked and out of search until the feature lands; publishing one means
 	 linking it from the title page, dropping its robots tag and removing it
 	 from this list. */
-	private static let pendingPages: Set<String> = ["/pages/interaction-style.html"]
+	private static let pendingPages: Set<String> = []
 
 	@Test("A pending page stays unlinked and out of the search index")
 	func pendingPagesAreNotPublished() throws {

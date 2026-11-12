@@ -141,6 +141,8 @@ struct OnboardingNetwork {
 final class OnboardingSettings {
 	var identity = OnboardingIdentity()
 	var appearance = OnboardingAppearance()
+	/// Whether questions open as dialogs or appear in the conversation.
+	var interaction = InteractionStyle.dialogs
 	var notifications = OnboardingNotifications()
 	var network = OnboardingNetwork()
 }
@@ -153,6 +155,7 @@ final class OnboardingSettings {
 struct OnboardingAcceptedSteps {
 	var identity: OnboardingIdentity?
 	var appearance: OnboardingAppearance?
+	var interaction: InteractionStyle?
 	var notifications: OnboardingNotifications?
 	var network: OnboardingNetwork?
 }
