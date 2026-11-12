@@ -74,6 +74,20 @@ actor TranscriptRenderPipeline {
 	/// The deliveries that have not been applied yet, so ``stop()`` can reach
 	/// them. A delivery withdraws its own entry as it finishes.
 	private var deliveries: [UUID: Task<Void, Never>] = [:]
+	/// The position of the next ordered job in the delivery chain.
+	private var nextSequence = 0
+	/// Ordered jobs that have rendered and wait for their turn, by position.
+	private var rendered: [Int: Application] = [:]
+	/// Ordered jobs another delivery already applied, by position.
+	private var appliedEarly: Set<Int> = []
+	/// How many main-actor turns ordered jobs were applied in. For tests.
+	private(set) var orderedBatchCount = 0
+
+	/// How many ordered jobs have rendered and wait for their turn. For tests.
+	var readyApplicationCount: Int {
+		rendered.count
+	}
+
 	private var drainWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
 	/// `limit` is the budget CPU-bound jobs draw their render slot from; nil
@@ -113,43 +127,84 @@ actor TranscriptRenderPipeline {
 
 					let predecessors = submission.waitsForAllSubmissions
 						? Array(deliveries.values) : predecessor.map { [$0] } ?? []
-					let delivery = deliver(submission, after: predecessors)
+					let (rendering, delivery) = deliver(
+						submission, after: predecessors, at: sequence(for: submission)
+					)
 
 					if submission.isStandalone == false {
 						predecessor = delivery
 					}
 
-					group.addTask { await delivery.value }
+					/* The width bounds renders, not lines waiting to be applied: a
+					 job that has rendered gives its place back while it waits for
+					 the main actor, so a burst reaches the view as many finished
+					 lines per turn rather than one or two, and the view edits its
+					 text once for all of them. */
+					group.addTask { await rendering.value }
 					inFlight += 1
 				}
 
 				await group.waitForAll()
+			}
+			for delivery in deliveries.values {
+				await delivery.value
 			}
 		} onCancel: {
 			Task { await self.stop() }
 		}
 	}
 
+	typealias Application = (@MainActor () -> Void)?
+
+	/** The job's position among the ordered jobs, or nil for a job that is
+	 applied on its own. A job every earlier one has to precede leaves a gap,
+	 so no batch of ordered jobs is applied across it. */
+	private func sequence(for submission: TranscriptRenderSubmission) -> Int? {
+		guard submission.isStandalone == false else { return nil }
+		defer { nextSequence += 1 }
+		return submission.waitsForAllSubmissions ? nil : nextSequence
+	}
+
 	/** Renders `submission` right away and holds its result until `predecessor`
 	 has been applied. Starting the render before the wait is what makes the
-	 pipeline concurrent; waiting afterwards is what keeps it in order. */
+	 pipeline concurrent; waiting afterwards is what keeps it in order. Returns
+	 the render, which ends when the result is ready, and the delivery, which
+	 ends when it has been applied.
+
+	 An ordered job whose turn comes applies, in the same main-actor turn, every
+	 job after it that has already rendered: the chain otherwise reached the
+	 main actor once per line, and a burst reached the view one line per edit. */
 	private func deliver(
 		_ submission: TranscriptRenderSubmission,
-		after predecessors: [Task<Void, Never>]
-	) -> Task<Void, Never> {
+		after predecessors: [Task<Void, Never>],
+		at sequence: Int?
+	) -> (rendering: Task<Void, Never>, delivery: Task<Void, Never>) {
 		let identifier = UUID()
 		let limit = limit
+		let render = Task { await Self.render(submission, limit: limit) }
 
 		let delivery = Task { [weak self] in
-			let apply = await Self.render(submission, limit: limit)
+			let apply = await withTaskCancellationHandler {
+				await render.value
+			} onCancel: {
+				render.cancel()
+			}
+			if let sequence {
+				await self?.noteRendered(apply, at: sequence)
+			}
 
 			for predecessor in predecessors {
 				await predecessor.value
 			}
 
-			if Task.isCancelled == false {
+			let batch = if let sequence {
+				await self?.takeBatch(startingAt: sequence) ?? []
+			} else {
+				[apply]
+			}
+			if Task.isCancelled == false, batch.isEmpty == false {
 				await MainActor.run {
-					if Task.isCancelled == false {
+					for apply in batch where Task.isCancelled == false {
 						apply?()
 					}
 				}
@@ -160,7 +215,7 @@ actor TranscriptRenderPipeline {
 
 		deliveries[identifier] = delivery
 
-		return delivery
+		return (Task { _ = await render.value }, delivery)
 	}
 
 	/** Runs the job, holding a render slot for exactly as long as a CPU-bound job
@@ -177,6 +232,32 @@ actor TranscriptRenderPipeline {
 		}
 		defer { limit.release() }
 		return await submission.job()
+	}
+
+	private func noteRendered(_ apply: Application, at sequence: Int) {
+		/* `updateValue`: assigning a job that rendered nothing would remove
+		 the entry instead of recording that it is ready. */
+		rendered.updateValue(apply, forKey: sequence)
+	}
+
+	/** The applications from `sequence` on that are ready, in order, or none
+	 when an earlier delivery has already applied this one. Called once its
+	 predecessor has been applied, so nothing before `sequence` is pending. */
+	private func takeBatch(startingAt sequence: Int) -> [Application] {
+		guard appliedEarly.remove(sequence) == nil else { return [] }
+		var batch: [Application] = []
+		var position = sequence
+		while let apply = rendered.removeValue(forKey: position) {
+			batch.append(apply)
+			if position != sequence {
+				appliedEarly.insert(position)
+			}
+			position += 1
+		}
+		if batch.isEmpty == false {
+			orderedBatchCount += 1
+		}
+		return batch
 	}
 
 	private func finishDelivery(_ identifier: UUID) {
@@ -197,6 +278,8 @@ actor TranscriptRenderPipeline {
 		}
 
 		deliveries.removeAll()
+		rendered.removeAll()
+		appliedEarly.removeAll()
 		let waiters = drainWaiters.values
 		drainWaiters.removeAll()
 		for waiter in waiters {

@@ -230,6 +230,42 @@ struct TranscriptRenderPipelineTests {
 		await runner.value
 	}
 
+	/** A burst used to reach the view one line per main-actor turn: each line
+	 waited for the one before it to be applied before making its own hop, and
+	 a line kept its render slot until then, so no more than the pipeline's
+	 width had ever rendered ahead. Every turn was a text edit and a layout. */
+	@Test("Lines that rendered behind a parked one are applied with it in one main-actor turn", .timeLimit(.minutes(1)))
+	func renderedLinesApplyTogether() async {
+		let pipeline = TranscriptRenderPipeline()
+		let runner = Task { await pipeline.run() }
+		let log = DeliveryLog()
+		let gate = RenderGate()
+
+		pipeline.submissions.yield(TranscriptRenderSubmission(isStandalone: false) {
+			await gate.wait()
+			return { log.append("0") }
+		})
+		for index in 1 ..< 10 {
+			pipeline.submissions.yield(TranscriptRenderSubmission(isStandalone: false) {
+				{ log.append(String(index)) }
+			})
+		}
+		/* More lines than the pipeline's width render while the first is parked. */
+		while await pipeline.readyApplicationCount < 9 {
+			await Task.yield()
+		}
+		#expect(log.labels.isEmpty)
+
+		await gate.open()
+		await pipeline.barrier()
+
+		#expect(log.labels == (0 ..< 10).map(String.init))
+		#expect(await pipeline.orderedBatchCount == 1)
+
+		await pipeline.stop()
+		await runner.value
+	}
+
 	@Test("A standalone job does not hold up what was submitted after it")
 	func standaloneJobBypassesTheBatch() async {
 		let pipeline = TranscriptRenderPipeline()
