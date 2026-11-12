@@ -4,20 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Support - Glasstual</title>
-    <meta name="description" content="Get help with Glasstual for macOS and report an issue.">
+    <meta name="description" content="Get help with Glasstual for macOS: system requirements, the built-in Help, common problems and how to report an issue.">
     <meta name="robots" content="index, follow">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <link rel="canonical" href="https://vakesz.github.io/Glasstual/support.html">
-    <link rel="icon" href="assets/app-icon.png">
-    <link rel="apple-touch-icon" href="assets/app-icon.png">
+    <link rel="icon" type="image/png" href="assets/app-icon-64.png">
+    <link rel="apple-touch-icon" href="assets/app-icon-192.png">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Glasstual">
     <meta property="og:title" content="Support - Glasstual">
-    <meta property="og:description" content="Get help with Glasstual for macOS and report an issue.">
+    <meta property="og:description" content="Get help with Glasstual for macOS: system requirements, the built-in Help, common problems and how to report an issue.">
     <meta property="og:url" content="https://vakesz.github.io/Glasstual/support.html">
     <meta property="og:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Glasstual, an IRC client for macOS">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Support - Glasstual">
+    <meta name="twitter:description" content="Get help with Glasstual for macOS: system requirements, the built-in Help, common problems and how to report an issue.">
+    <meta name="twitter:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta name="twitter:image:alt" content="Glasstual, an IRC client for macOS">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -25,7 +33,7 @@
     <header class="site-header">
       <div class="shell">
         <a class="wordmark" href="index.html" aria-label="Glasstual home">
-          <img src="assets/app-icon.png" alt="" width="28" height="28">
+          <img src="assets/app-icon-64.png" alt="" width="28" height="28">
           <span>Glasstual</span>
         </a>
         <nav aria-label="Main navigation">
@@ -41,22 +49,43 @@
       <div class="shell document">
         <p class="eyebrow">Glasstual</p>
         <h1>Support</h1>
-        <p class="lead">Need help connecting, moving your settings, or reporting a bug? Contact the Glasstual developer directly.</p>
+        <p class="lead">Need help connecting, signing in or reporting a bug? Start with the Help built into the app, or contact the Glasstual developer directly.</p>
 
-        <section aria-labelledby="contact">
-          <h2 id="contact">Contact</h2>
-          <p>Email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a> for support. You can also <a href="https://github.com/vakesz/Glasstual/issues/new/choose" rel="noopener">open a GitHub issue</a> for a public bug report or feature request.</p>
-          <p>Include your macOS and Glasstual versions, what you expected, what happened, and steps to reproduce the issue. Please remove passwords, private messages, and personal data from screenshots or logs before sharing them.</p>
+        <section aria-labelledby="help">
+          <h2 id="help">Help in the App</h2>
+          <p>Choose Help &gt; Glasstual Help for step-by-step pages on adding servers, signing in, secure connections, proxies, file transfers, commands and keyboard shortcuts. Help &gt; Welcome to Glasstual opens the first-run setup again, and Help &gt; Connect to Help Channel lets you ask other Glasstual users.</p>
         </section>
 
         <section aria-labelledby="requirements">
           <h2 id="requirements">Requirements</h2>
-          <p>Glasstual runs on Apple silicon Macs with macOS 26 or later. You need access to an IRC server to chat. Some networks require their own account or registration; Glasstual does not provide an IRC account.</p>
+          <p>Glasstual runs on Apple silicon (arm64) Macs with macOS 26 or later. Intel Macs are not supported. You need access to an IRC server to chat. Some networks require an account; where the network supports it you can register one from Server &gt; Register Account. Glasstual does not provide an IRC account.</p>
+          <p>Updates are installed manually: download the new release and replace the app.</p>
+        </section>
+
+        <section aria-labelledby="troubleshooting">
+          <h2 id="troubleshooting">Common Problems</h2>
+          <ul>
+            <li><strong>You can&#8217;t connect.</strong> Check the address and port in Server &gt; Server Properties &gt; General, and that &#8220;Connect securely&#8221; matches the port (often 6697 with TLS, 6667 without). For a WebSocket server, check the connection type and path.</li>
+            <li><strong>A proxy is in the way.</strong> For Tor, open Tor Browser first. For another proxy, check its address in the Proxy Server pane, or hold Option and choose Server &gt; Connect Without Proxy.</li>
+            <li><strong>Sign-in fails.</strong> Check the SASL mechanism and account name in Server Properties &gt; Identity; the pane names any missing password, certificate, key or token. Then choose Server &gt; Sign In Again.</li>
+            <li><strong>Channels don&#8217;t join.</strong> In Server Properties &gt; Identity, select &#8220;Wait for identification before joining channels.&#8221;</li>
+            <li><strong>File transfers fail.</strong> Transfers need a direct connection. Check the IP address detection and port range in Settings &gt; File Transfers, or use passive requests.</li>
+            <li><strong>Images don&#8217;t appear.</strong> Turn on &#8220;Show inline images&#8221; in Settings &gt; Style. On a server with a SOCKS5 or HTTP proxy, click &#8220;Load image from&#8221; to load each one.</li>
+            <li><strong>Messages are missing after a reconnect.</strong> If a banner says some messages weren&#8217;t loaded, click Load Missing Messages. The server must keep history.</li>
+            <li><strong>Notifications don&#8217;t appear.</strong> Allow them for Glasstual in System Settings &gt; Notifications, and check that Glasstual isn&#8217;t muted or quieted by a Focus.</li>
+          </ul>
+          <p>The Troubleshooting page in Glasstual Help has more detail on each of these.</p>
+        </section>
+
+        <section aria-labelledby="contact">
+          <h2 id="contact">Contact</h2>
+          <p>Email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a> for support. You can also <a href="https://github.com/vakesz/Glasstual/issues/new/choose" rel="noopener">open a GitHub issue</a> for a public bug report or feature request.</p>
+          <p>Include your macOS and Glasstual versions, what you expected, what happened, and steps to reproduce the issue. Please remove passwords, private messages and personal data from screenshots or logs before sharing them.</p>
         </section>
 
         <section aria-labelledby="safety">
           <h2 id="safety">Unwanted Messages</h2>
-          <p>Use Mute User or Add Ignore from a member's menu to limit messages you see. IRC networks set their own conduct rules and handle reports about their users; contact the network's operators to report abuse. For help using Glasstual's controls, email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>.</p>
+          <p>Control-click a member and choose Mute User or Add Ignore to limit the messages you see, or manage ignores in Window &gt; People. IRC networks set their own conduct rules and handle reports about their users; contact the network&#8217;s operators to report abuse. For help using Glasstual&#8217;s controls, email <a href="mailto:hello@vakesz.com">hello@vakesz.com</a>.</p>
         </section>
 
         <section aria-labelledby="resources">
