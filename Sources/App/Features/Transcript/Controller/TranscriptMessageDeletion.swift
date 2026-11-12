@@ -37,7 +37,9 @@ enum TranscriptMessageDeletion {
 			alternateButton: PromptStrings.Action.cancel,
 			destructiveButton: .default,
 			style: .warning,
-			field: .text(placeholder: String(localized: .Transcript.deleteMessageReasonPlaceholder), initialValue: ""),
+			field: .text(
+				placeholder: String(localized: .Transcript.deleteMessageReasonPlaceholder), initialValue: "", isRequired: false
+			),
 			keywords: [.default: .delete, .alternate: .cancel]
 		)
 	}

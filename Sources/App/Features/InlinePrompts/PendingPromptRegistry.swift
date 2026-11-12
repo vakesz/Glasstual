@@ -39,7 +39,7 @@ final class PendingPrompt: Identifiable {
 		self.request = request
 		self.scope = scope
 		self.route = route
-		text = if case let .text(_, initialValue) = request.field {
+		text = if case let .text(_, initialValue, _) = request.field {
 			initialValue
 		} else {
 			""
@@ -54,6 +54,13 @@ final class PendingPrompt: Identifiable {
 			&& self.request.responses == request.responses && self.request.reference == request.reference
 			&& self.scope == scope && self.route == route
 	}
+}
+
+/// A note about a typed answer, for the conversation it was typed in.
+nonisolated struct PromptFeedback: Equatable, Sendable {
+	/// The chat item the command was typed in.
+	let itemID: String?
+	let text: String
 }
 
 /// What answering a question came to.
@@ -77,6 +84,10 @@ final class PendingPromptRegistry {
 	private(set) var pending: [PendingPrompt] = []
 	/// The question whose field a typed `/answer` asked to type into.
 	var fieldFocusRequest: Int?
+	/// What the last typed answering command had to say, shown above the
+	/// message field instead of being printed, so nothing about a question
+	/// reaches the transcript, the scrollback or a log.
+	var feedback: PromptFeedback?
 
 	/// Whether the connection a question was bound to is still the one the
 	/// session is on. An answer is only accepted while it is.

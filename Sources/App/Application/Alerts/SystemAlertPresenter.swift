@@ -165,7 +165,7 @@ private final class AlertSession {
 
 		if let requestedField = request.field {
 			let field: NSTextField = switch requestedField {
-			case let .text(placeholder, initialValue):
+			case let .text(placeholder, initialValue, _):
 				Self.textField(placeholder: placeholder, value: initialValue)
 			case let .secure(placeholder):
 				Self.secureField(placeholder: placeholder)

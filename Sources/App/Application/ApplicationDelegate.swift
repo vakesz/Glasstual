@@ -166,6 +166,9 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 			guard let window = self?.mainWindow, window.isVisible == false else { return }
 			ApplicationForeground.bringForward(window)
 		}
+		router.announce = { [weak self] prompt in
+			self?.mainWindow?.announcePrompt(prompt)
+		}
 		router.registry.isConnectionCurrent = { [weak self] scope in
 			guard let connection = scope.connection else { return true }
 			guard let sessionID = scope.sessionID,

@@ -12,6 +12,11 @@ struct MainWindowConversation: View {
 
 	@Environment(\.accessibilityReduceMotion) private var reduceMotion
 	@Environment(\.colorSchemeContrast) private var contrast
+	/// The height the waiting questions take above the input bar, reserved in
+	/// the transcript's inset so the newest line is never hidden behind them.
+	/// The tray's height depends only on its width, so measuring it does not
+	/// feed back into its own layout.
+	@State private var promptTrayHeight: CGFloat = 0
 
 	/// AppKit measures the input bar and reserves its height in the transcript's
 	/// bottom inset. Feeding SwiftUI geometry back into layout can cause a loop.
@@ -27,7 +32,7 @@ struct MainWindowConversation: View {
 					inputField: inputContentView,
 					accessoryHeight: InputBarLayout.accessoryHeight(
 						for: inputContentView.textView.accessoryModel
-					) + SlashCommandDiscoveryView.height(for: inputContentView.textView.commandDiscovery),
+					) + SlashCommandDiscoveryView.height(for: inputContentView.textView.commandDiscovery) + promptTrayHeight,
 					isObscured: columns.isConversationObscured
 				)
 
@@ -41,6 +46,13 @@ struct MainWindowConversation: View {
 	/// command list above it are flat material, so no glass sits on glass.
 	private var inputBar: some View {
 		VStack(spacing: 0) {
+			promptTray
+				.padding(.horizontal, UISpacing.regular)
+				.padding(.bottom, AppServices.promptRegistry.pending.isEmpty ? 0 : UISpacing.tight)
+				.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+					promptTrayHeight = height
+				}
+
 			SlashCommandDiscoveryView(model: inputContentView.textView.commandDiscovery) { suggestion in
 				inputContentView.textView.acceptSlashCommand(suggestion)
 			}
@@ -63,6 +75,18 @@ struct MainWindowConversation: View {
 				.overlay(focusRing)
 				.padding(.horizontal, UISpacing.regular)
 				.padding(.bottom, InputBarLayout.bottomPadding)
+		}
+	}
+
+	/// The questions waiting in the conversation on screen, and elsewhere.
+	private var promptTray: some View {
+		let registry = AppServices.promptRegistry
+		let itemID = columns.transcript?.viewController?.associatedItem?.uniqueIdentifier
+		let feedback = registry.feedback.flatMap { $0.itemID == itemID ? $0.text : nil }
+		return PromptTrayView(registry: registry, itemID: itemID, feedback: feedback) { anchor in
+			columns.window?.showPromptAnchor(anchor)
+		} answered: { prompt, result in
+			columns.window?.promptWasAnswered(prompt, result: result)
 		}
 	}
 

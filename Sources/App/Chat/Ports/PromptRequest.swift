@@ -121,8 +121,13 @@ nonisolated struct AlertRequest: Sendable {
 
 	 Never the destructive one: a confirmation whose Return key erases something
 	 turns a reflex into a loss. Where the destructive button is the only one,
-	 nothing is defaulted and the reader has to choose.  */
+	 nothing is defaulted and the reader has to choose. A security question's
+	 Return presses only its way out, so a password, a file or a connection is
+	 never let through by a reflex. */
 	var returnButton: AlertResponse? {
+		if sensitivity == .security {
+			return isDestructive(escapeButton) ? nil : escapeButton
+		}
 		guard destructiveButton == .default else {
 			return .default
 		}
@@ -179,11 +184,20 @@ nonisolated struct AlertRequest: Sendable {
 
 /// What an answer needs beyond a button.
 nonisolated enum PromptField: Sendable, Equatable {
-	/// A line of text, such as the reason a message is deleted for.
-	case text(placeholder: String, initialValue: String)
+	/// A line of text, such as a virtual host. An optional one, such as the
+	/// reason a message is deleted for, may be submitted empty.
+	case text(placeholder: String, initialValue: String, isRequired: Bool = true)
 	/// A secret, such as a password. It is never echoed, never typed into the
 	/// message field and never written anywhere but to whoever asked.
 	case secure(placeholder: String)
+
+	/// Whether the field has to hold something before the question is answered.
+	var isRequired: Bool {
+		switch self {
+		case let .text(_, _, isRequired): isRequired
+		case .secure: true
+		}
+	}
 
 	var isSecure: Bool {
 		if case .secure = self {
