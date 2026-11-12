@@ -327,6 +327,26 @@ struct MemberListTableTests {
 		}
 	}
 
+	@Test("The table's container names the list and carries its member count through joins and parts")
+	func containerCarriesMemberCount() {
+		let fixture = Fixture(count: 3)
+		defer { fixture.window.close() }
+		let container = fixture.controller.scrollView
+		#expect(container.accessibilityLabel() == String(localized: .MemberList.sectionMembers))
+		#expect(container.accessibilityIdentifier() == AccessibilityIdentifier.memberCount)
+		#expect(container.accessibilityValue() as? String == "3")
+		#expect(fixture.controller.tableView.isDescendant(of: container))
+
+		let joined = (0 ..< 500).map { Member(user: User(nickname: "joined\($0)")) }
+		fixture.model.membersDidChange(fixture.members + joined)
+		fixture.controller.update(revision: fixture.model.presentationRevision, selection: [])
+		#expect(container.accessibilityValue() as? String == "503")
+
+		fixture.model.membersDidChange(Array(fixture.members.prefix(1)))
+		fixture.controller.update(revision: fixture.model.presentationRevision, selection: [])
+		#expect(container.accessibilityValue() as? String == "1")
+	}
+
 	@Test("Rank headings scroll with their members instead of gaining a floating background and separator")
 	func rankHeadingsDoNotFloat() throws {
 		var members = (0 ..< 80).map { Member(user: User(nickname: "member\($0)")) }

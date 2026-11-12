@@ -19,12 +19,8 @@ struct MemberListView: View {
 			redirectTyping: redirectTyping
 		)
 		/* No title band: an inspector carries its actions in its part of the
-		 toolbar. The list's group is what names it and counts its members for
+		 toolbar. The table's group names the list and counts its members for
 		 Accessibility clients. */
-		.accessibilityElement(children: .contain)
-		.accessibilityLabel(Text(.MemberList.sectionMembers))
-		.accessibilityIdentifier(AccessibilityIdentifier.memberCount)
-		.accessibilityValue(Text(verbatim: String(model.groups.reduce(0) { $0 + $1.members.count })))
 		.toolbar {
 			ToolbarItem(placement: .automatic) {
 				Button(.MemberList.showProfileAction, systemImage: "info.circle") {

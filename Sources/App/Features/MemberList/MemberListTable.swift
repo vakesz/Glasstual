@@ -38,6 +38,9 @@ struct MemberListTable: NSViewRepresentable {
 /// member and every presentation decision remains on the feature's model.
 final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableViewDelegate {
 	let model: MemberList
+	/// The table's container for Accessibility clients: it names the list and
+	/// carries its member count as its value. SwiftUI exports no value on a
+	/// containing element, so the adapter holds it.
 	let scrollView = NSScrollView()
 	let tableView = MemberListNativeTable()
 	private(set) var rows: [MemberListTableRow] = []
@@ -92,6 +95,9 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 		notifications.observe(NSView.boundsDidChangeNotification, object: scrollView.contentView) { [weak self] _ in
 			self?.scrollPositionChanged()
 		}
+		scrollView.setAccessibilityLabel(String(localized: .MemberList.sectionMembers))
+		scrollView.setAccessibilityIdentifier(AccessibilityIdentifier.memberCount)
+		scrollView.setAccessibilityValue("0")
 	}
 
 	func stopObserving() {
@@ -111,6 +117,7 @@ final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableV
 			renderedRevision = revision
 			renderedSourceIdentifier = model.sourceIdentifier
 			updateCount += 1
+			scrollView.setAccessibilityValue(String(model.groups.reduce(0) { $0 + $1.members.count }))
 		}
 		let selectedIndexes = IndexSet(selection.compactMap { indexes[.member($0)] })
 		if selectedIndexes != tableView.selectedRowIndexes {
