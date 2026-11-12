@@ -9,7 +9,7 @@ struct OnboardingSkipScenario: Scenario {
 	func run(_ context: ScenarioContext) async throws {
 		try await context.launch(seed: Seed.onboarding(corpora: context.corpora), keepsState: true)
 		try await context.completeIdentityStep()
-		for next in ["notifications", "network", "summary"] {
+		for next in ["interaction", "notifications", "network", "summary"] {
 			try await context.driver.button(AXID.onboardingSkip, inWindow: AXID.onboardingWindow)
 			try await context.onboardingStep(next)
 		}

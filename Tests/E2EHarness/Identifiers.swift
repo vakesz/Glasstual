@@ -77,10 +77,14 @@ enum AXID {
 	static let onboardingNetworkSASL = "onboarding-network-sasl"
 	static let onboardingConnectWhenFinished = "onboarding-connect-when-finished"
 
-	/// `identity`, `appearance`, `notifications`, `network` or `summary`.
+	/// `identity`, `appearance`, `interaction`, `notifications`, `network` or `summary`.
 	static func onboardingStep(_ name: String) -> String {
 		"onboarding-step-" + name
 	}
+
+	/// The two choices of the step that asks how Glasstual asks.
+	static let onboardingInteractionDialogs = "onboarding-interaction-dialogs"
+	static let onboardingInteractionConversation = "onboarding-interaction-conversation"
 
 	// MARK: Settings
 

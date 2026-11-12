@@ -15,6 +15,9 @@ struct OnboardingFinishScenario: Scenario {
 		try await context.launch(seed: Seed.onboarding(corpora: context.corpora), keepsState: true)
 		try await context.completeIdentityStep()
 		try await context.driver.button(AXID.onboardingContinue, inWindow: AXID.onboardingWindow)
+		try await context.onboardingStep("interaction")
+		try await context.driver.button(AXID.onboardingInteractionDialogs, inWindow: AXID.onboardingWindow)
+		try await context.driver.button(AXID.onboardingContinue, inWindow: AXID.onboardingWindow)
 		try await context.onboardingStep("notifications")
 		/* Continue here asks macOS for notification permission, and Finish
 		 waits for the answer: a system prompt the harness must not answer for
