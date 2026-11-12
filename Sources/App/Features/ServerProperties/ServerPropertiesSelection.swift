@@ -17,7 +17,6 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 	case profile
 	case channelList
 	case highlights
-	case addressBook
 	case connectCommands
 	case disconnectMessages
 	case encoding
@@ -35,7 +34,6 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		case .profile: .ServerProperties.profilePaneTitle
 		case .channelList: .ServerProperties.channelList
 		case .highlights: .ServerProperties.serverPropertiesNavigationMenuHighlights
-		case .addressBook: .ServerProperties.people
 		case .connectCommands: .ServerProperties.connectCommands
 		case .disconnectMessages: .ServerProperties.serverPropertiesNavigationMenuMessages
 		case .encoding: .ServerProperties.serverPropertiesNavigationMenuEncoding
@@ -56,7 +54,6 @@ enum ServerPropertiesSelection: CaseIterable, Hashable {
 		case .profile: "person.text.rectangle"
 		case .channelList: "number"
 		case .highlights: "highlighter"
-		case .addressBook: "person.2"
 		case .connectCommands: "terminal"
 		case .disconnectMessages: "text.bubble"
 		case .encoding: "character.book.closed"

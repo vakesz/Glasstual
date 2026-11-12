@@ -46,7 +46,8 @@ extension MenuGraph {
 			#selector(MenuActionController.showRegisterAccountSheet(_:))
 		),
 		.separator(),
-		.item(String(localized: .MainWindow.menuServerAddServer), .addServer, #selector(MenuActionController.addServer(_:))),
+		/* Add Server… is in the File menu and the toolbar: it makes a server
+			rather than acting on the selected one. */
 		.item(
 			String(localized: .MainWindow.menuServerDuplicateServer),
 			.duplicateServer,
@@ -168,7 +169,7 @@ extension MenuGraph {
 
 	/*  The menu for a one-to-one conversation.
 
-	 Query Logs carries no key equivalent. Channel ▸ View Logs sends the same
+	 View Logs carries no key equivalent here. Channel ▸ View Logs sends the same
 	 action, validates for a one-to-one conversation too, and already answers
 	 Shift-Command-L. Two menu-bar items on one shortcut leave AppKit to pick
 	 one of them. */
@@ -309,22 +310,18 @@ extension MenuGraph {
 		),
 	]
 
+	/** The order of the system's text menus: look the selection up, then
+	 Copy and Paste, then what belongs to this application. */
 	static let transcriptEntries: [Entry] = [
-		.item(
-			String(localized: .MainWindow.menuServerChangeNickname),
-			.changeNickname,
-			#selector(MenuActionController.showServerChangeNicknameSheet(_:))
-		),
-		.separator(),
-		.item(
-			SystemWebSearch.menuTitle,
-			.webSearch,
-			#selector(MenuActionController.searchWeb(_:))
-		),
 		.item(
 			String(localized: .MainWindow.menuTranscriptLookUpInDictionary),
 			.transcriptDictionary,
 			#selector(MenuActionController.lookUpInDictionary(_:))
+		),
+		.item(
+			SystemWebSearch.menuTitle,
+			.webSearch,
+			#selector(MenuActionController.searchWeb(_:))
 		),
 		.separator(),
 		.item(String(localized: .MainWindow.menuEditCopy), .copy, #selector(NSText.copy(_:)), key: "c"),
@@ -338,12 +335,33 @@ extension MenuGraph {
 			modifiers: [.command, .shift]
 		),
 		.item(String(localized: .MainWindow.menuBarChannel), .transcriptChannelMenu),
+		.item(
+			String(localized: .MainWindow.menuServerChangeNickname),
+			.changeNickname,
+			#selector(MenuActionController.showServerChangeNicknameSheet(_:))
+		),
 	]
 
+	/** The commands a person reaches for most come first: writing to the
+	 member and finding out who they are. Moderation follows, and the IRC
+	 protocol submenus close the menu. */
 	static let memberEntries: [Entry] = [
+		.item(
+			String(localized: .MainWindow.menuMemberPrivateMessage),
+			.startDirectConversation,
+			#selector(MenuActionController.memberStartDirectConversation(_:))
+		),
+		.item(
+			String(localized: .MainWindow.menuMemberMessagePrivatelyInChannel),
+			.messagePrivatelyInChannel,
+			#selector(MenuActionController.memberMessagePrivatelyInChannel(_:))
+		),
+		.item(String(localized: .MainWindow.menuMemberWhois), .whois, #selector(MenuActionController.memberSendWhois(_:))),
+		.separator(),
+		.item(String(localized: .MainWindow.menuMemberInviteTo), .inviteTo, #selector(MenuActionController.memberSendInvite(_:))),
+		.separator(),
 		.item(String(localized: .MainWindow.menuMemberMute), .muteUser, #selector(MenuActionController.memberMute(_:))),
 		.item(String(localized: .MainWindow.menuMemberUnmute), .unmuteUser, #selector(MenuActionController.memberUnmute(_:))),
-		.separator(),
 		.item(String(localized: .MainWindow.menuMemberAddIgnore), .addIgnore, #selector(MenuActionController.memberAddIgnore(_:))),
 		.item(
 			String(localized: .MainWindow.menuMemberModifyIgnore),
@@ -355,20 +373,7 @@ extension MenuGraph {
 			.removeIgnore,
 			#selector(MenuActionController.memberRemoveIgnore(_:))
 		),
-		.separator(),
-		.item(String(localized: .MainWindow.menuMemberInviteTo), .inviteTo, #selector(MenuActionController.memberSendInvite(_:))),
-		.separator(),
-		.item(String(localized: .MainWindow.menuMemberWhois), .whois, #selector(MenuActionController.memberSendWhois(_:))),
-		.item(
-			String(localized: .MainWindow.menuMemberPrivateMessage),
-			.startDirectConversation,
-			#selector(MenuActionController.memberStartDirectConversation(_:))
-		),
-		.item(
-			String(localized: .MainWindow.menuMemberMessagePrivatelyInChannel),
-			.messagePrivatelyInChannel,
-			#selector(MenuActionController.memberMessagePrivatelyInChannel(_:))
-		),
+		.item(String(localized: .MainWindow.menuMemberChangeColor), .changeColor, #selector(MenuActionController.memberChangeColor(_:))),
 		.separator(),
 		.item(String(localized: .MainWindow.menuMemberGiveOp), .giveOp, #selector(MenuActionController.memberModeGiveOp(_:))),
 		.item(
@@ -447,6 +452,5 @@ extension MenuGraph {
 			.item(String(localized: .MainWindow.menuMemberShun), .operatorShun, #selector(MenuActionController.memberShunOnServer(_:))),
 			.item(String(localized: .MainWindow.menuMemberGline), .operatorGline, #selector(MenuActionController.memberBanFromServer(_:))),
 		]),
-		.item(String(localized: .MainWindow.menuMemberChangeColor), .changeColor, #selector(MenuActionController.memberChangeColor(_:))),
 	]
 }

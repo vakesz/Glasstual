@@ -134,13 +134,12 @@ struct MenuContentViewTests {
 					controller.mainMenuChannelMenu,
 					context: MenuTargetContext(coordinator: controller, item: item)
 				)
-				/* Disabled, not absent: a menu whose shape follows the
-				 selection is a menu nobody can learn. */
+				/* A context menu leaves out what does not apply to the row it
+				 was opened on, rather than dimming it (HIG Context menus). */
 				let channelCommands = entries.filter {
 					$0.command == .joinChannel || $0.command == .leaveChannel
 				}
-				#expect(channelCommands.isEmpty == false)
-				#expect(channelCommands.allSatisfy { $0.isEnabled == false })
+				#expect(channelCommands.isEmpty)
 				context.withContext(.sidebarItem(item)) {
 					#expect(context.selectedSession === item)
 					#expect(context.selectedConversation == nil)
@@ -222,15 +221,15 @@ struct MenuContentViewTests {
 	 are the exception: Connect and Disconnect, Join and Leave, Mute and Unmute. Each
 	 pair is one command in two states and showing both offers a choice that
 	 does not exist. */
-	@Test("Only commands with mutually exclusive states are ever hidden")
+	/// The menu bar dims what does not apply, so its menus keep their shape;
+	/// only context menus leave items out.
+	@Test("In the menu bar only commands with mutually exclusive states are ever hidden")
 	func availabilityIsExpressedByEnablement() async throws {
 		try await withChannelMenu { controller, _, _, _ in
 			let menus = try [
 				#require(NSApp.mainMenu),
 				controller.mainMenuChannelMenu,
 				controller.mainMenuDirectMenu,
-				controller.userControlMenu,
-				controller.transcriptGeneralMenu,
 			]
 			let allowedToHide: Set<MenuCommand> = [
 				.connect, .connectWithoutProxy, .disconnect, .joinChannel, .leaveChannel,
@@ -339,8 +338,8 @@ struct MenuContentViewTests {
 		let combined = NSMenu()
 		do {
 			let native = MenuContentView.nativeMenu(menu: source) { selectionCount += 1 }
-			#expect(native.items.map(\.title) == ["Action", "Disabled"])
-			#expect(native.item(at: 1)?.isEnabled == false)
+			/* A context menu leaves the unavailable item out. */
+			#expect(native.items.map(\.title) == ["Action"])
 			let item = try #require(native.item(at: 0))
 			native.removeItem(item)
 			combined.addItem(item)
@@ -458,16 +457,29 @@ struct MenuContentViewTests {
 		#expect(entries.map(\.title) == ["Connect"])
 	}
 
-	@Test("Enablement is read back from the item the validator settled")
+	/// A context menu leaves out what does not apply rather than dimming it.
+	@Test("An item the validator disabled is left out of the context menu")
 	func enablementComesFromValidation() {
 		let validator = MenuValidator()
 		validator.disabledTitles = ["Kick"]
 
 		let entries = MenuItemSnapshot.validating(menu(["Ban", "Kick"], validatedBy: validator))
 
-		#expect(entries.count == 2)
-		#expect(entries.first(where: { $0.title == "Ban" })?.isEnabled == true)
-		#expect(entries.first(where: { $0.title == "Kick" })?.isEnabled == false)
+		#expect(entries.map(\.title) == ["Ban"])
+		#expect(entries.first?.isEnabled == true)
+	}
+
+	@Test("Separators left with nothing to separate are dropped")
+	func redundantSeparatorsAreDropped() {
+		let validator = MenuValidator()
+		validator.disabledTitles = ["Kick"]
+		let source = menu(["Ban", "Kick"], validatedBy: validator)
+		source.insertItem(.separator(), at: 1)
+		source.addItem(.separator())
+
+		let entries = MenuItemSnapshot.validating(source)
+
+		#expect(entries.map(\.title) == ["Ban"])
 	}
 
 	/// Validation used to run from inside `body`, so every evaluation of the
@@ -489,15 +501,18 @@ struct MenuContentViewTests {
 	}
 
 	@Test("Separators and submenus keep their shape")
-	func separatorsAndSubmenusAreDescribed() {
+	func separatorsAndSubmenusAreDescribed() throws {
 		let validator = MenuValidator()
 		let parent = menu(["Client-to-Client"], validatedBy: validator)
 		parent.addItem(.separator())
 		parent.item(at: 0)?.submenu = menu(["Lag (PING)"], validatedBy: validator)
+		let trailing = try #require(menu(["Kick"], validatedBy: validator).items.first)
+		trailing.menu?.removeItem(trailing)
+		parent.addItem(trailing)
 
 		let entries = MenuItemSnapshot.validating(parent)
 
-		#expect(entries.count == 2)
+		#expect(entries.count == 3)
 		guard case let .submenu(children) = entries[0].content else {
 			Issue.record("The first entry should carry a submenu")
 			return

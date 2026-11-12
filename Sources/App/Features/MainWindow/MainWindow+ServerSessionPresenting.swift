@@ -16,11 +16,12 @@ extension MainWindow: ServerSessionPresenting {
 
 			return sessionSheet.sessionId == sessionIdentifier
 		}
-		/* The access list and the highlight log are windows rather than sheets
-		 now, so the main window no longer takes them down with its own; a window
-		 about a connection that is going away has nothing left to show. */
+		/* The access list, the highlight log and People are windows rather than
+		 sheets now, so the main window no longer takes them down with its own; a
+		 window about a connection that is going away has nothing left to show. */
 		AppServices.channelMaskList.close { $0.sessionId == sessionIdentifier }
 		AppServices.highlightLogs.close(for: sessionIdentifier)
+		AppServices.addressBooks.close(for: sessionIdentifier)
 	}
 
 	func maskListEntryReceived(

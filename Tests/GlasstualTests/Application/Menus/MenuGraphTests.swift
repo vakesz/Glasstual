@@ -300,20 +300,27 @@ struct MenuGraphTests {
 	}
 
 	/** The Window menu names windows; a digit that means "the fourth channel in
-	 whatever order the sidebar happens to be in" does not. */
-	@Test("The Window menu owns the Command-digit shortcuts")
+	 whatever order the sidebar happens to be in" does not. The digits count
+	 down the menu in the order the windows are listed. */
+	@Test("The Window menu owns the Command-digit shortcuts, numbered in menu order")
 	func windowMenuOwnsTheDigitShortcuts() throws {
 		_ = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
+		let window = try #require(mainMenu.item(for: .windowMenu)?.submenu)
 
 		let expected: [(MenuCommand, String)] = [
-			(.mainWindow, "1"), (.addressBook, "2"), (.highlightList, "4"),
+			(.mainWindow, "1"), (.addressBook, "2"), (.highlightList, "3"), (.browseTranscriptLogs, "4"),
 		]
 		for (command, key) in expected {
-			let item = try #require(mainMenu.item(for: command))
+			let item = try #require(window.item(for: command))
 			#expect(item.keyEquivalent == key)
 			#expect(item.keyEquivalentModifierMask == .command)
 		}
+		let digits = window.items
+			.filter { $0.keyEquivalentModifierMask == .command && Int($0.keyEquivalent) != nil }
+			.map(\.keyEquivalent)
+		#expect(digits == ["1", "2", "3", "4"])
+		#expect(String(localized: .MainWindow.menuWindowHighlightList) == "Highlights")
 
 		let transfers = try #require(mainMenu.item(for: .fileTransfers))
 		#expect(transfers.keyEquivalent == "l")
@@ -342,18 +349,22 @@ struct MenuGraphTests {
 	}
 
 	/** Muting is an application-wide mode, and a mode is ticked rather than
-	 renamed. It sits in View, and the Dock menu offers it as well. */
-	@Test("The mute toggles sit in the View menu and the Dock menu")
-	func muteTogglesLiveInTheViewMenu() throws {
+	 renamed. View is for how content looks, so the toggles sit in the
+	 application menu under Settings, and the Dock menu offers them as well. */
+	@Test("The mute toggles sit in the application menu and the Dock menu")
+	func muteTogglesLiveInTheApplicationMenu() throws {
 		let controller = MenuActionController()
 		let mainMenu = try #require(NSApp.mainMenu)
 		let view = try #require(mainMenu.item(for: .viewMenu)?.submenu)
 		let application = try #require(mainMenu.item(for: .applicationMenu)?.submenu)
 		let file = try #require(mainMenu.item(for: .fileMenu)?.submenu)
 
-		#expect(view.item(for: .muteNotifications) != nil)
-		#expect(view.item(for: .muteNotificationSounds) != nil)
-		#expect(application.item(for: .muteNotifications) == nil)
+		#expect(application.item(for: .muteNotifications) != nil)
+		#expect(application.item(for: .muteNotificationSounds) != nil)
+		let settings = try #require(application.items.firstIndex { $0.command == .settings })
+		let mute = try #require(application.items.firstIndex { $0.command == .muteNotifications })
+		#expect(settings < mute)
+		#expect(view.item(for: .muteNotifications) == nil)
 		#expect(file.item(for: .muteNotifications) == nil)
 		#expect(controller.dockMenu.item(for: .muteNotifications) != nil)
 		#expect(String(localized: .MainWindow.menuMuteNotifications) == "Mute Notifications")
@@ -370,7 +381,8 @@ struct MenuGraphTests {
 		#expect(view.item(for: .sortChannelList) != nil)
 		#expect(window.item(for: .sortChannelList) == nil)
 		let logs = try #require(file.item(for: .viewLogs))
-		#expect(logs.keyEquivalent == "3")
+		/* Command-3 names the third window in the Window menu. */
+		#expect(logs.keyEquivalent.isEmpty)
 		#expect(window.item(for: .viewLogs) == nil)
 	}
 
@@ -418,12 +430,74 @@ struct MenuGraphTests {
 		#expect(mainMenu.item(for: .queryMenu)?.isHidden == false)
 	}
 
-	/// AppKit would append its own list of open windows to a menu that already
-	/// names every window this application opens.
-	@Test("The Window menu is not handed to AppKit to fill in")
-	func windowMenuIsNotDelegatedToAppKit() {
+	/** The Window menu is the system's: AppKit adds Fill, Center, Move &
+	 Resize and the list of open windows to it, so the application keeps no
+	 Center command of its own beside the system's. */
+	@Test("The Window menu is handed to AppKit, with no Center Window of its own")
+	func windowMenuIsTheSystemWindowsMenu() throws {
 		_ = MenuActionController()
-		#expect(NSApp.windowsMenu == nil)
+		let mainMenu = try #require(NSApp.mainMenu)
+		let window = try #require(mainMenu.item(for: .windowMenu)?.submenu)
+
+		#expect(NSApp.windowsMenu === window)
+		#expect(window.items.contains { $0.action == NSSelectorFromString("centerMainWindow:") } == false)
+		#expect(MenuCommand(rawValue: "centerWindow") == nil)
+	}
+
+	/** HIG File menu order: what makes something, then Close, then what moves
+	 data in and out, then Print last. Adding a server is a File command. */
+	@Test("The File menu runs Add Server, Close, settings transfer and Print in that order")
+	func fileMenuFollowsTheStandardOrder() throws {
+		let controller = MenuActionController()
+		let file = try #require(MenuGraph.builtMainMenu(for: controller).item(for: .fileMenu)?.submenu)
+		let commands = file.items.compactMap(\.command)
+
+		#expect(commands == [.addServer, .closeWindow, .importSettings, .exportSettings, .viewLogs, .printLog])
+		#expect(String(localized: .MainWindow.menuFileCloseWindow) == "Close")
+		let server = try #require(MenuGraph.builtMainMenu(for: controller).item(for: .serverMenu)?.submenu)
+		#expect(server.item(for: .addServer) == nil)
+	}
+
+	/// Plain Mac names where they exist; IRC terms stay where there is none.
+	@Test("The menus use plain Mac names")
+	func menusUsePlainNames() {
+		#expect(String(localized: .MainWindow.menuBarQuery) == "Conversation")
+		#expect(String(localized: .MainWindow.menuBarNavigation) == "Go")
+		#expect(String(localized: .MainWindow.menuMemberWhois) == "Get Info")
+		#expect(String(localized: .MainWindow.menuMemberPrivateMessage) == "Send Message")
+		#expect(String(localized: .MainWindow.menuQueryClose) == "Close Conversation")
+	}
+
+	/// A context menu leads with what people reach for most.
+	@Test("The member menu leads with Send Message and Get Info, and ends with the protocol submenus")
+	func memberMenuOrder() {
+		let controller = MenuActionController()
+		let commands = controller.userControlMenu.items.compactMap(\.command)
+
+		#expect(Array(commands.prefix(3)) == [.startDirectConversation, .messagePrivatelyInChannel, .whois])
+		#expect(Array(commands.suffix(2)) == [.ctcp, .ircOperator])
+	}
+
+	/// The order of the system's own text menus: look up, then the clipboard,
+	/// then the application's commands.
+	@Test("The transcript menu follows the system's text menu order")
+	func transcriptMenuOrder() {
+		let controller = MenuActionController()
+		let commands = controller.transcriptGeneralMenu.items.compactMap(\.command)
+
+		#expect(commands == [
+			.transcriptDictionary, .webSearch, .copy, .paste, .queryLogs, .transcriptChannelMenu, .changeNickname,
+		])
+	}
+
+	/// The acknowledgements are in the About panel, so Help names no document.
+	@Test("Help opens the Help Book and keeps no Acknowledgements item")
+	func helpMenuHasNoAcknowledgements() throws {
+		let controller = MenuActionController()
+		let help = try #require(MenuGraph.builtMainMenu(for: controller).item(for: .helpMenu)?.submenu)
+
+		#expect(help.items.first?.command == .glasstualHelp)
+		#expect(MenuCommand(rawValue: "acknowledgements") == nil)
 	}
 
 	private func allItems(of menu: NSMenu) -> [NSMenuItem] {
@@ -555,9 +629,9 @@ struct MenuGraphTests {
 		#expect(shared.isEmpty, "Shortcuts with more than one command: \(shared)")
 	}
 
-	/// The Channel and Query menus hang in the menu bar and take the same
-	/// symbols as every other menu there.
-	@Test("The menu bar carries symbols on mapped commands")
+	/// Icons go on a few key commands only; the standard ones are left to
+	/// AppKit.
+	@Test("The menu bar carries symbols on the key commands only")
 	func menuBarCarriesSymbolsOnMappedCommands() throws {
 		let controller = try #require(AppServices.delegate?.menuController)
 
@@ -570,7 +644,9 @@ struct MenuGraphTests {
 		let bar = MenuGraph.builtMainMenu(for: controller)
 		MenuPresentation.apply(to: bar)
 		let items = allItems(of: bar)
-		#expect(items.first { $0.command == .settings }?.image != nil)
-		#expect(items.first { $0.command == .toggleSidebar }?.image != nil)
+		#expect(items.first { $0.command == .connect }?.image != nil)
+		#expect(items.first { $0.command == .settings }?.image == nil)
+		#expect(items.first { $0.command == .toggleSidebar }?.image == nil)
+		#expect(items.first { $0.command == .printLog }?.image == nil)
 	}
 }

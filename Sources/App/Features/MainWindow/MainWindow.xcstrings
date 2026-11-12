@@ -2334,43 +2334,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navigation"
+            "value": "Go"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navigáció"
+            "value": "Ugrás"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navigation"
+            "value": "Gehe zu"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navegación"
+            "value": "Ir"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navigation"
+            "value": "Aller"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ナビゲーション"
+            "value": "移動"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Navegação"
+            "value": "Ir"
           }
         }
       }
@@ -2382,37 +2382,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Query"
+            "value": "Conversation"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Privát beszélgetés"
+            "value": "Beszélgetés"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gespräch"
+            "value": "Konversation"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mensaje directo"
+            "value": "Conversación"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Message privé"
+            "value": "Conversation"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クエリ"
+            "value": "会話"
           }
         },
         "pt-BR": {
@@ -4974,43 +4974,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close Window"
+            "value": "Close"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ablak bezárása"
+            "value": "Bezárás"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fenster schließen"
+            "value": "Schließen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerrar ventana"
+            "value": "Cerrar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fermer la fenêtre"
+            "value": "Fermer"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ウインドウを閉じる"
+            "value": "閉じる"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fechar Janela"
+            "value": "Fechar"
           }
         }
       }
@@ -5155,54 +5155,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Imprimir…"
-          }
-        }
-      }
-    },
-    "menu-help-acknowledgements": {
-      "comment": "Help menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Acknowledgements"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Köszönetnyilvánítás"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Danksagungen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agradecimientos"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remerciements"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "謝辞"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Agradecimentos"
           }
         }
       }
@@ -6408,49 +6360,49 @@
       }
     },
     "menu-member-private-message": {
-      "comment": "Member list context menu item title.",
+      "comment": "Member list context menu item title: opens a private conversation with the member.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private Message (Query)"
+            "value": "Send Message"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Privát üzenet (beszélgetés)"
+            "value": "Üzenet küldése"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Private Nachricht (Gespräch)"
+            "value": "Nachricht senden"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mensaje directo (Query)"
+            "value": "Enviar mensaje"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Message privé (Query)"
+            "value": "Envoyer un message"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クエリ"
+            "value": "メッセージを送信"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mensagem Direta (Query)"
+            "value": "Enviar Mensagem"
           }
         }
       }
@@ -6888,49 +6840,49 @@
       }
     },
     "menu-member-whois": {
-      "comment": "Member list context menu item title.",
+      "comment": "Member list context menu item title: asks the server who the member is (WHOIS).",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Get Info (Whois)"
+            "value": "Get Info"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adatok lekérése (WHOIS)"
+            "value": "Adatok lekérése"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Informationen abrufen (WHOIS)"
+            "value": "Informationen abrufen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obtener información (Whois)"
+            "value": "Obtener información"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obtenir des informations (Whois)"
+            "value": "Obtenir des informations"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "情報を取得(Whois)"
+            "value": "情報を取得"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obter Informações (Whois)"
+            "value": "Obter Informações"
           }
         }
       }
@@ -8088,13 +8040,13 @@
       }
     },
     "menu-query-close": {
-      "comment": "Query menu item title.",
+      "comment": "Conversation menu item title: closes the selected private conversation.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close Query"
+            "value": "Close Conversation"
           }
         },
         "hu": {
@@ -8106,13 +8058,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gespräch schließen"
+            "value": "Konversation schließen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerrar mensaje directo"
+            "value": "Cerrar conversación"
           }
         },
         "fr": {
@@ -8124,7 +8076,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クエリを閉じる"
+            "value": "会話を閉じる"
           }
         },
         "pt-BR": {
@@ -8136,49 +8088,49 @@
       }
     },
     "menu-query-logs": {
-      "comment": "Query menu item title.",
+      "comment": "Conversation menu and transcript context menu item title: shows the conversation's logs.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Query Logs"
+            "value": "View Logs"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beszélgetés naplói"
+            "value": "Naplók megtekintése"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gesprächsprotokolle"
+            "value": "Protokolle anzeigen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Registros de mensajes directos"
+            "value": "Ver registros"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Journaux de la conversation"
+            "value": "Afficher les journaux"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クエリのログ"
+            "value": "ログを表示"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Registros da Conversa"
+            "value": "Ver Registros"
           }
         }
       }
@@ -9479,54 +9431,6 @@
         }
       }
     },
-    "menu-window-center": {
-      "comment": "Window menu item title.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Center Window"
-          }
-        },
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ablak középre helyezése"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fenster zentrieren"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Centrar ventana"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Centrer la fenêtre"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ウインドウを中央に配置"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Centralizar Janela"
-          }
-        }
-      }
-    },
     "menu-window-file-transfers": {
       "comment": "Window menu item title.",
       "extractionState": "manual",
@@ -9582,43 +9486,43 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Highlight List"
+            "value": "Highlights"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Említések listája"
+            "value": "Említések"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hervorhebungsliste"
+            "value": "Hervorhebungen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lista de menciones"
+            "value": "Menciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liste des mentions"
+            "value": "Mentions"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ハイライトリスト"
+            "value": "ハイライト"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lista de Destaques"
+            "value": "Destaques"
           }
         }
       }

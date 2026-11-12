@@ -7,21 +7,12 @@ import AppKit
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
 /// place stops the contextual menus assembled at runtime from drifting apart.
 ///
-/// Contextual menus and the menu bar both get symbols, following the macOS 26
-/// convention: an actionable command with a clear symbol carries it, and a
-/// command without one stays blank. Items AppKit owns -- Services, the Hide
-/// and Quit commands, Minimize, Zoom, Bring All to Front -- have no mapping
-/// and are left to the system. The Channel and Query menus hang in the menu
-/// bar and take the same symbols as their contextual copies. Whether a symbol
-/// is drawn is AppKit's call, which follows the running release.
+/// Icons go only on the few key commands ``MenuCommand/symbolNames`` maps,
+/// each group all or none. The standard commands carry none of this
+/// application's, so AppKit draws its own where the system does, and every
+/// image keeps the size AppKit gives menu images: none is forced here.
 @MainActor
 enum MenuPresentation {
-	private static let symbolConfiguration = NSImage.SymbolConfiguration(
-		pointSize: NSFont.systemFontSize,
-		weight: .regular,
-		scale: .medium
-	)
-
 	static func apply(to menu: NSMenu?) {
 		guard let menu else {
 			return
@@ -33,10 +24,6 @@ enum MenuPresentation {
 			{
 				item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: item.title)
 			}
-
-			/* Visibility stays automatic: AppKit decides per release and
-			 system setting whether menu images are drawn. */
-			item.image = item.image?.withSymbolConfiguration(symbolConfiguration) ?? item.image
 
 			if item.hasSubmenu {
 				apply(to: item.submenu)
@@ -76,7 +63,8 @@ enum MenuPresentation {
 
 		let reactMenu = NSMenu(title: react.title)
 
-		for emoji in ["👍", "❤️", "😂", "😮", "😢", "👎"] {
+		/* The same row the reaction popover offers, so the two ways in agree. */
+		for emoji in RecentReactions.row(recent: SettingsKeys.Reactions.recent.value) {
 			let item = NSMenuItem(
 				title: emoji,
 				action: #selector(MenuActionController.reactToMessage(_:)),
@@ -150,10 +138,11 @@ enum MenuPresentation {
 			menuItem.representedObject = picker
 		}
 
-		menuItem.image = NSImage(
-			systemSymbolName: "square.and.arrow.up",
-			accessibilityDescription: title
-		)?.withSymbolConfiguration(symbolConfiguration)
+		/* The standard item brings the system's own image; the disabled
+		 stand-in draws the same symbol. */
+		if menuItem.image == nil {
+			menuItem.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: title)
+		}
 
 		return menuItem
 	}

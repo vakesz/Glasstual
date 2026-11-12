@@ -167,6 +167,13 @@ enum AccessibilityIdentifier {
 	static let serverChannelListFilters = "server-channel-list-filters"
 	static let serverChannelListMinimumUsers = "server-channel-list-minimum-users"
 
+	// MARK: - People
+
+	static let addressBookWindow = "address-book-window"
+	static let addressBookList = "address-book-list"
+	static let addressBookAdd = "address-book-add"
+	static let addressBookRemove = "address-book-remove"
+
 	// MARK: - Main window
 
 	/** A sidebar row: `sidebar-row-<kind>-<name>`.

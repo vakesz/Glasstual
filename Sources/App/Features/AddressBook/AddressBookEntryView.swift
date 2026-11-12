@@ -4,39 +4,9 @@
 
 import SwiftUI
 
-@MainActor
-final class AddressBookEntrySheet: SheetSession {
-	let model: AddressBookEntryModel
-
-	private let onSave: (AddressBookEntry) -> Void
-
-	convenience init(entryType: AddressBookEntryKind, onSave: @escaping (AddressBookEntry) -> Void) {
-		self.init(model: AddressBookEntryModel(entryType: entryType), onSave: onSave)
-	}
-
-	convenience init(entry: AddressBookEntry, onSave: @escaping (AddressBookEntry) -> Void) {
-		self.init(model: AddressBookEntryModel(entry: entry), onSave: onSave)
-	}
-
-	private init(model: AddressBookEntryModel, onSave: @escaping (AddressBookEntry) -> Void) {
-		self.model = model
-		self.onSave = onSave
-		super.init(window: nil)
-		setContent(AddressBookEntryView(
-			model: model,
-			submit: { [weak self] in self?.submit() },
-			cancel: { [weak self] in self?.cancel() }
-		))
-	}
-
-	override func submit() {
-		guard let entry = model.validatedEntry() else { return }
-
-		onSave(entry)
-		super.submit()
-	}
-}
-
+/** The editor for one address book entry, shown as a sheet on the People
+ window. It edits ``AddressBookEntryModel``; the window writes an accepted
+ entry back into the connection. */
 struct AddressBookEntryView: View {
 	@Bindable var model: AddressBookEntryModel
 	let submit: () -> Void

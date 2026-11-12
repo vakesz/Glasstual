@@ -102,14 +102,4 @@ struct AddressBookSheetTests {
 		#expect(model.validatedEntry() == nil)
 		#expect(model.validationMessage == CommonValidationStrings.invalidNickname)
 	}
-
-	@Test("The sheet reports the entry it accepted")
-	func sheetReportsTheAcceptedEntry() throws {
-		var submitted: AddressBookEntry?
-		let sheet = AddressBookEntrySheet(entryType: .userTracking) { submitted = $0 }
-		sheet.model.entry.hostmask = "vakesz"
-
-		sheet.submit()
-		#expect(try #require(submitted).hostmask == "vakesz")
-	}
 }

@@ -29,8 +29,11 @@ extension MenuActionController {
 		MenuSheetPresenter.presentChannelInvite(for: target.nicknames, on: target.session, to: channels)
 	}
 
+	/// Window ▸ People: the selected server's ignored and tracked people, in a
+	/// window of their own.
 	@objc func showAddressBook(_: Any?) {
-		presentServerPropertiesForSelectedSession(at: .addressBook)
+		guard let session = context.selectedSession else { return }
+		AppServices.addressBooks.open(for: session)
 	}
 
 	@objc func showOnboardingWindow(_: Any?) {

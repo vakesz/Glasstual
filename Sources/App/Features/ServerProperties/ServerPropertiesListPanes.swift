@@ -89,55 +89,6 @@ struct ServerPropertiesHighlightsPane: View {
 	}
 }
 
-struct ServerPropertiesAddressBookPane: View {
-	@Bindable var model: ServerPropertiesModel
-	weak var commands: (any ServerPropertiesCommands)?
-
-	var body: some View {
-		VStack(alignment: .leading, spacing: UISpacing.wide) {
-			List(selection: $model.selectedAddressBookEntryID) {
-				ForEach(model.config.ignoreList, id: \.uniqueIdentifier) { entry in
-					VStack(alignment: .leading) {
-						Text(verbatim: entry.hostmask)
-						Text(entry.entryType.listTitle)
-							.font(.caption).foregroundStyle(.secondary)
-					}.tag(entry.uniqueIdentifier)
-				}
-			}
-			.listCommands(.addressBook, commands: commands, selection: $model.selectedAddressBookEntryID)
-			.overlay {
-				if model.config.ignoreList.isEmpty {
-					ServerPropertiesEmptyList(kind: .addressBook)
-				}
-			}
-
-			HStack {
-				/* A menu rather than a button, because an entry is either an
-				 ignore or a tracked user and this one list holds both. */
-				Menu {
-					Button(.ServerProperties.addUserIgnoreEntry) { commands?.addIgnoreEntry() }
-					Button(.ServerProperties.addUserTrackingEntry) { commands?.addTrackingEntry() }
-				} label: {
-					Label(String(localized: ServerPropertiesListKind.addressBook.addLabel), systemImage: "plus")
-						.labelStyle(.iconOnly)
-				}
-				.menuIndicator(.hidden)
-				.help(ServerPropertiesListKind.addressBook.addLabel)
-
-				ServerPropertiesListEditButtons(
-					kind: .addressBook,
-					hasSelection: model.selectedAddressBookEntryID != nil,
-					commands: commands
-				)
-				Spacer()
-			}
-			.buttonStyle(.borderless)
-			.padding(.horizontal, SheetMetrics.margin)
-			.padding(.bottom, UISpacing.wide)
-		}
-	}
-}
-
 private struct ServerPropertiesEmptyList: View {
 	let kind: ServerPropertiesListKind
 

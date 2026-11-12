@@ -49,7 +49,7 @@ struct ServerPropertiesView: View {
 						/* A network of a bouncer account takes its identity, endpoint and
 						 socket settings from the account. */
 						Section(.ServerProperties.navigationSectionConnection) {
-							navigationRows([.channelList, .highlights, .addressBook, .connectCommands])
+							navigationRows([.channelList, .highlights, .connectCommands])
 							if model.profile != nil {
 								navigationRows([.profile])
 							}
@@ -64,7 +64,7 @@ struct ServerPropertiesView: View {
 								navigationRows([.profile])
 							}
 							navigationRows([
-								.channelList, .highlights, .addressBook,
+								.channelList, .highlights,
 								.connectCommands, .disconnectMessages, .encoding,
 							])
 						}
@@ -123,7 +123,6 @@ struct ServerPropertiesView: View {
 			}
 		case .channelList: ServerPropertiesChannelListPane(model: model, commands: commands)
 		case .highlights: ServerPropertiesHighlightsPane(model: model, commands: commands)
-		case .addressBook: ServerPropertiesAddressBookPane(model: model, commands: commands)
 		case .connectCommands: ServerPropertiesConnectCommandsPane(model: model)
 		case .disconnectMessages: ServerPropertiesDisconnectMessagesPane(model: model)
 		case .encoding: ServerPropertiesEncodingPane(model: model)

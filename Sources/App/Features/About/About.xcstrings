@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "acknowledgements-button" : {
-      "comment" : "Link in the About panel credits that opens third-party acknowledgements.",
+      "comment" : "Heading in the About panel credits above the third-party acknowledgements.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

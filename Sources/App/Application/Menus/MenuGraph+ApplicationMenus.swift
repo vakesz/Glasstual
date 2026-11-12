@@ -31,6 +31,22 @@ extension MenuGraph {
 			key: ","
 		),
 		.separator(),
+		/* Muting is an application-wide mode, not a way of looking at content,
+			so it sits with the other application commands. The Dock menu
+			offers it as well. */
+		.item(
+			String(localized: .MainWindow.menuMuteNotifications),
+			.muteNotifications,
+			#selector(MenuActionController.toggleMuteOnNotifications(_:))
+		),
+		.item(
+			String(localized: .MainWindow.menuMuteNotificationSounds),
+			.muteNotificationSounds,
+			#selector(MenuActionController.toggleMuteOnNotificationSounds(_:)),
+			key: "m",
+			modifiers: [.command, .shift]
+		),
+		.separator(),
 		.item(String(localized: .MainWindow.menuApplicationServices), .services, children: []),
 		.separator(),
 		.item(String(localized: .MainWindow.menuApplicationHide), .hideApplication, #selector(NSApplication.hide(_:)), key: "h"),
@@ -46,8 +62,12 @@ extension MenuGraph {
 		.item(String(localized: .MainWindow.menuApplicationQuit), .quit, #selector(NSApplication.terminate(_:)), key: "q"),
 	]
 
+	/** The order the system's own File menus use: what adds something, then
+	 Close, then what moves data in and out, then Print last. */
 	static let fileEntries: [Entry] = [
-		.item(String(localized: .MainWindow.menuFilePrint), .printLog, #selector(MenuActionController.printTranscript(_:)), key: "p"),
+		.item(String(localized: .MainWindow.menuServerAddServer), .addServer, #selector(MenuActionController.addServer(_:))),
+		.separator(),
+		.item(String(localized: .MainWindow.menuFileCloseWindow), .closeWindow, #selector(MenuActionController.closeWindow(_:)), key: "w"),
 		.separator(),
 		.item(
 			String(localized: .MainWindow.menuFileImportSettings),
@@ -60,14 +80,15 @@ extension MenuGraph {
 			#selector(MenuActionController.exportSettings(_:))
 		),
 		.separator(),
+		/* No key equivalent: the Command-digit keys name windows in the
+			Window menu. */
 		.item(
 			String(localized: .MainWindow.menuWindowViewLogs),
 			.viewLogs,
-			#selector(MenuActionController.openLogLocation(_:)),
-			key: "3"
+			#selector(MenuActionController.openLogLocation(_:))
 		),
 		.separator(),
-		.item(String(localized: .MainWindow.menuFileCloseWindow), .closeWindow, #selector(MenuActionController.closeWindow(_:)), key: "w"),
+		.item(String(localized: .MainWindow.menuFilePrint), .printLog, #selector(MenuActionController.printTranscript(_:)), key: "p"),
 	]
 
 	static let viewEntries: [Entry] = [
@@ -166,20 +187,6 @@ extension MenuGraph {
 			),
 		]),
 		.separator(),
-		/* Muting is an application-wide mode. The Dock menu offers it as well. */
-		.item(
-			String(localized: .MainWindow.menuMuteNotifications),
-			.muteNotifications,
-			#selector(MenuActionController.toggleMuteOnNotifications(_:))
-		),
-		.item(
-			String(localized: .MainWindow.menuMuteNotificationSounds),
-			.muteNotificationSounds,
-			#selector(MenuActionController.toggleMuteOnNotificationSounds(_:)),
-			key: "m",
-			modifiers: [.command, .shift]
-		),
-		.separator(),
 		.item(
 			String(localized: .MainWindow.menuViewEnterFullScreen),
 			.enterFullScreen,
@@ -189,15 +196,14 @@ extension MenuGraph {
 		),
 	]
 
+	/** `NSApp.windowsMenu` is this menu, so AppKit adds Fill, Center, Move &
+	 Resize and the tiling commands after Zoom, and lists the open windows
+	 after Bring All to Front. The application's own windows come between,
+	 numbered in the order they are listed. */
 	static let windowEntries: [Entry] = [
 		.item(String(localized: .MainWindow.menuWindowMinimize), .minimize, #selector(NSWindow.performMiniaturize(_:)), key: "m"),
 		.item(String(localized: .MainWindow.menuWindowZoom), .zoom, #selector(NSWindow.performZoom(_:))),
 		.separator(),
-		.item(
-			String(localized: .MainWindow.menuWindowCenter),
-			.centerWindow,
-			#selector(MenuActionController.centerMainWindow(_:))
-		),
 		.item(
 			String(localized: .MainWindow.menuWindowResetSize),
 			.resetWindow,
@@ -217,15 +223,15 @@ extension MenuGraph {
 			key: "2"
 		),
 		.item(
-			String(localized: .TranscriptLogViewer.menuTitle),
-			.browseTranscriptLogs,
-			#selector(MenuActionController.showTranscriptLogViewer(_:)),
-			key: "5"
-		),
-		.item(
 			String(localized: .MainWindow.menuWindowHighlightList),
 			.highlightList,
 			#selector(MenuActionController.showHighlightLog(_:)),
+			key: "3"
+		),
+		.item(
+			String(localized: .TranscriptLogViewer.menuTitle),
+			.browseTranscriptLogs,
+			#selector(MenuActionController.showTranscriptLogViewer(_:)),
 			key: "4"
 		),
 		.item(
@@ -267,17 +273,14 @@ extension MenuGraph {
 			#selector(MenuActionController.connectToGlasstualTestingChannel(_:))
 		),
 		.separator(),
+		/* The acknowledgements are in the About panel's credits, where the
+			system puts them. */
 		.item(String(localized: .MainWindow.menuHelpWelcome), .welcome, #selector(MenuActionController.showOnboardingWindow(_:))),
-		.item(
-			String(localized: .MainWindow.menuHelpAcknowledgements),
-			.acknowledgements,
-			#selector(MenuActionController.openAcknowledgements(_:))
-		),
 	]
 
 	/*  The transcript's own menu.
 
-	 Change Nickname, Copy, Paste and Query Logs are the same commands the menu
+	 Change Nickname, Copy, Paste and View Logs are the same commands the menu
 	 bar offers, placed here as well: the title, the key equivalent and the menu
 	 they hang in are this table's, while the identity -- and with it the
 	 validator -- stays one. */

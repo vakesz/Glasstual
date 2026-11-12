@@ -11,12 +11,14 @@ struct MenuPresentationTests {
 	/// That every mapped symbol exists in the system catalogue is stated once,
 	/// in `MenuCommandTests.symbolNamesResolve`; what this adds is that the
 	/// symbols go to actionable commands and not to the ones AppKit owns.
-	@Test("Actionable commands take a symbol and system-owned ones do not")
+	@Test("Key commands take a symbol and standard ones do not")
 	func symbolsBelongToActionableCommands() {
 		#expect(MenuCommand.connect.symbolName == "bolt")
 		#expect(MenuCommand.whois.symbolName == "info.circle")
-		#expect(MenuCommand.settings.symbolName == "gearshape")
-		#expect(MenuCommand.toggleSidebar.symbolName == "sidebar.left")
+		/* The standard commands are left to AppKit, which draws its own. */
+		#expect(MenuCommand.settings.symbolName == nil)
+		#expect(MenuCommand.toggleSidebar.symbolName == nil)
+		#expect(MenuCommand.copy.symbolName == nil)
 		#expect(MenuCommand.quit.symbolName == nil)
 		#expect(MenuCommand.hideApplication.symbolName == nil)
 		#expect(MenuCommand.services.symbolName == nil)
@@ -84,9 +86,11 @@ struct MenuPresentationTests {
 
 		let reactionItems = try #require(items[2].submenu).items
 
-		#expect(reactionItems.count == 8)
+		/* The same row the reaction popover offers, then Other…. */
+		let row = RecentReactions.row(recent: SettingsKeys.Reactions.recent.value)
+		#expect(reactionItems.count == row.count + 2)
 		#expect(reactionItems[0].action == #selector(MenuTarget.reactToMessage(_:)))
-		#expect((reactionItems[0].representedObject as? MessageMenuContext)?.emoji == "👍")
+		#expect(reactionItems.prefix(row.count).map { ($0.representedObject as? MessageMenuContext)?.emoji } == row)
 		#expect(reactionItems.last?.action == #selector(MenuTarget.reactToMessageWithOtherEmoji(_:)))
 	}
 

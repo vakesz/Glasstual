@@ -78,7 +78,15 @@ final class MenuActionController: NSObject, NSMenuDelegate, NSMenuItemValidation
 		if isDockConversationItem(menuItem) {
 			return true
 		}
-		return validator.validate(menuItem)
+		let isAvailable = validator.validate(menuItem)
+		/* Context menus leave out what does not apply; the menu bar dims it.
+		 See ``MenuContextualVisibility``. */
+		let isContextual = MenuContextualVisibility.isContextual(menuItem.menu, menuBar: NSApp.mainMenu, dock: dockMenu)
+		MenuContextualVisibility.settle(menuItem, isAvailable: isAvailable, isContextual: isContextual)
+		if isContextual, let menu = menuItem.menu {
+			MenuContextualVisibility.hideRedundantSeparators(in: menu)
+		}
+		return isAvailable
 	}
 }
 

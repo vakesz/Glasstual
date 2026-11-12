@@ -23,6 +23,14 @@ struct AccessibilityIdentifiersTests {
 		#expect(item.command == .serverProperties)
 	}
 
+	@Test("The People window")
+	func addressBook() {
+		#expect(AccessibilityIdentifier.addressBookWindow == "address-book-window")
+		#expect(AccessibilityIdentifier.addressBookList == "address-book-list")
+		#expect(AccessibilityIdentifier.addressBookAdd == "address-book-add")
+		#expect(AccessibilityIdentifier.addressBookRemove == "address-book-remove")
+	}
+
 	@Test("Alerts and their buttons")
 	func alerts() {
 		#expect(AccessibilityIdentifier.certificateTrust == "certificate-trust")

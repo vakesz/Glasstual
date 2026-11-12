@@ -109,11 +109,27 @@ struct MenuItemSnapshot: Identifiable {
 		return snapshot(menu, context: nil)
 	}
 
+	/** The items a context menu shows: those AppKit left visible, less the
+	 unavailable ones a context menu leaves out rather than dims (see
+	 ``MenuContextualVisibility``), with the separators that no longer
+	 separate anything dropped. The menus snapshotted here hang in the menu
+	 bar too, which keeps dimming them. */
 	private static func snapshot(_ menu: NSMenu, context: MenuTargetContext?) -> [MenuItemSnapshot] {
 		menu.update()
 
-		return menu.items.compactMap { item in
-			guard item.isHidden == false else { return nil }
+		let shown = menu.items.map { item in
+			/* An item with no action is a label or a submenu holder, which
+			 nothing validated. */
+			item.isHidden == false
+				&& (item.isSeparatorItem || item.isEnabled || item.action == nil
+					|| MenuContextualVisibility.hidesWhenUnavailable(item.command) == false)
+		}
+		let separators = MenuContextualVisibility.visibleSeparatorIndices(in: zip(menu.items, shown).map { item, isShown in
+			item.isSeparatorItem ? .separator : isShown ? .item : .hidden
+		})
+
+		return menu.items.enumerated().compactMap { index, item in
+			guard shown[index], item.isSeparatorItem == false || separators.contains(index) else { return nil }
 
 			let content: Content = if item.isSeparatorItem {
 				.separator

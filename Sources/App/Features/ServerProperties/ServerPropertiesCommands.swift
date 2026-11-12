@@ -25,11 +25,6 @@ protocol ServerPropertiesCommands: AnyObject {
 	func editHighlight()
 	func deleteHighlight()
 
-	func addIgnoreEntry()
-	func addTrackingEntry()
-	func editAddressBookEntry()
-	func deleteAddressBookEntry()
-
 	func chooseCertificate()
 	func resetCertificate()
 	/// Puts the NickServ registration command for `fingerprint` on the
@@ -37,22 +32,20 @@ protocol ServerPropertiesCommands: AnyObject {
 	func copyNickServCommand(for fingerprint: String)
 }
 
-/** One of the sheet's three editable lists.
+/** One of the sheet's two editable lists.
 
- The three panes are the same list with the same three buttons over different
+ The two panes are the same list with the same three buttons over different
  contents, so what changes between them -- what each button is called, and which
  command it runs -- is named here once instead of travelling beside every
  closure. */
 enum ServerPropertiesListKind {
 	case channels
 	case highlights
-	case addressBook
 
 	var pane: ServerPropertiesSelection {
 		switch self {
 		case .channels: .channelList
 		case .highlights: .highlights
-		case .addressBook: .addressBook
 		}
 	}
 
@@ -60,7 +53,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: .ServerProperties.channelsEmptyTitle
 		case .highlights: .ServerProperties.highlightsEmptyTitle
-		case .addressBook: .ServerProperties.addressBookEmptyTitle
 		}
 	}
 
@@ -68,7 +60,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: .ServerProperties.channelsEmptyDescription
 		case .highlights: .ServerProperties.highlightsEmptyDescription
-		case .addressBook: .ServerProperties.addressBookEmptyDescription
 		}
 	}
 
@@ -76,7 +67,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: .ServerProperties.addChannelButton
 		case .highlights: .ServerProperties.addHighlightButton
-		case .addressBook: .ServerProperties.addAddressBookEntryButton
 		}
 	}
 
@@ -84,7 +74,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: .ServerProperties.editChannelButton
 		case .highlights: .ServerProperties.editHighlightButton
-		case .addressBook: .ServerProperties.editAddressBookEntryButton
 		}
 	}
 
@@ -92,7 +81,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: .ServerProperties.removeChannelButton
 		case .highlights: .ServerProperties.removeHighlightButton
-		case .addressBook: .ServerProperties.removeAddressBookEntryButton
 		}
 	}
 
@@ -100,10 +88,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: commands?.addChannel()
 		case .highlights: commands?.addHighlight()
-		/* The Address Book's plus is a menu, because an entry is either an
-		 ignore or a tracked user; asking for one without saying which adds the
-		 ignore its button used to. */
-		case .addressBook: commands?.addIgnoreEntry()
 		}
 	}
 
@@ -111,7 +95,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: commands?.editChannel()
 		case .highlights: commands?.editHighlight()
-		case .addressBook: commands?.editAddressBookEntry()
 		}
 	}
 
@@ -119,7 +102,6 @@ enum ServerPropertiesListKind {
 		switch self {
 		case .channels: commands?.deleteChannel()
 		case .highlights: commands?.deleteHighlight()
-		case .addressBook: commands?.deleteAddressBookEntry()
 		}
 	}
 }

@@ -54,24 +54,11 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		setContent(ServerPropertiesView(model: model, commands: self))
 	}
 
-	/// Opens the sheet at the pane a menu asked for, on whatever that pane
-	/// needs to start on.
-	func start(at destination: ServerPropertiesDestination = .default) {
-		model.selection = switch destination {
-		case .default: model.isBouncerNetwork ? .channelList : .general
-		case .addressBook, .newIgnoreEntry, .editIgnoreEntry: .addressBook
-		}
+	/// Opens the sheet on its first pane. The address book is the People
+	/// window's, so no destination opens here any more.
+	func start() {
+		model.selection = model.isBouncerNetwork ? .channelList : .general
 		startSheet()
-
-		switch destination {
-		case .default, .addressBook:
-			break
-		case let .newIgnoreEntry(hostmask):
-			addIgnoreAddressBookEntry(hostmask: hostmask)
-		case let .editIgnoreEntry(entry):
-			model.selectedAddressBookEntryID = entry.uniqueIdentifier
-			editAddressBookEntry()
-		}
 	}
 
 	override func submit() {
@@ -88,9 +75,11 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 				return false
 			}
 			/* The Profile pane changes the server's profile live, outside Save,
-			 so the profile the session holds now is the one to keep. */
+			 and the People window changes the address book the same way, so
+			 what the session holds now is what to keep of both. */
 			if let session {
 				submitted.serverProfile = session.config.serverProfile
+				submitted.ignoreList = session.config.ignoreList
 			}
 			let write = credentialPersistence.enqueue(submitted.pendingKeychainEdits, retainsFailureForTermination: false)
 			do {
@@ -202,34 +191,6 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 		model.applySelectedTemplate()
 	}
 
-	func addIgnoreEntry() {
-		addIgnoreAddressBookEntry(hostmask: nil)
-	}
-
-	private func addIgnoreAddressBookEntry(hostmask: String?) {
-		guard let hostmask else {
-			presentEditor(AddressBookEntrySheet(entryType: .ignore, onSave: applyAddressBookEntry))
-			return
-		}
-		presentEditor(AddressBookEntrySheet(
-			entry: .newIgnoreEntry(forHostmask: hostmask),
-			onSave: applyAddressBookEntry
-		))
-	}
-
-	func addTrackingEntry() {
-		presentEditor(AddressBookEntrySheet(
-			entryType: .userTracking,
-			onSave: applyAddressBookEntry
-		))
-	}
-
-	func editAddressBookEntry() {
-		guard let id = model.selectedAddressBookEntryID,
-		      let entry = model.config.ignoreList.first(where: { $0.uniqueIdentifier == id }) else { return }
-		presentEditor(AddressBookEntrySheet(entry: entry, onSave: applyAddressBookEntry))
-	}
-
 	/// Hangs a child editor sheet off this sheet's window and starts it.
 	private func presentEditor(_ sheet: SheetSession) {
 		sheet.window = window
@@ -250,16 +211,6 @@ final class ServerPropertiesSheet: SheetSession, SessionScoped, ServerProperties
 			model.config[keyPath: list].append(entry)
 		}
 		model[keyPath: selection] = entry[keyPath: id]
-	}
-
-	func deleteAddressBookEntry() {
-		guard let id = model.selectedAddressBookEntryID else { return }
-		model.config.ignoreList.removeAll { $0.uniqueIdentifier == id }
-		model.selectedAddressBookEntryID = nil
-	}
-
-	private func applyAddressBookEntry(_ entry: AddressBookEntry) {
-		upsert(entry, id: \.uniqueIdentifier, in: \.ignoreList, selecting: \.selectedAddressBookEntryID)
 	}
 
 	/// Copies the command that registers the fingerprint with NickServ, which

@@ -141,7 +141,7 @@ struct MenuItemValidator {
 		case .nextHighlight, .previousHighlight:
 			return context.selectedViewController?.hasHighlightedLines == true
 		case .queryLogs:
-			/* The Query menu's item and the transcript menu's are the same
+			/* The Conversation menu's item and the transcript menu's are the same
 			 command, so one guard answers for both. */
 			return conversation?.isDirect == true && ApplicationPaths.isWritingTranscripts
 		case .muteNotifications:
@@ -232,7 +232,7 @@ struct MenuItemValidator {
 			let appearance = item.command?.preferredAppearance
 			item.state = appearance == SettingsKeys.Appearance.preferredAppearance.value ? .on : .off
 			return true
-		case .sortChannelList, .centerWindow, .resetWindow:
+		case .sortChannelList, .resetWindow:
 			return mainWindowAnswers
 		case .addressBook:
 			return session != nil

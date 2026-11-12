@@ -28,8 +28,8 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case viewMenu // View
 	case serverMenu // Server
 	case channelMenu // Channel
-	case queryMenu // Query
-	case navigationMenu // Navigation
+	case queryMenu // Conversation
+	case navigationMenu // Go
 	case windowMenu // Window
 	case helpMenu // Help
 	case about // About Glasstual
@@ -44,7 +44,7 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case printLog // Print…
 	case importSettings // Import Settings…
 	case exportSettings // Export Settings…
-	case closeWindow // Close Window
+	case closeWindow // Close
 	case undo // Undo
 	case redo // Redo
 	case cut // Cut
@@ -107,17 +107,15 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case appearanceLight // Light
 	case appearanceDark // Dark
 	case sortChannelList // Sort Channel List
-	case centerWindow // Center Window
 	case resetWindow // Reset Window to Default Size
 	case mainWindow // Main Window
-	case addressBook // Address Book
+	case addressBook // People
 	case viewLogs // Show Logs in Finder
 	case browseTranscriptLogs // Transcript Logs
-	case highlightList // Highlight List
+	case highlightList // Highlights
 	case fileTransfers // File Transfers
 	case bringAllToFront // Bring All to Front
 	case glasstualHelp // Glasstual Help
-	case acknowledgements // Acknowledgements
 	case connectToHelpChannel // Connect to Help Channel
 	case connectToTestingChannel // Connect to Testing Channel
 	case welcome // Welcome to Glasstual
@@ -132,8 +130,8 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case modifyIgnore // Modify Ignore…
 	case removeIgnore // Remove Ignore
 	case inviteTo // Invite to…
-	case whois // Get Info (Whois)
-	case startDirectConversation // Private Message (Query)
+	case whois // Get Info
+	case startDirectConversation // Send Message
 	case messagePrivatelyInChannel // Message Privately in Channel
 	case giveOp // Give Operator Status
 	case giveHalfop // Give Half-Operator Status
@@ -148,8 +146,8 @@ enum MenuCommand: String, CaseIterable, Sendable {
 	case ctcp // Client-to-Client
 	case ircOperator // IRC Operator
 	case changeColor // Change Color…
-	case closeQuery // Close Query
-	case queryLogs // Query Logs
+	case closeQuery // Close Conversation
+	case queryLogs // View Logs
 	case findText // Find…
 	case findNext // Find Next
 	case findPrevious // Find Previous
@@ -216,7 +214,7 @@ extension MenuCommand {
 			.channel
 		case .minimize, .zoom, .toggleMemberList, .toggleSidebar,
 		     .appearanceSystem, .appearanceLight, .appearanceDark, .sortChannelList,
-		     .centerWindow, .resetWindow, .mainWindow, .addressBook, .viewLogs,
+		     .resetWindow, .mainWindow, .addressBook, .viewLogs,
 		     .browseTranscriptLogs, .highlightList, .fileTransfers, .bringAllToFront:
 			.window
 		case .webSearch, .transcriptDictionary, .transcriptChannelMenu,
@@ -260,7 +258,7 @@ extension MenuCommand {
 	var isEssential: Bool {
 		switch self {
 		case .about, .settings, .quit, .printLog, .closeWindow, .paste, .mainWindow,
-		     .glasstualHelp, .acknowledgements, .welcome, .exportSettings:
+		     .glasstualHelp, .welcome, .exportSettings:
 			true
 		default:
 			false
@@ -273,68 +271,28 @@ extension MenuCommand {
 extension MenuCommand {
 	/// The SF Symbol drawn next to the command, if it takes one.
 	///
-	/// Menu bar and contextual menus share one map, so a command that hangs in
-	/// both -- Copy, Paste, Mute Notifications -- looks the same in each.
-	/// ``MenuPresentation/apply(to:)`` draws it. Commands AppKit owns, such as
-	/// Quit, Hide, Minimize and Zoom, and state-only choices such as the
-	/// appearance radio items, take none.
+	/// Icons are kept for a few key commands, each group all or none: what a
+	/// connection, a channel, a conversation and a member are mainly for. The
+	/// standard application, file, edit, view and window commands carry none
+	/// of this application's, so AppKit draws its own where the system does.
+	/// Menu bar and contextual menus share the map, so a command looks the same
+	/// in each; ``MenuPresentation/apply(to:)`` draws it.
 	var symbolName: String? {
 		Self.symbolNames[self]
 	}
 
 	static let symbolNames: [MenuCommand: String] = [
-		.copy: "doc.on.doc", .paste: "doc.on.clipboard",
-		.muteNotifications: "bell.slash", .muteNotificationSounds: "speaker.slash",
+		// Server: the connection's state.
 		.connect: "bolt", .connectWithoutProxy: "bolt.badge.clock",
 		.disconnect: "bolt.slash", .cancelReconnect: "xmark.circle",
-		.channelList: "list.bullet", .changeNickname: "pencil", .signInAgainWithSASL: "person.badge.key",
-		.registerAccount: "person.crop.circle.badge.plus",
-		.addServer: "plus", .duplicateServer: "plus.square.on.square",
-		.deleteServer: "trash.square", .serverProperties: "gearshape.2",
+		// Channel and conversation: joining, leaving and pinning.
 		.joinChannel: "arrow.right.square", .leaveChannel: "arrow.left.square",
-		.addChannel: "plus.circle", .deleteChannel: "minus.circle",
-		.viewChannelLogs: "doc.text", .modifyTopic: "text.quote",
-		.modes: "slider.horizontal.3", .bans: "hand.raised",
-		.channelProperties: "slider.vertical.3", .copyChannelIdentifier: "number.square", .toggleFavorite: "pin",
-		.closeQuery: "xmark", .queryLogs: "doc.plaintext",
+		.toggleFavorite: "pin", .closeQuery: "xmark",
+		// Member: writing to someone and finding out who they are.
+		.startDirectConversation: "bubble.left", .messagePrivatelyInChannel: "lock",
+		.whois: "info.circle",
+		// The one-item menus over a channel name and a link in the transcript.
 		.channelNameJoinChannel: "arrow.right.circle", .copyLinkURL: "link",
-		.webSearch: "globe", .transcriptDictionary: "book",
-		.transcriptChannelMenu: "number",
-		.muteUser: "person.crop.circle.badge.minus", .unmuteUser: "person.crop.circle.badge.checkmark",
-		.addIgnore: "eye.slash", .modifyIgnore: "pencil.circle",
-		.removeIgnore: "hand.raised.slash", .inviteTo: "envelope",
-		.whois: "info.circle", .startDirectConversation: "bubble.left",
-		.messagePrivatelyInChannel: "lock",
-		.ban: "nosign", .banAccount: "person.crop.circle.badge.xmark", .kick: "person.fill.xmark", .kickban: "hammer",
-		.ctcp: "arrow.left.arrow.right", .ircOperator: "shield",
-		.changeColor: "paintpalette",
-		// Application, File and Edit menus.
-		.settings: "gearshape", .printLog: "printer",
-		.importSettings: "square.and.arrow.down", .exportSettings: "square.and.arrow.up",
-		.closeWindow: "xmark.rectangle", .undo: "arrow.uturn.backward", .redo: "arrow.uturn.forward",
-		.cut: "scissors", .delete: "trash", .selectAll: "selection.pin.in.out",
-		.find: "magnifyingglass",
-		// View and Navigation menus.
-		.toggleSidebar: "sidebar.left", .toggleMemberList: "sidebar.right",
-		.setUnreadMarker: "bookmark", .gotoUnreadMarker: "bookmark.circle",
-		.markAllRead: "checkmark.circle", .clearScrollback: "eraser",
-		.increaseFont: "textformat.size.larger", .decreaseFont: "textformat.size.smaller",
-		.actualSize: "textformat.size",
-		.enterFullScreen: "arrow.up.left.and.arrow.down.right",
-		.navigationServers: "server.rack", .navigationChannels: "number.circle",
-		.moveBackward: "chevron.backward", .moveForward: "chevron.forward",
-		.jumpToPresent: "arrow.down.to.line",
-		.searchChannels: "line.3.horizontal.decrease", .channelSpotlight: "magnifyingglass.circle",
-		// Channel menu.
-		.banExceptions: "checkmark.shield", .inviteExceptions: "envelope.open",
-		.quiets: "speaker.zzz",
-		// Window and Help menus.
-		.sortChannelList: "arrow.up.arrow.down", .centerWindow: "rectangle.center.inset.filled",
-		.resetWindow: "arrow.counterclockwise", .mainWindow: "macwindow",
-		.addressBook: "book.closed", .viewLogs: "folder",
-		.browseTranscriptLogs: "doc.text.magnifyingglass", .highlightList: "bell.badge",
-		.fileTransfers: "tray.and.arrow.down", .findInAllConversations: "text.magnifyingglass",
-		.connectToHelpChannel: "questionmark.bubble", .connectToTestingChannel: "checkmark.bubble",
 	]
 }
 

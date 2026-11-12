@@ -12,7 +12,6 @@ final class ServerPropertiesModel {
 	var isSaving = false
 	var config: ServerConfig
 	var selection: ServerPropertiesSelection = .general
-	var selectedAddressBookEntryID: String?
 	var selectedChannelID: String?
 	var selectedHighlightID: String?
 

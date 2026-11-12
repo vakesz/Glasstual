@@ -2,13 +2,13 @@
   "sourceLanguage": "en",
   "strings": {
     "close-query": {
-      "comment": "Close-query menu title. Legacy key: hri-l0.",
+      "comment": "File menu item title for Command-W when it closes the selected private conversation. Legacy key: hri-l0.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close Query"
+            "value": "Close Conversation"
           }
         },
         "hu": {
@@ -20,13 +20,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gespräch schließen"
+            "value": "Konversation schließen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerrar mensaje directo"
+            "value": "Cerrar conversación"
           }
         },
         "fr": {
@@ -38,7 +38,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クエリを閉じる"
+            "value": "会話を閉じる"
           }
         },
         "pt-BR": {
@@ -50,49 +50,49 @@
       }
     },
     "close-window": {
-      "comment": "Close-window menu title. Legacy key: 1f6-bg.",
+      "comment": "File menu item title for Command-W when it closes the window. Legacy key: 1f6-bg.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Close Window"
+            "value": "Close"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ablak bezárása"
+            "value": "Bezárás"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fenster schließen"
+            "value": "Schließen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerrar ventana"
+            "value": "Cerrar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fermer la fenêtre"
+            "value": "Fermer"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ウインドウを閉じる"
+            "value": "閉じる"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fechar Janela"
+            "value": "Fechar"
           }
         }
       }

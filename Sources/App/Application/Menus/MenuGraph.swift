@@ -106,9 +106,11 @@ enum MenuGraph {
 		NSApp.mainMenu = mainMenu
 		NSApp.servicesMenu = mainMenu.item(for: .services)?.submenu
 		NSApp.helpMenu = mainMenu.item(for: .helpMenu)?.submenu
-		/* `NSApp.windowsMenu` is deliberately not set: AppKit would append its
-		 own list of open windows to a menu that already names every window
-		 this application opens, so each one appeared twice. */
+		/* The system's Window menu: AppKit adds Fill, Center, Move & Resize and
+		 the tiling commands, and lists the open windows. The application's
+		 named windows keep their numbered commands above that list, the way
+		 Mail and Xcode keep theirs. */
+		NSApp.windowsMenu = mainMenu.item(for: .windowMenu)?.submenu
 	}
 
 	/** A menu that is only ever popped up, never hung under a titled item.

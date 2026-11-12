@@ -4,12 +4,6 @@
 
 import AppKit
 import CocoaExtensions
-import os
-
-private let menuWindowLogger = Logger(
-	subsystem: LogSubsystem.current,
-	category: "MenuActionController"
-)
 
 // MARK: - Window, appearance and application-wide commands
 
@@ -44,10 +38,6 @@ extension MenuActionController {
 
 	@objc func showMainWindow(_ sender: Any?) {
 		ApplicationForeground.raise(mainWindow, sender: sender)
-	}
-
-	@objc func centerMainWindow(_: Any?) {
-		mainWindow.centerOnScreen()
 	}
 
 	@objc func resetMainWindowFrame(_ sender: Any?) {
@@ -133,16 +123,10 @@ extension MenuActionController {
 		HelpBook.open(.home)
 	}
 
-	@objc func openAcknowledgements(_: Any?) {
-		guard let url = Bundle.main.url(
-			forResource: "Acknowledgements",
-			withExtension: "pdf",
-			subdirectory: "Documentation"
-		) else {
-			menuWindowLogger.error("Acknowledgements.pdf is missing from the application bundle")
-			return
-		}
-		NSWorkspace.shared.open(url)
+	/// The acknowledgements are the About panel's credits, so a link that asks
+	/// for them opens the panel.
+	@objc func openAcknowledgements(_ sender: Any?) {
+		showAboutWindow(sender)
 	}
 
 	@objc func connectToGlasstualHelpChannel(_: Any?) {

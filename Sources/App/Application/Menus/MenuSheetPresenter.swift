@@ -66,6 +66,11 @@ enum MenuSheetPresenter {
 		if let session, opensServerPropertiesAsCommand(for: session, at: destination) {
 			return
 		}
+		/* The address book is a window of its own: Window ▸ People. */
+		if let session, let request = AddressBookDestination(destination) {
+			AppServices.addressBooks.open(for: session, request: request.editRequest)
+			return
+		}
 		present(ServerPropertiesSheet(session: session) { [weak session] config in
 			guard let directory = AppServices.chatSession else { return }
 			guard let session else {
@@ -75,7 +80,7 @@ enum MenuSheetPresenter {
 				return
 			}
 			applyServerConfiguration(config, to: session)
-		}) { $0.start(at: destination) }
+		}) { $0.start() }
 	}
 
 	/// The conversation's way into the connection sheet: `/serverconfig`, or

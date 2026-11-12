@@ -20,6 +20,7 @@ enum AppServices {
 	 opens the windows; these own what is inside them. */
 	static let serverChannelLists = ServerChannelListWindowSessions()
 	static let highlightLogs = HighlightLogWindowSessions()
+	static let addressBooks = AddressBookWindowSessions()
 	static let channelSpotlight = ChannelSpotlightWindow()
 	static let channelMaskList = ChannelMaskListWindow()
 	static let transcriptLogViewer = TranscriptLogViewerWindow()
