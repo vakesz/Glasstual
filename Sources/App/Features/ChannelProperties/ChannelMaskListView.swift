@@ -54,20 +54,6 @@ struct ChannelMaskListView: View {
 		VStack(spacing: 0) {
 			editor(canEdit: canEdit)
 
-			HStack {
-				Spacer()
-				if model.isRefreshing {
-					ProgressView()
-						.controlSize(.small)
-						.accessibilityLabel(.ChannelProperties.loadingList)
-				}
-				Text(verbatim: model.entryCountDescription)
-					.foregroundStyle(.secondary)
-					.monospacedDigit()
-			}
-			.padding(.horizontal, SheetMetrics.margin)
-			.padding(.bottom, UISpacing.regular)
-
 			Table(model.entries, selection: $model.selection, sortOrder: $model.sortOrder) {
 				TableColumn(
 					.ChannelProperties.hostmask,
@@ -117,16 +103,20 @@ struct ChannelMaskListView: View {
 			.copyable(model.selectedMasks)
 			.onDeleteCommand(perform: session.removeSelectedEntries)
 			.contextMenu(forSelectionType: ChannelMaskListEntry.ID.self) { selection in
-				Button(.ChannelProperties.editSelected) {
-					model.selection = selection
-					edit()
+				/* Only what can be done to these rows: an operator command the
+				 reader is not allowed to send is not offered at all. */
+				if canEdit, selection.count == 1 {
+					Button(.ChannelProperties.editSelected) {
+						model.selection = selection
+						edit()
+					}
 				}
-				.disabled(canEdit == false || selection.count != 1)
-				Button(.ChannelProperties.removeSelected, role: .destructive) {
-					model.selection = selection
-					session.removeSelectedEntries()
+				if canEdit, selection.isEmpty == false {
+					Button(.ChannelProperties.removeSelected, role: .destructive) {
+						model.selection = selection
+						session.removeSelectedEntries()
+					}
 				}
-				.disabled(canEdit == false || selection.isEmpty)
 			} primaryAction: { selection in
 				model.selection = selection
 				edit()
@@ -143,19 +133,23 @@ struct ChannelMaskListView: View {
 					.padding(.top, UISpacing.regular)
 			}
 
-			Divider()
-			HStack {
-				Button(.ChannelProperties.removeSelected, role: .destructive, action: session.removeSelectedEntries)
-					.disabled(canEdit == false || model.selection.isEmpty)
+			/* Add, remove and the list's other commands under the table, as
+			 every editable list has them. An entry is edited by
+			 double-clicking it or pressing Return. */
+			ListEditingControls(
+				addLabel: Text(.ChannelProperties.addEntryButton),
+				removeLabel: Text(.ChannelProperties.removeSelected),
+				canAdd: canEdit,
+				canRemove: canEdit && model.selection.isEmpty == false,
+				add: beginAdding,
+				remove: session.removeSelectedEntries
+			) {
 				Button(.ChannelProperties.editSelected, action: edit)
 					.keyboardShortcut("e", modifiers: .command)
 					.disabled(canEdit == false || model.selection.count != 1)
-				Spacer()
-				Button(.ChannelProperties.updateList, action: session.updateList)
-					.keyboardShortcut("r", modifiers: .command)
-					.disabled(model.isRefreshing)
 			}
-			.padding(UISpacing.wide)
+			.padding(.horizontal, UISpacing.wide)
+			.padding(.vertical, UISpacing.regular)
 		}
 		.frame(
 			minWidth: 580,
@@ -163,6 +157,24 @@ struct ChannelMaskListView: View {
 			minHeight: 320,
 			idealHeight: 400
 		)
+		/* How much of the list arrived is a subtitle, as in the channel list
+		 window; refreshing it is the window's toolbar command. */
+		.navigationSubtitle(model.entryCountDescription)
+		.toolbar {
+			ToolbarItem(placement: .primaryAction) {
+				if model.isRefreshing {
+					ProgressView()
+						.controlSize(.small)
+						.accessibilityLabel(.ChannelProperties.loadingList)
+				} else {
+					Button(action: session.updateList) {
+						Label(.ChannelProperties.updateList, systemImage: "arrow.clockwise")
+					}
+					.keyboardShortcut("r", modifiers: .command)
+					.help(Text(.ChannelProperties.updateList))
+				}
+			}
+		}
 		.defaultFocus($fieldIsFocused, true)
 	}
 
@@ -224,6 +236,14 @@ struct ChannelMaskListView: View {
 
 	private func edit() {
 		session.beginEditingSelectedEntry()
+		fieldIsFocused = true
+	}
+
+	/// The plus starts a new entry in the field above the table.
+	private func beginAdding() {
+		if session.model.editingMask != nil {
+			session.cancelEditing()
+		}
 		fieldIsFocused = true
 	}
 }
