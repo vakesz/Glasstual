@@ -50,8 +50,26 @@ struct MenuItemValidator {
 			commandSpecificResult: validateCommand(menuItem),
 			applicationIsLaunched: appController.applicationIsLaunched,
 			mainWindowHasAttachedSheet: mainWindow.attachedSheet != nil,
-			mainWindowIsFocused: mainWindow.isMainWindow,
+			mainWindowIsFocused: mainWindowAnswers,
 			hasExplicitMenuContext: context.hasExplicitMenuContext
+		)
+	}
+
+	/** Whether the main window answers for the menu. While the application is
+	 active, that is whether it is the main window. In the background AppKit
+	 has no main window at all, so the window that becomes main again when the
+	 application comes forward answers instead: Accessibility and scripting
+	 clients drive the menu of an application that is not frontmost, and found
+	 every command of the main window disabled. */
+	static func mainWindowAnswers(isMainWindow: Bool, applicationIsActive: Bool, isFrontmostWindow: Bool) -> Bool {
+		applicationIsActive ? isMainWindow : isFrontmostWindow
+	}
+
+	private var mainWindowAnswers: Bool {
+		Self.mainWindowAnswers(
+			isMainWindow: mainWindow.isMainWindow,
+			applicationIsActive: NSApp.isActive,
+			isFrontmostWindow: NSApp.orderedWindows.first { $0.isVisible && $0.canBecomeMain } === mainWindow
 		)
 	}
 
@@ -206,16 +224,16 @@ struct MenuItemValidator {
 		switch item.command {
 		case .toggleSidebar:
 			item.title = MenuCommand.sidebarTitle(isVisible: mainWindow.columnModel.isSidebarVisible)
-			return mainWindow.isMainWindow
+			return mainWindowAnswers
 		case .toggleMemberList:
 			item.title = MenuCommand.memberListTitle(isVisible: mainWindow.columnModel.isMemberListVisible)
-			return mainWindow.isMainWindow && conversation?.isChannel == true && session?.isLoggedIn == true
+			return mainWindowAnswers && conversation?.isChannel == true && session?.isLoggedIn == true
 		case .appearanceSystem, .appearanceLight, .appearanceDark:
 			let appearance = item.command?.preferredAppearance
 			item.state = appearance == SettingsKeys.Appearance.preferredAppearance.value ? .on : .off
 			return true
 		case .sortChannelList, .centerWindow, .resetWindow:
-			return mainWindow.isMainWindow
+			return mainWindowAnswers
 		case .addressBook:
 			return session != nil
 		case .viewLogs:

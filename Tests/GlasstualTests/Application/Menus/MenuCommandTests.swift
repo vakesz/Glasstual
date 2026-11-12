@@ -162,6 +162,24 @@ struct MenuCommandTests {
 		}
 	}
 
+	@Test(
+		"The main window answers while it is main, or in the background while it is the window that comes forward",
+		arguments: [
+			(true, true, true, true),
+			(false, true, true, false),
+			(false, false, true, true),
+			(false, false, false, false),
+			(true, false, false, false),
+		]
+	)
+	func mainWindowAnswersInTheBackground(
+		isMainWindow: Bool, applicationIsActive: Bool, isFrontmostWindow: Bool, expected: Bool
+	) {
+		#expect(MenuItemValidator.mainWindowAnswers(
+			isMainWindow: isMainWindow, applicationIsActive: applicationIsActive, isFrontmostWindow: isFrontmostWindow
+		) == expected)
+	}
+
 	@Test("A clicked context remains usable without focus but never bypasses sheets or eligibility")
 	func contextDoesNotBypassSafety() {
 		for (eligible, launched, sheet, expected) in [
