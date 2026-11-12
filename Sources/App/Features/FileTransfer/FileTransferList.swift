@@ -41,6 +41,20 @@ enum FileTransferAction: Sendable {
 	case preview
 	/// Show the certificate the peer of a secure transfer presented.
 	case showCertificate
+
+	/** The toolbar's commands for the selection, in order, and whether each
+	 holds its place when the window is too narrow for all of them.
+
+	 Starting and stopping the selected transfer are what the window is for, so
+	 they stay in view; the others go into the toolbar's overflow menu first. */
+	static let toolbarCommands: [FileTransferAction] = [.start, .stop, .downloadTo, .preview, .showCertificate]
+
+	var keepsToolbarPlace: Bool {
+		switch self {
+		case .start, .stop: true
+		case .downloadTo, .remove, .open, .reveal, .preview, .showCertificate: false
+		}
+	}
 }
 
 /// An XDCC request the File Transfers window lists until its bot answers.

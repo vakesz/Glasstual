@@ -79,49 +79,21 @@ struct FileTransferListView: View {
 				.fixedSize()
 			}
 
+			/* Start and Stop hold their place while the direction filter and the
+			 title share a narrow window; the other commands overflow first. */
+			if #available(macOS 26.1, *) {
+				ToolbarItemGroup(placement: .primaryAction) {
+					toolbarButtons(keepingPlace: true)
+				}
+				.visibilityPriority(.high)
+			} else {
+				ToolbarItemGroup(placement: .primaryAction) {
+					toolbarButtons(keepingPlace: true)
+				}
+			}
+
 			ToolbarItemGroup(placement: .primaryAction) {
-				Button {
-					center.perform(.start, on: model.selection)
-				} label: {
-					Label(model.startActionTitle(), systemImage: "play.circle")
-				}
-				.help(model.startActionTitle())
-				.disabled(model.canPerform(.start) == false)
-				.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersStart)
-
-				Button {
-					center.perform(.downloadTo, on: model.selection)
-				} label: {
-					Label(.FileTransfer.downloadTo, systemImage: "folder.badge.arrow.down")
-				}
-				.help(Text(.FileTransfer.downloadTo))
-				.disabled(model.canPerform(.downloadTo) == false)
-
-				Button {
-					center.perform(.stop, on: model.selection)
-				} label: {
-					Label(.FileTransfer.cancelTransfer, systemImage: "stop.circle")
-				}
-				.help(Text(.FileTransfer.cancelTransfer))
-				.disabled(model.canPerform(.stop) == false)
-				.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersStop)
-
-				Button {
-					center.perform(.preview, on: model.selection)
-				} label: {
-					Label(.FileTransfer.quickLook, systemImage: "eye")
-				}
-				.help(Text(.FileTransfer.quickLook))
-				.disabled(model.canPerform(.preview) == false)
-
-				Button {
-					center.perform(.showCertificate, on: model.selection)
-				} label: {
-					Label(.FileTransfer.showCertificate, systemImage: "checkmark.seal")
-				}
-				.help(Text(.FileTransfer.showCertificate))
-				.disabled(model.canPerform(.showCertificate) == false)
-				.accessibilityIdentifier("file-transfer-show-certificate")
+				toolbarButtons(keepingPlace: false)
 			}
 
 			ToolbarSpacer(placement: .primaryAction)
@@ -146,6 +118,63 @@ struct FileTransferListView: View {
 			allowedContentTypes: [.folder],
 			onCompletion: center.completeDestinationSelection
 		)
+	}
+
+	private func toolbarButtons(keepingPlace: Bool) -> some View {
+		ForEach(FileTransferAction.toolbarCommands.filter { $0.keepsToolbarPlace == keepingPlace }, id: \.self) { action in
+			toolbarButton(for: action)
+		}
+	}
+
+	@ViewBuilder
+	private func toolbarButton(for action: FileTransferAction) -> some View {
+		switch action {
+		case .start:
+			Button {
+				center.perform(.start, on: model.selection)
+			} label: {
+				Label(model.startActionTitle(), systemImage: "play.circle")
+			}
+			.help(model.startActionTitle())
+			.disabled(model.canPerform(.start) == false)
+			.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersStart)
+		case .stop:
+			Button {
+				center.perform(.stop, on: model.selection)
+			} label: {
+				Label(.FileTransfer.cancelTransfer, systemImage: "stop.circle")
+			}
+			.help(Text(.FileTransfer.cancelTransfer))
+			.disabled(model.canPerform(.stop) == false)
+			.accessibilityIdentifier(AccessibilityIdentifier.fileTransfersStop)
+		case .downloadTo:
+			Button {
+				center.perform(.downloadTo, on: model.selection)
+			} label: {
+				Label(.FileTransfer.downloadTo, systemImage: "folder.badge.arrow.down")
+			}
+			.help(Text(.FileTransfer.downloadTo))
+			.disabled(model.canPerform(.downloadTo) == false)
+		case .preview:
+			Button {
+				center.perform(.preview, on: model.selection)
+			} label: {
+				Label(.FileTransfer.quickLook, systemImage: "eye")
+			}
+			.help(Text(.FileTransfer.quickLook))
+			.disabled(model.canPerform(.preview) == false)
+		case .showCertificate:
+			Button {
+				center.perform(.showCertificate, on: model.selection)
+			} label: {
+				Label(.FileTransfer.showCertificate, systemImage: "checkmark.seal")
+			}
+			.help(Text(.FileTransfer.showCertificate))
+			.disabled(model.canPerform(.showCertificate) == false)
+			.accessibilityIdentifier("file-transfer-show-certificate")
+		case .remove, .open, .reveal:
+			EmptyView()
+		}
 	}
 
 	private var transferRows: some View {
