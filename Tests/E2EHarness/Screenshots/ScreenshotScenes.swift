@@ -277,6 +277,16 @@ struct ScreenshotSession {
 
 		try await context.send("/no")
 		try await context.until("the card goes") { try promptHint() == nil }
+
+		/* A question a typed command raises is shown where it was typed, not
+		 in the server console behind a line that says it waits elsewhere. */
+		try await context.selectRow("channel", DemoScript.swift.name)
+		try await context.send("/sasl token")
+		try await context.until("the token question is a card in the channel it was typed in") {
+			try secondCard() != nil
+		}
+		try await context.send("/no")
+		try await context.until("that card goes too") { try secondCard() == nil }
 	}
 
 	/// What the first question's card says answers it.
@@ -284,6 +294,12 @@ struct ScreenshotSession {
 		try context.mainWindow().flatMap { try driver.find(AXID.promptCard(1), in: $0) }
 			.flatMap { try driver.find(AXID.promptCardHint(1), in: $0) }
 			.flatMap { try driver.value($0) }
+	}
+
+	/// The card of the second question asked in this launch, while the
+	/// conversation on screen is the one it is shown in.
+	private func secondCard() throws -> AXUIElement? {
+		try context.mainWindow().flatMap { try driver.find(AXID.promptCard(2), in: $0) }
 	}
 
 	/// `marlow` offers a file over TLS; accepting it asks about the

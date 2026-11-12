@@ -288,6 +288,13 @@ class ServerSession: ChatItem {
 	 rebuild it. */
 	var conversationIndex = ConversationNameIndex()
 	weak var lastSelectedConversation: Conversation?
+	/** The conversation the reader typed the command being carried out in, for
+	 as long as it is being carried out and no longer.
+
+	 A question that command raises appears there, where the reader is
+	 looking; one the server raises later has no command behind it and
+	 appears where it always did. */
+	weak var commandConversation: Conversation?
 	let addressBookMatchCache = AddressBookMatchCache()
 	/// The netsplit or netjoin batch being collapsed into one summary line, and
 	/// the nicknames it has named so far.

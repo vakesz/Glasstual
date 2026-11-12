@@ -223,7 +223,7 @@ extension ServerSession {
 			}
 
 			if isPrefixed, source.hasPrefix("//") == false, line.length > 1 {
-				session.sendCommand(line.attributedSubstring(fromIndex: 1), target: conversation.name)
+				session.performTypedCommand(line.attributedSubstring(fromIndex: 1), in: conversation)
 			} else {
 				if isPrefixed, line.length > 1 {
 					line = line.attributedSubstring(fromIndex: 1)
@@ -232,6 +232,19 @@ extension ServerSession {
 			}
 			return true
 		}
+	}
+
+	/** Carries out a command the reader typed in `conversation`.
+
+	 The handlers run inside this call, so a question one of them asks is
+	 asked while the session still names where the command was typed, and is
+	 shown there. A command a script, a timer or the connect list runs has no
+	 reader behind it and goes straight to `sendCommand`. */
+	func performTypedCommand(_ command: NSAttributedString, in conversation: Conversation) {
+		let outer = commandConversation
+		commandConversation = conversation
+		defer { commandConversation = outer }
+		sendCommand(command, target: conversation.name)
 	}
 
 	func sendText(_ text: NSAttributedString, as command: RemoteCommand, to conversation: Conversation) {

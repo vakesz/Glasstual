@@ -116,7 +116,7 @@ extension ServerSession {
 	}
 
 	/** Asks for an OAuth token in a secure field, as an alert or in the
-	 console, and saves it. The token goes from the field to the keychain and
+	 conversation the command was typed in, and saves it. The token goes from the field to the keychain and
 	 nowhere else. */
 	private func askForSASLBearerToken() {
 		let request = Self.saslBearerTokenRequest(connectionName: config.connectionName)

@@ -14,9 +14,11 @@ extension ServerSession {
 
 	/** Where a question about this session belongs.
 
-	 A question about a conversation appears in it; any other appears in the
-	 server console. `boundToConnection` ties the question to the connection it
-	 was asked on, so the question is withdrawn when that connection ends. */
+	 A question about a conversation appears in it. One raised by a command
+	 the reader just typed appears in the conversation they typed it in; any
+	 other appears in the server console. `boundToConnection` ties the question
+	 to the connection it was asked on, so the question is withdrawn when that
+	 connection ends. */
 	func promptScope(
 		in conversation: Conversation? = nil,
 		boundToConnection: Bool = true,
@@ -25,11 +27,23 @@ extension ServerSession {
 	) -> PromptScope {
 		PromptScope(
 			sessionID: uniqueIdentifier,
-			conversationID: conversation?.uniqueIdentifier,
+			conversationID: Self.promptConversationID(
+				about: conversation?.uniqueIdentifier,
+				commandTypedIn: commandConversation?.uniqueIdentifier
+			),
 			connection: boundToConnection ? promptConnection : nil,
 			origin: origin,
 			revealsMainWindow: revealsMainWindow
 		)
+	}
+
+	/// The conversation a question is placed in: the one it is about, else the
+	/// one whose command raised it, else none, which is the server console.
+	nonisolated static func promptConversationID( // nonisolated: pure
+		about conversationID: String?,
+		commandTypedIn commandConversationID: String?
+	) -> String? {
+		conversationID ?? commandConversationID
 	}
 
 	/// Keeps a pending user decision in this session. A delayed answer cannot

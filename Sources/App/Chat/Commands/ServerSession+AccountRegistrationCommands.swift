@@ -109,7 +109,7 @@ extension ServerSession {
 	}
 
 	/** Asks for the new account's password in a secure field, as an alert or
-	 in the console, and registers with it. The password goes from the field to
+	 in the conversation the command was typed in, and registers with it. The password goes from the field to
 	 the registration and nowhere else: not the transcript, not input history. */
 	private func askForRegistrationPassword(account: AccountRegistrationRequest.AccountName, email: String?) {
 		let name = account == .currentNickname ? userNickname : (AccountRegistrationRequest(
