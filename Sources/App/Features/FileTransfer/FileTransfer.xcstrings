@@ -2307,7 +2307,7 @@
       }
     },
     "transfers": {
-      "comment": "Count of file transfers visible under the current filter. The argument is the count.",
+      "comment": "Window subtitle of File Transfers: the number of transfers visible under the current filter. The argument is the count.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -2316,13 +2316,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%ld Transfer"
+                  "value": "%ld transfer"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%ld Transfers"
+                  "value": "%ld transfers"
                 }
               }
             }

@@ -73,17 +73,50 @@ struct ServerChannelListView: View {
 	let joinSelected: () -> Void
 	let update: () -> Void
 
+	@State private var showsFilters = false
+
 	var body: some View {
-		VStack(spacing: 0) {
-			channelTable
-			Divider()
-			footer
-		}
-		.searchable(
-			text: $model.searchString,
-			placement: .toolbar,
-			prompt: Text(.ServerChannelList.searchChannels)
-		)
+		channelTable
+			/* A list this long is rarely cut short; when it is, the window says so
+			 at its foot, as a status bar would, rather than in the toolbar. */
+			.safeAreaInset(edge: .bottom, spacing: 0) {
+				if let notice = model.truncationNotice {
+					Text(verbatim: notice)
+						.font(.callout)
+						.foregroundStyle(.secondary)
+						.frame(maxWidth: .infinity, alignment: .leading)
+						.padding(.horizontal, UISpacing.wide)
+						.padding(.vertical, UISpacing.snug)
+						.background(.bar)
+				}
+			}
+			.searchable(
+				text: $model.searchString,
+				placement: .toolbar,
+				prompt: Text(.ServerChannelList.searchChannels)
+			)
+			.toolbar {
+				ToolbarItemGroup(placement: .primaryAction) {
+					if model.isRefreshing || model.isFiltering {
+						ProgressView()
+							.controlSize(.small)
+							.accessibilityLabel(.ServerChannelList.requestingChannelList)
+					}
+					Button(.ServerChannelList.updateList, systemImage: "arrow.clockwise", action: update)
+						.keyboardShortcut("r", modifiers: .command)
+						.help(Text(.ServerChannelList.updateList))
+						.disabled(model.isRefreshing)
+						.accessibilityIdentifier(AccessibilityIdentifier.serverChannelListUpdate)
+					if supportsMinimumUserCount {
+						filtersButton
+					}
+					Button(.ServerChannelList.joinSelectedChannels, systemImage: "arrow.right.circle", action: joinSelected)
+						.keyboardShortcut(.defaultAction)
+						.help(Text(.ServerChannelList.joinSelectedChannels))
+						.disabled(model.selection.isEmpty)
+						.accessibilityIdentifier(AccessibilityIdentifier.serverChannelListJoin)
+				}
+			}
 	}
 
 	private var channelTable: some View {
@@ -110,55 +143,38 @@ struct ServerChannelListView: View {
 		.accessibilityLabel(.ServerChannelList.publicChannelList)
 	}
 
-	private var footer: some View {
-		VStack(alignment: .leading, spacing: UISpacing.regular) {
-			if let notice = model.truncationNotice {
-				Text(verbatim: notice)
-					.font(.callout)
-					.foregroundStyle(.secondary)
-					.frame(maxWidth: .infinity, alignment: .leading)
-			}
-
-			HStack(alignment: .firstTextBaseline, spacing: UISpacing.regular) {
-				if supportsMinimumUserCount {
-					LabeledContent(.ServerChannelList.minimumUsers) {
-						TextField(
-							"0",
-							text: Binding(
-								get: { model.minimumUserCount },
-								set: model.setMinimumUserCount
-							)
-						)
-						.frame(width: 64)
-						.monospacedDigit()
-					}
-					.fixedSize()
-				}
-
-				Spacer()
-
-				if model.isRefreshing || model.isFiltering {
-					ProgressView()
-						.controlSize(.small)
-						.accessibilityLabel(.ServerChannelList.requestingChannelList)
-				}
-
-				Button(.ServerChannelList.updateList, action: update)
-					.keyboardShortcut("r", modifiers: .command)
-					.disabled(model.isRefreshing)
-
-				Button(.ServerChannelList.joinSelectedChannels, action: joinSelected)
-					.buttonStyle(.borderedProminent)
-					.keyboardShortcut(.defaultAction)
-					.disabled(model.selection.isEmpty)
-			}
-
-			if supportsMinimumUserCount {
-				Text(.ServerChannelList.onlyListChannelsWithAtLeast)
-					.font(.footnote)
-					.foregroundStyle(.secondary)
-			}
+	/// The server-side size filter, behind one toolbar button that is filled
+	/// while it applies, as Mail's filter button is.
+	private var filtersButton: some View {
+		Button(
+			String(localized: .ServerChannelList.filters),
+			systemImage: model.minimumUserCount.isEmpty || model.minimumUserCount == "0"
+				? "line.3.horizontal.decrease.circle"
+				: "line.3.horizontal.decrease.circle.fill"
+		) {
+			showsFilters.toggle()
 		}
-		.padding(UISpacing.wide)
+		.help(Text(.ServerChannelList.filters))
+		.accessibilityIdentifier(AccessibilityIdentifier.serverChannelListFilters)
+		.popover(isPresented: $showsFilters, arrowEdge: .bottom) {
+			Form {
+				Section {
+					TextField(
+						String(localized: .ServerChannelList.minimumUsers),
+						text: Binding(get: { model.minimumUserCount }, set: model.setMinimumUserCount),
+						prompt: Text(verbatim: 0.formatted())
+					)
+					.monospacedDigit()
+					.accessibilityIdentifier(AccessibilityIdentifier.serverChannelListMinimumUsers)
+				} footer: {
+					Text(.ServerChannelList.onlyListChannelsWithAtLeast)
+						.font(.footnote)
+						.foregroundStyle(.secondary)
+				}
+			}
+			.formStyle(.grouped)
+			.frame(width: 300)
+			.fixedSize(horizontal: false, vertical: true)
+		}
 	}
 }

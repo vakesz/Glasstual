@@ -154,6 +154,17 @@ enum AXID {
 	}
 
 	static let fileTransferFilenamePrefix = "file-transfer-filename-"
+
+	// MARK: History search
+
+	static let scrollbackSearchFilters = "scrollback-search-filters"
+
+	// MARK: Channel list
+
+	static let serverChannelListUpdate = "server-channel-list-update"
+	static let serverChannelListJoin = "server-channel-list-join"
+	static let serverChannelListFilters = "server-channel-list-filters"
+	static let serverChannelListMinimumUsers = "server-channel-list-minimum-users"
 }
 
 /** The settings keys the harness seeds. The harness does not link the

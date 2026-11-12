@@ -65,7 +65,8 @@ struct ServerChannelListRenderedFixtureTests {
 		#expect(table.accessibilityLabel() == String(localized: .ServerChannelList.publicChannelList))
 		let scrollView = try #require(table.enclosingScrollView)
 		#expect(scrollView.frame.width <= host.frame.width)
-		#expect(scrollView.frame.height < host.frame.height)
+		// The actions are in the toolbar, so the table fills the window's content.
+		#expect(scrollView.frame.height <= host.frame.height)
 		var visibleRows = 0
 		table.enumerateAvailableRowViews { _, _ in visibleRows += 1 }
 		#expect(visibleRows > 0 && visibleRows < 100)

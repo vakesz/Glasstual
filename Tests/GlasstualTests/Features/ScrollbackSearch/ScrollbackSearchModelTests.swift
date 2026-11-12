@@ -247,6 +247,20 @@ struct ScrollbackSearchModelTests {
 		succeed.withLock { $0 = false }
 		await model.open(row)
 		#expect(model.revealFailed)
+
+		model.dismissRevealFailure()
+		#expect(model.revealFailed == false)
+	}
+
+	@Test("The filter button is filled while a sender or the dates narrow the search")
+	func filtersAreReported() {
+		let model = model(recorder: SearchRecorder(.results([], truncated: false)))
+		#expect(model.hasFilters == false)
+		model.sender = "alice"
+		#expect(model.hasFilters)
+		model.sender = ""
+		model.restrictsDates = true
+		#expect(model.hasFilters)
 	}
 
 	@Test("The selection moves through the matches in listed order and stops at the ends")

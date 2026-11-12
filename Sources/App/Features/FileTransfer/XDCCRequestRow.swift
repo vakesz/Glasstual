@@ -56,10 +56,18 @@ struct XDCCRequestRow: View {
 
 			Spacer()
 
-			Button(.FileTransfer.cancelRequest, action: cancel)
+			// An inline stop button, as a download list draws one on its row.
+			Button(.FileTransfer.cancelRequest, systemImage: "xmark.circle.fill", action: cancel)
+				.labelStyle(.iconOnly)
+				.buttonStyle(.borderless)
+				.foregroundStyle(.secondary)
+				.help(Text(.FileTransfer.cancelRequest))
 				.accessibilityIdentifier("xdcc-request-cancel-\(pending.id.uuidString)")
 		}
 		.padding(.vertical, UISpacing.tight)
+		.contextMenu {
+			Button(.FileTransfer.cancelRequest, action: cancel)
+		}
 		.accessibilityElement(children: .combine)
 		.accessibilityAction(named: Text(.FileTransfer.cancelRequest), cancel)
 		.accessibilityIdentifier("xdcc-request-row-\(pending.id.uuidString)")

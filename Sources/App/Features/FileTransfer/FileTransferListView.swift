@@ -28,8 +28,48 @@ struct FileTransferListView: View {
 	@SceneStorage("file-transfer-filter") private var storedDirectionFilter = FileTransferDirectionFilter.all
 
 	var body: some View {
-		VStack(spacing: 0) {
-			HStack {
+		List(selection: $model.selection) {
+			if model.xdccRequests.isEmpty {
+				transferRows
+			} else {
+				Section {
+					ForEach(model.xdccRequests) { pending in
+						XDCCRequestRow(pending: pending) { center.cancelXDCCRequest(pending) }
+							.selectionDisabled()
+					}
+				} header: {
+					Text(.FileTransfer.waitingForBots)
+				}
+				Section {
+					transferRows
+				} header: {
+					Text(.FileTransfer.transfersSection)
+				}
+			}
+		}
+		.listStyle(.inset)
+		.alternatingRowBackgrounds(model.visibleTransfers.isEmpty ? .disabled : .enabled)
+		.accessibilityLabel(Text(.FileTransfer.fileTransfers))
+		.overlay {
+			if model.visibleTransfers.isEmpty, model.xdccRequests.isEmpty {
+				ContentUnavailableView {
+					Label(.FileTransfer.noFileTransfers, systemImage: "arrow.left.arrow.right")
+				} description: {
+					Text(.FileTransfer.transfersAppearHere)
+				}
+			}
+		}
+		.onChange(of: model.selection) { model.selectionDidChange() }
+		.onChange(of: model.filter) { storedDirectionFilter = model.filter }
+		.onKeyPress(.space) {
+			guard model.canPerform(.preview) else { return .ignored }
+			center.perform(.preview, on: model.selection)
+			return .handled
+		}
+		.onDeleteCommand(perform: model.selection.isEmpty ? nil : { center.perform(.remove, on: model.selection) })
+		.navigationSubtitle(Text(.FileTransfer.transfers(model.visibleTransfers.count)))
+		.toolbar {
+			ToolbarItem(placement: .principal) {
 				Picker(.FileTransfer.show, selection: $model.filter) {
 					Text(.FileTransfer.all).tag(FileTransferDirectionFilter.all)
 					Text(.FileTransfer.sending).tag(FileTransferDirectionFilter.sending)
@@ -37,61 +77,13 @@ struct FileTransferListView: View {
 				}
 				.pickerStyle(.segmented)
 				.fixedSize()
+			}
 
-				Spacer()
-				Text(.FileTransfer.transfers(model.visibleTransfers.count))
-					.foregroundStyle(.secondary)
-					.monospacedDigit()
-			}
-			.padding(.horizontal, UISpacing.wide)
-			.padding(.vertical, UISpacing.comfortable)
-
-			List(selection: $model.selection) {
-				if model.xdccRequests.isEmpty {
-					transferRows
-				} else {
-					Section {
-						ForEach(model.xdccRequests) { pending in
-							XDCCRequestRow(pending: pending) { center.cancelXDCCRequest(pending) }
-								.selectionDisabled()
-						}
-					} header: {
-						Text(.FileTransfer.waitingForBots)
-					}
-					Section {
-						transferRows
-					} header: {
-						Text(.FileTransfer.transfersSection)
-					}
-				}
-			}
-			.listStyle(.inset)
-			.alternatingRowBackgrounds(model.visibleTransfers.isEmpty ? .disabled : .enabled)
-			.accessibilityLabel(Text(.FileTransfer.fileTransfers))
-			.overlay {
-				if model.visibleTransfers.isEmpty, model.xdccRequests.isEmpty {
-					ContentUnavailableView {
-						Label(.FileTransfer.noFileTransfers, systemImage: "arrow.left.arrow.right")
-					} description: {
-						Text(.FileTransfer.transfersAppearHere)
-					}
-				}
-			}
-			.onChange(of: model.selection) { model.selectionDidChange() }
-			.onChange(of: model.filter) { storedDirectionFilter = model.filter }
-			.onKeyPress(.space) {
-				guard model.canPerform(.preview) else { return .ignored }
-				center.perform(.preview, on: model.selection)
-				return .handled
-			}
-			.onDeleteCommand(perform: model.selection.isEmpty ? nil : { center.perform(.remove, on: model.selection) })
-		}
-		.toolbar {
-			ToolbarItemGroup {
+			ToolbarItemGroup(placement: .primaryAction) {
 				Button {
 					center.perform(.start, on: model.selection)
 				} label: {
-					Label(model.startActionTitle(), systemImage: "play.fill")
+					Label(model.startActionTitle(), systemImage: "play.circle")
 				}
 				.help(model.startActionTitle())
 				.disabled(model.canPerform(.start) == false)
@@ -108,7 +100,7 @@ struct FileTransferListView: View {
 				Button {
 					center.perform(.stop, on: model.selection)
 				} label: {
-					Label(.FileTransfer.cancelTransfer, systemImage: "stop.fill")
+					Label(.FileTransfer.cancelTransfer, systemImage: "stop.circle")
 				}
 				.help(Text(.FileTransfer.cancelTransfer))
 				.disabled(model.canPerform(.stop) == false)
@@ -132,9 +124,9 @@ struct FileTransferListView: View {
 				.accessibilityIdentifier("file-transfer-show-certificate")
 			}
 
-			ToolbarSpacer()
+			ToolbarSpacer(placement: .primaryAction)
 
-			ToolbarItem {
+			ToolbarItem(placement: .primaryAction) {
 				Button(action: center.clearStoppedTransfers) {
 					Label(.FileTransfer.clearAllStoppedTransfers, systemImage: "xmark.bin")
 				}
@@ -190,22 +182,29 @@ struct FileTransferListView: View {
 		}
 	}
 
+	/// Unavailable commands are left out, not dimmed, as context menus do.
 	@ViewBuilder
 	private func transferMenu(for identifiers: Set<String>) -> some View {
-		Button(model.startActionTitle(for: identifiers)) { center.perform(.start, on: identifiers) }
-			.disabled(model.canPerform(.start, on: identifiers) == false)
-		Button(.FileTransfer.downloadTo) { center.perform(.downloadTo, on: identifiers) }
-			.disabled(model.canPerform(.downloadTo, on: identifiers) == false)
-		Button(.FileTransfer.cancelTransfer) { center.perform(.stop, on: identifiers) }
-			.disabled(model.canPerform(.stop, on: identifiers) == false)
+		if model.canPerform(.start, on: identifiers) {
+			Button(model.startActionTitle(for: identifiers)) { center.perform(.start, on: identifiers) }
+		}
+		if model.canPerform(.downloadTo, on: identifiers) {
+			Button(.FileTransfer.downloadTo) { center.perform(.downloadTo, on: identifiers) }
+		}
+		if model.canPerform(.stop, on: identifiers) {
+			Button(.FileTransfer.cancelTransfer) { center.perform(.stop, on: identifiers) }
+		}
 
 		Divider()
-		Button(.FileTransfer.quickLook) { center.perform(.preview, on: identifiers) }
-			.disabled(model.canPerform(.preview, on: identifiers) == false)
-		Button(.FileTransfer.openFile) { center.perform(.open, on: identifiers) }
-			.disabled(model.canPerform(.open, on: identifiers) == false)
-		Button(.FileTransfer.showInFinder) { center.perform(.reveal, on: identifiers) }
-			.disabled(model.canPerform(.reveal, on: identifiers) == false)
+		if model.canPerform(.preview, on: identifiers) {
+			Button(.FileTransfer.quickLook) { center.perform(.preview, on: identifiers) }
+		}
+		if model.canPerform(.open, on: identifiers) {
+			Button(.FileTransfer.openFile) { center.perform(.open, on: identifiers) }
+		}
+		if model.canPerform(.reveal, on: identifiers) {
+			Button(.FileTransfer.showInFinder) { center.perform(.reveal, on: identifiers) }
+		}
 		if model.canPerform(.showCertificate, on: identifiers) {
 			Button(.FileTransfer.showCertificate) { center.perform(.showCertificate, on: identifiers) }
 		}
@@ -213,10 +212,11 @@ struct FileTransferListView: View {
 		/* Asking the model settles the rows' local files once for the whole
 		 menu, and leaves the share holding the access it needs to read them. */
 		let urls = model.shareableFileURLs(for: identifiers)
-		ShareLink(items: urls) {
-			Text(.FileTransfer.share)
+		if urls.isEmpty == false, urls.count == identifiers.count {
+			ShareLink(items: urls) {
+				Text(.FileTransfer.share)
+			}
 		}
-		.disabled(urls.count != identifiers.count)
 
 		Divider()
 		Button(.FileTransfer.removeFromList, role: .destructive) {
@@ -239,7 +239,8 @@ private struct FileTransferRowView: View {
 				HStack {
 					if let security = presentation.security {
 						Image(systemName: security.indicator.symbolName)
-							.foregroundStyle(security.indicator == .unverified ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+							.symbolRenderingMode(security.indicator == .unverified ? .multicolor : .monochrome)
+							.foregroundStyle(.secondary)
 							.help(Text(verbatim: security.details))
 							.accessibilityLabel(Text(verbatim: security.accessibilityLabel))
 							.accessibilityIdentifier("file-transfer-security-\(transfer.uniqueIdentifier)")
@@ -251,8 +252,6 @@ private struct FileTransferRowView: View {
 						Text(verbatim: requested)
 							.font(.caption)
 							.foregroundStyle(.secondary)
-							.padding(.horizontal, UISpacing.tight)
-							.background(.quaternary, in: Capsule())
 							.accessibilityIdentifier("file-transfer-requested-\(transfer.uniqueIdentifier)")
 					}
 					Spacer()

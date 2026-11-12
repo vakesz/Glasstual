@@ -19,7 +19,7 @@ final class ServerChannelListTableCell: NSTableCellView, NSViewToolTipOwner {
 	override init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
 		let label = NSTextField(labelWithString: "")
-		label.font = .systemFont(ofSize: NSFont.systemFontSize)
+		label.font = .preferredFont(forTextStyle: .body)
 		label.lineBreakMode = .byTruncatingTail
 		label.maximumNumberOfLines = 1
 		label.translatesAutoresizingMaskIntoConstraints = false

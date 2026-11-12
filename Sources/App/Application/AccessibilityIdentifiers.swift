@@ -155,6 +155,18 @@ enum AccessibilityIdentifier {
 	static let fileTransfersStart = "file-transfers-start"
 	static let fileTransfersStop = "file-transfers-stop"
 
+	// MARK: - History search
+
+	/// The toolbar button that shows the sender and date filters.
+	static let scrollbackSearchFilters = "scrollback-search-filters"
+
+	// MARK: - Channel list
+
+	static let serverChannelListUpdate = "server-channel-list-update"
+	static let serverChannelListJoin = "server-channel-list-join"
+	static let serverChannelListFilters = "server-channel-list-filters"
+	static let serverChannelListMinimumUsers = "server-channel-list-minimum-users"
+
 	// MARK: - Main window
 
 	/** A sidebar row: `sidebar-row-<kind>-<name>`.

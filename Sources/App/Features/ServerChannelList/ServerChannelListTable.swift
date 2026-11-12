@@ -51,7 +51,8 @@ final class ServerChannelListTableController: NSObject, NSTableViewDataSource, N
 		addColumn(.memberCount, title: String(localized: .ServerChannelList.memberCount), width: 90, minimum: 70)
 		addColumn(.topic, title: String(localized: .ServerChannelList.topic), width: 420, minimum: 220)
 		tableView.style = .inset
-		tableView.rowHeight = 24
+		// One line of body text and the table's margins, at the system text size.
+		tableView.rowHeight = (TextLineMetrics.lineHeight(for: .preferredFont(forTextStyle: .body)) + 2 * UISpacing.tight).rounded(.up)
 		tableView.usesAutomaticRowHeights = false
 		tableView.autoresizingMask = [.width]
 		tableView.allowsMultipleSelection = true
@@ -131,7 +132,12 @@ final class ServerChannelListTableController: NSObject, NSTableViewDataSource, N
 		case .channelName:
 			cell.textField?.stringValue = entry.channelName
 		case .memberCount:
-			cell.textField?.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+			cell.textField?.font = .monospacedDigitSystemFont(
+				ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize,
+				weight: .regular
+			)
+			// Counts line up on their last digit, as numbers in a table column do.
+			cell.textField?.alignment = .right
 			cell.textField?.stringValue = entry.memberCount.formatted()
 		case .topic:
 			cell.textField?.attributedStringValue = formattedTopic(for: entry)
@@ -146,7 +152,7 @@ final class ServerChannelListTableController: NSObject, NSTableViewDataSource, N
 			return cached
 		}
 		let formatted = (entry.displayedTopic as NSString).attributedString(
-			withIRCFormatting: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+			withIRCFormatting: NSFont.preferredFont(forTextStyle: .body),
 			preferredFontColor: .controlTextColor
 		) ?? NSAttributedString()
 		topics.setObject(formatted, forKey: key)

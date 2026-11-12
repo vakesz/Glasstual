@@ -62,67 +62,59 @@ struct HighlightLogView: View {
 	@State private var clearConfirmationIsPresented = false
 
 	var body: some View {
-		VStack(spacing: 0) {
-			Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
-				TableColumn(
-					.HighlightLog.channel,
-					sortUsing: HighlightLogComparator(field: .conversation, order: .forward)
-				) { row in
-					Text(verbatim: row.conversationName).lineLimit(1)
-				}
-				.width(min: 90, ideal: 130)
+		Table(model.rows, selection: $model.selection, sortOrder: $model.sortOrder) {
+			TableColumn(
+				.HighlightLog.channel,
+				sortUsing: HighlightLogComparator(field: .conversation, order: .forward)
+			) { row in
+				Text(verbatim: row.conversationName).lineLimit(1)
+			}
+			.width(min: 90, ideal: 130)
 
-				TableColumn(String(localized: .HighlightLog.message)) { row in
-					Text(row.message).lineLimit(1)
-				}
-				.width(min: 220, ideal: 420)
+			TableColumn(String(localized: .HighlightLog.message)) { row in
+				Text(row.message).lineLimit(1)
+			}
+			.width(min: 220, ideal: 420)
 
-				TableColumn(
-					.HighlightLog.time,
-					sortUsing: HighlightLogComparator(field: .time, order: .forward)
-				) { row in
-					/* The relative time went stale the moment it was drawn: it
-					 said "1 minute ago" for as long as the window stayed open. */
-					TimelineView(.everyMinute) { context in
-						Text(verbatim: row.timeLabel(relativeTo: context.date)).lineLimit(1)
-					}
-				}
-				.width(min: 100, ideal: 130)
-			}
-			.alternatingRowBackgrounds(model.rows.isEmpty ? .disabled : .enabled)
-			.accessibilityLabel(.HighlightLog.highlightList)
-			.overlay {
-				if model.rows.isEmpty {
-					ContentUnavailableView(
-						String(localized: .HighlightLog.emptyTitle),
-						systemImage: "exclamationmark.bubble",
-						description: Text(.HighlightLog.emptyDescription)
-					)
+			TableColumn(
+				.HighlightLog.time,
+				sortUsing: HighlightLogComparator(field: .time, order: .forward)
+			) { row in
+				/* The relative time went stale the moment it was drawn: it
+				 said "1 minute ago" for as long as the window stayed open. */
+				TimelineView(.everyMinute) { context in
+					Text(verbatim: row.timeLabel(relativeTo: context.date)).lineLimit(1)
 				}
 			}
-			.copyable(model.selectedCopyItems)
-			/* Opening the row is the table's primary action, so it is a
-			 double-click, Return and the context menu at once -- which a tap
-			 gesture on each cell was none of. */
-			.contextMenu(forSelectionType: HighlightLogRow.ID.self) { selection in
-				Button(.HighlightLog.goToMessage) { open(selection) }
-					.disabled(selection.count != 1)
-			} primaryAction: { selection in
-				open(selection)
-			}
-			.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
-
-			Divider()
-			HStack {
-				Text(.HighlightLog.actionNote)
-					.font(.caption)
-					.foregroundStyle(.secondary)
-				Spacer()
-			}
-			.padding(UISpacing.wide)
+			.width(min: 100, ideal: 130)
 		}
+		.alternatingRowBackgrounds(model.rows.isEmpty ? .disabled : .enabled)
+		.accessibilityLabel(.HighlightLog.highlightList)
+		.overlay {
+			if model.rows.isEmpty {
+				ContentUnavailableView(
+					String(localized: .HighlightLog.emptyTitle),
+					systemImage: "exclamationmark.bubble",
+					description: Text(.HighlightLog.emptyDescription)
+				)
+			}
+		}
+		.copyable(model.selectedCopyItems)
+		/* Opening the row is the table's primary action, so it is a
+		 double-click, Return and the context menu at once -- which a tap
+		 gesture on each cell was none of. */
+		.contextMenu(forSelectionType: HighlightLogRow.ID.self) { selection in
+			// Hidden rather than dimmed when it cannot apply, as context menus do.
+			if selection.count == 1 {
+				Button(.HighlightLog.goToMessage) { open(selection) }
+			}
+		} primaryAction: { selection in
+			open(selection)
+		}
+		.onChange(of: model.sortOrder) { _, newOrder in model.sort(using: newOrder) }
+		.navigationSubtitle(model.rows.isEmpty ? "" : String(localized: .HighlightLog.highlightCount(model.rows.count)))
 		.toolbar {
-			ToolbarItem {
+			ToolbarItem(placement: .primaryAction) {
 				Button(role: .destructive) {
 					clearConfirmationIsPresented = true
 				} label: {

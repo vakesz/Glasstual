@@ -6,67 +6,77 @@ import SwiftUI
 struct ScrollbackSearchView: View {
 	@Bindable var model: ScrollbackSearchModel
 
-	@FocusState private var searchIsFocused: Bool
+	@State private var showsFilters = false
 
 	var body: some View {
-		VStack(spacing: 0) {
-			filters
-			Divider()
-			results
+		results
+			.frame(minWidth: 520, minHeight: 360)
+			.navigationSubtitle(subtitle)
+			.searchable(
+				text: $model.text,
+				placement: .toolbar,
+				prompt: Text(.ScrollbackSearch.searchPlaceholder)
+			)
+			.searchScopes($model.scope) {
+				ForEach(ScrollbackSearchScope.allCases.filter(model.isAvailable)) { scope in
+					Text(label(for: scope)).tag(scope)
+				}
+			}
+			.onSubmit(of: .search) { Task { await model.openSelection() } }
+			.toolbar {
+				ToolbarItem(placement: .primaryAction) {
+					filtersButton
+				}
+			}
+			.alert(
+				String(localized: .ScrollbackSearch.lineNotStored),
+				isPresented: revealFailurePresented
+			) {}
+			.onAppear { model.refreshTargets() }
+			.onKeyPress(.downArrow) {
+				model.moveSelection(by: 1)
+				return .handled
+			}
+			.onKeyPress(.upArrow) {
+				model.moveSelection(by: -1)
+				return .handled
+			}
+	}
+
+	/// Sender and dates narrow a search the way Mail's filter does: one
+	/// toolbar button, filled while a filter applies.
+	private var filtersButton: some View {
+		Button(
+			String(localized: .ScrollbackSearch.filters),
+			systemImage: model.hasFilters
+				? "line.3.horizontal.decrease.circle.fill"
+				: "line.3.horizontal.decrease.circle"
+		) {
+			showsFilters.toggle()
 		}
-		.frame(minWidth: 520, minHeight: 360)
-		.defaultFocus($searchIsFocused, true)
-		.onAppear { model.refreshTargets() }
-		.onKeyPress(.downArrow) {
-			model.moveSelection(by: 1)
-			return .handled
-		}
-		.onKeyPress(.upArrow) {
-			model.moveSelection(by: -1)
-			return .handled
+		.help(String(localized: .ScrollbackSearch.filters))
+		.accessibilityIdentifier(AccessibilityIdentifier.scrollbackSearchFilters)
+		.popover(isPresented: $showsFilters, arrowEdge: .bottom) {
+			ScrollbackSearchFilters(model: model)
 		}
 	}
 
-	private var filters: some View {
-		VStack(alignment: .leading, spacing: UISpacing.regular) {
-			HStack(spacing: UISpacing.wide) {
-				Image(systemName: "magnifyingglass")
-					.foregroundStyle(.secondary)
-					.accessibilityHidden(true)
-				TextField(.ScrollbackSearch.searchPlaceholder, text: $model.text)
-					.textFieldStyle(.plain)
-					.font(.title2)
-					.focused($searchIsFocused)
-					.accessibilityIdentifier("scrollback-search-field")
-					.onSubmit { Task { await model.openSelection() } }
-			}
-			HStack(spacing: UISpacing.wide) {
-				Picker(.ScrollbackSearch.scope, selection: $model.scope) {
-					ForEach(ScrollbackSearchScope.allCases) { scope in
-						Text(label(for: scope)).tag(scope)
-							.disabled(model.isAvailable(scope) == false)
-					}
+	private var subtitle: String {
+		guard model.phase == .finished || model.phase == .searching, model.groups.isEmpty == false else { return "" }
+		return model.isTruncated
+			? String(localized: .ScrollbackSearch.resultCountTruncated(model.resultCount))
+			: String(localized: .ScrollbackSearch.resultCount(model.resultCount))
+	}
+
+	private var revealFailurePresented: Binding<Bool> {
+		Binding(
+			get: { model.revealFailed },
+			set: {
+				if $0 == false {
+					model.dismissRevealFailure()
 				}
-				.pickerStyle(.menu)
-				.fixedSize()
-				.accessibilityIdentifier("scrollback-search-scope")
-				TextField(.ScrollbackSearch.senderPlaceholder, text: $model.sender)
-					.frame(maxWidth: 160)
-					.accessibilityIdentifier("scrollback-search-sender")
-				Toggle(.ScrollbackSearch.limitDates, isOn: $model.restrictsDates)
-					.accessibilityIdentifier("scrollback-search-dates")
-				if model.restrictsDates {
-					DatePicker(.ScrollbackSearch.fromDate, selection: $model.fromDate, displayedComponents: .date)
-						.labelsHidden()
-					Text(.ScrollbackSearch.dateRangeTo)
-						.foregroundStyle(.secondary)
-					DatePicker(.ScrollbackSearch.throughDate, selection: $model.throughDate, displayedComponents: .date)
-						.labelsHidden()
-				}
-				Spacer(minLength: 0)
 			}
-		}
-		.padding(UISpacing.loose)
+		)
 	}
 
 	private func label(for scope: ScrollbackSearchScope) -> String {
@@ -104,50 +114,50 @@ struct ScrollbackSearchView: View {
 	}
 
 	private var resultList: some View {
-		VStack(spacing: 0) {
-			List(selection: $model.selection) {
-				ForEach(model.groups) { group in
-					Section {
-						ForEach(group.rows) { row in
-							ScrollbackSearchRowView(row: row, query: model.markedText)
-								.tag(row.id)
-								.contentShape(.rect)
-								.onTapGesture(count: 2) { Task { await model.open(row) } }
-								.accessibilityAddTraits(.isButton)
-								.accessibilityAction { Task { await model.open(row) } }
-						}
-					} header: {
-						ScrollbackSearchGroupHeader(group: group)
+		List(selection: $model.selection) {
+			ForEach(model.groups) { group in
+				Section {
+					ForEach(group.rows) { row in
+						ScrollbackSearchRowView(row: row, query: model.markedText)
+							.tag(row.id)
+							.accessibilityAction { Task { await model.open(row) } }
 					}
+				} header: {
+					ScrollbackSearchGroupHeader(group: group)
 				}
 			}
-			.listStyle(.inset)
-			.accessibilityLabel(Text(.ScrollbackSearch.resultsAccessibilityLabel))
-			footer
 		}
+		.listStyle(.inset)
+		.contextMenu(forSelectionType: ScrollbackSearchRow.ID.self) { _ in
+		} primaryAction: { _ in
+			Task { await model.openSelection() }
+		}
+		.accessibilityLabel(Text(.ScrollbackSearch.resultsAccessibilityLabel))
 	}
+}
 
-	private var footer: some View {
-		HStack {
-			Text(.ScrollbackSearch.resultCount(model.resultCount))
-				.foregroundStyle(.secondary)
-			if model.isTruncated {
-				Text(.ScrollbackSearch.resultsTruncated)
-					.foregroundStyle(.secondary)
-			}
-			if model.revealFailed {
-				Text(.ScrollbackSearch.lineNotStored)
-					.foregroundStyle(.orange)
-			}
-			Spacer()
-			if model.phase == .searching {
-				ProgressView().controlSize(.small)
+/// The sender and date filters, in the popover the toolbar's filter button shows.
+private struct ScrollbackSearchFilters: View {
+	@Bindable var model: ScrollbackSearchModel
+
+	var body: some View {
+		Form {
+			TextField(
+				String(localized: .ScrollbackSearch.sender),
+				text: $model.sender,
+				prompt: Text(.ScrollbackSearch.senderPlaceholder)
+			)
+			.accessibilityIdentifier("scrollback-search-sender")
+			Toggle(.ScrollbackSearch.limitDates, isOn: $model.restrictsDates)
+				.accessibilityIdentifier("scrollback-search-dates")
+			if model.restrictsDates {
+				DatePicker(.ScrollbackSearch.fromDate, selection: $model.fromDate, displayedComponents: .date)
+				DatePicker(.ScrollbackSearch.throughDate, selection: $model.throughDate, displayedComponents: .date)
 			}
 		}
-		.font(.callout)
-		.padding(.horizontal, UISpacing.loose)
-		.padding(.vertical, UISpacing.regular)
-		.background(.bar)
+		.formStyle(.grouped)
+		.frame(width: 320)
+		.fixedSize(horizontal: false, vertical: true)
 	}
 }
 

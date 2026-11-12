@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import AppKit
 import SwiftUI
 
 struct ChannelSpotlightScene: Scene {
@@ -80,16 +81,33 @@ struct ChannelSpotlightActivation {
 	}
 }
 
-/// What the spotlight panel is built from. The panel sizes itself to its
-/// content, so the heights the rows are drawn at are also the heights the
-/// window is asked for; naming them once is what keeps the two in step.
-private enum ChannelSpotlightLayout {
+/** What the spotlight panel is built from. The panel sizes itself to its
+ content, so the heights the rows are drawn at are also the heights the
+ window is asked for; naming them once is what keeps the two in step.
+
+ Every height follows from the text styles it holds, as Spotlight's does,
+ measured once per launch. */
+enum ChannelSpotlightLayout {
 	static let width: CGFloat = 600
-	static let searchFieldHeight: CGFloat = 60
-	static let rowHeight: CGFloat = 54
-	static let emptyStateHeight: CGFloat = 72
 	/// How many matches the panel grows to before it starts scrolling.
 	static let maximumVisibleRows = 6
+	/// The radius the panel's glass keeps once results open under the field,
+	/// when the window around it offers no corner to be concentric with.
+	static let minimumCornerRadius: CGFloat = 22
+
+	/// One line of the field's title text and a margin above and below it.
+	static let searchFieldHeight = (lineHeight(.title2) + 2 * UISpacing.spacious).rounded(.up)
+
+	/// A title over a line of activity, with a margin above and below.
+	static let rowHeight = (lineHeight(.headline) + UISpacing.tight / 2 + lineHeight(.caption1) + 2 * UISpacing.wide)
+		.rounded(.up)
+
+	/// The "No Results" title and the same margins as the field.
+	static let emptyStateHeight = (lineHeight(.title3) + 2 * UISpacing.spacious + UISpacing.wide).rounded(.up)
+
+	private static func lineHeight(_ style: NSFont.TextStyle) -> CGFloat {
+		TextLineMetrics.lineHeight(for: .preferredFont(forTextStyle: style))
+	}
 }
 
 @MainActor
@@ -151,7 +169,11 @@ struct ChannelSpotlightView: View {
 				}
 			}
 		}
-		.glassEffect(.regular, in: .rect(cornerRadius: 22))
+		/* Glass on the floating control layer: a capsule round the field
+		 alone, and a rectangle concentric with the panel once results open. */
+		.glassEffect(.regular, in: model.searchText.isEmpty
+			? AnyShape(.capsule)
+			: AnyShape(.rect(corners: .concentric(minimum: .fixed(ChannelSpotlightLayout.minimumCornerRadius)), isUniform: true)))
 		.frame(width: ChannelSpotlightLayout.width, height: contentHeight)
 		.defaultFocus($searchIsFocused, true)
 		.onChange(of: controlActiveState, initial: true) { _, state in

@@ -46,7 +46,7 @@ struct ChannelTopicEditor: NSViewRepresentable {
 			height: CGFloat.greatestFiniteMagnitude
 		)
 		textView.minSize = NSSize(width: 0, height: 0)
-		textView.preferredFont = .systemFont(ofSize: NSFont.systemFontSize)
+		textView.preferredFont = .preferredFont(forTextStyle: .body)
 		textView.preferredFontColor = .textColor
 		textView.stringValueWithIRCFormatting = formattedText
 		textView.textContainer?.containerSize = NSSize(

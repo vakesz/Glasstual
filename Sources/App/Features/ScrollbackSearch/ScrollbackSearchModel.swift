@@ -191,6 +191,16 @@ final class ScrollbackSearchModel {
 		text
 	}
 
+	/// Whether the sender or the dates narrow the search.
+	var hasFilters: Bool {
+		sender.isEmpty == false || restrictsDates
+	}
+
+	/// The reader saw that the line they opened is gone.
+	func dismissRevealFailure() {
+		revealFailed = false
+	}
+
 	/// Opens a match in the main window, at its line.
 	func open(_ row: ScrollbackSearchRow) async {
 		selection = row.id
