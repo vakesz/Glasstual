@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Connect to a WebSocket server</title>
+	<meta name="description" content="Connect to a network’s WebSocket gateway instead of a plain IRC port.">
+	<meta name="keywords" content="WebSocket, wss, ws, web gateway, transport">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="websocket"></a>
+<h1>Connect to a WebSocket server</h1>
+<p>Some networks accept IRC connections over WebSocket, for example when only web ports are open.</p>
+
+<h2>Use a WebSocket endpoint</h2>
+<ol>
+	<li>Select the server, then choose Server &gt; Server Properties.</li>
+	<li>In the General pane, choose WebSocket as the connection type.</li>
+	<li>Enter the server address, the port, and the path the gateway listens on, such as <code>/irc</code> or <code>/webirc/websocket/</code>. The path starts with a slash.</li>
+	<li>Select Connect securely to use <code>wss://</code>, WebSocket over TLS. Without it, the connection uses unencrypted <code>ws://</code>.</li>
+	<li>Click Save, then reconnect.</li>
+</ol>
+<p>Alternate servers can mix IRC and WebSocket endpoints; the list shows each one’s type and path.</p>
+<p>You can also switch the selected server with <code>/transport websocket /path</code> or back with <code>/transport irc</code>. The change applies the next time you connect.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="add-server.html">Add a server</a> · <a href="connect-securely.html">Connect securely</a></p>
+</nav>
+</body>
+</html>

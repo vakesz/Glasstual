@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Sign in to your account</title>
+	<meta name="description" content="Sign in to a network account with SASL, choose a mechanism and sign in again without reconnecting.">
+	<meta name="keywords" content="SASL, NickServ, account, login, identify, password, PLAIN, SCRAM, EXTERNAL, ECDSA, OAuth">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="sign-in"></a>
+<h1>Sign in to your account</h1>
+<p>Many networks let you register your nickname as an account. Glasstual signs in with SASL as it connects, before it joins any channel.</p>
+
+<h2>Set up sign-in</h2>
+<ol>
+	<li>Select the server, then choose Server &gt; Server Properties, then click Identity.</li>
+	<li>Under Authentication, select Sign in with SASL.</li>
+	<li>Enter your account name and password. The password is stored in your keychain.</li>
+	<li>Choose a SASL mechanism, or leave it on Automatic to let Glasstual pick the strongest one the server offers.</li>
+	<li>Click Save, then reconnect.</li>
+</ol>
+<p>If you turn off SASL, Glasstual uses the password to identify with NickServ instead.</p>
+
+<h2>SASL mechanisms</h2>
+<table>
+	<tr><th scope="row">Password</th><td>Sends the account name and password (PLAIN).</td></tr>
+	<tr><th scope="row">Password Proof</th><td>Proves you know the password without sending it (SCRAM-SHA-256 or SCRAM-SHA-512).</td></tr>
+	<tr><th scope="row">Client Certificate</th><td>Signs in with the certificate chosen in the Client Certificate pane (EXTERNAL).</td></tr>
+	<tr><th scope="row">Signing Key</th><td>Signs the server’s challenge with an ECDSA key stored in your keychain (ECDSA-NIST256P-CHALLENGE).</td></tr>
+	<tr><th scope="row">OAuth Token</th><td>Sends a bearer token, only over an encrypted connection whose certificate is trusted (OAUTHBEARER). Paste a new token when it expires.</td></tr>
+</table>
+<p>On Automatic, Glasstual tries a certificate or key first, then a token, then a password proof, and the plain password last. Select “Use only this mechanism” to stop Glasstual from trying the others. If the details a mechanism needs are missing, the pane says so.</p>
+
+<h2>Use a signing key</h2>
+<ol>
+	<li>In the Identity pane, click Generate Key, or click Import to use an unencrypted P-256 private key in PEM or PKCS #8 format.</li>
+	<li>Click Copy Public Key, then register it with your account, for example with <code>NickServ SET PUBKEY</code> on Atheme networks.</li>
+	<li>Choose Signing Key as the SASL mechanism.</li>
+</ol>
+<p>The private key stays in your keychain.</p>
+
+<h2>Sign in again</h2>
+<p>To sign in again without reconnecting, for example after services return, choose Server &gt; Sign In Again, choose a mechanism if you want a particular one, then click Sign In. In the Identity pane, select “Sign in again when services return” to have Glasstual do this on its own.</p>
+<p>You can also type <code>/sasl status</code> to see how you’re signed in, or <code>/sasl auth</code> to sign in again.</p>
+
+<h2>Choose what happens around sign-in</h2>
+<p>In the Authentication section of the Identity pane:</p>
+<ul>
+	<li>Select “Wait for identification before joining channels” so channels that need an account don’t refuse you.</li>
+	<li>Select “Disconnect if SASL authentication fails” to stay off the network rather than connect without your account.</li>
+</ul>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="register-account.html">Register an account</a> · <a href="connect-securely.html">Connect securely</a> · <a href="troubleshooting.html">Troubleshooting</a></p>
+</nav>
+</body>
+</html>

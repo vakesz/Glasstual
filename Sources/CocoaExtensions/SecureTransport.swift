@@ -1,0 +1,374 @@
+/* *********************************************************************
+ *
+ *            Copyright (c) 2024 Codeux Software, LLC
+ *     Please see ACKNOWLEDGEMENT for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of "Codeux Software, LLC", nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+/*
+ Portions of the cipher-suite naming logic derive from Chromium's
+ ssl_cipher_suite_names.cc.
+
+ Copyright (c) 2013 The Chromium Authors. All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are
+ met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+  * Neither the name of Google Inc. nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING PROCUREMENT OF SUBSTITUTE
+ GOODS OR SERVICES, LOSS OF USE, DATA, OR PROFITS, OR BUSINESS INTERRUPTION
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE ARISING IN ANY WAY OUT
+ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ DAMAGE.
+ */
+
+import Foundation
+import Security
+
+public let tlsProtocolVersionUnknown = tls_protocol_version_t(rawValue: 0)!
+public let tlsCipherSuiteUnknown = tls_ciphersuite_t(rawValue: 0)!
+
+/** Which cipher suites a handshake offers. The raw values are persisted with a
+ server configuration.
+
+ `.system` names no suite of its own: the handshake is handed the platform's
+ default group, which is the list Apple keeps current. The two named lists only
+ narrow that, and neither of them has ever included a suite without forward
+ secrecy -- those are reached by the transport's own fallback and by nothing a
+ user can pick. */
+public enum CipherSuiteCollection: UInt, Sendable {
+	/// The operating system's default group.
+	case system = 0
+
+	/// TLS 1.3, then ECDHE with an AEAD, then ECDHE with CBC and SHA-2.
+	case modern = 1
+
+	/** `.modern`'s ECDHE suites plus the SHA-1 ones an older server may be
+	 limited to. It names no TLS 1.3 suite, so a connection that chooses it
+	 settles on TLS 1.2. */
+	case intermediate = 2
+}
+
+public enum SecureTransportSupport {
+	public static var minimumProtocolType: tls_protocol_version_t {
+		.TLSv12
+	}
+
+	public static func description(forProtocolType type: tls_protocol_version_t) -> String {
+		switch type.rawValue {
+		case 0x0303: "Transport Layer Security (TLS), version 1.2"
+		case 0x0304: "Transport Layer Security (TLS), version 1.3"
+		case 0xFEFD: "Datagram Transport Layer Security (DTLS), version 1.2"
+		default: "Unknown"
+		}
+	}
+
+	public static func description(forCipherSuite suite: tls_ciphersuite_t,
+	                               withProtocol: Bool = false) -> String
+	{
+		guard let name = cipherNames[suite.rawValue] else { return "Unknown" }
+		return withProtocol && (0x1301 ... 0x1303).contains(suite.rawValue) ? "\(name) (TLS 1.3)" : name
+	}
+
+	/// Whether `suite` has no forward secrecy, so that a later compromise of the
+	/// server's key decrypts a recorded session.
+	public static func isCipherSuiteLegacy(_ suite: tls_ciphersuite_t) -> Bool {
+		nonForwardSecretSuites.contains(suite.rawValue)
+	}
+
+	/// What the server-properties sheet shows the user. It has to name the same
+	/// suites the transport offers, which is why every entry of every
+	/// collection is a value `tls_ciphersuite_t` defines.
+	public static func descriptions(forCipherListCollection collection: CipherSuiteCollection,
+	                                withProtocol: Bool = false) -> [String]
+	{
+		cipherSuites(inCollection: collection).map { number in
+			guard let suite = tls_ciphersuite_t(rawValue: number.uint16Value) else { return "Unknown" }
+
+			return description(forCipherSuite: suite, withProtocol: withProtocol)
+		}
+	}
+
+	/// The suites `collection` offers, most preferred first. `.system` offers
+	/// none of its own: the handshake takes the platform's default group.
+	public static func cipherSuites(inCollection collection: CipherSuiteCollection) -> [NSNumber] {
+		let suites: [UInt16] = switch collection {
+		case .system: []
+		case .modern: modernSuites
+		case .intermediate: intermediateSuites
+		}
+
+		return suites.map(NSNumber.init(value:))
+	}
+
+	/** What the transport's own fallback adds to whichever suites were selected,
+	 once, when the peer refused every one of them.
+
+	 Static RSA: the session key is encrypted to the server's long-term key, so a
+	 recording of the session is readable by anyone who later obtains that key.
+	 No selection offers these and no setting reaches them. A server that
+	 offers nothing else does, and the connection says so every time. */
+	public static let legacyCipherSuites: [NSNumber] = legacySuites.map(NSNumber.init(value:))
+
+	public static func isTLSError(_ error: NSError) -> Bool {
+		error.domain == "kCFStreamErrorDomainSSL"
+	}
+
+	/// Whether `code` says the two sides found no cipher suite in common.
+	/// `errSSLPeerHandshakeFail` is the alert a server sends when it accepted
+	/// none of the suites offered; `errSSLNegotiation` is the local shape of the
+	/// same disagreement.
+	public static func namesNoSharedCipherSuite(errorCode code: Int) -> Bool {
+		noSharedCipherSuiteErrors.contains(code)
+	}
+
+	/** Whether a handshake that failed with `code` may be dialled again with
+	 ``legacyCipherSuites`` added to what was offered.
+
+	 Only a failure to agree on a suite qualifies. A certificate the client will
+	 not accept, a protocol version no suite can change, a session the peer
+	 dropped without a close-notify (-9816, the shape of a throttled reconnect),
+	 a timeout and a cancel are all refused.
+
+	 The other two conditions are what keeps the downgrade honest. It is offered
+	 at most once per connection attempt, and only while the peer's certificate
+	 has not been seen: the suite both sides agreed on is named in the server's
+	 first message, so a failure that arrives after a certificate cannot be one
+	 a suite would fix. A peer able to force a handshake failure therefore gains
+	 nothing but a downgrade the negotiated suite reports back. */
+	public static func retriesWithLegacyCipherSuites(
+		afterErrorCode code: Int?,
+		legacySuitesAlreadyOffered: Bool,
+		peerCertificateSeen: Bool
+	) -> Bool {
+		guard let code, legacySuitesAlreadyOffered == false, peerCertificateSeen == false else {
+			return false
+		}
+
+		return namesNoSharedCipherSuite(errorCode: code)
+	}
+
+	public static func description(forErrorCode originalCode: Int) -> String {
+		SecureTransportErrorLocalization.description(for: SecureTransportErrorCode(normalizing: originalCode))
+	}
+
+	public static func description(forBadCertificateErrorCode code: Int) -> String? {
+		isBadCertificateErrorCode(code) ? description(forErrorCode: code) : nil
+	}
+
+	private static func isBadCertificateErrorCode(_ code: Int) -> Bool {
+		badCertificateErrors.contains(code)
+	}
+
+	public static func trust(fromCertificateChain chain: [Data], policyName: String) -> SecTrust? {
+		let certificates = chain.compactMap { SecCertificateCreateWithData(nil, $0 as CFData) }
+		guard certificates.isEmpty == false else { return nil }
+		let policy = SecPolicyCreateSSL(true, policyName as CFString)
+		var trust: SecTrust?
+		guard SecTrustCreateWithCertificates(certificates as CFArray, policy, &trust) == errSecSuccess,
+		      let result = trust
+		else { return nil }
+		// Trust evaluation happens on the calling queue; never hit the network
+		// for OCSP/AIA from there.
+		_ = SecTrustSetNetworkFetchAllowed(result, false)
+		return result
+	}
+
+	public static func certificates(in trust: SecTrust) -> [Data]? {
+		guard let certificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate] else { return nil }
+		return certificates.map { SecCertificateCopyData($0) as Data }
+	}
+
+	/// Builds the client chain from supplied certificates and local keychains.
+	/// This prepares the identity for presentation; the peer decides whether it
+	/// trusts it. Self-signed IRC identities do not need a locally trusted root.
+	public static func localIdentity(
+		_ identity: SecIdentity,
+		certificateChain: [SecCertificate] = []
+	) throws -> sec_identity_t {
+		var certificate: SecCertificate?
+		let certificateStatus = SecIdentityCopyCertificate(identity, &certificate)
+		guard certificateStatus == errSecSuccess, let certificate else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(certificateStatus == errSecSuccess ? errSecDecode : certificateStatus))
+		}
+
+		var trust: SecTrust?
+		let trustStatus = SecTrustCreateWithCertificates(
+			([certificate] + certificateChain) as CFArray, SecPolicyCreateBasicX509(), &trust
+		)
+		guard trustStatus == errSecSuccess, let trust else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(trustStatus == errSecSuccess ? errSecDecode : trustStatus))
+		}
+		let fetchStatus = SecTrustSetNetworkFetchAllowed(trust, false)
+		guard fetchStatus == errSecSuccess else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(fetchStatus))
+		}
+		_ = SecTrustEvaluateWithError(trust, nil)
+		guard let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate], !chain.isEmpty else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(errSecCreateChainFailed))
+		}
+
+		// Network.framework already sends the leaf from SecIdentity. Its extra
+		// certificate array must start with the issuer, never repeat the leaf.
+		guard let result = sec_identity_create_with_certificates(identity, Array(chain.dropFirst()) as CFArray) else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(errSecInternalComponent))
+		}
+		return result
+	}
+
+	public static func policyName(in trust: SecTrust) -> String? {
+		var policies: CFArray?
+		guard SecTrustCopyPolicies(trust, &policies) == errSecSuccess,
+		      let policies = policies as? [SecPolicy]
+		else { return nil }
+		for policy in policies {
+			guard let properties = SecPolicyCopyProperties(policy) as? [CFString: Any],
+			      let name = properties[kSecPolicyName] as? String
+			else { continue }
+			return name
+		}
+		return nil
+	}
+
+	/* Every raw value below is a case of `tls_ciphersuite_t`. The enum is what
+	 Network.framework negotiates from, so a value outside it is not a weaker
+	 choice — it is silently no choice at all, and the list the user picked
+	 stops being the list that is offered. `cipherSuiteRawValuesAreDefined`
+	 pins that. */
+
+	private static let modernSuites: [UInt16] = [
+		0x1302, 0x1301, 0x1303,
+		0xC02C, 0xC030, 0xCCA9, 0xCCA8, 0xC02B, 0xC02F,
+		0xC024, 0xC028, 0xC023, 0xC027,
+	]
+
+	/** The ECDHE suites, SHA-1 included, less the DHE and DHE-DSS suites the
+	 platform never implemented. */
+	private static let intermediateSuites: [UInt16] = [
+		0xC02F, 0xC02B, 0xC030, 0xC02C,
+		0xC027, 0xC023, 0xC013, 0xC009, 0xC028, 0xC024, 0xC014, 0xC00A,
+	]
+
+	/// What ``legacyCipherSuites`` offers, most preferred first.
+	private static let legacySuites: [UInt16] = [0x009C, 0x009D, 0x003C, 0x003D, 0x002F, 0x0035]
+
+	/// Every suite with no forward secrecy, ``legacySuites`` plus the 3DES suite
+	/// no list here offers but the platform's own group names.
+	private static let nonForwardSecretSuites: Set<UInt16> = Set(legacySuites + [0x000A])
+
+	/// The codes ``namesNoSharedCipherSuite(errorCode:)`` answers for:
+	/// `errSSLPeerHandshakeFail` and `errSSLNegotiation`.
+	private static let noSharedCipherSuiteErrors: Set<Int> = [-9824, -9801]
+
+	/// One name for every case of `tls_ciphersuite_t`, so a negotiated suite
+	/// always has one -- including the suites only the platform's own
+	/// `.default` group can pick.
+	private static let cipherNames: [UInt16: String] = [
+		0x1301: "AES-128-GCM", 0x1302: "AES-256-GCM", 0x1303: "CHACHA20-POLY1305",
+		0xC02B: "ECDHE-ECDSA-AES-128-GCM", 0xC02C: "ECDHE-ECDSA-AES-256-GCM",
+		0xC02F: "ECDHE-RSA-AES-128-GCM", 0xC030: "ECDHE-RSA-AES-256-GCM",
+		0xCCA8: "ECDHE-RSA-CHACHA20-POLY1305", 0xCCA9: "ECDHE-ECDSA-CHACHA20-POLY1305",
+		0xC023: "ECDHE-ECDSA-AES-128-CBC-SHA256", 0xC024: "ECDHE-ECDSA-AES-256-CBC-SHA384",
+		0xC027: "ECDHE-RSA-AES-128-CBC-SHA256", 0xC028: "ECDHE-RSA-AES-256-CBC-SHA384",
+		0xC009: "ECDHE-ECDSA-AES-128-CBC-SHA1", 0xC00A: "ECDHE-ECDSA-AES-256-CBC-SHA1",
+		0xC013: "ECDHE-RSA-AES-128-CBC-SHA1", 0xC014: "ECDHE-RSA-AES-256-CBC-SHA1",
+		0xC008: "ECDHE-ECDSA-3DES-EDE-CBC-SHA1", 0xC012: "ECDHE-RSA-3DES-EDE-CBC-SHA1",
+		0x009C: "RSA-AES-128-GCM", 0x009D: "RSA-AES-256-GCM",
+		0x003C: "RSA-AES-128-CBC-SHA256", 0x003D: "RSA-AES-256-CBC-SHA256",
+		0x002F: "RSA-AES-128-CBC-SHA1", 0x0035: "RSA-AES-256-CBC-SHA1",
+		0x000A: "RSA-3DES-EDE-CBC-SHA1",
+	]
+
+	/** Only the codes that mean the server's certificate failed validation:
+	 chain invalid, bad, unknown or missing root, expired, not yet valid, and
+	 a host-name mismatch. A peer alert about the client's own certificate,
+	 or a session the server closed without a close-notify (-9816, the usual
+	 shape of a throttled reconnect), is a plain TLS failure and reads as one. */
+	private static let badCertificateErrors: Set<Int> = [
+		-9807, -9808, -9812, -9813, -9814, -9815, -9843,
+	]
+}
+
+private struct SecureTransportErrorCode: Sendable {
+	let value: Int
+
+	init(normalizing originalValue: Int) {
+		value = (-9890 ... -9800).contains(originalValue) && !(-9889 ... -9886).contains(originalValue)
+			? originalValue
+			: -9999
+	}
+
+	var localizationKey: String {
+		String(value)
+	}
+}
+
+private enum SecureTransportErrorLocalization {
+	static func description(for code: SecureTransportErrorCode) -> String {
+		let bundle = Bundle(for: SecureTransportLocalizationBundleToken.self)
+		/* The reason is keyed by the OSStatus itself, so it is read by key
+		 rather than through a generated symbol. */
+		let reason = bundle.localizedString(
+			forKey: code.localizationKey,
+			value: nil,
+			table: "SecureTransportErrorCodes"
+		)
+
+		let description = bundle.localizedString(
+			for: .SecureTransportErrorCodes.errorDescription(reason, code.value),
+			arguments: [reason, code.value]
+		)
+
+		/* "Handshake failure" names the alert, not the cause, and the cause is
+		 the one a reader can act on: the server accepted none of the suites
+		 offered. Said after the code rather than instead of the reason, so the
+		 number the rest of the sentence carries still matches the OSStatus. */
+		guard SecureTransportSupport.namesNoSharedCipherSuite(errorCode: code.value) else {
+			return description
+		}
+
+		return description + " " + bundle.localizedString(for: .SecureTransportErrorCodes.noSharedCipherSuite)
+	}
+}
+
+private final class SecureTransportLocalizationBundleToken {}

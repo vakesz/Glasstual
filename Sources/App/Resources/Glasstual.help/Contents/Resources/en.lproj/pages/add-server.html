@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Add a server in Glasstual</title>
+	<meta name="description" content="Add an IRC network or server, connect to it and change its settings.">
+	<meta name="keywords" content="network, new server, connect, disconnect, reconnect, alternate servers">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="add-server"></a>
+<h1>Add a server in Glasstual</h1>
+<p>Each server in the sidebar is one connection to an IRC network. You can add as many as you like.</p>
+
+<h2>Add a server</h2>
+<ol>
+	<li>Choose File &gt; Add Server, or click the Add Server button in the toolbar.</li>
+	<li>Choose a network to fill in its address, port and encryption, or choose Custom Server to enter your own. A network may suggest channels; they’re added to the server’s channel list, where you can remove any of them.</li>
+	<li>Check the settings in the General pane:
+		<ul>
+			<li><strong>Server Address</strong> and <strong>Port</strong>: Where to connect. You can also type a network name, such as Libera.Chat, to fill in its details.</li>
+			<li><strong>Connect securely</strong>: Encrypts the connection with TLS. See <a href="connect-securely.html">Connect securely</a>.</li>
+			<li><strong>Server Password</strong>: Sent with the PASS command when connecting. Most networks don’t use one; it isn’t your account password.</li>
+			<li><strong>Connect when Glasstual opens</strong> and <strong>Reconnect after disconnect</strong>: Keep you connected without doing anything.</li>
+		</ul>
+	</li>
+	<li>Click Identity to set your nickname for this server and, if you have an account, how to sign in. See <a href="sign-in.html">Sign in to your account</a>.</li>
+	<li>Click Save.</li>
+</ol>
+<p>You can also add a server by typing <code>/server</code> followed by its address, for example <code>/server irc.example.org +6697</code>. A plus sign before the port connects securely.</p>
+
+<h2>Connect and disconnect</h2>
+<p>Select the server in the sidebar, then choose Server &gt; Connect or Server &gt; Disconnect. While Glasstual waits to reconnect, choose Server &gt; Cancel Reconnect to stop it.</p>
+<p>If the server uses a proxy, hold down the Option key and choose Server &gt; Connect Without Proxy to connect once without it.</p>
+
+<h2>Use alternate servers</h2>
+<p>In the General pane, click Modify Alternate Servers to list other addresses for the same network. Glasstual tries them from top to bottom; the first is the primary server.</p>
+
+<h2>Change a server’s settings</h2>
+<p>Select the server, then choose Server &gt; Server Properties. The panes cover your identity and profile, the channel list, highlights, commands sent on connect, quit messages, text encoding, bouncers, the client certificate, the network socket, the proxy and flood control.</p>
+<p>Each server’s properties open in a window of their own, so you can keep them open while you chat. Click Save or press Command-S to apply your changes, or click Revert to go back to the saved settings. If you close a window with unsaved changes, Glasstual asks whether to save them: click Save, Don’t Save or Cancel. If you quit with unsaved changes, Glasstual offers to review them first.</p>
+<p>To ignore someone on a server or to be told when they come online, choose Window &gt; People.</p>
+<p>To make a copy of a server, choose Server &gt; Duplicate Server. To remove one, choose Server &gt; Delete Server.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="connect-securely.html">Connect securely</a> · <a href="proxies.html">Proxies and Tor</a> · <a href="websocket.html">WebSocket servers</a></p>
+</nav>
+</body>
+</html>

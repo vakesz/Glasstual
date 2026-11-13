@@ -1,0 +1,440 @@
+// Copyright (c) 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import CocoaExtensions
+import Foundation
+import os
+
+/** Logging for the connection classes. */
+enum ConnectionHostLog {
+	static let connection = Logger(
+		subsystem: LogSubsystem.current, category: "Connection"
+	)
+
+	static let listener = Logger(
+		subsystem: LogSubsystem.current, category: "Listener"
+	)
+}
+
+/// One IRC connection, from the service's side.
+///
+/// The host owns the send queue, the flood-control counters and the transport;
+/// the transport hands it everything that happened through one `AsyncStream`,
+/// so the ordering the client sees is the ordering the server produced. What
+/// used to be a serial `DispatchQueue` shared between two classes and asserted
+/// by comment is now the actor's own isolation.
+actor ConnectionHost {
+	/// The client half of the connection. `RemoteConnectionClientProtocol`
+	/// refines `Sendable`, which is what lets the proxy live in here.
+	private var client: (any RemoteConnectionClientProtocol)?
+
+	private var socket: ConnectionSocket?
+	private var eventTask: Task<Void, Never>?
+	private var writerTask: Task<Void, Never>?
+	private var ready = false
+	private var closing = false
+
+	private var sendQueue = ConnectionHostSendQueue()
+
+	/// Wakes the writer when the flood-control window next has room. A
+	/// `ContinuousClock` sleep, so it keeps time across system sleep and
+	/// cancels cleanly; it exists only while enforced lines are waiting.
+	private var floodControlTask: Task<Void, Never>?
+	private var floodControlEnforced = false
+	private var floodControlWindow = FloodControlWindow(
+		capacity: Int(ConnectionDefaults.floodControlMaximumMessages),
+		interval: .seconds(Double(ConnectionDefaults.floodControlDelayInterval))
+	)
+
+	/** `ProcessInfo.disableSuddenTermination()` is a counter. The host process is shared by
+	 every connection, so an unbalanced disable would permanently pin the whole service. */
+	private var suddenTerminationDisableCount = 0
+
+	/** The App Nap activities this connection is holding.
+
+	 `beginActivity` hands back a token that has to be ended exactly once, and
+	 the process is shared, so they are counted rather than assumed to be one. */
+	private var appNapActivities: [any NSObjectProtocol] = []
+
+	// MARK: - Connection Lifecycle
+
+	init(client: any RemoteConnectionClientProtocol) {
+		self.client = client
+	}
+
+	/// The application owns the connection's lifetime; this runs from its
+	/// interruption and invalidation handlers.
+	func detach() async {
+		ConnectionHostLog.connection.debug("Client connection ended")
+
+		client = nil
+		await close()
+
+		balanceSuddenTermination()
+		balanceAppNap()
+	}
+
+	/** The last chance to let go of what the process shares.
+
+	 `detach()` is the ordinary path, but it is driven by the XPC connection's
+	 handlers and a host released any other way would leave its activity and its
+	 sudden-termination disable held for the life of the process. */
+	isolated deinit {
+		eventTask?.cancel()
+		writerTask?.cancel()
+		floodControlTask?.cancel()
+		balanceSuddenTermination()
+		balanceAppNap()
+	}
+
+	// MARK: - Open/Close
+
+	func open(with config: ConnectionConfig) async {
+		config.diagnostics?.record(.hostStarted)
+		guard socket == nil else {
+			ConnectionHostLog.connection.error("Cannot open a connection that is already open")
+			/* Returning in silence left the application waiting for a connection
+			 nothing was going to make: it had asked, and the only answer it ever
+			 gets is a callback. Refusing out loud is what lets it retry. */
+			client?.didDisconnect(
+				withError: ConnectionError.other(message: String(localized: .ConnectionErrors.connectionAlreadyOpen))
+			)
+
+			return
+		}
+
+		guard let client else {
+			ConnectionHostLog.connection.error("Cannot open a connection before the client is known")
+
+			return
+		}
+
+		let (events, continuation) = AsyncStream<SocketEvent>.makeStream(
+			// The reader waits for readDrained after each bounded chunk. Never use
+			// a dropping stream policy for IRC data or terminal events.
+			bufferingPolicy: .unbounded
+		)
+
+		let socket = ConnectionSocket(config: config, client: client, events: continuation)
+
+		self.socket = socket
+		closing = false
+		floodControlWindow = FloodControlWindow(
+			capacity: Int(config.floodControlMaximumMessages),
+			interval: .seconds(Double(config.floodControlDelayInterval))
+		)
+
+		/* Both references are weak. Holding the transport strongly kept it — and
+		 the file descriptor it owns — alive for as long as the stream had not
+		 finished, and a released host left the loop running with nothing to
+		 deliver to, reading from the socket for the life of the process. */
+		eventTask = Task { [weak self, weak socket] in
+			for await event in events {
+				guard let self, let socket else { return }
+
+				await handle(event, from: socket)
+			}
+		}
+
+		ConnectionHostLog.connection.debug("Opening connection \(socket.uniqueIdentifier, privacy: .public)...")
+
+		await socket.open()
+
+		/* `detach()` runs from the XPC interruption and invalidation handlers
+		 rather than through the command queue, so it can land inside the
+		 suspension above. A socket dialled after that has no client to report
+		 to and nothing left holding it, so it is closed here instead. */
+		guard self.client != nil, closing == false, self.socket === socket else {
+			await socket.close()
+
+			/* Only if it is still the one being held: a later `open` may already
+			 have put its own transport there, and that one is not ours to drop. */
+			if self.socket === socket {
+				releaseSocket()
+			}
+
+			return
+		}
+	}
+
+	func close() async {
+		guard let socket else { return }
+		closing = true
+
+		ConnectionHostLog.connection.debug("Closing connection \(socket.uniqueIdentifier, privacy: .public)...")
+
+		resetState()
+
+		/* The transport is not let go of here when a disconnect is on its way.
+		 Every path out of its connection task ends in a `.disconnected` event,
+		 and that event is what carries the disconnect to the client; dropping
+		 the reference first would make `handle(_:from:)` discard it as
+		 belonging to a transport nobody owns. `releaseSocket()` runs when the
+		 event lands.
+
+		 A transport that never dialled has no such path, though, and closing it
+		 is a no-operation. Waiting for an event that is not coming left the
+		 reference in place for good, and every later `open` was refused. */
+		guard await socket.close() else {
+			releaseSocket()
+
+			return
+		}
+	}
+
+	/// Invoked when closing and again when the transport reports it
+	/// disconnected. Both paths are idempotent so doing the work twice is
+	/// harmless and keeps the state machine simple.
+	private func resetState() {
+		ready = false
+		writerTask?.cancel()
+		writerTask = nil
+		floodControlEnforced = false
+		floodControlWindow.reset()
+
+		clearSendQueue()
+
+		cancelFloodControlWake()
+	}
+
+	/// Lets go of a transport that has finished, so `open(with:)` can build the
+	/// next one. The socket, its event stream and everything they hold are
+	/// released here rather than when the client happens to invalidate its
+	/// connection.
+	private func releaseSocket() {
+		socket = nil
+
+		eventTask?.cancel()
+		eventTask = nil
+	}
+
+	// MARK: - Send Queue
+
+	func clearSendQueue() {
+		sendQueue.removeAll()
+	}
+
+	func send(_ data: Data, bypassQueue: Bool) {
+		guard socket != nil, closing == false, client != nil else {
+			ConnectionHostLog.connection.error("Cannot send data while disconnected")
+
+			return
+		}
+
+		sendQueue.append(data, bypassingFloodControl: bypassQueue)
+		startWriterIfNeeded()
+	}
+
+	private func startWriterIfNeeded() {
+		guard writerTask == nil, ready, closing == false, let socket, sendQueue.isEmpty == false else { return }
+		// Only this task waits for network writes. Command and event drains stay live.
+		writerTask = Task { [weak self] in
+			await self?.drainWrites(to: socket)
+		}
+	}
+
+	private func drainWrites(to socket: ConnectionSocket) async {
+		var restartAfterClear = false
+		var waitsForWindow = false
+		while Task.isCancelled == false, self.socket === socket, ready, closing == false, sendQueue.isEmpty == false {
+			/* Only enforced, queued lines count against the window: PONG and QUIT
+			 bypass it, and registration traffic goes out before it applies. */
+			let paced = sendQueue.firstBypassesFloodControl == false && floodControlEnforced
+			if paced, floodControlWindow.admits(at: .now) == false {
+				waitsForWindow = true
+				break
+			}
+			guard let next = sendQueue.takeFirst() else { break }
+			let clearGeneration = sendQueue.clearGeneration
+			if paced {
+				floodControlWindow.record(at: .now)
+			}
+			guard await socket.write(next.data) else {
+				/* Closing clears the queue while a write may be suspended. A failed
+				 write from that retired drain must not put its old line back. */
+				guard Task.isCancelled == false, self.socket === socket, closing == false else { return }
+				if clearGeneration != sendQueue.clearGeneration {
+					/* A QUIT may have replaced the queued traffic while this write
+					 was in flight. Let a new drain send that replacement. */
+					if paced {
+						floodControlWindow.forgetLatest()
+					}
+					restartAfterClear = true
+					break
+				}
+				/* The transport reports `false` only when it did not take the
+				 line, so the line is still owed to the server: put it back at
+				 the head, in front of the traffic queued behind it, and let
+				 the next drain try again. */
+				sendQueue.putBack(next)
+				if paced {
+					floodControlWindow.forgetLatest()
+				}
+				break
+			}
+		}
+		guard Task.isCancelled == false, self.socket === socket else { return }
+		writerTask = nil
+		if restartAfterClear {
+			startWriterIfNeeded()
+		} else if waitsForWindow {
+			scheduleFloodControlWake()
+		}
+	}
+
+	// MARK: - Flood Control
+
+	/// Registration is over, so the window applies from here, starting empty:
+	/// registration traffic had its own budget.
+	func enforceFloodControl() {
+		guard !floodControlEnforced else { return }
+		floodControlWindow.reset()
+		floodControlEnforced = true
+		startWriterIfNeeded()
+	}
+
+	/// Restarts the writer once the window has room again. One wake at a time,
+	/// and only while flood control holds lines back.
+	private func scheduleFloodControlWake() {
+		guard floodControlTask == nil, floodControlEnforced,
+		      let deadline = floodControlWindow.nextAdmission() else { return }
+
+		floodControlTask = Task { [weak self] in
+			try? await Task.sleep(until: deadline, clock: .continuous)
+
+			guard Task.isCancelled == false, let self else { return }
+
+			await floodControlWindowOpened()
+		}
+	}
+
+	private func floodControlWindowOpened() {
+		floodControlTask = nil
+
+		startWriterIfNeeded()
+	}
+
+	private func cancelFloodControlWake() {
+		floodControlTask?.cancel()
+		floodControlTask = nil
+	}
+
+	// MARK: - Secure Connection Information
+
+	func secureConnectionInformation() async -> SecureConnectionInformation {
+		guard let socket else { return .none }
+
+		return await socket.secureConnectionInformation()
+	}
+
+	// MARK: - App Nap and Sudden Termination
+
+	/** Lets the process nap again, one held activity at a time.
+
+	 A connection keeps its activity until the application detaches, which is
+	 when `balanceAppNap()` hands them all back; nothing asks for one to end
+	 sooner. Activities are counted the way the sudden-termination disables are,
+	 because the host process is shared by every connection: the last one to
+	 end its activity is what lets the process nap. */
+	private func enableAppNap() {
+		guard let activity = appNapActivities.popLast() else { return }
+
+		ProcessInfo.processInfo.endActivity(activity)
+	}
+
+	/** Keeps the process out of App Nap for as long as this connection is open.
+
+	 Idle system sleep is deliberately still allowed: a connection the user is
+	 not looking at is not a reason to keep the machine awake, only a reason not
+	 to have the process throttled while it is. */
+	func disableAppNap() {
+		guard client != nil else { return }
+
+		appNapActivities.append(
+			ProcessInfo.processInfo.beginActivity(
+				options: .userInitiatedAllowingIdleSystemSleep,
+				reason: "An IRC connection is open"
+			)
+		)
+	}
+
+	private func balanceAppNap() {
+		while appNapActivities.isEmpty == false {
+			enableAppNap()
+		}
+	}
+
+	private func enableSuddenTermination() {
+		guard suddenTerminationDisableCount > 0 else { return }
+
+		suddenTerminationDisableCount -= 1
+
+		ProcessInfo.processInfo.enableSuddenTermination()
+	}
+
+	func disableSuddenTermination() {
+		guard client != nil else { return }
+		suddenTerminationDisableCount += 1
+
+		ProcessInfo.processInfo.disableSuddenTermination()
+	}
+
+	private func balanceSuddenTermination() {
+		while suddenTerminationDisableCount > 0 {
+			enableSuddenTermination()
+		}
+	}
+
+	// MARK: - Transport Events
+
+	private func handle(_ event: SocketEvent, from socket: ConnectionSocket) {
+		guard self.socket === socket else {
+			/* Nobody is going to answer for a transport this host let go of,
+			 so its reader is released here rather than left waiting. */
+			if case let .received(_, acknowledged) = event {
+				acknowledged.finish()
+			}
+			return
+		}
+		switch event {
+		case let .willConnectToProxy(host, port):
+			client?.willConnect(toProxy: host, port: port)
+		case let .connected(host):
+			guard closing == false else { return }
+			ready = true
+			client?.didConnect(toHost: host)
+			startWriterIfNeeded()
+		case let .secured(protocolVersion, cipherSuite, leafCertificate):
+			client?.didSecureConnection(
+				withProtocolType: protocolVersion,
+				cipherSuite: cipherSuite,
+				leafCertificate: leafCertificate
+			)
+		case let .negotiatedSubprotocol(subprotocol):
+			client?.didNegotiateWebSocketSubprotocol(subprotocol)
+		case let .received(lines, acknowledged):
+			/* The transport waits on the application's reply, not on this
+			 loop: the forwarding returns at once, so the events behind these
+			 lines are not held up while the application works through them. */
+			guard let client else {
+				acknowledged.finish()
+				return
+			}
+			client.didReceive(lines) {
+				acknowledged.finish()
+			}
+		case let .willSend(data):
+			client?.willSend(data)
+		case .didSend:
+			client?.didSendData()
+		case .closedReadStream:
+			client?.didCloseReadStream()
+		case let .disconnected(error):
+			resetState()
+
+			client?.didDisconnect(withError: error.map { $0 as NSError })
+
+			releaseSocket()
+		}
+	}
+}

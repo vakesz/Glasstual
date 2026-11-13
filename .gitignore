@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+.LSOverride
+*~
+*~.*
+
+# Xcode
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcarchive
+.swiftpm/
+DerivedData/
+build/
+Build Results/
+.tmp/
+*.profraw
+.build/
+rule_docs/
+/Generated/Xcode/
+
+# Generated from project.yml by `make generate`.
+/Glasstual.xcodeproj/
+
+# Local agent/tool state.
+.agents/
+.claude/
+skills-lock.json

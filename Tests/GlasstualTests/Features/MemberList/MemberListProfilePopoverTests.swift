@@ -1,0 +1,174 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+@testable import Glasstual
+import Observation
+import Synchronization
+import Testing
+
+/// The profile a click opens, and the rank the row draws it for. Both used to
+/// be answered per row, which is why a click on one member showed another's
+/// profile and why the glyph and the label could disagree.
+@MainActor
+@Suite("Member list profile and rank")
+struct MemberListProfilePopoverTests {
+	private let session: TestServerSession
+	private let memberList: MemberList
+	private let channel: Conversation
+
+	init() {
+		let session = TestServerSession()
+		let memberList = MemberList()
+		let channel = Conversation(config: ConversationConfig(name: "#profile"))
+		channel.associatedSession = session
+		channel.activate()
+		memberList.assign(to: channel)
+
+		self.session = session
+		self.memberList = memberList
+		self.channel = channel
+	}
+
+	@Test("An explicit profile action opens at once and can inspect another member")
+	func anExplicitActionOpensTheProfileAtOnce() throws {
+		let alice = try add("alice")
+		let bob = try add("bob")
+
+		memberList.showProfile(for: alice.id)
+		#expect(memberList.memberShowingProfile == alice.id)
+
+		memberList.showProfile(for: bob.id)
+		#expect(memberList.memberShowingProfile == bob.id)
+	}
+
+	@Test("The double click that opens the conversation takes the profile down")
+	func aDoubleClickHidesTheProfile() throws {
+		let alice = try add("alice")
+
+		memberList.showProfile(for: alice.id)
+		memberList.hideProfile()
+
+		#expect(memberList.memberShowingProfile == nil)
+	}
+
+	@Test("A member who leaves takes their profile with them")
+	func leavingClosesTheProfile() throws {
+		let alice = try add("alice")
+
+		memberList.showProfile(for: alice.id)
+		channel.removeMember(withNickname: "alice")
+
+		#expect(memberList.memberShowingProfile == nil)
+	}
+
+	/// The glyph honoured the setting and the label did not, so a server
+	/// operator was drawn as staff and described as an ordinary member.
+	@Test("One rank answers for the glyph, the tooltip and the popover")
+	func staffPreferenceReachesEveryDescription() {
+		/* Written and read back through the same detached handle the rows use,
+		 so the test is not asking one handle whether another's write landed. */
+		let key = SettingsKeys.Appearance.memberListSortFavorsServerStaff
+		let previous = key.detachedStoredValue
+		defer { key.detachedStoredValue = previous }
+
+		var user = User(nickname: "carol")
+		user.isIRCop = true
+		let member = Member(user: user, prefixes: session.currentUserPrefixes)
+
+		key.detachedValue = true
+		#expect(MemberListRanks.displayRank(for: member) == .irCopByMode)
+		#expect(MemberListRanks.privilegeDescription(for: member)
+			== MemberListRanks.privilegeDescription(for: .irCopByMode))
+
+		key.detachedValue = false
+		#expect(MemberListRanks.displayRank(for: member) == member.rank)
+		#expect(MemberListRanks.privilegeDescription(for: member)
+			== MemberListRanks.privilegeDescription(for: member.rank))
+	}
+
+	@Test("An archived no-mode preference never adds a fictitious rank badge")
+	func noModeSymbolStaysAbsent() {
+		let key = SettingsKeys.Appearance.memberListNoModeSymbol
+		let previous = key.detachedStoredValue
+		defer { key.detachedStoredValue = previous }
+
+		key.detachedValue = true
+		#expect(MemberListPresentationStyle.current().symbolName(for: UserRank.none) == nil)
+		#expect(MemberListPresentationStyle.current().symbolName(for: .voiced) == "mic.fill")
+
+		key.detachedValue = false
+		#expect(MemberListPresentationStyle.current().symbolName(for: UserRank.none) == nil)
+		#expect(MemberListPresentationStyle.current().symbolName(for: .voiced) == "mic.fill")
+	}
+
+	/** The rows read their settings once, out of a snapshot the list hands
+	 down. Three reads per row per redraw — glyph, tooltip, label — each built
+	 its own handle on the defaults suite, on every row of a channel that
+	 rebuilds on each join, part and mode change. */
+	@Test("One snapshot answers for every row, and it changes when the preferences do")
+	func presentationStyleIsOneSnapshotOfThePreferences() {
+		let staff = SettingsKeys.Appearance.memberListSortFavorsServerStaff
+		let noMode = SettingsKeys.Appearance.memberListNoModeSymbol
+		let previousStaff = staff.detachedStoredValue
+		let previousNoMode = noMode.detachedStoredValue
+		defer {
+			staff.detachedStoredValue = previousStaff
+			noMode.detachedStoredValue = previousNoMode
+		}
+
+		staff.detachedValue = true
+		noMode.detachedValue = true
+		let favouring = MemberListPresentationStyle.current()
+		#expect(favouring.favorsServerStaff)
+		#expect(favouring.displayRank(isIRCOperator: true, channelRank: .voiced) == .irCopByMode)
+		#expect(favouring.displayRank(isIRCOperator: false, channelRank: .voiced) == .voiced)
+
+		staff.detachedValue = false
+		noMode.detachedValue = false
+		let plain = MemberListPresentationStyle.current()
+		#expect(plain.displayRank(isIRCOperator: true, channelRank: .voiced) == .voiced)
+		#expect(plain.symbolName(for: UserRank.none) == nil)
+		#expect(plain != favouring)
+	}
+
+	/** The profile button sits in the inspector's toolbar. A busy channel
+	 rebuilds the rows on every join; the button's state must not follow, or
+	 the toolbar is rebuilt for every batch. */
+	@Test("Joins redraw the open profile but not the profile button")
+	func joinsDoNotInvalidateTheProfileButton() throws {
+		let alice = try add("alice")
+		memberList.selectedMemberIDs = [alice.id]
+		memberList.showProfile(for: alice.id)
+		let button = Mutex(false)
+		let profile = Mutex(false)
+		withObservationTracking {
+			_ = memberList.selectedProfileMember
+			_ = memberList.isShowingProfile
+		} onChange: {
+			button.withLock { $0 = true }
+		}
+		withObservationTracking {
+			_ = memberList.profileMember
+		} onChange: {
+			profile.withLock { $0 = true }
+		}
+
+		for index in 0 ..< 50 {
+			try add("joined\(index)")
+		}
+
+		#expect(profile.withLock { $0 })
+		#expect(button.withLock { $0 } == false)
+		#expect(memberList.isShowingProfile)
+		#expect(memberList.selectedProfileMember?.id == alice.id)
+	}
+
+	@discardableResult
+	private func add(_ nickname: String) throws -> Member {
+		let user = session.findUserOrCreate(nickname)
+		channel.addMember(Member(user: user, prefixes: session.currentUserPrefixes))
+
+		return try #require(channel.findMember(nickname))
+	}
+}

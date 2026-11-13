@@ -1,0 +1,36 @@
+name: Quality
+
+# Lint and formatting only. Building and testing on a hosted macOS runner is
+# too expensive for the free tier, so `make build`, `make test`,
+# `make e2e-fixtures` and `make e2e` stay local (see AGENTS.md), and the
+# Signed Release workflow does its own build. The Signed Release workflow
+# accepts a commit only after a push run of this workflow passed.
+# scripts/release-validation.sh lists the required job and step by name, so
+# rename a step in both places.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  # A new push to a pull request replaces its older run. A run on main always
+  # finishes, because a release needs a completed run for its exact commit.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: xcode-27
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint and check formatting
+        run: make lint

@@ -1,0 +1,2650 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "apply-settings-and-add-or-update-servers": {
+      "comment": "Import preview. What Merge will do, shown under the mode picker.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply the settings in this file and add or update its servers. Keep other servers and settings. Servers being updated will disconnect. A recovery backup is saved first."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alkalmazd a fájlban lévő beállításokat, és add hozzá vagy frissítsd a kiszolgálókat. A többi kiszolgáló és beállítás megmarad. A frissített kiszolgálók kapcsolata megszakad. Először helyreállítási mentés készül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wende die Einstellungen aus dieser Datei an und füge die darin enthaltenen Server hinzu oder aktualisiere sie. Andere Server und Einstellungen bleiben erhalten. Aktualisierte Server werden getrennt. Zuerst wird eine Wiederherstellungssicherung erstellt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplica los ajustes de este archivo y añade o actualiza sus servidores. Conserva los demás servidores y ajustes. Los servidores que se actualicen se desconectarán. Antes se guarda una copia de seguridad de recuperación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applique les réglages de ce fichier et ajoute ou met à jour ses serveurs. Conserve les autres serveurs et réglages. Les serveurs mis à jour seront déconnectés. Une sauvegarde de récupération est d’abord enregistrée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルの設定を適用し、サーバを追加または更新します。他のサーバと設定は保持されます。更新対象のサーバは切断されます。最初にリカバリ用バックアップが保存されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplica os ajustes deste arquivo e adiciona ou atualiza os servidores dele. Mantém os outros servidores e ajustes. Os servidores atualizados serão desconectados. Um backup de recuperação é salvo antes."
+          }
+        }
+      }
+    },
+    "backups-notice": {
+      "comment": "Configuration recovery policy, shown in Settings.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The five most recent protected local backups are kept here. They retain connect commands and certificate references so removed servers can be recovered. Keychain passwords and certificate objects are not copied. Folder access is not included."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Itt az öt legutóbbi védett helyi biztonsági mentés marad meg. Megőrzik a kapcsolódási parancsokat és a tanúsítványhivatkozásokat, így az eltávolított kiszolgálók visszaállíthatók. A kulcskarika jelszavai és tanúsítványai nem kerülnek bele. A mappahozzáférési engedélyeket sem tartalmazzák."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die fünf neuesten geschützten lokalen Sicherungen bleiben hier erhalten. Sie enthalten Verbindungsbefehle und Zertifikatsverweise, damit entfernte Server wiederhergestellt werden können. Schlüsselbundpasswörter und Zertifikatsobjekte werden nicht kopiert. Ordnerzugriffsrechte sind nicht enthalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí se conservan las cinco copias de seguridad locales protegidas más recientes. Incluyen los comandos de conexión y las referencias a certificados para poder recuperar los servidores eliminados. Las contraseñas del llavero y los objetos de certificado no se copian. No se incluye el acceso a carpetas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les cinq sauvegardes locales protégées les plus récentes sont conservées ici. Elles conservent les commandes de connexion et les références de certificats afin de pouvoir récupérer les serveurs supprimés. Les mots de passe du trousseau et les objets de certificat ne sont pas copiés. L’accès aux dossiers n’est pas inclus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保護されたローカルバックアップが、最新の5件まで保持されます。接続コマンドと証明書の参照が含まれるため、削除したサーバを復元できます。キーチェーンのパスワードと証明書オブジェクトはコピーされません。フォルダへのアクセス権は含まれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os cinco backups locais protegidos mais recentes são mantidos aqui. Eles retêm comandos de conexão e referências de certificados para que servidores removidos possam ser recuperados. As senhas do chaveiro e os objetos de certificado não são copiados. O acesso a pastas não está incluído."
+          }
+        }
+      }
+    },
+    "configuration-changed-after-preview": {
+      "comment": "Error shown when the settings or servers changed between preparing a preview and applying it.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current settings changed after this preview was prepared. Cancel and preview the file again. No imported settings were applied."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelenlegi beállítások megváltoztak az előnézet elkészítése óta. Szakítsd meg a műveletet, majd nyisd meg újra a fájl előnézetét. Egyetlen importált beállítás sem lett alkalmazva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die aktuellen Einstellungen wurden seit dem Erstellen dieser Vorschau geändert. Brich ab und öffne die Vorschau erneut. Es wurden keine importierten Einstellungen angewendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los ajustes actuales cambiaron después de preparar esta vista previa. Cancela y vuelve a previsualizar el archivo. No se aplicó ningún ajuste importado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réglages actuels ont changé après la préparation de cet aperçu. Annulez et prévisualisez à nouveau le fichier. Aucun réglage importé n’a été appliqué."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このプレビューの準備後に、現在の設定が変更されました。キャンセルして、もう一度ファイルをプレビューしてください。読み込んだ設定は適用されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os ajustes atuais mudaram depois que esta prévia foi preparada. Cancele e visualize o arquivo novamente. Nenhum ajuste importado foi aplicado."
+          }
+        }
+      }
+    },
+    "configuration-file-exceeds-size-limit": {
+      "comment": "Error shown when a configuration file is larger, or more deeply nested, than the importer accepts.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The settings file exceeds the 16 MB size limit or contains too many nested values. No settings were changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beállításfájl meghaladja a 16 MB-os mérethatárt, vagy túl sok egymásba ágyazott értéket tartalmaz. A beállítások nem változtak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Einstellungsdatei überschreitet das Größenlimit von 16 MB oder enthält zu tief verschachtelte Werte. Es wurden keine Einstellungen geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo de ajustes supera el límite de tamaño de 16 MB o contiene demasiados valores anidados. No se modificó ningún ajuste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier de réglages dépasse la limite de taille de 16 Mo ou contient trop de valeurs imbriquées. Aucun réglage n’a été modifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定ファイルが16 MBのサイズ制限を超えているか、入れ子の値が多すぎます。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O arquivo de ajustes excede o limite de tamanho de 16 MB ou contém valores aninhados demais. Nenhum ajuste foi alterado."
+          }
+        }
+      }
+    },
+    "configuration-imported-settings-changed": {
+      "comment": "Counts in order: changed preferences, added servers, updated servers, removed servers, ignored keys.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings imported. Values changed: %1$lld. Servers added: %2$lld; updated: %3$lld; removed: %4$lld. Values not imported: %5$lld. The recovery backup is available in Settings."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beállítások importálva. Módosított értékek: %1$lld. Hozzáadott kiszolgálók: %2$lld; frissítve: %3$lld; eltávolítva: %4$lld. Nem importált értékek: %5$lld. A helyreállítási mentés a Beállításokban érhető el."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen importiert. Geänderte Werte: %1$lld. Server hinzugefügt: %2$lld; aktualisiert: %3$lld; entfernt: %4$lld. Nicht importierte Werte: %5$lld. Die Wiederherstellungssicherung ist in den Einstellungen verfügbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes importados. Valores cambiados: %1$lld. Servidores añadidos: %2$lld; actualizados: %3$lld; eliminados: %4$lld. Valores no importados: %5$lld. La copia de seguridad de recuperación está disponible en Ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages importés. Valeurs modifiées : %1$lld. Serveurs ajoutés : %2$lld ; mis à jour : %3$lld ; supprimés : %4$lld. Valeurs non importées : %5$lld. La sauvegarde de récupération est disponible dans les réglages."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定を読み込みました。変更された値: %1$lld。追加されたサーバ: %2$lld、更新: %3$lld、削除: %4$lld。読み込まれなかった値: %5$lld。リカバリ用バックアップは設定で確認できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes importados. Valores alterados: %1$lld. Servidores adicionados: %2$lld; atualizados: %3$lld; removidos: %4$lld. Valores não importados: %5$lld. O backup de recuperação está disponível em Ajustes."
+          }
+        }
+      }
+    },
+    "configuration-snapshot-uses-a-newer-format": {
+      "comment": "Error shown when a configuration file was written by a newer version of the application.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This settings file uses a newer format. Update Glasstual before importing it. No settings were changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a beállításfájl újabb formátumot használ. Importálás előtt frissítsd a Glasstualt. A beállítások nem változtak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Einstellungsdatei verwendet ein neueres Format. Aktualisiere Glasstual vor dem Import. Es wurden keine Einstellungen geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo de ajustes usa un formato más reciente. Actualiza Glasstual antes de importarlo. No se modificó ningún ajuste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce fichier de réglages utilise un format plus récent. Mettez à jour Glasstual avant de l’importer. Aucun réglage n’a été modifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この設定ファイルは、より新しい形式を使用しています。読み込む前にGlasstualをアップデートしてください。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este arquivo de ajustes usa um formato mais recente. Atualize o Glasstual antes de importá-lo. Nenhum ajuste foi alterado."
+          }
+        }
+      }
+    },
+    "configuration-transfer-complete": {
+      "comment": "Title of the alert shown after settings are imported or exported successfully.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings transfer complete"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások átvitele befejezve"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungsübertragung abgeschlossen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferencia de ajustes completada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfert des réglages terminé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定の転送が完了しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferência de ajustes concluída"
+          }
+        }
+      }
+    },
+    "configuration-transfer-in-progress": {
+      "comment": "Error shown when an import or export is started while another one is still running.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A settings transfer is already in progress."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már folyamatban van egy beállításátvitel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Einstellungsübertragung läuft bereits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay una transferencia de ajustes en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un transfert de réglages est déjà en cours."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定の転送はすでに実行中です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já há uma transferência de ajustes em andamento."
+          }
+        }
+      }
+    },
+    "configuration-transfer-stopped": {
+      "comment": "Title of the alert shown when a settings import or export fails.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings transfer stopped"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások átvitele leállt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungsübertragung gestoppt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se detuvo la transferencia de ajustes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfert des réglages interrompu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定の転送が停止しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferência de ajustes interrompida"
+          }
+        }
+      }
+    },
+    "connect-commands-warning": {
+      "comment": "Warning next to an export option that defaults to off. Commands are copied verbatim if the user opts in.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect commands may contain passwords or other private information. Enable this option only if you intend to include every command in the exported file. Keychain passwords and certificate references are never included in portable exports."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolódási parancsok jelszavakat vagy más személyes adatokat tartalmazhatnak. Csak akkor kapcsold be ezt a lehetőséget, ha minden parancsot bele szeretnél foglalni az exportált fájlba. A kulcskarika jelszavai és a tanúsítványhivatkozások sosem kerülnek bele a hordozható exportokba."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungsbefehle können Passwörter oder andere private Informationen enthalten. Aktiviere diese Option nur, wenn du sämtliche Befehle in die exportierte Datei aufnehmen möchtest. Schlüsselbundpasswörter und Zertifikatsverweise werden nie in portable Exporte aufgenommen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los comandos de conexión pueden contener contraseñas u otra información privada. Activa esta opción solo si quieres incluir todos los comandos en el archivo exportado. Las contraseñas del llavero y las referencias a certificados nunca se incluyen en las exportaciones portátiles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les commandes de connexion peuvent contenir des mots de passe ou d’autres informations privées. Activez cette option uniquement si vous voulez inclure chaque commande dans le fichier exporté. Les mots de passe du trousseau et les références de certificats ne sont jamais inclus dans les exportations portables."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続コマンドには、パスワードなどの個人情報が含まれている場合があります。書き出すファイルにすべてのコマンドを含める場合にのみ、このオプションを有効にしてください。キーチェーンのパスワードと証明書の参照は、ポータブルな書き出しには含まれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os comandos de conexão podem conter senhas ou outras informações privadas. Ative esta opção somente se quiser incluir todos os comandos no arquivo exportado. As senhas do chaveiro e as referências de certificados nunca são incluídas em exportações portáteis."
+          }
+        }
+      }
+    },
+    "enter-a-valid-whole-number": {
+      "comment": "Validation note under a Settings number field that was given something that is not a whole number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid whole number. The saved value has not changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg érvényes egész számot. A mentett érték nem változott."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine gültige ganze Zahl ein. Der gespeicherte Wert wurde nicht geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un número entero válido. El valor guardado no ha cambiado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez un nombre entier valide. La valeur enregistrée n’a pas changé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効な整数を入力してください。保存されている値は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digite um número inteiro válido. O valor salvo não foi alterado."
+          }
+        }
+      }
+    },
+    "export-configuration": {
+      "comment": "Settings button that exports settings to a file. The ellipsis marks a button that opens a dialog, so keep it.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Settings…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások exportálása…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen exportieren…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar ajustes…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter les réglages…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定を書き出す…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar ajustes…"
+          }
+        }
+      }
+    },
+    "export-options": {
+      "comment": "Title of the sheet that asks what an exported settings file should include.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Settings"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások exportálása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen exportieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar ajustes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter les réglages"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定を書き出す"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar ajustes"
+          }
+        }
+      }
+    },
+    "export-succeeded": {
+      "comment": "Confirmation shown after a configuration file has been written.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your settings were exported successfully."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A beállítások exportálása sikerült."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Einstellungen wurden erfolgreich exportiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus ajustes se exportaron correctamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos réglages ont bien été exportés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定を書き出しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus ajustes foram exportados com sucesso."
+          }
+        }
+      }
+    },
+    "file-is-not-a-valid-configuration-snapshot": {
+      "comment": "Error shown when the chosen file is not a configuration this application wrote.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file is not a settings file that Glasstual wrote. No settings were changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezt a beállításfájlt nem a Glasstual hozta létre. A beállítások nem változtak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Datei ist keine von Glasstual erstellte Einstellungsdatei. Es wurden keine Einstellungen geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo no es un archivo de ajustes escrito por Glasstual. No se modificó ningún ajuste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce fichier n’est pas un fichier de réglages écrit par Glasstual. Aucun réglage n’a été modifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルは、Glasstualが作成した設定ファイルではありません。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este arquivo não é um arquivo de ajustes gravado pelo Glasstual. Nenhum ajuste foi alterado."
+          }
+        }
+      }
+    },
+    "import-configuration": {
+      "comment": "Settings button that imports settings from a file. The ellipsis marks a button that opens a dialog, so keep it.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import Settings…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások importálása…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen importieren…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar ajustes…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importer les réglages…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定を読み込む…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar ajustes…"
+          }
+        }
+      }
+    },
+    "include-connect-commands": {
+      "comment": "Export option. Checkbox that puts each server's connect commands into the exported file.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include connect commands"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsolódási parancsok belefoglalása"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungsbefehle einschließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir comandos de conexión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclure les commandes de connexion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続コマンドを含める"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir comandos de conexão"
+          }
+        }
+      }
+    },
+    "invalid-value": {
+      "comment": "Error shown when an imported file fails the validation a setting declares for itself.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file holds an invalid value, or values that conflict. No settings were changed."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fájl érvénytelen vagy egymásnak ellentmondó értékeket tartalmaz. A beállítások nem változtak."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Datei enthält einen ungültigen Wert oder widersprüchliche Werte. Es wurden keine Einstellungen geändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo contiene un valor no válido o valores en conflicto. No se modificó ningún ajuste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce fichier contient une valeur non valide ou des valeurs en conflit. Aucun réglage n’a été modifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルには、無効な値または競合する値が含まれています。設定は変更されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este arquivo contém um valor inválido ou valores conflitantes. Nenhum ajuste foi alterado."
+          }
+        }
+      }
+    },
+    "keys-not-imported": {
+      "comment": "Number of unknown or machine-local settings that were not imported. %lld is the count.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings not imported: %lld"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem importált beállítások: %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht importierte Einstellungen: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes no importados: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages non importés : %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み込まれなかった設定: %lld"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes não importados: %lld"
+          }
+        }
+      }
+    },
+    "local-recovery-notice": {
+      "comment": "Import preview. What a protected local backup restores that a portable file cannot.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This protected local backup restores original connect commands and certificate references, including for removed servers. Keychain objects stay on this Mac and are not imported. Recovered servers do not connect automatically."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a védett helyi biztonsági mentés visszaállítja az eredeti kapcsolódási parancsokat és tanúsítványhivatkozásokat, az eltávolított kiszolgálókét is. A kulcskarika elemei ezen a Macen maradnak, és nem lesznek importálva. A visszaállított kiszolgálókhoz nem kapcsolódunk automatikusan."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese geschützte lokale Sicherung stellt ursprüngliche Verbindungsbefehle und Zertifikatsverweise wieder her, auch für entfernte Server. Schlüsselbundobjekte bleiben auf diesem Mac und werden nicht importiert. Wiederhergestellte Server verbinden sich nicht automatisch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia de seguridad local protegida restaura los comandos de conexión originales y las referencias a certificados, incluidas las de los servidores eliminados. Los objetos del llavero permanecen en este Mac y no se importan. Los servidores recuperados no se conectan automáticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette sauvegarde locale protégée restaure les commandes de connexion et les références de certificats d’origine, y compris pour les serveurs supprimés. Les objets du trousseau restent sur ce Mac et ne sont pas importés. Les serveurs récupérés ne se connectent pas automatiquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このローカルの保護されたバックアップでは、削除されたサーバを含め、元の接続コマンドと証明書の参照が復元されます。キーチェーンのオブジェクトはこのMacに残り、読み込まれません。復元されたサーバは自動的には接続されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este backup local protegido restaura os comandos de conexão e as referências de certificados originais, inclusive de servidores removidos. Os objetos do chaveiro permanecem neste Mac e não são importados. Os servidores recuperados não se conectam automaticamente."
+          }
+        }
+      }
+    },
+    "merge": {
+      "comment": "Import mode, and the button that applies it: add to the current configuration.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merge"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Összevonás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenführen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combinar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fusionner"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マージ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesclar"
+          }
+        }
+      }
+    },
+    "mode": {
+      "comment": "Label of the picker that chooses between merging and restoring an imported configuration.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import mode"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importálási mód"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importmodus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo de importación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode d’importation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み込みモード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo de importação"
+          }
+        }
+      }
+    },
+    "passwords-and-certificates-stay-on-this-mac": {
+      "comment": "Import preview. What a portable configuration file does and does not carry.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keychain passwords and certificate references are not imported from portable files. Included connect commands replace current commands; omitted commands are kept. Included commands may contain passwords. Imported servers do not connect automatically."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kulcskarika jelszavai és a tanúsítványhivatkozások nem importálhatók hordozható fájlokból. A fájlban szereplő kapcsolódási parancsok lecserélik a jelenlegieket; a hiányzók megmaradnak. A parancsok jelszavakat is tartalmazhatnak. Az importált kiszolgálókhoz nem kapcsolódunk automatikusan."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüsselbundpasswörter und Zertifikatsverweise werden nicht aus portablen Dateien importiert. Enthaltene Verbindungsbefehle ersetzen die aktuellen; fehlende bleiben erhalten. Enthaltene Befehle können Passwörter enthalten. Importierte Server verbinden sich nicht automatisch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las contraseñas del llavero y las referencias a certificados no se importan desde archivos portátiles. Los comandos de conexión incluidos sustituyen a los actuales; los omitidos se conservan. Los comandos incluidos pueden contener contraseñas. Los servidores importados no se conectan automáticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mots de passe du trousseau et les références de certificats ne sont pas importés depuis les fichiers portables. Les commandes de connexion incluses remplacent les commandes actuelles ; les commandes omises sont conservées. Les commandes incluses peuvent contenir des mots de passe. Les serveurs importés ne se connectent pas automatiquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポータブルファイルからは、キーチェーンのパスワードと証明書の参照は読み込まれません。含まれている接続コマンドは現在のコマンドを置き換え、含まれていないコマンドはそのまま保持されます。含まれているコマンドにパスワードが含まれている場合があります。読み込まれたサーバは自動的には接続されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As senhas do chaveiro e as referências de certificados não são importadas de arquivos portáteis. Os comandos de conexão incluídos substituem os atuais; os comandos omitidos são mantidos. Os comandos incluídos podem conter senhas. Os servidores importados não se conectam automaticamente."
+          }
+        }
+      }
+    },
+    "preferences-changed": {
+      "comment": "%lld is the number of preference keys that will change.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings to change: %lld"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Módosítandó beállítások: %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu ändernde Einstellungen: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes por cambiar: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages à modifier : %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更する設定: %lld"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes a alterar: %lld"
+          }
+        }
+      }
+    },
+    "preview-backup": {
+      "comment": "Button that shows what restoring one protected local backup would change.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview Recovery"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyreállítás előnézete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederherstellungsvorschau"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previsualizar recuperación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu de la restauration"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元をプレビュー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pré-visualizar recuperação"
+          }
+        }
+      }
+    },
+    "preview-title": {
+      "comment": "Title of the sheet that shows what importing a settings file would change.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview Settings Import"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállításimportálás előnézete"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschau des Einstellungsimports"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previsualizar importación de ajustes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu de l’importation des réglages"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定の読み込みをプレビュー"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pré-visualizar importação de ajustes"
+          }
+        }
+      }
+    },
+    "restore": {
+      "comment": "Import mode, and the button that applies it: replace the current configuration.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visszaállítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederherstellen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar"
+          }
+        }
+      }
+    },
+    "restore-notice": {
+      "comment": "Import preview. What Restore will do, shown under the mode picker.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace portable settings and remove servers missing from this snapshot. Changed or removed servers will disconnect. Restore proceeds only after a recovery backup has been saved."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecseréli a hordozható beállításokat, és eltávolítja a pillanatképből hiányzó kiszolgálókat. A módosított vagy eltávolított kiszolgálók kapcsolata megszakad. A visszaállítás csak helyreállítási mentés készítése után folytatódik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzt portable Einstellungen und entfernt Server, die in diesem Stand fehlen. Geänderte oder entfernte Server werden getrennt. Die Wiederherstellung erfolgt erst nach dem Sichern einer Wiederherstellungskopie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustituye los ajustes portátiles y elimina los servidores que no figuran en esta instantánea. Los servidores modificados o eliminados se desconectarán. La restauración solo continúa después de guardar una copia de seguridad de recuperación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplace les réglages portables et supprime les serveurs absents de cet instantané. Les serveurs modifiés ou supprimés seront déconnectés. La restauration n’a lieu qu’après l’enregistrement d’une sauvegarde de récupération."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポータブル設定を置き換え、このスナップショットに含まれていないサーバを削除します。変更または削除されたサーバは切断されます。復元は、リカバリ用バックアップが保存された後にのみ実行されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substitui os ajustes portáteis e remove os servidores ausentes deste instantâneo. Os servidores alterados ou removidos serão desconectados. A restauração só prossegue depois que um backup de recuperação for salvo."
+          }
+        }
+      }
+    },
+    "review-before-importing": {
+      "comment": "Import preview. Heading of the block listing changes that can send commands or widen what Glasstual trusts.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Before Importing"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ellenőrzés importálás előtt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vor dem Import prüfen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar antes de importar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier avant d’importer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み込む前に確認"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar antes de importar"
+          }
+        }
+      }
+    },
+    "risky-changes-notice": {
+      "comment": "Import preview. Explains the block that lists changes which can send commands or widen what Glasstual trusts.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file changes settings that can send commands to servers or change what Glasstual trusts. Read each one before importing."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a fájl olyan beállításokat módosít, amelyek parancsokat küldhetnek a kiszolgálóknak, vagy megváltoztathatják, miben bízik meg a Glasstual. Importálás előtt olvasd el mindegyiket."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Datei ändert Einstellungen, die Befehle an Server senden oder beeinflussen können, welchen Inhalten Glasstual vertraut. Lies jeden Eintrag vor dem Import."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo cambia ajustes que pueden enviar comandos a servidores o modificar aquello en lo que Glasstual confía. Lee cada uno antes de importarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce fichier modifie des réglages qui peuvent envoyer des commandes aux serveurs ou modifier ce à quoi Glasstual fait confiance. Lisez-les un par un avant d’importer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルは、サーバにコマンドを送信したり、Glasstualが信頼する対象を変更したりする設定を変更します。読み込む前に、それぞれの内容をよく確認してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este arquivo altera ajustes que podem enviar comandos a servidores ou mudar aquilo em que o Glasstual confia. Leia cada um antes de importar."
+          }
+        }
+      }
+    },
+    "risky-rule-action": {
+      "comment": "Import preview. A rule the file adds or changes that runs commands. The first argument is the rule's title, the second is its action text, which can span several lines.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule “%1$@” runs:\n%2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%1$@\" szabály ezt futtatja:\n%2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regel \"%1$@\" führt aus:\n%2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La regla «%1$@» se ejecuta:\n%2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La règle « %1$@ » exécute :\n%2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ルール「%1$@」が実行する内容:\n%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A regra “%1$@” executa:\n%2$@"
+          }
+        }
+      }
+    },
+    "risky-connect-commands": {
+      "comment": "Import preview. Commands a server in the file sends each time it connects. The first argument is the server's name, the second is its commands, one per line.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” sends when it connects:\n%2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) \"%1$@\" kiszolgáló kapcsolódáskor ezt küldi:\n%2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server \"%1$@\" sendet beim Verbinden:\n%2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor «%1$@» envía al conectarse:\n%2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur « %1$@ » envoie à la connexion :\n%2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバ「%1$@」が接続時に送信する内容:\n%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor “%1$@” envia ao conectar:\n%2$@"
+          }
+        }
+      }
+    },
+    "risky-server-endpoint-same-server": {
+      "comment": "Import preview. A server in the file connects to a different address than this Mac's copy, which keeps its saved passwords. The first argument is the server's name, the second is where it connects now, the third is where the file sends it.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” would connect to %3$@ instead of %2$@. It keeps its saved passwords, so they would be sent to the new address."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló ide csatlakozna: %3$@ (eddig: %2$@). Megtartja a mentett jelszavait, így azok az új címre kerülnének elküldésre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" würde sich mit %3$@ statt mit %2$@ verbinden. Er behält seine gespeicherten Passwörter, sie würden also an die neue Adresse gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» se conectaría a %3$@ en lugar de a %2$@. Conserva sus contraseñas guardadas, por lo que se enviarían a la nueva dirección."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur « %1$@ » se connecterait à %3$@ au lieu de %2$@. Il conserve ses mots de passe enregistrés, qui seraient donc envoyés à la nouvelle adresse."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバ「%1$@」は%2$@ではなく%3$@に接続するようになります。保存済みのパスワードは引き継がれるため、新しいアドレスに送信されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor “%1$@” se conectaria a %3$@ em vez de %2$@. Ele mantém as senhas salvas, que seriam enviadas ao novo endereço."
+          }
+        }
+      }
+    },
+    "risky-server-endpoint-new-kept": {
+      "comment": "Import preview, Merge. A server in the file connects to a different address than this Mac's server with the same identity, so it is imported as a new server without secrets or history and this Mac's server is left alone. Arguments: the server's name, where this Mac's server connects, where the file's server connects.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” connects to %3$@ in this file. It is imported as a new server, without saved passwords, certificate, connect commands or history. This Mac’s server connecting to %2$@ stays as it is."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló ebben a fájlban ide csatlakozik: %3$@. Új kiszolgálóként lesz importálva, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A Mac-en lévő, ide csatlakozó kiszolgáló (%2$@) változatlan marad."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" verbindet sich in dieser Datei mit %3$@. Er wird als neuer Server importiert, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der Server dieses Macs, der sich mit %2$@ verbindet, bleibt unverändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» se conecta a %3$@ en este archivo. Se importa como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor de este Mac que se conecta a %2$@ no cambia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dans ce fichier, le serveur « %1$@ » se connecte à %3$@. Il est importé comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur de ce Mac qui se connecte à %2$@ reste inchangé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルでは、サーバ「%1$@」は%3$@に接続します。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして読み込まれます。%2$@に接続するこのMacのサーバは変更されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Neste arquivo, o servidor “%1$@” se conecta a %3$@. Ele é importado como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor deste Mac que se conecta a %2$@ permanece como está."
+          }
+        }
+      }
+    },
+    "risky-server-endpoint-new-removed": {
+      "comment": "Import preview, Restore. A server in the file connects to a different address than this Mac's server with the same identity, so it replaces that server as a new one without secrets or history, and the replaced server's history is not carried over. Arguments: the server's name, where this Mac's server connects, where the file's server connects.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” connects to %3$@ in this file and replaces this Mac’s server for %2$@. It starts as a new server, without saved passwords, certificate, connect commands or history. The replaced server is removed and its history is not carried over."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló ebben a fájlban ide csatlakozik: %3$@, és leváltja a Mac-en lévő, %2$@ címhez tartozó kiszolgálót. Új kiszolgálóként indul, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A leváltott kiszolgáló el lesz távolítva, az előzményei nem kerülnek át."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" verbindet sich in dieser Datei mit %3$@ und ersetzt den Server dieses Macs für %2$@. Er startet als neuer Server, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der ersetzte Server wird entfernt, sein Verlauf wird nicht übernommen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» se conecta a %3$@ en este archivo y sustituye al servidor de este Mac para %2$@. Empieza como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor sustituido se elimina y su historial no se traslada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dans ce fichier, le serveur « %1$@ » se connecte à %3$@ et remplace le serveur de ce Mac pour %2$@. Il démarre comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur remplacé est supprimé et son historique n’est pas repris."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルでは、サーバ「%1$@」は%3$@に接続し、%2$@用のこのMacのサーバを置き換えます。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして開始されます。置き換えられるサーバは削除され、その履歴は引き継がれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Neste arquivo, o servidor “%1$@” se conecta a %3$@ e substitui o servidor deste Mac para %2$@. Ele começa como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor substituído é removido e o histórico dele não é transferido."
+          }
+        }
+      }
+    },
+    "risky-new-destination-kept": {
+      "comment": "Import preview, Merge. The file adds a new destination, a server or a proxy, to a server this Mac already has, so the file's server is imported as a new server without secrets or history and this Mac's server is left alone. Arguments: the server's name, the new destination.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file adds %2$@ to server “%1$@”. It is imported as a new server, without saved passwords, certificate, connect commands or history. This Mac’s server stays as it is."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A fájl hozzáadja ezt: %2$@ a(z) \"%1$@\" kiszolgálóhoz. Új kiszolgálóként lesz importálva, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A Mac-en lévő kiszolgáló változatlan marad."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Die Datei fügt dem Server \"%1$@\" %2$@ hinzu. Er wird als neuer Server importiert, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der Server dieses Macs bleibt unverändert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El archivo añade %2$@ al servidor «%1$@». Se importa como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor de este Mac no cambia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le fichier ajoute %2$@ au serveur « %1$@ ». Il est importé comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur de ce Mac reste inchangé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルはサーバ「%1$@」に%2$@を追加します。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして読み込まれます。このMacのサーバは変更されません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O arquivo adiciona %2$@ ao servidor “%1$@”. Ele é importado como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor deste Mac permanece como está."
+          }
+        }
+      }
+    },
+    "risky-new-destination-removed": {
+      "comment": "Import preview, Restore. The file adds a new destination, a server or a proxy, to a server this Mac already has, so it replaces that server as a new one without secrets or history, and the replaced server's history is not carried over. Arguments: the server's name, the new destination.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file adds %2$@ to server “%1$@” and replaces this Mac’s server. It starts as a new server, without saved passwords, certificate, connect commands or history. The replaced server is removed and its history is not carried over."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A fájl hozzáadja ezt: %2$@ a(z) \"%1$@\" kiszolgálóhoz, és leváltja a Mac-en lévő kiszolgálót. Új kiszolgálóként indul, mentett jelszavak, tanúsítvány, csatlakozási parancsok és előzmények nélkül. A leváltott kiszolgáló el lesz távolítva, az előzményei nem kerülnek át."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Die Datei fügt dem Server \"%1$@\" %2$@ hinzu und ersetzt den Server dieses Macs. Er startet als neuer Server, ohne gespeicherte Passwörter, Zertifikat, Verbindungsbefehle oder Verlauf. Der ersetzte Server wird entfernt, sein Verlauf wird nicht übernommen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El archivo añade %2$@ al servidor «%1$@» y sustituye al servidor de este Mac. Empieza como un servidor nuevo, sin contraseñas guardadas, certificado, comandos de conexión ni historial. El servidor sustituido se elimina y su historial no se traslada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le fichier ajoute %2$@ au serveur « %1$@ » et remplace le serveur de ce Mac. Il démarre comme un nouveau serveur, sans mots de passe enregistrés, certificat, commandes de connexion ni historique. Le serveur remplacé est supprimé et son historique n’est pas repris."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイルはサーバ「%1$@」に%2$@を追加し、このMacのサーバを置き換えます。保存済みのパスワード、証明書、接続時コマンド、履歴を含まない新しいサーバとして開始されます。置き換えられるサーバは削除され、その履歴は引き継がれません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O arquivo adiciona %2$@ ao servidor “%1$@” e substitui o servidor deste Mac. Ele começa como um novo servidor, sem senhas salvas, certificado, comandos de conexão ou histórico. O servidor substituído é removido e o histórico dele não é transferido."
+          }
+        }
+      }
+    },
+    "destination-proxy": {
+      "comment": "Import preview. A proxy server a connection would be routed through, named as a destination. The first argument is the proxy's host name, the second is its port number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "proxy %1$@ port %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy: %1$@, %2$@ port"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Proxy %1$@ Port %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy %1$@ puerto %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy %1$@ port %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プロキシ %1$@、ポート%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "proxy %1$@ porta %2$@"
+          }
+        }
+      }
+    },
+    "risky-certificate-validation": {
+      "comment": "Import preview. The file makes a server connect without checking the certificate chain it is shown, so a different server could pass for the real one. The argument is the server's name.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server “%1$@” does not check the certificate chain of the server it connects to."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A(z) \"%1$@\" kiszolgáló nem ellenőrzi annak a kiszolgálónak a tanúsítványláncát, amelyhez csatlakozik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Der Server \"%1$@\" prüft die Zertifikatskette des Servers, mit dem er sich verbindet, nicht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "El servidor «%1$@» no comprueba la cadena de certificados del servidor al que se conecta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Le serveur « %1$@ » ne vérifie pas la chaîne de certificats du serveur auquel il se connecte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバ「%1$@」は、接続先サーバの証明書チェーンを検証しません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "O servidor “%1$@” não verifica a cadeia de certificados do servidor ao qual se conecta."
+          }
+        }
+      }
+    },
+    "endpoint-encrypted": {
+      "comment": "Import preview. Where a server connects, over an encrypted connection. The first argument is the host name, the second is the port number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ port %2$@, encrypted"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@, %2$@ port, titkosítva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ Port %2$@, verschlüsselt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ puerto %2$@, cifrado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ port %2$@, chiffré"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@、ポート%2$@、暗号化あり"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ porta %2$@, criptografado"
+          }
+        }
+      }
+    },
+    "endpoint-plain": {
+      "comment": "Import preview. Where a server connects, as a plain connection without encryption. The first argument is the host name, the second is the port number.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ port %2$@, not encrypted"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@, %2$@ port, titkosítás nélkül"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ Port %2$@, unverschlüsselt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ puerto %2$@, sin cifrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ port %2$@, non chiffré"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@、ポート%2$@、暗号化なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ porta %2$@, sem criptografia"
+          }
+        }
+      }
+    },
+    "risky-ctcp-version-reply": {
+      "comment": "Import preview. The file changes the reply sent to CTCP VERSION requests. The argument is that reply.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answers CTCP VERSION requests with: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A CTCP VERSION kérésekre adott válasz: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beantwortet CTCP-VERSION-Anfragen mit: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responde a las solicitudes CTCP VERSION con: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répond aux requêtes CTCP VERSION avec : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CTCP VERSIONリクエストに次の内容で応答します: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responde às solicitações CTCP VERSION com: %@"
+          }
+        }
+      }
+    },
+    "risky-developer-mode": {
+      "comment": "Import preview. The file turns on developer mode.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turns on developer mode."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekapcsolja a fejlesztői módot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiviert den Entwicklermodus."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa el modo de desarrollador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active le mode développeur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開発者モードをオンにします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativa o modo de desenvolvedor."
+          }
+        }
+      }
+    },
+    "risky-link-schemes": {
+      "comment": "Import preview. Link schemes the file would make clickable in transcripts. The argument is a formatted list of scheme names, such as “file and x-apple”.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text using these link schemes becomes clickable: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az alábbi hivatkozássémákat használó szöveg kattinthatóvá válik: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text mit diesen Linkschemata wird anklickbar: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto que usa estos esquemas de enlace se puede pulsar: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le texte utilisant ces schémas de lien devient cliquable : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらのリンクスキームを使用するテキストが、クリック可能になります: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O texto com estes esquemas de link se torna clicável: %@"
+          }
+        }
+      }
+    },
+    "servers-did-not-disconnect": {
+      "comment": "Error shown when an import had to disconnect servers first and at least one of them did not disconnect in time. The import is abandoned and the servers reconnect.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some servers did not disconnect in time, so no imported settings were applied. Glasstual is reconnecting the servers it disconnected."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Néhány kiszolgáló kapcsolata nem szakadt meg időben, ezért az importált beállítások nem lettek alkalmazva. A Glasstual újracsatlakozik azokhoz a kiszolgálókhoz, amelyek kapcsolatát bontotta."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Server wurden nicht rechtzeitig getrennt. Daher wurden keine importierten Einstellungen angewendet. Glasstual verbindet die zuvor getrennten Server erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos servidores no se desconectaron a tiempo, por lo que no se aplicó ningún ajuste importado. Glasstual está volviendo a conectar los servidores que desconectó."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certains serveurs ne se sont pas déconnectés à temps ; aucun réglage importé n’a donc été appliqué. Glasstual reconnecte les serveurs qu’il avait déconnectés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一部のサーバが時間内に切断されなかったため、読み込んだ設定は適用されませんでした。Glasstualは、切断したサーバに再接続しています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alguns servidores não se desconectaram a tempo, então nenhum ajuste importado foi aplicado. O Glasstual está reconectando os servidores que desconectou."
+          }
+        }
+      }
+    },
+    "servers-to-add": {
+      "comment": "Import preview heading, followed by a comma separated list of server names.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers to add"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hozzáadandó kiszolgálók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzuzufügende Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores por añadir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveurs à ajouter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加するサーバ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores a adicionar"
+          }
+        }
+      }
+    },
+    "servers-to-remove": {
+      "comment": "Import preview heading, followed by a comma separated list of server names.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers to remove"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eltávolítandó kiszolgálók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu entfernende Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores por eliminar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveurs à retirer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除するサーバ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores a remover"
+          }
+        }
+      }
+    },
+    "servers-to-update": {
+      "comment": "Import preview heading, followed by a comma separated list of server names.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers to update"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frissítendő kiszolgálók"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu aktualisierende Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores por actualizar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveurs à mettre à jour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新するサーバ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidores a atualizar"
+          }
+        }
+      }
+    },
+    "settings-and-recovery": {
+      "comment": "Settings pane section header over the export, import and local recovery commands. Legacy key: configuration.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings and Recovery"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások és helyreállítás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen und Wiederherstellung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes y recuperación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages et récupération"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定とリカバリ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes e recuperação"
+          }
+        }
+      }
+    },
+    "show-backups": {
+      "comment": "Button that reveals the newest protected local backup in the Finder.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenítés a Finderben"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en el Finder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher dans le Finder"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finderで表示"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar no Finder"
+          }
+        }
+      }
+    },
+    "setting-will-change": {
+      "comment": "Import preview. VoiceOver label of a row in the list of settings the import would change. %@ is the setting's name. The row's icon is a pencil.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will change"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ módosulni fog"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ wird geändert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ cambiará"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sera modifié"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@が変更されます"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ será alterado"
+          }
+        }
+      }
+    },
+    "setting-will-be-removed": {
+      "comment": "Import preview. VoiceOver label of a row in the list of settings the import would remove. %@ is the setting's name. The row's icon is a minus sign.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will be removed"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ el lesz távolítva"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ wird entfernt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ se eliminará"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sera supprimé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@が削除されます"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ será removido"
+          }
+        }
+      }
+    },
+    "import-invalid-web-socket-path": {
+      "comment": "Import error. A server in the file has a WebSocket path that cannot be used.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A server in this file has a WebSocket path that is not valid. A path starts with “/” and contains no spaces or “#”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ein Server in dieser Datei hat einen ungültigen WebSocket-Pfad. Ein Pfad beginnt mit „/“ und enthält keine Leerzeichen oder „#“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un servidor de este archivo tiene una ruta WebSocket no válida. Una ruta empieza por «/» y no contiene espacios ni «#»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un serveur de ce fichier a un chemin WebSocket non valide. Un chemin commence par « / » et ne contient ni espace ni « # »."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A fájl egyik kiszolgálójának WebSocket-útvonala érvénytelen. Az útvonal „/” jellel kezdődik, és nem tartalmaz szóközt vagy „#” jelet."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このファイル内のサーバーのWebSocketパスが無効です。パスは「/」で始まり、スペースや「#」を含めることはできません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Um servidor neste arquivo tem um caminho WebSocket inválido. Um caminho começa com “/” e não contém espaços nem “#”."
+          }
+        }
+      }
+    },
+    "websocket-endpoint": {
+      "comment": "Import preview. Where a server connects, when it is a WebSocket. The argument is the ws:// or wss:// address.",
+      "extractionState": "manual",
+      "generatesSymbol": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@（WebSocket）"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ (WebSocket)"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

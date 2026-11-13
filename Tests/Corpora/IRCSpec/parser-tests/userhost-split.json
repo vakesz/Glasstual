@@ -1,0 +1,56 @@
+{
+  "tests": [
+    {
+      "atoms": {
+        "nick": "coolguy"
+      },
+      "source": "coolguy"
+    },
+    {
+      "atoms": {
+        "host": "127.0.0.1",
+        "nick": "coolguy",
+        "user": "ag"
+      },
+      "source": "coolguy!ag@127.0.0.1"
+    },
+    {
+      "atoms": {
+        "host": "localhost",
+        "nick": "coolguy",
+        "user": "~ag"
+      },
+      "source": "coolguy!~ag@localhost"
+    },
+    {
+      "atoms": {
+        "host": "127.0.0.1",
+        "nick": "coolguy"
+      },
+      "source": "coolguy@127.0.0.1"
+    },
+    {
+      "atoms": {
+        "nick": "coolguy",
+        "user": "ag"
+      },
+      "source": "coolguy!ag"
+    },
+    {
+      "atoms": {
+        "host": "net\u00035w\u0003ork.admin",
+        "nick": "coolguy",
+        "user": "ag"
+      },
+      "source": "coolguy!ag@net\u00035w\u0003ork.admin"
+    },
+    {
+      "atoms": {
+        "host": "n\u0002et\u000305w\u000fork.admin",
+        "nick": "coolguy",
+        "user": "~ag"
+      },
+      "source": "coolguy!~ag@n\u0002et\u000305w\u000fork.admin"
+    }
+  ]
+}

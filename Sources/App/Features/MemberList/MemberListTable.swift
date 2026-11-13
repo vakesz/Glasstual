@@ -1,0 +1,315 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import SwiftUI
+
+struct MemberListTable: NSViewRepresentable {
+	let model: MemberList
+	let revision: Int
+	let selection: Set<User.ID>
+	let followsProfileOnScroll: Bool
+	let redirectTyping: (String) -> Void
+
+	func makeCoordinator() -> MemberListTableController {
+		MemberListTableController(model: model)
+	}
+
+	func makeNSView(context: Context) -> NSScrollView {
+		context.coordinator.scrollView
+	}
+
+	func updateNSView(_: NSScrollView, context: Context) {
+		context.coordinator.redirectTyping = redirectTyping
+		context.coordinator.followsProfileOnScroll = followsProfileOnScroll
+		context.coordinator.update(revision: revision, selection: selection)
+	}
+
+	static func dismantleNSView(_: NSScrollView, coordinator: MemberListTableController) {
+		coordinator.stopObserving()
+	}
+
+	func sizeThatFits(_ proposal: ProposedViewSize, nsView _: NSScrollView, context _: Context) -> CGSize? {
+		CGSize(width: proposal.width ?? MemberListLayout.idealWidth, height: proposal.height ?? 300)
+	}
+}
+
+/// A native table owns pointer coordinates and list interaction, while every
+/// member and every presentation decision remains on the feature's model.
+final class MemberListTableController: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+	let model: MemberList
+	/// The table's container for Accessibility clients: it names the list and
+	/// carries its member count as its value. SwiftUI exports no value on a
+	/// containing element, so the adapter holds it.
+	let scrollView = NSScrollView()
+	let tableView = MemberListNativeTable()
+	private(set) var rows: [MemberListTableRow] = []
+	private(set) var updateCount = 0
+	private(set) var replacementCount = 0
+	private var indexes: [MemberListTableRow.Identity: Int] = [:]
+	private var renderedRevision: Int?
+	private var renderedSourceIdentifier: String?
+	private var isUpdating = false
+	private var previousScrollOrigin = NSPoint.zero
+	private let notifications = NotificationSubscriptions()
+	var followsProfileOnScroll = true
+	var redirectTyping: (String) -> Void = { _ in }
+	var performDoubleClick: () -> Void = { AppServices.delegate.menuController?.memberInMemberListDoubleClicked() }
+	var sendFiles: ([String], String) -> Void = { paths, nickname in
+		AppServices.delegate.menuController?.confirmSendDroppedFiles(paths, to: nickname)
+	}
+
+	init(model: MemberList) {
+		self.model = model
+		super.init()
+		let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("member"))
+		column.resizingMask = .autoresizingMask
+		tableView.addTableColumn(column)
+		tableView.headerView = nil
+		tableView.style = .inset
+		// Rows follow System Settings › Appearance › Sidebar icon size, as the sidebar's do.
+		tableView.rowSizeStyle = .default
+		tableView.floatsGroupRows = false
+		tableView.backgroundColor = .clear
+		tableView.autoresizingMask = [.width]
+		tableView.allowsMultipleSelection = true
+		tableView.allowsEmptySelection = true
+		tableView.allowsColumnReordering = false
+		tableView.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
+		tableView.intercellSpacing = NSSize(width: 0, height: 2)
+		tableView.rowHeight = ListRowMetrics(ListRowMetrics.Size(tableView.effectiveRowSizeStyle)).avatarRowHeight
+		tableView.dataSource = self
+		tableView.delegate = self
+		tableView.target = self
+		tableView.doubleAction = #selector(doubleClicked)
+		tableView.owner = self
+		tableView.setAccessibilityLabel(String(localized: .MemberList.sectionMembers))
+		tableView.setAccessibilityIdentifier("member-list")
+		tableView.registerForDraggedTypes([.fileURL])
+		scrollView.documentView = tableView
+		scrollView.hasVerticalScroller = true
+		scrollView.hasHorizontalScroller = false
+		scrollView.autohidesScrollers = true
+		scrollView.drawsBackground = false
+		scrollView.contentView.postsBoundsChangedNotifications = true
+		notifications.observe(NSView.boundsDidChangeNotification, object: scrollView.contentView) { [weak self] _ in
+			self?.scrollPositionChanged()
+		}
+		scrollView.setAccessibilityLabel(String(localized: .MemberList.sectionMembers))
+		scrollView.setAccessibilityIdentifier(AccessibilityIdentifier.memberCount)
+		scrollView.setAccessibilityValue("0")
+	}
+
+	func stopObserving() {
+		notifications.cancelAll()
+	}
+
+	func update(revision: Int, selection: Set<User.ID>) {
+		isUpdating = true
+		defer { isUpdating = false }
+		if renderedRevision != revision || renderedSourceIdentifier != model.sourceIdentifier {
+			let updated = MemberListTableRow.rows(in: model.groups)
+			if renderedRevision == nil || renderedSourceIdentifier != model.sourceIdentifier {
+				replaceRows(updated)
+			} else {
+				applyRows(updated)
+			}
+			renderedRevision = revision
+			renderedSourceIdentifier = model.sourceIdentifier
+			updateCount += 1
+			scrollView.setAccessibilityValue(String(model.groups.reduce(0) { $0 + $1.members.count }))
+		}
+		let selectedIndexes = IndexSet(selection.compactMap { indexes[.member($0)] })
+		if selectedIndexes != tableView.selectedRowIndexes {
+			tableView.selectRowIndexes(selectedIndexes, byExtendingSelection: false)
+		}
+	}
+
+	/// Switching channels is a replacement, not a sequence of joins and parts.
+	/// Diffing unrelated large member lists delays the entire selection frame.
+	private func replaceRows(_ updated: [MemberListTableRow]) {
+		storeRows(updated)
+		tableView.reloadData()
+		scrollView.contentView.scroll(to: .zero)
+		scrollView.reflectScrolledClipView(scrollView.contentView)
+		previousScrollOrigin = scrollView.contentView.bounds.origin
+		replacementCount += 1
+	}
+
+	private func storeRows(_ updated: [MemberListTableRow]) {
+		rows = updated
+		indexes = Dictionary(uniqueKeysWithValues: rows.enumerated().map { ($0.element.id, $0.offset) })
+	}
+
+	/// Inserts and removes identities without rebuilding the whole native list.
+	/// Visible cells are refreshed for in-place user and appearance changes.
+	private func applyRows(_ updated: [MemberListTableRow]) {
+		let origin = scrollView.contentView.bounds.origin
+		let topRow = tableView.row(at: origin)
+		let anchor = rows.indices.contains(topRow) ? rows[topRow].id : nil
+		let offset = topRow >= 0 ? origin.y - tableView.rect(ofRow: topRow).minY : 0
+		let difference = updated.map(\.id).difference(from: rows.map(\.id))
+		var removed = IndexSet()
+		var inserted = IndexSet()
+		for change in difference {
+			switch change {
+			case let .remove(index, _, _): removed.insert(index)
+			case let .insert(index, _, _): inserted.insert(index)
+			}
+		}
+		storeRows(updated)
+		if difference.isEmpty == false {
+			tableView.beginUpdates()
+			tableView.removeRows(at: removed, withAnimation: [])
+			tableView.insertRows(at: inserted, withAnimation: [])
+			tableView.endUpdates()
+		}
+		tableView.enumerateAvailableRowViews { [self] _, index in
+			guard rows.indices.contains(index) else { return }
+			if let cell = tableView.view(atColumn: 0, row: index, makeIfNecessary: false) as? MemberListTableCell {
+				configure(cell, at: index)
+			}
+		}
+		if let anchor, let index = indexes[anchor], difference.isEmpty == false {
+			scrollView.contentView.scroll(to: NSPoint(x: origin.x, y: tableView.rect(ofRow: index).minY + offset))
+			scrollView.reflectScrolledClipView(scrollView.contentView)
+		}
+		previousScrollOrigin = scrollView.contentView.bounds.origin
+	}
+
+	func numberOfRows(in _: NSTableView) -> Int {
+		rows.count
+	}
+
+	func tableView(_: NSTableView, isGroupRow row: Int) -> Bool {
+		rows.indices.contains(row) && rows[row].member == nil
+	}
+
+	func tableView(_: NSTableView, shouldSelectRow row: Int) -> Bool {
+		member(at: row) != nil
+	}
+
+	func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+		member(at: row) == nil ? ListRowMetrics.sectionRowHeight : ListRowMetrics(ListRowMetrics.Size(tableView.effectiveRowSizeStyle))
+			.avatarRowHeight
+	}
+
+	func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
+		let identifier = NSUserInterfaceItemIdentifier("member-cell")
+		let cell = tableView.makeView(withIdentifier: identifier, owner: self) as? MemberListTableCell
+			?? MemberListTableCell(frame: .zero)
+		cell.identifier = identifier
+		configure(cell, at: row)
+		return cell
+	}
+
+	private func configure(_ cell: MemberListTableCell, at index: Int) {
+		guard rows.indices.contains(index) else { return }
+		let row = rows[index]
+		cell.configure(
+			row: row,
+			style: model.presentationStyle,
+			avatarSize: ListRowMetrics(ListRowMetrics.Size(tableView.effectiveRowSizeStyle)).avatarSize,
+			overrides: model.nicknameColorOverrides,
+			profile: row.member.map { MemberRowProfile($0.user, presentation: model.profilePresentation) } ?? MemberRowProfile(),
+			activationName: SettingsKeys.Input.userDoubleClickAction.value.accessibilityActionTitle,
+			showProfile: { [weak model] in
+				guard let member = row.member else { return }
+				model?.showProfile(for: member.id)
+			},
+			activate: { [weak self] in self?.activateMember(at: index) }
+		)
+		cell.showMenu = row.member == nil ? nil : { [weak self, weak cell] in
+			guard let self, let cell else { return false }
+			return showContextMenu(forRowOf: cell)
+		}
+	}
+
+	/// The context menu a secondary click on the cell's row opens, at the row.
+	private func showContextMenu(forRowOf cell: NSView) -> Bool {
+		let row = tableView.row(for: cell)
+		guard row >= 0, let menu = contextMenu(at: row) else { return false }
+		let frame = tableView.rect(ofRow: row)
+		return menu.popUp(positioning: nil, at: NSPoint(x: frame.midX, y: frame.maxY), in: tableView)
+	}
+
+	func tableViewSelectionDidChange(_: Notification) {
+		guard isUpdating == false else { return }
+		model.selectedMemberIDs = Set(tableView.selectedRowIndexes.compactMap { member(at: $0)?.id })
+	}
+
+	func member(at row: Int) -> Member? {
+		guard rows.indices.contains(row) else { return nil }
+		return rows[row].member
+	}
+
+	func row(for identifier: User.ID) -> Int? {
+		indexes[.member(identifier)]
+	}
+
+	@objc private func doubleClicked() {
+		activateMember(at: tableView.clickedRow)
+	}
+
+	func activateMember(at row: Int) {
+		guard let member = member(at: row) else { return }
+		model.hideProfile()
+		model.notePrimaryInteraction(withID: member.id)
+		performDoubleClick()
+	}
+
+	private func scrollPositionChanged() {
+		let origin = scrollView.contentView.bounds.origin
+		guard origin != previousScrollOrigin else { return }
+		previousScrollOrigin = origin
+		guard isUpdating == false, let window = tableView.window else { return }
+		let point = tableView.convert(window.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil)
+		followProfile(at: point)
+	}
+
+	/// A single native row lookup; no layout preferences, scanning or selection.
+	func followProfile(at point: NSPoint) {
+		guard tableView.visibleRect.contains(point) else { return }
+		let identifier = member(at: tableView.row(at: point))?.id
+		model.followProfileWhileScrolling(over: identifier, enabled: followsProfileOnScroll)
+	}
+}
+
+final class MemberListNativeTable: NSTableView {
+	weak var owner: MemberListTableController?
+
+	override func menu(for event: NSEvent) -> NSMenu? {
+		owner?.contextMenu(at: row(at: convert(event.locationInWindow, from: nil)))
+	}
+
+	override func showContextMenuForSelection(_: Any?) {
+		guard selectedRow >= 0, let menu = selectionContextMenu() else { return }
+		scrollRowToVisible(selectedRow)
+		let row = rect(ofRow: selectedRow)
+		menu.popUp(positioning: nil, at: NSPoint(x: row.midX, y: row.maxY), in: self)
+	}
+
+	func selectionContextMenu() -> NSMenu? {
+		owner?.contextMenu(at: selectedRow)
+	}
+
+	override func keyDown(with event: NSEvent) {
+		/* Return and Enter do what a double click on the selected member does,
+		 under the same setting. A pointer has the double click; a keyboard has
+		 nothing else that activates a row. */
+		if event.modifierFlags.isDisjoint(with: [.command, .control, .option]),
+		   event.charactersIgnoringModifiers == "\r" || event.charactersIgnoringModifiers == "\u{3}",
+		   selectedRow >= 0
+		{
+			owner?.activateMember(at: selectedRow)
+		} else if let text = TypingRedirect.text(
+			for: event.characters ?? "",
+			commandIsPressed: event.modifierFlags.contains(.command),
+			controlIsPressed: event.modifierFlags.contains(.control)
+		) {
+			owner?.redirectTyping(text)
+		} else {
+			super.keyDown(with: event)
+		}
+	}
+}

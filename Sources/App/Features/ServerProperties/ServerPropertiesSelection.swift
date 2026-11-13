@@ -1,0 +1,96 @@
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+
+/** One pane of the connection sheet.
+
+ Every case is a pane the sidebar lists and the detail view draws, and it carries
+ its own row: the sidebar and the pane's heading used to name the same pane
+ twice, once each, so a renamed pane could be called two things at once. The
+ entry points a menu can open the sheet at are `ServerPropertiesDestination`,
+ which is a different question and used to be mixed in here as two cases nothing
+ could select. */
+enum ServerPropertiesSelection: CaseIterable, Hashable {
+	case general
+	case identity
+	case profile
+	case channelList
+	case highlights
+	case connectCommands
+	case disconnectMessages
+	case encoding
+	case zncBouncer
+	case bouncerNetworks
+	case clientCertificate
+	case networkSocket
+	case proxyServer
+	case floodControl
+
+	var title: LocalizedStringResource {
+		switch self {
+		case .general: .ServerProperties.serverPropertiesNavigationMenuGeneral
+		case .identity: .ServerProperties.serverPropertiesNavigationMenuIdentity
+		case .profile: .ServerProperties.profilePaneTitle
+		case .channelList: .ServerProperties.channelList
+		case .highlights: .ServerProperties.serverPropertiesNavigationMenuHighlights
+		case .connectCommands: .ServerProperties.connectCommands
+		case .disconnectMessages: .ServerProperties.serverPropertiesNavigationMenuMessages
+		case .encoding: .ServerProperties.serverPropertiesNavigationMenuEncoding
+		case .zncBouncer: .ServerProperties.zncBouncer
+		case .bouncerNetworks: .ServerProperties.bouncerNetworks
+		case .clientCertificate: .ServerProperties.clientCertificate
+		case .networkSocket: .ServerProperties.networkSocket
+		case .proxyServer: .ServerProperties.proxyServer
+		case .floodControl: .ServerProperties.floodControl
+		}
+	}
+
+	/// The SF Symbol the sidebar row carries.
+	var symbol: String {
+		switch self {
+		case .general: "network"
+		case .identity: "person.crop.circle"
+		case .profile: "person.text.rectangle"
+		case .channelList: "number"
+		case .highlights: "highlighter"
+		case .connectCommands: "terminal"
+		case .disconnectMessages: "text.bubble"
+		case .encoding: "character.book.closed"
+		case .zncBouncer: "server.rack"
+		case .bouncerNetworks: "point.3.connected.trianglepath.dotted"
+		case .clientCertificate: "checkmark.shield"
+		case .networkSocket: "cable.connector"
+		case .proxyServer: "arrow.triangle.branch"
+		case .floodControl: "speedometer"
+		}
+	}
+}
+
+extension ServerPropertiesSelection {
+	/// The panes a network of a bouncer account lists; it takes the others
+	/// from the account.
+	static let bouncerNetworkPanes: Set<Self> = [
+		.channelList, .highlights, .connectCommands, .profile, .bouncerNetworks,
+	]
+
+	/// The pane a window stored by name, as its accessibility identifier and
+	/// `String(describing:)` spell it.
+	init?(storedName name: String) {
+		guard let pane = Self.allCases.first(where: { String(describing: $0) == name }) else { return nil }
+		self = pane
+	}
+
+	/// The name a window stores the pane under.
+	var storedName: String {
+		String(describing: self)
+	}
+
+	/// Whether the sidebar lists this pane for `model`'s connection.
+	func isListed(for model: ServerPropertiesModel) -> Bool {
+		if self == .profile, model.profile == nil {
+			return false
+		}
+		return model.isBouncerNetwork == false || Self.bouncerNetworkPanes.contains(self)
+	}
+}

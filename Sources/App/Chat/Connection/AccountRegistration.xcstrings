@@ -1,0 +1,2886 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "failure-account-exists": {
+      "comment": "Account registration failure: the server already has an account with that name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An account with that name already exists."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már létezik ilyen nevű fiók."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Account mit diesem Namen existiert bereits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya existe una cuenta con ese nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte portant ce nom existe déjà."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その名前のアカウントはすでに存在します。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já existe uma conta com esse nome."
+          }
+        }
+      }
+    },
+    "failure-bad-account-name": {
+      "comment": "Account registration failure: the server refuses the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server doesn’t accept that account name."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver nem fogadja el ezt a fióknevet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server akzeptiert diesen Account-Namen nicht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no acepta ese nombre de cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’accepte pas ce nom de compte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバはそのアカウント名を受け付けません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não aceita esse nome de conta."
+          }
+        }
+      }
+    },
+    "failure-account-name-must-be-nickname": {
+      "comment": "Account registration failure: the account must be named after the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server requires the account name to match your nickname."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szerver megköveteli, hogy a fióknév megegyezzen a beceneveddel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server verlangt, dass der Account-Name deinem Nickname entspricht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor exige que el nombre de cuenta coincida con tu apodo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur exige que le nom du compte corresponde à votre pseudo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバでは、アカウント名をニックネームと同じにする必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor exige que o nome da conta seja igual ao seu apelido."
+          }
+        }
+      }
+    },
+    "failure-needs-nickname": {
+      "comment": "Account registration failure: the server wants a nickname first.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server needs a nickname before an account can be registered."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szervernek becenévre van szüksége a fiók regisztrálása előtt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server braucht einen Nickname, bevor ein Account registriert werden kann."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor necesita un apodo antes de poder registrar una cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a besoin d’un pseudo avant de pouvoir enregistrer un compte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントを登録する前に、サーバにニックネームを設定する必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor precisa de um apelido antes de registrar uma conta."
+          }
+        }
+      }
+    },
+    "failure-already-authenticated": {
+      "comment": "Account registration failure or unavailability: the connection is already signed in to an account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re already signed in to an account on this server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már be vagy jelentkezve egy fiókba ezen a szerveren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du bist auf diesem Server bereits bei einem Account angemeldet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya has iniciado sesión con una cuenta en este servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes déjà connecté à un compte sur ce serveur."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバではすでにアカウントにサインインしています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você já está conectado a uma conta neste servidor."
+          }
+        }
+      }
+    },
+    "failure-weak-password": {
+      "comment": "Account registration failure: the server considers the password too weak.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server says the password is too weak. Choose a stronger one."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver szerint a jelszó túl gyenge. Válassz erősebbet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut Server ist das Passwort zu schwach. Wähle ein sichereres."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor indica que la contraseña es demasiado débil. Elige una más segura."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur indique que le mot de passe est trop faible. Choisissez-en un plus robuste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバによると、パスワードが弱すぎます。より強力なパスワードを選択してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor informa que a senha é fraca demais. Escolha uma mais forte."
+          }
+        }
+      }
+    },
+    "failure-unacceptable-password": {
+      "comment": "Account registration failure: the server refuses the password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server doesn’t accept that password."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver nem fogadja el ezt a jelszót."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server akzeptiert dieses Passwort nicht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no acepta esa contraseña."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’accepte pas ce mot de passe."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバはそのパスワードを受け付けません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não aceita essa senha."
+          }
+        }
+      }
+    },
+    "failure-invalid-email": {
+      "comment": "Account registration failure: the server says the email address is malformed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server says the email address is not valid."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver szerint az e-mail-cím érvénytelen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut Server ist die E-Mail-Adresse ungültig."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor indica que la dirección de correo no es válida."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur indique que l’adresse e-mail n’est pas valide."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバによると、メールアドレスが有効ではありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor informa que o endereço de e-mail não é válido."
+          }
+        }
+      }
+    },
+    "failure-unacceptable-email": {
+      "comment": "Account registration failure: the server refuses the email address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server doesn’t accept that email address."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver nem fogadja el ezt az e-mail-címet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server akzeptiert diese E-Mail-Adresse nicht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no acepta esa dirección de correo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’accepte pas cette adresse e-mail."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバはそのメールアドレスを受け付けません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não aceita esse endereço de e-mail."
+          }
+        }
+      }
+    },
+    "failure-complete-connection-required": {
+      "comment": "Account registration failure: the server wants the connection to finish first.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server asks you to finish connecting before registering. Try again."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver azt kéri, hogy a regisztráció előtt fejeződjön be a kapcsolódás. Próbáld újra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server verlangt, dass die Verbindung vor der Registrierung abgeschlossen wird. Versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor pide que termine la conexión antes de registrarte. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur demande de terminer la connexion avant l’enregistrement. Réessayez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバは登録の前に接続を完了するよう求めています。もう一度お試しください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor pede que a conexão termine antes do registro. Tente novamente."
+          }
+        }
+      }
+    },
+    "failure-invalid-code": {
+      "comment": "Account registration failure: the verification code is wrong.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The verification code is not correct."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az ellenőrző kód nem helyes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Bestätigungscode ist nicht korrekt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El código de verificación no es correcto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le code de vérification est incorrect."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認コードが正しくありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O código de verificação não está correto."
+          }
+        }
+      }
+    },
+    "failure-temporarily-unavailable": {
+      "comment": "Account registration failure: registration is temporarily unavailable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account registration is temporarily unavailable on this server. Try again later."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fiókregisztráció átmenetileg nem érhető el ezen a szerveren. Próbáld újra később."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Account-Registrierung ist auf diesem Server vorübergehend nicht verfügbar. Versuche es später erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El registro de cuentas no está disponible temporalmente en este servidor. Inténtalo más tarde."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’enregistrement de compte est temporairement indisponible sur ce serveur. Réessayez plus tard."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバではアカウント登録が一時的に利用できません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O registro de contas está temporariamente indisponível neste servidor. Tente novamente mais tarde."
+          }
+        }
+      }
+    },
+    "failure-account-required": {
+      "comment": "Account registration failure: the server only admits signed-in users.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server only accepts users who are signed in to an account. If an account is still waiting for its code, connect again and use /verify to finish it."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szerver csak fiókba bejelentkezett felhasználókat enged be. Ha egy fiók még a kódjára vár, kapcsolódj újra, és fejezd be a /verify paranccsal."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server akzeptiert nur Benutzer, die bei einem Account angemeldet sind. Wartet ein Account noch auf seinen Code, verbinde dich erneut und schließe ihn mit /verify ab."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor solo acepta usuarios que han iniciado sesión con una cuenta. Si una cuenta aún espera su código, vuelve a conectarte y usa /verify para completarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur n’accepte que les utilisateurs connectés à un compte. Si un compte attend encore son code, reconnectez-vous et utilisez /verify pour le finaliser."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバはアカウントにサインインしたユーザのみを受け付けます。コード待ちのアカウントがある場合は、再接続して /verify で完了してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor aceita apenas usuários conectados a uma conta. Se uma conta ainda estiver aguardando o código, conecte-se novamente e use /verify para concluí-la."
+          }
+        }
+      }
+    },
+    "failure-already-in-progress": {
+      "comment": "Account registration failure or unavailability: another registration is running on this connection.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An account registration is already in progress."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Már folyamatban van egy fiókregisztráció."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Account-Registrierung läuft bereits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay un registro de cuenta en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un enregistrement de compte est déjà en cours."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント登録はすでに進行中です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já há um registro de conta em andamento."
+          }
+        }
+      }
+    },
+    "failure-other": {
+      "comment": "Account registration failure with a reply code Glasstual does not know. The argument is the server's code, such as SOME_CODE.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused the registration (%@)."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver elutasította a regisztrációt (%@)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat die Registrierung abgelehnt (%@)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó el registro (%@)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé l’enregistrement (%@)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが登録を拒否しました（%@）。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusou o registro (%@)."
+          }
+        }
+      }
+    },
+    "failure-unsupported": {
+      "comment": "Account registration failure or unavailability: the server does not support registration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server doesn’t support account registration."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szerver nem támogatja a fiókregisztrációt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server unterstützt keine Account-Registrierung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor no admite el registro de cuentas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur ne prend pas en charge l’enregistrement de compte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバはアカウント登録に対応していません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor não oferece suporte ao registro de contas."
+          }
+        }
+      }
+    },
+    "failure-not-connected": {
+      "comment": "Account registration failure: the session is not connected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to the server to register an account."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiók regisztrálásához kapcsolódj a szerverhez."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinde dich mit dem Server, um einen Account zu registrieren."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conéctate al servidor para registrar una cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous au serveur pour enregistrer un compte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントを登録するには、サーバに接続してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecte-se ao servidor para registrar uma conta."
+          }
+        }
+      }
+    },
+    "failure-timed-out": {
+      "comment": "Account registration failure: the server never answered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server didn’t answer the registration request."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver nem válaszolt a regisztrációs kérésre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat auf die Registrierungsanfrage nicht geantwortet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no respondió a la solicitud de registro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’a pas répondu à la demande d’enregistrement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが登録要求に応答しませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não respondeu à solicitação de registro."
+          }
+        }
+      }
+    },
+    "failure-disconnected": {
+      "comment": "Account registration failure: the connection closed mid-flow.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection closed before the registration finished."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kapcsolat bezárult, mielőtt a regisztráció befejeződött."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung wurde geschlossen, bevor die Registrierung abgeschlossen war."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La conexión se cerró antes de que terminara el registro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion s’est fermée avant la fin de l’enregistrement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登録が完了する前に接続が閉じられました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conexão foi encerrada antes de o registro terminar."
+          }
+        }
+      }
+    },
+    "failure-withheld-unconfigured-host": {
+      "comment": "Account registration failure: the password was withheld because the host is not one of the configured servers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password was not sent, because this connection went to a server that is not one of the network’s configured servers."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszó nem lett elküldve, mert ez a kapcsolat olyan szerverhez vezet, amely nem tartozik a hálózat beállított szerverei közé."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort wurde nicht gesendet, weil diese Verbindung zu einem Server führt, der nicht zu den konfigurierten Servern des Netzwerks gehört."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se envió la contraseña porque esta conexión se dirigió a un servidor que no es uno de los configurados para la red."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe n’a pas été envoyé, car cette connexion mène à un serveur qui ne fait pas partie des serveurs configurés du réseau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この接続はネットワークに設定されたサーバ以外に接続しているため、パスワードは送信されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha não foi enviada porque esta conexão foi para um servidor que não está entre os servidores configurados da rede."
+          }
+        }
+      }
+    },
+    "failure-withheld-unverified-certificate": {
+      "comment": "Account registration failure: the password was withheld because nobody checked the certificate.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password was not sent, because the server’s certificate was not checked."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszó nem lett elküldve, mert a szerver tanúsítványa nem lett ellenőrizve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort wurde nicht gesendet, weil das Zertifikat des Servers nicht geprüft wurde."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se envió la contraseña porque no se verificó el certificado del servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe n’a pas été envoyé, car le certificat du serveur n’a pas été vérifié."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバの証明書が確認されていないため、パスワードは送信されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha não foi enviada porque o certificado do servidor não foi verificado."
+          }
+        }
+      }
+    },
+    "failure-withheld-plaintext": {
+      "comment": "Account registration failure: the password was withheld from an unencrypted connection that should have been encrypted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password was not sent, because the connection is not encrypted although encryption was requested."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszó nem lett elküldve, mert a kapcsolat nincs titkosítva, pedig titkosítást kértél."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort wurde nicht gesendet, weil die Verbindung nicht verschlüsselt ist, obwohl Verschlüsselung angefordert wurde."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se envió la contraseña porque la conexión no está cifrada aunque se solicitó cifrado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe n’a pas été envoyé, car la connexion n’est pas chiffrée alors que le chiffrement était demandé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗号化が要求されたにもかかわらず接続が暗号化されていないため、パスワードは送信されませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha não foi enviada porque a conexão não está criptografada, embora a criptografia tenha sido solicitada."
+          }
+        }
+      }
+    },
+    "failure-bouncer-network": {
+      "comment": "Account registration failure or unavailability: bouncer network connections sign in with the bouncer account.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accounts can’t be registered on a bouncer network connection."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bouncer-hálózati kapcsolaton nem lehet fiókot regisztrálni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf einer Bouncer-Netzwerkverbindung können keine Accounts registriert werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pueden registrar cuentas en una conexión de red de un bouncer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’enregistrer un compte sur une connexion réseau de bouncer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バウンサーのネットワーク接続ではアカウントを登録できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não é possível registrar contas em uma conexão de rede de bouncer."
+          }
+        }
+      }
+    },
+    "validation-account-name-invalid": {
+      "comment": "Account registration validation: the account name is empty or has spaces.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An account name can’t be empty or contain spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fióknév nem lehet üres, és nem tartalmazhat szóközt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Account-Name darf nicht leer sein und keine Leerzeichen enthalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un nombre de cuenta no puede estar vacío ni contener espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un nom de compte ne peut pas être vide ni contenir d’espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント名は空にできず、スペースも含められません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O nome da conta não pode estar vazio nem conter espaços."
+          }
+        }
+      }
+    },
+    "validation-account-must-match-nickname": {
+      "comment": "Account registration validation: the server names accounts after the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The account name must match your nickname on this server."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezen a szerveren a fióknévnek meg kell egyeznie a beceneveddel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Server muss der Account-Name deinem Nickname entsprechen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En este servidor el nombre de cuenta debe coincidir con tu apodo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur ce serveur, le nom du compte doit correspondre à votre pseudo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバでは、アカウント名をニックネームと同じにする必要があります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neste servidor, o nome da conta deve ser igual ao seu apelido."
+          }
+        }
+      }
+    },
+    "validation-email-required": {
+      "comment": "Account registration validation: the server requires an email address.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server requires an email address."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szerver e-mail-címet kér."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server verlangt eine E-Mail-Adresse."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor requiere una dirección de correo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur exige une adresse e-mail."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバではメールアドレスが必要です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor exige um endereço de e-mail."
+          }
+        }
+      }
+    },
+    "validation-email-invalid": {
+      "comment": "Account registration validation: the email address is not plausible.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an email address such as name@example.com."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy e-mail-címet, például: nev@example.com."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine E-Mail-Adresse wie name@example.com ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce una dirección de correo como nombre@example.com."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez une adresse e-mail comme nom@example.com."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "name@example.com のようなメールアドレスを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digite um endereço de e-mail como nome@example.com."
+          }
+        }
+      }
+    },
+    "validation-password-empty": {
+      "comment": "Account registration validation: no password was entered.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a password."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adj meg egy jelszót."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib ein Passwort ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce una contraseña."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez un mot de passe."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digite uma senha."
+          }
+        }
+      }
+    },
+    "validation-password-too-short": {
+      "comment": "Account registration validation: the password is shorter than the server allows. The argument is the minimum length in bytes, which equals characters for plain letters and digits.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password must be at least %lld characters long."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszónak legalább %lld karakter hosszúnak kell lennie."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort muss mindestens %lld Zeichen lang sein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La contraseña debe tener al menos %lld caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe doit comporter au moins %lld caractères."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードは%lld文字以上にしてください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha deve ter pelo menos %lld caracteres."
+          }
+        }
+      }
+    },
+    "validation-password-too-long": {
+      "comment": "Account registration validation: the password is longer than the server or Glasstual allows. The argument is the maximum length in bytes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password can be at most %lld characters long."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszó legfeljebb %lld karakter hosszú lehet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort darf höchstens %lld Zeichen lang sein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La contraseña puede tener como máximo %lld caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe peut comporter au plus %lld caractères."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードは%lld文字以内にしてください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha pode ter no máximo %lld caracteres."
+          }
+        }
+      }
+    },
+    "validation-password-control-characters": {
+      "comment": "Account registration validation: the password holds a line break or a null character.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password can’t contain line breaks or null characters."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszó nem tartalmazhat sortörést vagy nullkaraktert."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort darf keine Zeilenumbrüche oder Nullzeichen enthalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La contraseña no puede contener saltos de línea ni caracteres nulos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe ne peut pas contenir de sauts de ligne ni de caractères nuls."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードに改行やヌル文字は使用できません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha não pode conter quebras de linha nem caracteres nulos."
+          }
+        }
+      }
+    },
+    "validation-password-mismatch": {
+      "comment": "Account registration validation: the two password fields differ.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passwords don’t match."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszavak nem egyeznek."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Passwörter stimmen nicht überein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las contraseñas no coinciden."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mots de passe ne correspondent pas."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードが一致しません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As senhas não coincidem."
+          }
+        }
+      }
+    },
+    "validation-code-invalid": {
+      "comment": "Account registration validation: the verification code is empty or has spaces.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the verification code without spaces."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add meg az ellenőrző kódot szóközök nélkül."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib den Bestätigungscode ohne Leerzeichen ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el código de verificación sin espacios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez le code de vérification sans espaces."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認コードをスペースなしで入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digite o código de verificação sem espaços."
+          }
+        }
+      }
+    },
+    "validation-line-too-long": {
+      "comment": "Account registration validation: the account name, email and password do not fit one IRC line together.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The account name, email address and password are too long together."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fióknév, az e-mail-cím és a jelszó együtt túl hosszú."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account-Name, E-Mail-Adresse und Passwort sind zusammen zu lang."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El nombre de cuenta, la dirección de correo y la contraseña son demasiado largos en conjunto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le nom du compte, l’adresse e-mail et le mot de passe sont trop longs ensemble."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント名、メールアドレス、パスワードの合計が長すぎます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O nome da conta, o endereço de e-mail e a senha são longos demais juntos."
+          }
+        }
+      }
+    },
+    "account-required-hint": {
+      "comment": "Console hint printed when the server requires an account, naming the menu item and the command that register one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server requires an account. Choose Server › Register Account… or type /register to create one."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szerver fiókot követel meg. Válaszd a Kiszolgáló › Fiók regisztrálása… menüpontot, vagy írd be a /register parancsot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server verlangt einen Account. Wähle „Server“ › „Account registrieren…“ oder gib /register ein, um einen zu erstellen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor requiere una cuenta. Elige Servidor › Registrar cuenta… o escribe /register para crear una."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur exige un compte. Choisissez Serveur › Enregistrer un compte… ou tapez /register pour en créer un."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバではアカウントが必要です。「サーバ」›「アカウントを登録…」を選択するか、/register と入力して作成してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor exige uma conta. Escolha Servidor › Registrar Conta… ou digite /register para criar uma."
+          }
+        }
+      }
+    },
+    "verification-required": {
+      "comment": "Console line when the server asks to verify an account no registration of this session asked for. The arguments are the account and the server's message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account “%1$@” needs verification: %2$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) „%1$@” fiókot meg kell erősíteni: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account „%1$@“ muss bestätigt werden: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cuenta “%1$@” necesita verificación: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte « %1$@ » doit être vérifié : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント「%1$@」の確認が必要です：%2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conta “%1$@” precisa de verificação: %2$@"
+          }
+        }
+      }
+    },
+    "verification-required-command-hint": {
+      "comment": "Console hint after the server sent a verification code. The argument is the account name; <code> stays untranslated as command syntax.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your email, then enter the code with /verify %@ <code>."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nézd meg az e-mailjeidet, majd add meg a kódot így: /verify %@ <code>."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sieh in deinen E-Mails nach und gib den Code dann mit /verify %@ <code> ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu correo y luego introduce el código con /verify %@ <code>."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultez vos e-mails, puis saisissez le code avec /verify %@ <code>."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールを確認し、/verify %@ <code> でコードを入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique seu e-mail e digite o código com /verify %@ <code>."
+          }
+        }
+      }
+    },
+    "registering-account": {
+      "comment": "Console line when /register starts. The argument is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registering account “%@”…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) „%@” fiók regisztrálása…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account „%@“ wird registriert …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrando la cuenta “%@”…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement du compte « %@ »…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント「%@」を登録しています…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrando a conta “%@”…"
+          }
+        }
+      }
+    },
+    "registered-and-saved": {
+      "comment": "Console line after a registration succeeded and the password was saved. The argument is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account “%@” is registered. The password is saved in your keychain and Glasstual signs in with SASL from now on."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) „%@” fiók regisztrálva. A jelszó a kulcskarikádba került, és a Glasstual mostantól SASL-lel jelentkezik be."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account „%@“ ist registriert. Das Passwort ist in deinem Schlüsselbund gesichert, und Glasstual meldet sich ab jetzt per SASL an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cuenta “%@” está registrada. La contraseña se guardó en tu llavero y Glasstual iniciará sesión con SASL a partir de ahora."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte « %@ » est enregistré. Le mot de passe est enregistré dans votre trousseau et Glasstual se connecte désormais avec SASL."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント「%@」を登録しました。パスワードはキーチェーンに保存され、今後Glasstualは SASL でサインインします。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conta “%@” está registrada. A senha foi salva nas suas chaves e o Glasstual passa a entrar com SASL."
+          }
+        }
+      }
+    },
+    "registered-not-saved": {
+      "comment": "Console line after a registration succeeded but the password could not be saved. The argument is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account “%@” is registered, but the password could not be saved in your keychain."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) „%@” fiók regisztrálva, de a jelszót nem sikerült a kulcskarikába menteni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account „%@“ ist registriert, aber das Passwort konnte nicht in deinem Schlüsselbund gesichert werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cuenta “%@” está registrada, pero no se pudo guardar la contraseña en tu llavero."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte « %@ » est enregistré, mais le mot de passe n’a pas pu être enregistré dans votre trousseau."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント「%@」を登録しましたが、パスワードをキーチェーンに保存できませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conta “%@” está registrada, mas não foi possível salvar a senha nas suas chaves."
+          }
+        }
+      }
+    },
+    "verified-without-password": {
+      "comment": "Console line after /verify succeeded for an account registered earlier, with no password to save. The argument is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account “%@” is verified. Add its password in Server Properties to sign in automatically."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A(z) „%@” fiók megerősítve. Az automatikus bejelentkezéshez add meg a jelszavát a Kiszolgáló tulajdonságai ablakban."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account „%@“ ist bestätigt. Füge sein Passwort in den Servereigenschaften hinzu, um dich automatisch anzumelden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cuenta “%@” está verificada. Añade su contraseña en Propiedades del servidor para iniciar sesión automáticamente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte « %@ » est vérifié. Ajoutez son mot de passe dans les propriétés du serveur pour vous connecter automatiquement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント「%@」を確認しました。自動でサインインするには、サーバのプロパティでパスワードを追加してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A conta “%@” está verificada. Adicione a senha nas Propriedades do Servidor para entrar automaticamente."
+          }
+        }
+      }
+    },
+    "late-success-not-saved": {
+      "comment": "Console line when the server registered an account after the registration was cancelled or that this session never asked for. The argument is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server registered account “%@”. The registration was no longer waiting, so no password was saved."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver regisztrálta a(z) „%@” fiókot. A regisztráció már nem várakozott, ezért nem lett jelszó mentve."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat den Account „%@“ registriert. Die Registrierung wartete nicht mehr, daher wurde kein Passwort gesichert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor registró la cuenta “%@”. El registro ya no estaba en espera, así que no se guardó ninguna contraseña."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a enregistré le compte « %@ ». L’enregistrement n’était plus en attente, aucun mot de passe n’a donc été enregistré."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがアカウント「%@」を登録しました。登録はすでに待機していなかったため、パスワードは保存されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor registrou a conta “%@”. O registro não estava mais aguardando, então nenhuma senha foi salva."
+          }
+        }
+      }
+    },
+    "registration-failed": {
+      "comment": "Console line when a registration started with /register failed. The argument is the reason.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account registration failed: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fiókregisztráció nem sikerült: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account-Registrierung fehlgeschlagen: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error al registrar la cuenta: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de l’enregistrement du compte : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント登録に失敗しました：%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falha ao registrar a conta: %@"
+          }
+        }
+      }
+    },
+    "server-message": {
+      "comment": "Console line quoting the server's own message about a registration. The argument is that message.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server message: %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A szerver üzenete: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht des Servers: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensaje del servidor: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message du serveur : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバからのメッセージ：%@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensagem do servidor: %@"
+          }
+        }
+      }
+    },
+    "registration-cancelled": {
+      "comment": "Console line when /register cancel stopped a registration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account registration cancelled."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fiókregisztráció megszakítva."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account-Registrierung abgebrochen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de cuenta cancelado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement du compte annulé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント登録をキャンセルしました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de conta cancelado."
+          }
+        }
+      }
+    },
+    "nothing-to-cancel": {
+      "comment": "Console line when /register cancel finds no registration to cancel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No account registration is in progress."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs folyamatban fiókregisztráció."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es läuft keine Account-Registrierung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay ningún registro de cuenta en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun enregistrement de compte n’est en cours."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進行中のアカウント登録はありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum registro de conta em andamento."
+          }
+        }
+      }
+    },
+    "summary-header": {
+      "comment": "Summary header: the first line /register prints about what the server accepts for account registration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server accepts account registration:"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a szerver lehetővé teszi a fiókregisztrációt:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Server erlaubt die Account-Registrierung:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor admite el registro de cuentas:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur accepte l’enregistrement de compte :"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバはアカウント登録に対応しています："
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor aceita o registro de contas:"
+          }
+        }
+      }
+    },
+    "summary-any-account-name": {
+      "comment": "/register summary line: the account may have any name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• The account can have any name."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A fiók neve bármi lehet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Der Account kann einen beliebigen Namen haben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• La cuenta puede tener cualquier nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Le compte peut porter n’importe quel nom."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• アカウント名は自由に付けられます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A conta pode ter qualquer nome."
+          }
+        }
+      }
+    },
+    "summary-nickname-account-name": {
+      "comment": "/register summary line: the account is named after the nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• The account is named after your nickname."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A fiók a beceneved nevét kapja."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Der Account erhält den Namen deines Nicknames."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• La cuenta recibe el nombre de tu apodo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Le compte porte le nom de votre pseudo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• アカウント名はニックネームになります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A conta recebe o nome do seu apelido."
+          }
+        }
+      }
+    },
+    "summary-email-required": {
+      "comment": "/register summary line: an email address is required.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• An email address is required."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• E-mail-cím megadása kötelező."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Eine E-Mail-Adresse ist erforderlich."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Se requiere una dirección de correo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Une adresse e-mail est requise."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• メールアドレスが必要です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• É necessário um endereço de e-mail."
+          }
+        }
+      }
+    },
+    "summary-email-optional": {
+      "comment": "/register summary line: an email address is optional.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• An email address is optional."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Az e-mail-cím megadása nem kötelező."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Eine E-Mail-Adresse ist optional."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• La dirección de correo es opcional."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• L’adresse e-mail est facultative."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• メールアドレスは任意です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• O endereço de e-mail é opcional."
+          }
+        }
+      }
+    },
+    "summary-password-minimum": {
+      "comment": "/register summary line: the shortest password the server accepts. The argument is a length in bytes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• The password needs at least %lld characters."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A jelszónak legalább %lld karakteresnek kell lennie."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Das Passwort braucht mindestens %lld Zeichen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• La contraseña necesita al menos %lld caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Le mot de passe doit comporter au moins %lld caractères."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• パスワードは%lld文字以上が必要です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A senha precisa ter pelo menos %lld caracteres."
+          }
+        }
+      }
+    },
+    "summary-password-maximum": {
+      "comment": "/register summary line: the longest password the server accepts. The argument is a length in bytes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• The password can have at most %lld characters."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A jelszó legfeljebb %lld karakteres lehet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Das Passwort darf höchstens %lld Zeichen haben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• La contraseña puede tener como máximo %lld caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Le mot de passe peut comporter au plus %lld caractères."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• パスワードは%lld文字以内です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A senha pode ter no máximo %lld caracteres."
+          }
+        }
+      }
+    },
+    "summary-before-connect": {
+      "comment": "/register summary line: registration works before connecting completes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• You can register before connecting completes."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• A kapcsolódás befejezése előtt is regisztrálhatsz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Du kannst dich registrieren, bevor die Verbindung vollständig hergestellt ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Puedes registrarte antes de que termine la conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Vous pouvez vous enregistrer avant la fin de la connexion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• 接続が完了する前に登録できます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Você pode se registrar antes de a conexão terminar."
+          }
+        }
+      }
+    },
+    "summary-usage": {
+      "comment": "/register usage line. The command syntax stays untranslated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To register, type /register <account | *> <email | *> <password>, or choose Server › Register Account…"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regisztráláshoz írd be: /register <account | *> <email | *> <password>, vagy válaszd a Kiszolgáló › Fiók regisztrálása… menüpontot."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib zum Registrieren /register <account | *> <email | *> <password> ein oder wähle „Server“ › „Account registrieren…“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para registrarte, escribe /register <account | *> <email | *> <password> o elige Servidor › Registrar cuenta…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour vous enregistrer, tapez /register <account | *> <email | *> <password> ou choisissez Serveur › Enregistrer un compte…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登録するには /register <account | *> <email | *> <password> と入力するか、「サーバ」›「アカウントを登録…」を選択してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para se registrar, digite /register <account | *> <email | *> <password> ou escolha Servidor › Registrar Conta…"
+          }
+        }
+      }
+    },
+    "summary-after-connecting": {
+      "comment": "What /register prints before Glasstual knows whether the server supports registration.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual learns whether this server supports account registration when it connects. Type /register <account | *> <email | *> <password> to connect and register."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Glasstual kapcsolódáskor tudja meg, hogy a szerver támogatja-e a fiókregisztrációt. Kapcsolódáshoz és regisztráláshoz írd be: /register <account | *> <email | *> <password>."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual erfährt beim Verbinden, ob dieser Server die Account-Registrierung unterstützt. Gib /register <account | *> <email | *> <password> ein, um zu verbinden und dich zu registrieren."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual sabrá al conectarse si este servidor admite el registro de cuentas. Escribe /register <account | *> <email | *> <password> para conectarte y registrarte."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual apprend lors de la connexion si ce serveur prend en charge l’enregistrement de compte. Tapez /register <account | *> <email | *> <password> pour vous connecter et vous enregistrer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバがアカウント登録に対応しているかは、Glasstualが接続したときにわかります。接続して登録するには /register <account | *> <email | *> <password> と入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Glasstual descobre ao conectar se este servidor oferece suporte ao registro de contas. Digite /register <account | *> <email | *> <password> para conectar e se registrar."
+          }
+        }
+      }
+    },
+    "password-prompt-title": {
+      "comment": "Title of the question asking for the new account's password after /register with an account and email. %@ is the account name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a password for %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort für %@ wählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una contraseña para %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un mot de passe pour %@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz jelszót ehhez: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ のパスワードを設定"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha uma senha para %@"
+          }
+        }
+      }
+    },
+    "password-prompt-body": {
+      "comment": "Explanation in the question asking for the new account's password. %@ is the server name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is sent to %@ to register the account, and saved in your keychain once it succeeds. It is never shown in the conversation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Passwort wird an %@ gesendet, um den Account zu registrieren, und nach Erfolg in deinem Schlüsselbund gesichert. Es wird nie in der Unterhaltung angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La contraseña se envía a %@ para registrar la cuenta y se guarda en tu llavero cuando lo consigue. Nunca se muestra en la conversación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mot de passe est envoyé à %@ pour enregistrer le compte, puis enregistré dans votre trousseau en cas de réussite. Il n’apparaît jamais dans la conversation."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelszót a fiók regisztrálásához elküldi az app ide: %@, és siker esetén a kulcskarikádba menti. Soha nem jelenik meg a beszélgetésben."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードはアカウント登録のために %@ に送信され、成功するとキーチェーンに保存されます。会話に表示されることはありません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A senha é enviada a %@ para registrar a conta e guardada nas suas chaves quando der certo. Ela nunca aparece na conversa."
+          }
+        }
+      }
+    },
+    "password-prompt-register": {
+      "comment": "Button that registers the account with the password typed into the question.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regisztrálás"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登録"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar"
+          }
+        }
+      }
+    },
+    "password-prompt-placeholder": {
+      "comment": "Placeholder of the secure field for the new account's password.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelszó"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワード"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senha"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

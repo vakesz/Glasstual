@@ -1,0 +1,232 @@
+name: Signed Release
+
+# Manual Developer ID distribution outside the Mac App Store.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version to release (defaults to MARKETING_VERSION in project.yml)"
+        required: false
+        type: string
+      maintenance:
+        description: "Allow an older product/build version; never mark this release latest"
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: signed-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_version: ${{ steps.version.outputs.build_version }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate release and exact-SHA Quality run
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          MAINTENANCE: ${{ inputs.maintenance }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RELEASE_REF: ${{ github.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${INPUT_VERSION:-$(sed -nE 's/^[[:space:]]*MARKETING_VERSION: "([^"]+)"/\1/p' project.yml)}"
+          bash scripts/release-validation.sh preflight "${VERSION}" "${MAINTENANCE}" >> "${GITHUB_OUTPUT}"
+
+  release:
+    needs: validate
+    # Runs on the same hosted macOS image as Quality. scripts/ci-signing.sh
+    # imports the Developer ID identity from repository secrets into a
+    # throwaway keychain and removes it again at the end, so nothing has to
+    # live on the runner. The `release` environment is where the protection
+    # goes: add a required reviewer there and only that approval can start
+    # this job.
+    runs-on: xcode-27
+    environment: release
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      actions: read
+      artifact-metadata: write
+      attestations: write
+      id-token: write
+
+    env:
+      PROJECT: Glasstual.xcodeproj
+      SCHEME: Glasstual
+      CONFIGURATION: Release
+      TEAM_ID: H8W5DK3FN2
+      VERSION: ${{ needs.validate.outputs.version }}
+      BUILD_VERSION: ${{ needs.validate.outputs.build_version }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify Xcode 27 runner
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode.app
+          # Capture first: piping xcodebuild into head closes the pipe early,
+          # and xcodebuild 27 aborts on the broken pipe instead of exiting quietly.
+          XCODE_VERSION="$(xcodebuild -version)"
+          printf '%s\n' "${XCODE_VERSION}"
+          XCODE_MAJOR="$(printf '%s\n' "${XCODE_VERSION}" | sed -nE '1s/^Xcode ([0-9]+).*/\1/p')"
+          [ "${XCODE_MAJOR}" -eq 27 ]
+
+      - name: Generate Xcode project and metadata
+        run: make generate
+
+      - name: Install Developer ID signing material
+        env:
+          CERT_P12: ${{ secrets.DEVELOPER_ID_APPLICATION_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_APPLICATION_CERT_PASSWORD }}
+        run: bash scripts/ci-signing.sh install
+
+      - name: Build signed archive
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}" \
+            -configuration "${CONFIGURATION}" \
+            -archivePath "${RUNNER_TEMP}/Glasstual.xcarchive" \
+            -destination 'platform=macOS,arch=arm64' \
+            MARKETING_VERSION="${VERSION}" \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${TEAM_ID}" \
+            GLASSTUAL_MAIN_PROVISIONING_PROFILE="Glasstual Developer ID" \
+            GLASSTUAL_IRC_PROVISIONING_PROFILE="Glasstual IRC Connection Host Developer ID"
+
+      - name: Verify archived version
+        run: |
+          set -euo pipefail
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
+          bash scripts/release-validation.sh archive "${APP}" "${VERSION}" "${BUILD_VERSION}"
+
+      - name: Verify Developer ID signature
+        run: |
+          set -euo pipefail
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
+          codesign --verify --deep --strict --verbose=2 "${APP}"
+          codesign --display --verbose=4 "${APP}" 2>&1 \
+            | grep -E 'Authority|TeamIdentifier|Identifier'
+
+      - name: Notarize and staple
+        env:
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          for name in NOTARY_KEY_P8 NOTARY_KEY_ID NOTARY_ISSUER_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name} is not set."
+              exit 1
+            fi
+          done
+
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
+          KEY_DIR="${RUNNER_TEMP}/private_keys"
+          KEY_PATH="${KEY_DIR}/AuthKey.p8"
+          SUBMIT_ZIP="${RUNNER_TEMP}/Glasstual-notarize.zip"
+          mkdir -p "${KEY_DIR}"
+          echo -n "${NOTARY_KEY_P8}" | base64 --decode > "${KEY_PATH}"
+          chmod 600 "${KEY_PATH}"
+
+          ditto -c -k --keepParent "${APP}" "${SUBMIT_ZIP}"
+          SUBMISSION_JSON="$(xcrun notarytool submit "${SUBMIT_ZIP}" \
+            --key "${KEY_PATH}" \
+            --key-id "${NOTARY_KEY_ID}" \
+            --issuer "${NOTARY_ISSUER_ID}" \
+            --wait --timeout 45m --output-format json)"
+          echo "${SUBMISSION_JSON}"
+          SUBMISSION_ID="$(plutil -extract id raw -o - - <<< "${SUBMISSION_JSON}")"
+          SUBMISSION_STATUS="$(plutil -extract status raw -o - - <<< "${SUBMISSION_JSON}")"
+          if [ "${SUBMISSION_STATUS}" != "Accepted" ]; then
+            echo "::error::Notarization ${SUBMISSION_STATUS} (submission ${SUBMISSION_ID}). Notary log follows."
+            xcrun notarytool log "${SUBMISSION_ID}" \
+              --key "${KEY_PATH}" \
+              --key-id "${NOTARY_KEY_ID}" \
+              --issuer "${NOTARY_ISSUER_ID}"
+            exit 1
+          fi
+          xcrun notarytool log "${SUBMISSION_ID}" \
+            --key "${KEY_PATH}" \
+            --key-id "${NOTARY_KEY_ID}" \
+            --issuer "${NOTARY_ISSUER_ID}"
+          xcrun stapler staple "${APP}"
+          xcrun stapler validate "${APP}"
+          spctl --assess --type execute --verbose=4 "${APP}"
+
+      - name: Create release ZIP
+        id: package
+        run: |
+          set -euo pipefail
+          APP="${RUNNER_TEMP}/Glasstual.xcarchive/Products/Applications/Glasstual.app"
+          ARCHIVE_NAME="Glasstual-${VERSION}.zip"
+          OUT="${RUNNER_TEMP}/${ARCHIVE_NAME}"
+          CHECKSUM="${OUT}.sha256"
+          ditto -c -k --sequesterRsrc --keepParent "${APP}" "${OUT}"
+          (cd "${RUNNER_TEMP}" && shasum -a 256 "${ARCHIVE_NAME}") > "${CHECKSUM}"
+          {
+            echo "path=${OUT}"
+            echo "name=${ARCHIVE_NAME}"
+            echo "checksum=${CHECKSUM}"
+          } >> "${GITHUB_OUTPUT}"
+          cat "${CHECKSUM}"
+
+      - name: Attest release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.package.outputs.path }}
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAINTENANCE: ${{ inputs.maintenance }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RELEASE_REF: ${{ github.ref }}
+          PACKAGE_PATH: ${{ steps.package.outputs.path }}
+          PACKAGE_NAME: ${{ steps.package.outputs.name }}
+          PACKAGE_CHECKSUM: ${{ steps.package.outputs.checksum }}
+        run: |
+          set -euo pipefail
+          # Recheck after signing/notarization in case a tag or newer release appeared.
+          bash scripts/release-validation.sh preflight "${VERSION}" "${MAINTENANCE}"
+          LATEST=true
+          if [ "${MAINTENANCE}" = true ]; then LATEST=false; fi
+          gh release create "v${VERSION}" \
+            "${PACKAGE_PATH}#${PACKAGE_NAME}" \
+            "${PACKAGE_CHECKSUM}#${PACKAGE_NAME}.sha256" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "Glasstual ${VERSION}" \
+            --notes "Signed and notarized macOS release." \
+            --generate-notes \
+            --fail-on-no-commits \
+            --latest="${LATEST}"
+
+      - name: Clean up signing material
+        if: ${{ always() }}
+        run: |
+          bash scripts/ci-signing.sh remove
+          rm -rf "${RUNNER_TEMP}/private_keys"

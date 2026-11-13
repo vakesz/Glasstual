@@ -1,0 +1,1350 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "sasl-oauth-token-rejected" : {
+      "comment" : "Console line when the server refuses the SASL OAUTHBEARER token. %@ is the error status the server reported, such as invalid_token; it is not translated.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server rejected the OAuth token (%@)."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló elutasította az OAuth-tokent (%@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat das OAuth-Token abgelehnt (%@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor rechazó el token de OAuth (%@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a refusé le jeton OAuth (%@)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがOAuthトークンを拒否しました（%@）。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor rejeitou o token OAuth (%@)."
+          }
+        }
+      }
+    },
+    "sasl-oauth-token-rejected-without-status" : {
+      "comment" : "Console line when the server refuses the SASL OAUTHBEARER token without a readable reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server rejected the OAuth token."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló elutasította az OAuth-tokent."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat das OAuth-Token abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor rechazó el token de OAuth."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur a refusé le jeton OAuth."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがOAuthトークンを拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor rejeitou o token OAuth."
+          }
+        }
+      }
+    },
+    "sasl-oauth-requires-tls" : {
+      "comment" : "Console line when SASL OAUTHBEARER would run on an unencrypted connection; the token is not sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The OAuth token is only sent over a TLS connection, so it wasn’t sent."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az OAuth-token csak TLS-kapcsolaton keresztül kerül elküldésre, ezért nem lett elküldve."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das OAuth-Token wird nur über eine TLS-Verbindung gesendet und wurde daher nicht gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El token de OAuth solo se envía mediante una conexión TLS, así que no se envió."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeton OAuth n’est envoyé que par une connexion TLS ; il n’a donc pas été envoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuthトークンはTLS接続でのみ送信されるため、送信しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O token OAuth só é enviado por uma conexão TLS, por isso não foi enviado."
+          }
+        }
+      }
+    },
+    "sasl-oauth-exchange-invalid" : {
+      "comment" : "Console line when the server's half of the SASL OAUTHBEARER exchange does not follow RFC 7628.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL OAuth sign-in failed: the server’s reply wasn’t part of the exchange."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL OAuth-bejelentkezés sikertelen: a kiszolgáló válasza nem volt része a cserének."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL-OAuth-Anmeldung fehlgeschlagen: Die Antwort des Servers gehörte nicht zum Austausch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error al iniciar sesión con SASL OAuth: la respuesta del servidor no formaba parte del intercambio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la connexion SASL OAuth : la réponse du serveur ne faisait pas partie de l’échange."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL OAuthのサインインに失敗しました：サーバの応答が交換の一部ではありませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha no início de sessão SASL OAuth: a resposta do servidor não fazia parte da troca."
+          }
+        }
+      }
+    },
+    "credentials-changed-certificate-body" : {
+      "comment" : "Body of the alert asking whether to send the account password to a server whose certificate is not checked, shown instead of the usual body when the user allowed this host before and it now presents a different certificate. %1$@ is the server's host name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is presenting a different certificate from the one it had when you allowed your password to be sent. Its certificate is still not checked, because certificate checking is turned off for this network. Someone else may be answering at this address."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A(z) %1$@ más tanúsítványt mutat be, mint amikor engedélyezte a jelszava elküldését. A tanúsítványa továbbra sincs ellenőrizve, mert a tanúsítványellenőrzés ki van kapcsolva ennél a hálózatnál. Lehet, hogy valaki más válaszol ezen a címen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ zeigt ein anderes Zertifikat als damals, als Sie das Senden Ihres Passworts erlaubt haben. Das Zertifikat wird weiterhin nicht geprüft, weil die Zertifikatsprüfung für dieses Netzwerk ausgeschaltet ist. Möglicherweise antwortet jemand anderes unter dieser Adresse."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ presenta un certificado distinto del que tenía cuando permitió enviar su contraseña. Su certificado sigue sin comprobarse porque la comprobación de certificados está desactivada para esta red. Es posible que otra persona esté respondiendo en esta dirección."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ présente un certificat différent de celui qu’il avait lorsque vous avez autorisé l’envoi de votre mot de passe. Son certificat n’est toujours pas vérifié, car la vérification des certificats est désactivée pour ce réseau. Quelqu’un d’autre répond peut-être à cette adresse."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@は、パスワードの送信を許可したときとは異なる証明書を提示しています。このネットワークでは証明書の検証がオフになっているため、この証明書も検証されていません。別の誰かがこのアドレスで応答している可能性があります。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ está apresentando um certificado diferente daquele que tinha quando você permitiu o envio da sua senha. O certificado continua sem verificação, porque a verificação de certificados está desativada para esta rede. Outra pessoa pode estar respondendo neste endereço."
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-body" : {
+      "comment" : "Body of the alert asking whether to send the account password (SASL PLAIN or a NickServ IDENTIFY) to a server whose certificate was not checked because certificate checking is turned off for the network. %1$@ is the server's host name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The certificate of %1$@ was not checked, because certificate checking is turned off for this network. Your account password would be sent to the server without proof that it is the real %1$@."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A(z) %1$@ tanúsítványa nem lett ellenőrizve, mert a tanúsítványellenőrzés ki van kapcsolva ennél a hálózatnál. A fiók jelszava úgy kerülne elküldésre, hogy nincs bizonyíték arra, hogy a kiszolgáló valóban a(z) %1$@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Zertifikat von %1$@ wurde nicht geprüft, weil die Zertifikatsprüfung für dieses Netzwerk ausgeschaltet ist. Ihr Kontopasswort würde gesendet, ohne dass belegt ist, dass der Server wirklich %1$@ ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El certificado de %1$@ no se comprobó porque la comprobación de certificados está desactivada para esta red. Su contraseña de cuenta se enviaría al servidor sin garantía de que sea realmente %1$@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le certificat de %1$@ n’a pas été vérifié, car la vérification des certificats est désactivée pour ce réseau. Le mot de passe de votre compte serait envoyé au serveur sans preuve qu’il s’agit bien de %1$@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このネットワークでは証明書の検証がオフになっているため、%1$@の証明書は検証されていません。このサーバが本物の%1$@であるという証明がないまま、アカウントのパスワードが送信されます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O certificado de %1$@ não foi verificado, porque a verificação de certificados está desativada para esta rede. A senha da sua conta seria enviada ao servidor sem prova de que ele é mesmo %1$@."
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-dont-send" : {
+      "comment" : "Default button of the alert about an unverified server certificate. Keeps the account password from being sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don’t Send"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne küldje"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nicht senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No enviar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ne pas envoyer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "送信しない"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Não enviar"
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-send" : {
+      "comment" : "Button of the alert about an unverified server certificate. Sends the account password anyway.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Password"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Jelszó küldése"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Passwort senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enviar contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Envoyer le mot de passe"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "パスワードを送信"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enviar senha"
+          }
+        }
+      }
+    },
+    "credentials-unverified-certificate-title" : {
+      "comment" : "Title of the alert asking whether to send the account password to a server whose certificate was not checked because certificate checking is turned off for the network.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send your password to an unverified server?"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elküldi a jelszavát egy nem ellenőrzött kiszolgálónak?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Passwort an einen ungeprüften Server senden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "¿Enviar la contraseña a un servidor sin verificar?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Envoyer votre mot de passe à un serveur non vérifié ?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "検証されていないサーバにパスワードを送信しますか?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enviar sua senha a um servidor não verificado?"
+          }
+        }
+      }
+    },
+    "credentials-withheld-over-plaintext" : {
+      "comment" : "Console notice, printed at most once per connection, when the client refuses to send the account password (SASL PLAIN or a NickServ IDENTIFY) because a connection that was meant to be encrypted is not.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account password was not sent: this connection was expected to be encrypted but is not."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fiók jelszava nem lett elküldve: ennek a kapcsolatnak titkosítottnak kellett volna lennie, de nem az."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kontopasswort wurde nicht gesendet: Diese Verbindung sollte verschlüsselt sein, ist es aber nicht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La contraseña de la cuenta no se envió: se esperaba que esta conexión estuviera cifrada, pero no lo está."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mot de passe du compte n’a pas été envoyé : cette connexion devait être chiffrée, mais ne l’est pas."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントのパスワードは送信されませんでした。この接続は暗号化されている必要がありますが、暗号化されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A senha da conta não foi enviada: esta conexão deveria estar criptografada, mas não está."
+          }
+        }
+      }
+    },
+    "credentials-withheld-unconfigured-host" : {
+      "comment" : "Console notice when the connection goes to a host that is not one of the network's configured servers, for example a server-sent redirect, so the account password is not sent to it. %1$@ is the host.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account password will not be sent to %1$@: it is not one of this network's configured servers."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fiók jelszava nem lesz elküldve ide: %1$@. Nem tartozik a hálózat beállított kiszolgálói közé."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kontopasswort wird nicht an %1$@ gesendet: Dieser Server gehört nicht zu den konfigurierten Servern dieses Netzwerks."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La contraseña de la cuenta no se enviará a %1$@: no es uno de los servidores configurados de esta red."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mot de passe du compte ne sera pas envoyé à %1$@ : ce n’est pas l’un des serveurs configurés pour ce réseau."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントのパスワードは%1$@に送信されません。このネットワークに設定されたサーバではありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A senha da conta não será enviada para %1$@: esse não é um dos servidores configurados desta rede."
+          }
+        }
+      }
+    },
+    "credentials-withheld-unverified-certificate" : {
+      "comment" : "Console notice, printed at most once per connection, when the client does not send the account password (SASL PLAIN or a NickServ IDENTIFY) because the server's certificate was not verified and the user did not allow it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The account password was not sent: this server’s certificate was not verified."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A fiók jelszava nem lett elküldve: a kiszolgáló tanúsítványa nem lett ellenőrizve."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Kontopasswort wurde nicht gesendet: Das Zertifikat dieses Servers wurde nicht geprüft."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "La contraseña de la cuenta no se envió: no se verificó el certificado de este servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le mot de passe du compte n’a pas été envoyé : le certificat de ce serveur n’a pas été vérifié."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アカウントのパスワードは送信されませんでした。このサーバの証明書は検証されていません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A senha da conta não foi enviada: o certificado deste servidor não foi verificado."
+          }
+        }
+      }
+    },
+    "direct-chat-offer-refused-address" : {
+      "comment" : "Console notice when a DCC CHAT offer names an address the client refuses to dial (loopback, a private network, a documentation range). %1$@ is the sender's nickname, %2$@ the address the offer named.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refused a direct chat request from %1$@: %2$@ is not an address this client will connect to."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ közvetlen csevegési kérése elutasítva: a kliens nem kapcsolódik ehhez a címhez: %2$@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direkte Chatanfrage von %1$@ abgelehnt: Dieser Client stellt keine Verbindung zu %2$@ her."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se rechazó una solicitud de chat directo de %1$@: %2$@ no es una dirección a la que se conectará este cliente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demande de discussion directe refusée de %1$@ : %2$@ n’est pas une adresse à laquelle ce client se connectera."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@からのダイレクトチャットのリクエストを拒否しました。%2$@は、このクライアントが接続するアドレスではありません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pedido de chat direto de %1$@ recusado: %2$@ não é um endereço ao qual este cliente se conectará."
+          }
+        }
+      }
+    },
+    "direct-chat-request-with-address" : {
+      "comment" : "Body of the alert that asks whether to accept a DCC CHAT offer that names the address the client would dial. %1$@ is the sender's nickname, %2$@ the address. The sibling wants-to-start-a-direct-chat in Prompts.xcstrings is used for a passive offer, which names no address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ wants to start a direct chat with you from %2$@. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ közvetlen csevegést szeretne indítani veled erről a címről: %2$@. Ez közvetlen kapcsolat kettőtök között, amely nem az IRC-kiszolgálón keresztül zajlik, így a másik fél megismeri az IP-címedet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ möchte von %2$@ aus einen direkten Chat mit dir starten. Dabei entsteht eine direkte Verbindung zwischen euch, die nicht über den IRC-Server läuft. Die andere Person erfährt dadurch deine IP-Adresse."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ quiere iniciar un chat directo contigo desde %2$@. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, por lo que la otra persona conocerá tu dirección IP."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ souhaite démarrer une discussion directe avec vous depuis %2$@. Une discussion directe est une connexion entre vous deux qui ne passe pas par le serveur IRC ; l’autre personne connaîtra donc votre adresse IP."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@が、%2$@からダイレクトチャットを開始しようとしています。ダイレクトチャットは、IRCサーバを経由せず、あなたと相手との間で直接行う接続のため、相手にあなたのIPアドレスが知られます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ quer iniciar um chat direto com você a partir de %2$@. Um chat direto é uma conexão entre vocês dois que não passa pelo servidor IRC, portanto a outra pessoa saberá seu endereço IP."
+          }
+        }
+      }
+    },
+    "file-transfer-offer-refused-crowded" : {
+      "comment" : "Console notice when an incoming file transfer offer is dropped because the file transfer list already holds as many downloads as it will track. %@ is the sender's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignored a file transfer offer from %@: too many downloads are listed already. Clear the finished ones and ask them to send it again."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ fájlátviteli ajánlata figyelmen kívül hagyva: már túl sok letöltés van a listában. Távolítsd el a befejezetteket, majd kérd a fájl újbóli küldését."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiangebot von %@ ignoriert: Es sind bereits zu viele Downloads aufgelistet. Entferne abgeschlossene Übertragungen und bitte um erneutes Senden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ignoró una oferta de transferencia de archivos de %@: ya hay demasiadas descargas en la lista. Borra las finalizadas y pídele que la envíe de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offre de transfert de fichier ignorée de %@ : trop de téléchargements sont déjà listés. Effacez ceux qui sont terminés et demandez à la personne de le renvoyer."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@からのファイル転送の申し出を無視しました。ダウンロードの一覧に項目が多すぎます。完了したものを消去してから、もう一度送信してもらってください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oferta de transferência de arquivo de %@ ignorada: já há downloads demais na lista. Limpe os concluídos e peça para a pessoa enviar novamente."
+          }
+        }
+      }
+    },
+    "outgoing-line-refused-encoding" : {
+      "comment" : "Console notice that a line the user typed was not sent, because the text encoding configured for this connection turned it into bytes the IRC protocol treats as line breaks or as the end of the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An outgoing line was not sent, because this server’s text encoding would have split it into several lines."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy kimenő sor nem lett elküldve, mert a kiszolgálóhoz beállított szövegkódolás több sorra bontotta volna."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine ausgehende Zeile wurde nicht gesendet, weil die Textkodierung dieses Servers sie in mehrere Zeilen aufgeteilt hätte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se envió una línea saliente porque la codificación de texto de este servidor la habría dividido en varias líneas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une ligne sortante n’a pas été envoyée, car l’encodage de texte de ce serveur l’aurait découpée en plusieurs lignes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサーバのテキストエンコーディングでは複数の行に分割されてしまうため、送信行を送信しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma linha de saída não foi enviada porque a codificação de texto deste servidor a teria dividido em várias linhas."
+          }
+        }
+      }
+    },
+    "outgoing-line-truncated" : {
+      "comment" : "Console notice when a line this client was about to send was longer than the server accepts and had to be cut, so not all of what the user typed reached the server. %1$ld is the length of the assembled line in bytes, %2$ld how many bytes this server carries.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An outgoing line of %1$ld bytes was trimmed to the %2$ld this server accepts; the rest was not sent."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy %1$ld bájtos kimenő sor a kiszolgáló által elfogadott %2$ld bájtra lett rövidítve; a többi nem lett elküldve."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine ausgehende Zeile mit %1$ld Byte wurde auf die vom Server akzeptierten %2$ld Byte gekürzt. Der Rest wurde nicht gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una línea saliente de %1$ld bytes se recortó a %2$ld, el máximo que acepta este servidor; el resto no se envió."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une ligne sortante de %1$ld octets a été tronquée à %2$ld octets, la limite acceptée par ce serveur ; le reste n’a pas été envoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信行(%1$ldバイト)を、このサーバが受け付ける%2$ldバイトに切り詰めました。残りは送信されませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma linha de saída de %1$ld bytes foi reduzida para os %2$ld que este servidor aceita; o restante não foi enviado."
+          }
+        }
+      }
+    },
+    "outgoing-unprinted-lines-held-back" : {
+      "comment" : "Console notice when a /smsg, /sme or silent connect command stops part way: so many of the lines it already sent are still waiting for the server's echo that the client could no longer keep the next one's echo out of the transcript, so it sent nothing more.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The rest of the message was not sent: too many lines sent without being shown are still waiting for the server to echo them."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Az üzenet többi része nem lett elküldve: túl sok megjelenítés nélkül elküldött sor vár még arra, hogy a kiszolgáló visszaküldje."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Rest der Nachricht wurde nicht gesendet: Zu viele ohne Anzeige gesendete Zeilen warten noch darauf, dass der Server sie zurücksendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "El resto del mensaje no se envió: demasiadas líneas enviadas sin mostrarse siguen esperando a que el servidor las devuelva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Le reste du message n’a pas été envoyé : trop de lignes envoyées sans être affichées attendent encore que le serveur les renvoie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "メッセージの残りは送信されませんでした。表示せずに送信した行のうち、サーバからのエコーを待っているものが多すぎます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O restante da mensagem não foi enviado: linhas demais enviadas sem serem exibidas ainda aguardam que o servidor as devolva."
+          }
+        }
+      }
+    },
+    "sasl-authentication-timed-out" : {
+      "comment" : "Console notice when the server acknowledged the SASL capability and then never answered the authentication exchange, so the client gave up on it and finished registering.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server did not answer the SASL authentication request in time."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kiszolgáló nem válaszolt időben a SASL-hitelesítési kérésre."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server hat nicht rechtzeitig auf die SASL-Authentifizierungsanfrage geantwortet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor no respondió a la solicitud de autenticación SASL a tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur n’a pas répondu à la demande d’authentification SASL dans les délais."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがSASL認証リクエストに時間内に応答しませんでした。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor não respondeu ao pedido de autenticação SASL a tempo."
+          }
+        }
+      }
+    },
+    "sasl-credentials-contain-a-null-character" : {
+      "comment" : "Console notice when the configured SASL user name or password contains a U+0000 character. SASL PLAIN separates its fields with that character, so a field containing one cannot be sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The SASL user name or password contains a null character, which cannot be sent."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL-felhasználónév vagy -jelszó nullkaraktert tartalmaz, amely nem küldhető el."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der SASL-Benutzername oder das Passwort enthält ein Nullzeichen, das nicht gesendet werden kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nombre de usuario o contraseña SASL contiene un carácter nulo, que no se puede enviar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nom d’utilisateur ou le mot de passe SASL contient un caractère nul, qui ne peut pas être envoyé."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASLのユーザ名またはパスワードにヌル文字が含まれているため、送信できません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O nome de usuário ou a senha SASL contém um caractere nulo, que não pode ser enviado."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-challenge-invalid" : {
+      "comment" : "Console notice when the challenge of a SASL ECDSA exchange was not valid base64, had the wrong length or arrived out of order, so the exchange was abandoned.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ECDSA authentication failed because the server sent an unusable challenge."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL ECDSA-hitelesítés sikertelen, mert a kiszolgáló használhatatlan kihívást küldött."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die SASL-ECDSA-Authentifizierung ist fehlgeschlagen, weil der Server eine unbrauchbare Challenge gesendet hat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La autenticación SASL ECDSA falló porque el servidor envió un desafío inutilizable."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’authentification SASL ECDSA a échoué : le serveur a envoyé un défi inutilisable."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバが使用できないチャレンジを送信したため、SASL ECDSA認証に失敗しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A autenticação SASL ECDSA falhou porque o servidor enviou um desafio inválido."
+          }
+        }
+      }
+    },
+    "sasl-ecdsa-key-unavailable" : {
+      "comment" : "Console notice when SASL ECDSA was chosen but its signing key was missing or unreadable in the Keychain, so the exchange was abandoned.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL ECDSA authentication failed because the signing key could not be read from the Keychain."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SASL ECDSA-hitelesítés sikertelen, mert az aláírókulcs nem olvasható a Kulcskarikából."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die SASL-ECDSA-Authentifizierung ist fehlgeschlagen, weil der Signaturschlüssel nicht aus dem Schlüsselbund gelesen werden konnte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La autenticación SASL ECDSA falló porque no se pudo leer la clave de firma del llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’authentification SASL ECDSA a échoué : la clé de signature n’a pas pu être lue dans le trousseau."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "署名鍵をキーチェーンから読み取れなかったため、SASL ECDSA認証に失敗しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A autenticação SASL ECDSA falhou porque não foi possível ler a chave de assinatura do chaveiro."
+          }
+        }
+      }
+    },
+    "secure-direct-chat-request-with-address" : {
+      "comment" : "Body of the alert that asks whether to accept an encrypted direct chat (DCC SCHAT) offer that names the address the client would dial. %1$@ is the sender's nickname, %2$@ the address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ wants to start an encrypted direct chat with you from %2$@. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address. You will be asked to verify their certificate."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ titkosított közvetlen csevegést szeretne indítani veled innen: %2$@. A közvetlen csevegés egy kettőtök közötti kapcsolat, amely nem az IRC-kiszolgálón keresztül halad, így a másik fél megtudja az IP-címedet. Meg kell majd erősítened a tanúsítványát."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ möchte von %2$@ aus einen verschlüsselten direkten Chat mit dir starten. Ein direkter Chat ist eine Verbindung zwischen euch beiden, die nicht über den IRC-Server läuft, sodass die andere Person deine IP-Adresse erfährt. Du wirst gebeten, das Zertifikat zu überprüfen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ quiere iniciar un chat directo cifrado contigo desde %2$@. Un chat directo es una conexión entre los dos que no pasa por el servidor IRC, así que la otra persona conocerá tu dirección IP. Se te pedirá que verifiques su certificado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ souhaite démarrer une discussion directe chiffrée avec vous depuis %2$@. Une discussion directe est une connexion entre vous deux qui ne passe pas par le serveur IRC ; l’autre personne connaîtra donc votre adresse IP. Il vous sera demandé de vérifier son certificat."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@が、%2$@から暗号化されたダイレクトチャットを開始しようとしています。ダイレクトチャットは、IRCサーバを経由せず、あなたと相手との間で直接行う接続のため、相手にあなたのIPアドレスが知られます。相手の証明書の確認を求められます。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ quer iniciar um bate-papo direto criptografado com você a partir de %2$@. Um bate-papo direto é uma conexão entre vocês dois que não passa pelo servidor IRC, então a outra pessoa saberá seu endereço IP. Você precisará verificar o certificado dela."
+          }
+        }
+      }
+    },
+    "secure-dcc-weak-key" : {
+      "comment" : "Why a secure DCC transfer or chat failed: the peer's certificate has a key below the accepted strength (RSA under 2048 bits, elliptic curve under 256 bits). %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s certificate uses a key that is too weak to be trusted. The connection was refused."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tanúsítványa túl gyenge kulcsot használ ahhoz, hogy megbízható legyen. A kapcsolat elutasítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Zertifikat von %@ verwendet einen Schlüssel, der zu schwach ist, um ihm zu vertrauen. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado de %@ usa una clave demasiado débil para ser de confianza. Se rechazó la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat de %@ utilise une clé trop faible pour être approuvée. La connexion a été refusée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@の証明書の鍵は弱すぎるため信頼できません。接続を拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado de %@ usa uma chave fraca demais para ser confiável. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "secure-dcc-certificate-required" : {
+      "comment" : "Why a secure DCC transfer or chat failed: the peer presented no certificate and the setting that requires one is on. %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ presented no certificate, and secure connections are set to require one. The connection was refused."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nem mutatott be tanúsítványt, a biztonságos kapcsolatokhoz viszont kötelező. A kapcsolat elutasítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ hat kein Zertifikat vorgelegt, und sichere Verbindungen erfordern eins. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no presentó ningún certificado y las conexiones seguras están configuradas para exigir uno. Se rechazó la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’a présenté aucun certificat, alors que les connexions sécurisées en exigent un. La connexion a été refusée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@は証明書を提示しませんでしたが、安全な接続では証明書が必須に設定されています。接続を拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ não apresentou certificado, e as conexões seguras estão configuradas para exigir um. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "secure-dcc-certificate-rejected" : {
+      "comment" : "Why a secure DCC transfer or chat failed: the peer's certificate was not trusted, because the user said so or did not answer in time. %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s certificate was not trusted. The connection was refused."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tanúsítványa nem lett megbízhatónak jelölve. A kapcsolat elutasítva."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Zertifikat von %@ wurde nicht vertraut. Die Verbindung wurde abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se confió en el certificado de %@. Se rechazó la conexión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat de %@ n’a pas été approuvé. La connexion a été refusée."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@の証明書は信頼されませんでした。接続を拒否しました。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O certificado de %@ não foi considerado confiável. A conexão foi recusada."
+          }
+        }
+      }
+    },
+    "secure-dcc-handshake-failed" : {
+      "comment" : "Why a secure DCC transfer or chat failed: TLS could not agree with the peer. %1$@ is the peer's nickname and %2$@ the reason the system gave.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An encrypted connection with %1$@ could not be set up: %2$@"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült titkosított kapcsolatot létrehozni vele: %1$@: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine verschlüsselte Verbindung mit %1$@ konnte nicht hergestellt werden: %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo establecer una conexión cifrada con %1$@: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’établir une connexion chiffrée avec %1$@ : %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@との暗号化接続を確立できませんでした: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível estabelecer uma conexão criptografada com %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "secure-dcc-identity-unavailable" : {
+      "comment" : "Why a secure DCC transfer or chat failed before connecting: this user's own certificate for encrypted connections could not be loaded from or created in the keychain. %@ is the peer's nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your certificate for encrypted connections couldn't be loaded, so nothing was sent to %@. Try again."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A titkosított kapcsolatokhoz használt tanúsítványodat nem sikerült betölteni, ezért semmi sem lett elküldve neki: %@. Próbáld újra."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Zertifikat für verschlüsselte Verbindungen konnte nicht geladen werden, daher wurde nichts an %@ gesendet. Versuche es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar tu certificado para conexiones cifradas, así que no se envió nada a %@. Vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger votre certificat pour les connexions chiffrées ; rien n’a été envoyé à %@. Réessayez."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暗号化接続用の証明書を読み込めなかったため、%@には何も送信されませんでした。もう一度お試しください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível carregar seu certificado para conexões criptografadas, então nada foi enviado a %@. Tente novamente."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

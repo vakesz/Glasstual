@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NickServ Identified Tokens</key>
+	<array>
+		<string>now recognized</string>
+		<string>automatically identified</string>
+		<string>already identified</string>
+		<string>successfully identified</string>
+		<string>you are already logged in</string>
+		<string>you are now identified</string>
+		<string>Jelszavad elfogadva - azonosítás sikeres</string>
+		<string>password accepted</string>
+	</array>
+	<key>NickServ Needs Identification Tokens</key>
+	<array>
+		<string>nickname is owned</string>
+		<string>nickname is registered</string>
+		<string>owned by someone else</string>
+		<string>nick belongs to another user</string>
+		<string>if you do not change your nickname</string>
+		<string>authentication required</string>
+		<string>authenticate yourself</string>
+		<string>identify yourself</string>
+		<string>type /msg NickServ IDENTIFY password</string>
+	</array>
+	<key>Forbidden Script Commands</key>
+	<array>
+		<string>connect</string>
+		<string>die</string>
+		<string>error</string>
+		<string>info</string>
+		<string>kill</string>
+		<string>links</string>
+		<string>lusers</string>
+		<string>motd</string>
+		<string>names</string>
+		<string>oper</string>
+		<string>pass</string>
+		<string>ping</string>
+		<string>pong</string>
+		<string>rehash</string>
+		<string>restart</string>
+		<string>server</string>
+		<string>service</string>
+		<string>servlist</string>
+		<string>squery</string>
+		<string>squit</string>
+		<string>stats</string>
+		<string>time</string>
+		<string>trace</string>
+		<string>userhost</string>
+		<string>users</string>
+		<string>version</string>
+		<string>whowas</string>
+	</array>
+	<key>Spelling Ignores</key>
+	<array>
+		<string>deop</string>
+	</array>
+</dict>
+</plist>

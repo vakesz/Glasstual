@@ -1,0 +1,251 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+@testable import Glasstual
+import SwiftUI
+import Testing
+
+/// What the transcript shows and hands back, as opposed to how it stores it:
+/// the topic bar, the unread boundary, the highlight count and what a copy
+/// puts on the pasteboard.
+@MainActor
+@Suite("Transcript view topic bar")
+struct TranscriptViewTopicTests {
+	@Test("Topic expansion grows only the topic row and collapses when the topic changes")
+	func expandingTopicPreservesTranscriptLayout() {
+		let transcript = makeTranscriptView()
+		let topic = transcript.topicBar
+		transcript.setTopic(String(repeating: "Read the channel rules before posting. ", count: 40))
+		transcript.layoutSubtreeIfNeeded()
+		transcript.layoutSubtreeIfNeeded()
+		let width = transcript.frame.width
+		let collapsedHeight = topic.frame.height
+		#expect(topic.disclosure.isHidden == false)
+		#expect(collapsedHeight > 0)
+		/* The text runs beneath the bar; the top inset keeps its first line
+		 below it. */
+		#expect(transcript.scrollView.frame.height == transcript.bounds.height)
+		#expect(transcript.scrollView.contentInsets.top == collapsedHeight)
+
+		topic.disclosure.rootView.action()
+		transcript.layoutSubtreeIfNeeded()
+		transcript.layoutSubtreeIfNeeded()
+		#expect(topic.frame.height > collapsedHeight)
+		#expect(transcript.scrollView.contentInsets.top == topic.frame.height)
+		#expect(transcript.frame.width == width)
+		#expect(topic.label.bounds.width > 0)
+		#expect(topic.label.preferredMaxLayoutWidth == topic.label.bounds.width)
+		#expect(topic.label.frame.maxX <= topic.disclosure.frame.minX)
+		#expect(transcript.scrollView.frame.height > 0)
+		#expect(transcript.hasAmbiguousLayout == false)
+		#expect(topic.hasAmbiguousLayout == false)
+
+		transcript.setTopic("Short topic")
+		transcript.layoutSubtreeIfNeeded()
+		transcript.layoutSubtreeIfNeeded()
+		#expect(topic.label.maximumNumberOfLines == 1)
+		#expect(topic.disclosure.isHidden)
+		#expect(abs(topic.frame.height - collapsedHeight) < 1)
+	}
+
+	/** The topic arrives in the same wire form a message does. It used to be
+	 drawn as it arrived, so a coloured topic put its control codes in the bar,
+	 in the tooltip and on the pasteboard. */
+	@Test("The topic bar draws IRC formatting rather than the codes that carry it")
+	func topicBarRendersIRCFormatting() throws {
+		let transcriptView = makeTranscriptView()
+		transcriptView.setTopic("\u{02}bold\u{02} and \u{03}04red\u{03} plain")
+
+		let topic = transcriptView.topicBar.label.attributedStringValue
+		#expect(visibleTranscriptText(topic) == "bold and red plain")
+		#expect(transcriptView.topicBar.label.toolTip == "bold and red plain")
+
+		let boldRange = (topic.string as NSString).range(of: "bold")
+		let boldFont = try #require(topic.attribute(.font, at: boldRange.location, effectiveRange: nil) as? NSFont)
+		#expect(NSFontManager.shared.traits(of: boldFont).contains(.boldFontMask))
+	}
+
+	/// A link in a topic is located in the text as drawn; a scan of the wire
+	/// form counts the control codes too, and lands the range on the wrong
+	/// characters.
+	@Test("A link in a formatted topic is attached to the words that spell it")
+	func topicLinkRangeFollowsTheRenderedText() throws {
+		let transcriptView = makeTranscriptView()
+		transcriptView.setTopic("\u{02}rules\u{02} at https://example.com/rules")
+
+		let topic = transcriptView.topicBar.label.attributedStringValue
+		let visibleURL = (topic.string as NSString).range(of: "https://example.com/rules")
+		try #require(visibleURL.location != NSNotFound)
+		var linkRange = NSRange(location: NSNotFound, length: 0)
+		let url = topic.attribute(.link, at: visibleURL.location, effectiveRange: &linkRange) as? URL
+		#expect(url?.absoluteString == "https://example.com/rules")
+		#expect((topic.string as NSString).substring(with: linkRange) == "https://example.com/rules")
+		#expect(topic.attribute(.link, at: topic.length - 1, effectiveRange: nil) == nil)
+	}
+
+	/** The boundary is a claim about where the reader stopped reading, and the
+	 buffer only ever trims its oldest lines: a marked line it no longer holds
+	 is older than everything on screen, so the boundary belongs above all of
+	 it rather than nowhere. */
+	@Test("An unread boundary lands on its line, or above the whole buffer when that line is gone")
+	func unreadMarkerFallsBackToTheOldestLine() {
+		let transcriptView = makeTranscriptView()
+		transcriptView.replaceLines([line("one"), line("two")])
+
+		transcriptView.setUnreadMarker(.line("two"))
+		#expect(transcriptView.displayedLines.last?.markers.contains(where: \.isUnread) == true)
+
+		transcriptView.setUnreadMarker(.line("trimmed-away"))
+		#expect(transcriptView.displayedLines.first?.markers.contains(where: \.isUnread) == true)
+		#expect(transcriptView.displayedLines.last?.markers.contains(where: \.isUnread) == false)
+	}
+
+	/// The menu asks on every validation pass, so the transcript counts as it
+	/// is edited instead of walking the whole scrollback for an answer.
+	@Test("The highlight count follows what the document holds")
+	func highlightCountFollowsTheDocument() {
+		let transcriptView = makeTranscriptView(bufferLimit: 2)
+		#expect(transcriptView.hasHighlightedLines == false)
+
+		transcriptView.appendLines([line("plain"), line("shouted", isHighlight: true)])
+		#expect(transcriptView.hasHighlightedLines)
+
+		// The highlight is the older of the two once the buffer trims.
+		transcriptView.appendLines([line("after"), line("later")])
+		#expect(transcriptView.hasHighlightedLines == false)
+
+		transcriptView.clearLines()
+		#expect(transcriptView.hasHighlightedLines == false)
+	}
+
+	/// A restored row answers to the history row it came back from as well as
+	/// to the line number it was printed with, so a message the reader has
+	/// already seen is not drawn again beside its restored self.
+	@Test("A restored row is found under both identifiers it answers to")
+	func restoredRowsAnswerToBothIdentifiers() {
+		let transcriptView = makeTranscriptView()
+		var restored = line("row-uri")
+		restored.historyCursor = ScrollbackRowCursor(
+			timestamp: 0,
+			insertionIdentifier: 1,
+			lineIdentifier: "printed-line",
+			rowURI: "row-uri"
+		)
+		transcriptView.replaceLines([restored])
+
+		#expect(transcriptView.containsLine(identifier: "row-uri"))
+		#expect(transcriptView.containsLine(identifier: "printed-line"))
+		#expect(transcriptView.containsLine(identifier: "something-else") == false)
+
+		transcriptView.clearLines()
+		#expect(transcriptView.containsLine(identifier: "printed-line") == false)
+	}
+
+	/** The window subtitle no longer carries the channel's modes, so the topic
+	 bar does. It is a caption rather than part of the topic: nobody set it, so
+	 neither the tooltip nor Copy Topic answers with it. */
+	@Test("The topic bar captions the topic with the channel's modes, and copies only the topic")
+	func topicBarCaptionsChannelModes() throws {
+		let session = ServerSession(config: ServerConfig())
+		session.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+		/* Built here rather than asked of the session: `findConversationOrCreate` goes
+		 through the chat session, which a session made for one test does not have. */
+		let channel = Conversation(config: ConversationConfig(name: "#modes"))
+		channel.associatedSession = session
+		channel.activate()
+		_ = try #require(channel.modeInfo).updateModes("+ntk secret")
+
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		/* The view holds its controller weakly, so the controller has to outlive
+		 the assertions for the bar to have a channel to read modes from. */
+		let controller = TranscriptController(conversation: channel, in: window)
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.setTopic("House rules")
+
+		let drawn = visibleTranscriptText(transcriptView.topicBar.label.attributedStringValue)
+		#expect(drawn.hasPrefix("House rules"))
+		#expect(drawn.hasSuffix("+knt ******"))
+		/* The key never reaches the bar, only the mask. */
+		#expect(drawn.contains("secret") == false)
+		#expect(transcriptView.topicBar.label.toolTip == "House rules")
+		#expect(transcriptView.topicBar.copyableTopic == "House rules")
+	}
+
+	/// A channel whose modes are not known yet draws the topic and nothing else.
+	@Test("A view with no modes captions nothing")
+	func topicBarWithoutModesDrawsTheTopicAlone() {
+		let transcriptView = makeTranscriptView()
+		transcriptView.setTopic("House rules")
+
+		#expect(visibleTranscriptText(transcriptView.topicBar.label.attributedStringValue) == "House rules")
+	}
+
+	/// The label is what VoiceOver says for the transcript, so a rename that
+	/// leaves the old name in it sends the reader to the wrong conversation.
+	@Test("A renamed conversation is spoken under its new name")
+	func accessibilityLabelFollowsARename() {
+		let session = ServerSession(config: ServerConfig())
+		let channel = Conversation(config: ConversationConfig(name: "#before"))
+		channel.associatedSession = session
+		channel.activate()
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = TranscriptController(conversation: channel, in: window)
+		let transcriptView = controller.ensureBackingView()
+		#expect(transcriptView.textView.accessibilityLabel()?.contains("#before") == true)
+
+		channel.applyChannelRename(to: "#after")
+
+		let label = transcriptView.textView.accessibilityLabel()
+		#expect(label?.contains("#after") == true)
+		#expect(label?.contains("#before") == false)
+	}
+
+	private func makeTranscriptView(bufferLimit: Int = 1000) -> TranscriptView {
+		let session = ServerSession(config: ServerConfig())
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = TranscriptController(session: session, in: window)
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		transcriptView.setBufferLimit(bufferLimit)
+		return transcriptView
+	}
+
+	private func line(_ text: String, isHighlight: Bool = false) -> TranscriptRow {
+		TranscriptRow(
+			lineNumber: text,
+			receivedAt: Date(),
+			nickname: "alice",
+			memberType: .normal,
+			lineType: .privateMessage,
+			command: "PRIVMSG",
+			messageIdentifier: "id-\(text)",
+			replyToMessageIdentifier: nil,
+			deliveryState: .none,
+			deliveryFailureReason: nil,
+			reactions: [:],
+			markers: [],
+			body: TranscriptBody(
+				plainText: text,
+				runs: [TranscriptTextRun(text: text)],
+				isHighlight: isHighlight
+			)
+		)
+	}
+}

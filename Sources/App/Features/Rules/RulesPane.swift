@@ -1,0 +1,263 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import SwiftUI
+import UniformTypeIdentifiers
+
+private struct RuleEditorPresentation: Identifiable {
+	let id = UUID()
+	let rule: MessageRule
+	let replacingIdentifier: MessageRule.ID?
+}
+
+/** A rule command that stopped, with the sentence that says what to do next.
+
+ One title per operation: an export that could not be written is not a file
+ that could not be read, and saying so is the difference between a message
+ someone can act on and one they cannot. */
+private struct RuleEditorFailure: Identifiable {
+	enum Operation {
+		case importing
+		case exporting
+		case saving
+
+		var title: LocalizedStringResource {
+			switch self {
+			case .importing: .Rules.importFailedTitle
+			case .exporting: .Rules.exportFailedTitle
+			case .saving: .Rules.saveFailedTitle
+			}
+		}
+
+		var recovery: LocalizedStringResource? {
+			switch self {
+			case .importing: .Rules.importFailedRecovery
+			case .exporting: .Rules.exportFailedRecovery
+			case .saving: nil
+			}
+		}
+	}
+
+	let id = UUID()
+	let operation: Operation
+	let reason: String
+
+	var title: String {
+		String(localized: operation.title)
+	}
+
+	var message: String {
+		guard let recovery = operation.recovery else { return reason }
+		return "\(reason)\n\n\(String(localized: recovery))"
+	}
+}
+
+/// The Rules row of the Settings window: the rule list and the commands that
+/// edit it, as sections of the window's own form.
+struct RulesPane: View {
+	private static let listHeight = 240.0
+
+	@Bindable private var controller = AppServices.messageRules
+
+	@State private var editor: RuleEditorPresentation?
+	@State private var showsDeleteConfirmation = false
+	@State private var showsImporter = false
+	@State private var exportData: Data?
+	@State private var showsExporter = false
+	@State private var failure: RuleEditorFailure?
+	@State private var importURL: URL?
+
+	var body: some View {
+		Section {
+			List(selection: $controller.selection) {
+				ForEach(controller.rules) { rule in
+					Text(rule.description)
+						.tag(rule.id)
+				}
+				.onMove(perform: controller.move)
+			}
+			.contextMenu(forSelectionType: MessageRule.ID.self) { ids in
+				if ids.count == 1 {
+					Button(String(localized: .Rules.editRuleButton)) {
+						controller.selection = ids.first
+						editSelection()
+					}
+					Button(String(localized: .Rules.duplicateRuleButton)) {
+						controller.selection = ids.first
+						duplicateSelection()
+					}
+					Button(String(localized: .Rules.exportRuleButton)) {
+						controller.selection = ids.first
+						exportSelection()
+					}
+					Divider()
+					Button(String(localized: .Rules.deleteRuleButton), role: .destructive) {
+						controller.selection = ids.first
+						showsDeleteConfirmation = true
+					}
+				}
+			} primaryAction: { ids in
+				guard ids.count == 1 else { return }
+				controller.selection = ids.first
+				editSelection()
+			}
+			.frame(minHeight: Self.listHeight)
+			.overlay {
+				if controller.rules.isEmpty {
+					ContentUnavailableView(
+						String(localized: .Rules.noRulesTitle),
+						systemImage: "line.3.horizontal.decrease.circle",
+						description: Text(String(localized: .Rules.noRulesDescription))
+					)
+				}
+			}
+
+			commands
+		}
+		.sheet(item: $editor) { presentation in
+			RuleEditorView(rule: presentation.rule, sessions: MessageRuleSessionOption.current()) { rule in
+				if controller.save(rule, replacing: presentation.replacingIdentifier) == false {
+					failure = RuleEditorFailure(
+						operation: .saving,
+						reason: String(localized: .Rules.editedRuleRemoved)
+					)
+				}
+				editor = nil
+			} onCancel: {
+				editor = nil
+			}
+		}
+		.fileImporter(
+			isPresented: $showsImporter,
+			allowedContentTypes: [.propertyList],
+			allowsMultipleSelection: false,
+			onCompletion: importRule
+		)
+		.task(id: importURL) {
+			guard let importURL else { return }
+			do {
+				var rule = try await MessageRule.read(from: importURL)
+				try Task.checkCancellation()
+				rule.id = UUID().uuidString
+				editor = RuleEditorPresentation(rule: rule, replacingIdentifier: nil)
+			} catch {
+				guard !Task.isCancelled, !(error is CancellationError) else { return }
+				failure = RuleEditorFailure(operation: .importing, reason: error.localizedDescription)
+			}
+			self.importURL = nil
+		}
+		.onDisappear { importURL = nil }
+		.fileExporter(
+			isPresented: $showsExporter,
+			item: exportData.map(PropertyListExport.init(data:)),
+			contentTypes: [.propertyList],
+			defaultFilename: "filter.plist"
+		) { result in
+			if case let .failure(error) = result {
+				failure = RuleEditorFailure(operation: .exporting, reason: error.localizedDescription)
+			}
+			exportData = nil
+		} onCancellation: {
+			exportData = nil
+		}
+		.alert(
+			failure?.title ?? "",
+			isPresented: failureIsPresented,
+			presenting: failure
+		) { _ in
+			Button(String(localized: .Rules.okButton)) {
+				failure = nil
+			}
+		} message: { failure in
+			Text(failure.message)
+		}
+		.alert(
+			String(localized: .Rules.deleteRuleTitle),
+			isPresented: $showsDeleteConfirmation
+		) {
+			Button(String(localized: .Rules.deleteRuleButton), role: .destructive) {
+				controller.removeSelection()
+			}
+			Button(PromptStrings.Action.cancel, role: .cancel) {}
+		} message: {
+			Text(String(localized: .Rules.deleteRuleMessage))
+		}
+	}
+
+	private var failureIsPresented: Binding<Bool> {
+		Binding(
+			get: { failure != nil },
+			set: {
+				if $0 == false {
+					failure = nil
+				}
+			}
+		)
+	}
+
+	/// Add and remove under the list, and the rule's other commands in the
+	/// action menu. A rule is edited by double-clicking it or pressing Return.
+	private var commands: some View {
+		ListEditingControls(
+			addLabel: Text(String(localized: .Rules.addRuleButton)),
+			removeLabel: Text(String(localized: .Rules.deleteRuleButton)),
+			canRemove: controller.selectedRule != nil,
+			add: {
+				editor = RuleEditorPresentation(rule: MessageRule(), replacingIdentifier: nil)
+			},
+			remove: { showsDeleteConfirmation = true },
+			actions: {
+				Button(String(localized: .Rules.editRuleButton)) {
+					editSelection()
+				}
+				.disabled(controller.selectedRule == nil)
+
+				Button(String(localized: .Rules.duplicateRuleButton)) {
+					duplicateSelection()
+				}
+				.disabled(controller.selectedRule == nil)
+
+				Divider()
+
+				Button(String(localized: .Rules.importRuleButton)) {
+					showsImporter = true
+				}
+				Button(String(localized: .Rules.exportRuleButton)) {
+					exportSelection()
+				}
+				.disabled(controller.selectedRule == nil)
+			}
+		)
+	}
+
+	private func editSelection() {
+		guard let rule = controller.selectedRule else { return }
+		editor = RuleEditorPresentation(rule: rule, replacingIdentifier: rule.id)
+	}
+
+	private func duplicateSelection() {
+		guard var rule = controller.selectedRule else { return }
+		rule.id = UUID().uuidString
+		rule.title = String(localized: .Rules.duplicateFilterTitle(rule.title))
+		editor = RuleEditorPresentation(rule: rule, replacingIdentifier: nil)
+	}
+
+	private func exportSelection() {
+		guard let rule = controller.selectedRule else { return }
+		do {
+			exportData = try rule.propertyListData()
+			showsExporter = true
+		} catch {
+			failure = RuleEditorFailure(operation: .exporting, reason: error.localizedDescription)
+		}
+	}
+
+	private func importRule(_ result: Result<[URL], any Error>) {
+		do {
+			importURL = try result.get().first
+		} catch {
+			guard (error as? CocoaError)?.code != .userCancelled else { return }
+			failure = RuleEditorFailure(operation: .importing, reason: error.localizedDescription)
+		}
+	}
+}

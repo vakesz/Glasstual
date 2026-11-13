@@ -1,0 +1,390 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "internet-port-invalid" : {
+      "comment" : "Validation error for an invalid internet port. Migrated from legacy key l0c-nb.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a whole number between 1 and 65,535."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy 1 és 65 535 közötti egész számot."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib eine ganze Zahl zwischen 1 und 65.535 ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce un número entero entre 1 y 65 535."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez un nombre entier compris entre 1 et 65 535."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1〜65,535の整数を入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite um número inteiro entre 1 e 65.535."
+          }
+        }
+      }
+    },
+    "maximum-length" : {
+      "comment" : "Validation error for text too long to send over IRC, such as a disconnect message in the server properties Messages pane. The argument is the maximum length in bytes of UTF-8, which is what the IRC protocol limits. Migrated from legacy key 2cb-af.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Maximum length is %ld byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Maximum length is %ld bytes."
+                }
+              }
+            }
+          }
+        },
+        "hu" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "A maximális hossz %ld bájt."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "A maximális hossz %ld bájt."
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die maximale Länge beträgt %ld Byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die maximale Länge beträgt %ld Byte."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "La longitud máxima es de %ld bytes."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "La longitud máxima es de %ld byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "La longitud máxima es de %ld bytes."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "La longueur maximale est de %ld octets."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "La longueur maximale est de %ld octet."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "La longueur maximale est de %ld octets."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "最大の長さは%ldバイトです。"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "O comprimento máximo é de %ld bytes."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "O comprimento máximo é de %ld byte."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "O comprimento máximo é de %ld bytes."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "nickname-invalid" : {
+      "comment" : "Validation error for an invalid IRC nickname. Migrated from legacy key och-j5.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A nickname can contain letters, digits and - [ ] \\ ` _ ^ { | } and cannot start with a digit."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A becenév betűket, számjegyeket és a - [ ] \\ ` _ ^ { | } karaktereket tartalmazhatja, és nem kezdődhet számjeggyel."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Nickname darf Buchstaben, Ziffern und - [ ] \\ ` _ ^ { | } enthalten und nicht mit einer Ziffer beginnen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un apodo puede contener letras, dígitos y - [ ] \\ ` _ ^ { | } y no puede empezar por un dígito."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pseudo peut contenir des lettres, des chiffres et - [ ] \\ ` _ ^ { | } et ne peut pas commencer par un chiffre."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ニックネームには、文字、数字、- [ ] \\ ` _ ^ { | } を使用でき、数字で始めることはできません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um apelido pode conter letras, números e - [ ] \\ ` _ ^ { | } e não pode começar com um número."
+          }
+        }
+      }
+    },
+    "real-name-invalid" : {
+      "comment" : "Validation error shown beside the real name field, in the server properties Identity pane and on the onboarding identity step, when the name is empty or spans more than one line. Legacy key: agy-bp.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a real name on one line."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add meg a valódi nevedet egy sorban."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib deinen echten Namen in einer Zeile ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce un nombre real en una sola línea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez un nom réel sur une seule ligne."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本名は1行で入力してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite um nome real em uma linha."
+          }
+        }
+      }
+    },
+    "server-address-invalid" : {
+      "comment" : "Validation error for an invalid IRC server address. Migrated from legacy key yyx-l3.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a host name such as irc.libera.chat, or pick a network from the list."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adj meg egy gépnevet, például irc.libera.chat, vagy válassz hálózatot a listából."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib einen Hostnamen wie irc.libera.chat ein oder wähle ein Netzwerk aus der Liste."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce un nombre de host como irc.libera.chat o elige una red de la lista."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez un nom d’hôte tel que irc.libera.chat, ou choisissez un réseau dans la liste."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "irc.libera.chatなどのホスト名を入力するか、リストからネットワークを選択してください。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite um nome de host, como irc.libera.chat, ou escolha uma rede na lista."
+          }
+        }
+      }
+    },
+    "single-line-required" : {
+      "comment" : "Validation error for text containing more than one line. Migrated from legacy key gas-v8.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot contain more than one line."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem tartalmazhat egynél több sort."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darf nicht mehr als eine Zeile enthalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puede contener más de una línea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne peut pas contenir plus d’une ligne."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複数行にすることはできません。"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não pode ter mais de uma linha."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

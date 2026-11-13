@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Slash commands in Glasstual</title>
+	<meta name="description" content="Every slash command Glasstual understands, grouped by purpose, with its syntax.">
+	<meta name="keywords" content="commands, slash commands, /join, /msg, /me, syntax, reference">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="commands"></a>
+<h1>Slash commands in Glasstual</h1>
+<p>Type a command in the message field, starting with a slash. As you type, Glasstual suggests matching commands with their syntax. Words in angle brackets are required; words in square brackets are optional.</p>
+<p>To send a line that starts with a slash as an ordinary message, start it with two slashes.</p>
+
+<h2>Conversations</h2>
+<p>Join, leave and move between channels and private conversations.</p>
+<table>
+	<tr id="command-join"><th scope="row"><code>/join [channel[,channel]] [key[,key]]</code><span class="aliases">Also: /j</span></th><td>Join one or more channels<span class="hint">Separate channels and their keys with commas. With no channel, rejoins the selected channel.</span></td></tr>
+	<tr id="command-leave"><th scope="row"><code>/leave [channel] [reason]</code><span class="aliases">Also: /part</span></th><td>Leave a channel or close a private conversation<span class="hint">Omit the channel to use the selected channel.</span></td></tr>
+	<tr id="command-cycle"><th scope="row"><code>/cycle</code><span class="aliases">Also: /hop, /rejoin</span></th><td>Leave and rejoin the selected channel</td></tr>
+	<tr id="command-query"><th scope="row"><code>/query &lt;nickname&gt; [message]</code></th><td>Open a private conversation<span class="hint">Enter a nickname and optionally a first message.</span></td></tr>
+	<tr id="command-close"><th scope="row"><code>/close [target]</code><span class="aliases">Also: /remove</span></th><td>Close a conversation<span class="hint">Omit the target to close the selected conversation.</span></td></tr>
+	<tr id="command-goto"><th scope="row"><code>/goto &lt;name fragment&gt;</code></th><td>Switch to a matching conversation<span class="hint">Type part of a channel or conversation name. Searches across all networks.</span></td></tr>
+	<tr id="command-list"><th scope="row"><code>/list</code></th><td>Browse the network’s channels</td></tr>
+	<tr id="command-names"><th scope="row"><code>/names &lt;channel&gt; [more channels]</code></th><td>Request channel member names<span class="hint">Separate multiple channel names with spaces.</span></td></tr>
+	<tr id="command-invite"><th scope="row"><code>/invite &lt;nickname&gt; [more nicknames] [channel]</code></th><td>Invite people to a channel<span class="hint">Separate nicknames with spaces. The optional channel comes last.</span></td></tr>
+	<tr id="command-topic"><th scope="row"><code>/topic [channel] [topic]</code><span class="aliases">Also: /t</span></th><td>Read or change the channel topic<span class="hint">Omit the channel to use the selected channel. Omit the topic to read it.</span></td></tr>
+	<tr id="command-autojoin"><th scope="row"><code>/autojoin</code></th><td>Join the configured automatic channels</td></tr>
+	<tr id="command-setqueryname"><th scope="row"><code>/setqueryname &lt;nickname&gt;</code></th><td>Retitle the selected private conversation<span class="hint">Enter the user’s nickname on this network.</span></td></tr>
+</table>
+
+<h2>Messages</h2>
+<p>Send messages, actions and notices.</p>
+<table>
+	<tr id="command-msg"><th scope="row"><code>/msg &lt;target[,target]&gt; &lt;message&gt;</code><span class="aliases">Also: /umsg</span></th><td>Send a message to a person or channel<span class="hint">Use a nickname or channel as the target. Separate multiple targets with commas.</span></td></tr>
+	<tr id="command-me"><th scope="row"><code>/me &lt;message&gt;</code><span class="aliases">Also: /ume</span></th><td>Send an action in the selected conversation<span class="hint">Type the message after the command. Spaces are part of the message.</span></td></tr>
+	<tr id="command-notice"><th scope="row"><code>/notice &lt;target[,target]&gt; &lt;message&gt;</code><span class="aliases">Also: /unotice</span></th><td>Send an IRC notice<span class="hint">Use a nickname or channel as the target. Separate multiple targets with commas.</span></td></tr>
+	<tr id="command-whisper"><th scope="row"><code>/whisper &lt;nickname&gt; &lt;message&gt;</code></th><td>Whisper privately to a member from this channel<span class="hint">Use in a channel. The message is private and marked as belonging to the channel.</span></td></tr>
+	<tr id="command-smsg"><th scope="row"><code>/smsg &lt;target[,target]&gt; &lt;message&gt;</code></th><td>Send a message without echoing it locally<span class="hint">Use a nickname or channel as the target. Separate multiple targets with commas.</span></td></tr>
+	<tr id="command-sme"><th scope="row"><code>/sme &lt;target[,target]&gt; &lt;message&gt;</code></th><td>Send an action without echoing it locally<span class="hint">Use a nickname or channel as the target. Separate multiple targets with commas.</span></td></tr>
+	<tr id="command-omsg"><th scope="row"><code>/omsg [channel] &lt;message&gt;</code></th><td>Send a message to channel operators<span class="hint">Omit the channel to use the selected channel.</span></td></tr>
+	<tr id="command-onotice"><th scope="row"><code>/onotice [channel] &lt;message&gt;</code></th><td>Send a notice to channel operators<span class="hint">Omit the channel to use the selected channel.</span></td></tr>
+	<tr id="command-amsg"><th scope="row"><code>/amsg &lt;message&gt;</code></th><td>Send a message to all joined channels<span class="hint">Sends to every joined channel. Settings determine whether other connections are included.</span></td></tr>
+	<tr id="command-ame"><th scope="row"><code>/ame &lt;message&gt;</code></th><td>Send an action to all joined channels<span class="hint">Sends to every joined channel. Settings determine whether other connections are included.</span></td></tr>
+	<tr id="command-redact"><th scope="row"><code>/redact [message id [reason]]</code></th><td>Delete a message in the selected conversation<span class="hint">The message id is the message's msgid tag. Without a message id, your most recent message in the conversation is deleted. Requires server support for message redaction.</span></td></tr>
+	<tr id="command-ctcp"><th scope="row"><code>/ctcp &lt;nickname&gt; &lt;command&gt; [arguments]</code></th><td>Send a CTCP request<span class="hint">Enter a nickname and a CTCP command such as VERSION or PING.</span></td></tr>
+	<tr id="command-ctcpreply"><th scope="row"><code>/ctcpreply &lt;nickname&gt; &lt;command&gt; [arguments]</code></th><td>Send a CTCP reply<span class="hint">Enter a nickname and a CTCP command such as VERSION or PING.</span></td></tr>
+</table>
+
+<h2>Channel moderation</h2>
+<p>Change ranks and modes, and ban, quiet or remove people.</p>
+<table>
+	<tr id="command-mode"><th scope="row"><code>/mode [target] [flags] [arguments]</code><span class="aliases">Also: /m</span></th><td>View or change IRC modes<span class="hint">Start with + or - to change modes on the selected channel, or enter a target first.</span></td></tr>
+	<tr id="command-op"><th scope="row"><code>/op [channel] &lt;nickname&gt;</code></th><td>Grant channel operator status<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-deop"><th scope="row"><code>/deop [channel] &lt;nickname&gt;</code></th><td>Remove channel operator status<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-halfop"><th scope="row"><code>/halfop [channel] &lt;nickname&gt;</code></th><td>Grant half-operator status<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-dehalfop"><th scope="row"><code>/dehalfop [channel] &lt;nickname&gt;</code></th><td>Remove half-operator status<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-voice"><th scope="row"><code>/voice [channel] &lt;nickname&gt;</code></th><td>Grant voice status<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-devoice"><th scope="row"><code>/devoice [channel] &lt;nickname&gt;</code></th><td>Remove voice status<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-kick"><th scope="row"><code>/kick [channel] &lt;nickname&gt; [reason]</code></th><td>Remove a user from a channel<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-kickban"><th scope="row"><code>/kickban [channel] &lt;nickname&gt; [reason]</code><span class="aliases">Also: /kb</span></th><td>Ban and remove a user from a channel<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-ban"><th scope="row"><code>/ban [channel] &lt;nickname&gt;</code></th><td>Ban a user from a channel<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-banaccount"><th scope="row"><code>/banaccount [channel] &lt;nickname&gt;</code></th><td>Ban a user's account from a channel<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-unban"><th scope="row"><code>/unban [channel] &lt;nickname&gt;</code></th><td>Remove a channel ban<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-quiet"><th scope="row"><code>/quiet [channel] &lt;nickname&gt;</code></th><td>Prevent a user from speaking in a channel<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+	<tr id="command-unquiet"><th scope="row"><code>/unquiet [channel] &lt;nickname&gt;</code></th><td>Restore a user’s ability to speak<span class="hint">Omit the channel to use the selected channel. Requires the appropriate channel privileges.</span></td></tr>
+</table>
+
+<h2>People</h2>
+<p>Find out about people and control what you see from them.</p>
+<table>
+	<tr id="command-whois"><th scope="row"><code>/whois [nickname]</code></th><td>Look up a user’s information<span class="hint">Omit the nickname in a private conversation to look up that person.</span></td></tr>
+	<tr id="command-whowas"><th scope="row"><code>/whowas &lt;nickname&gt;</code></th><td>Look up a previously used nickname<span class="hint">Enter the user’s nickname on this network.</span></td></tr>
+	<tr id="command-who"><th scope="row"><code>/who &lt;channel|mask&gt; [flags]</code></th><td>Request information about matching users<span class="hint">Replace &lt;placeholders&gt; with values. Items in [brackets] are optional.</span></td></tr>
+	<tr id="command-ison"><th scope="row"><code>/ison &lt;nickname&gt; [more nicknames]</code></th><td>Check which nicknames are online<span class="hint">Separate multiple nicknames with spaces.</span></td></tr>
+	<tr id="command-monitor"><th scope="row"><code>/monitor L | S | C</code><span class="aliases">Also: /watch</span></th><td>Inspect the server’s online-status list<span class="hint">L lists entries, S requests status, C clears the list. Add or remove people in the People window.</span></td></tr>
+	<tr id="command-silence"><th scope="row"><code>/silence [&lt;+|-&gt;&lt;mask|nickname&gt;]</code></th><td>Manage the server-side silence list<span class="hint">Use + to add a mask or - to remove one. With no arguments, requests the list. Requires server support.</span></td></tr>
+	<tr id="command-ignore"><th scope="row"><code>/ignore [nickname]</code></th><td>Add an ignore rule for a user<span class="hint">Enter a nickname. If no matching user is available, the People window opens for editing.</span></td></tr>
+	<tr id="command-unignore"><th scope="row"><code>/unignore [nickname]</code></th><td>Remove an ignore rule for a user<span class="hint">Enter a nickname. If no matching user is available, the People window opens for editing.</span></td></tr>
+	<tr id="command-mute"><th scope="row"><code>/mute</code></th><td>Mute notification sounds</td></tr>
+	<tr id="command-unmute"><th scope="row"><code>/unmute</code></th><td>Restore notification sounds</td></tr>
+	<tr id="command-setcolor"><th scope="row"><code>/setcolor &lt;nickname&gt;</code></th><td>Choose a nickname’s display color<span class="hint">Enter the user’s nickname on this network.</span></td></tr>
+</table>
+
+<h2>Connection and account</h2>
+<p>Connect, change your nickname and status, and sign in.</p>
+<table>
+	<tr id="command-server"><th scope="row"><code>/server &lt;address&gt; [[+]port] [password]</code></th><td>Connect to another IRC server<span class="hint">Prefix the port with + to use TLS, for example +6697.</span></td></tr>
+	<tr id="command-conn"><th scope="row"><code>/conn [server]</code></th><td>Connect or reconnect to this network<span class="hint">Omit the server to reconnect to the current endpoint.</span></td></tr>
+	<tr id="command-quit"><th scope="row"><code>/quit [reason]</code></th><td>Disconnect from this network<span class="hint">The reason is optional and can contain spaces.</span></td></tr>
+	<tr id="command-nick"><th scope="row"><code>/nick &lt;nickname&gt;</code></th><td>Change your nickname<span class="hint">Enter the user’s nickname on this network.</span></td></tr>
+	<tr id="command-away"><th scope="row"><code>/away [reason]</code></th><td>Mark yourself as away<span class="hint">The reason is optional and can contain spaces.</span></td></tr>
+	<tr id="command-back"><th scope="row"><code>/back</code></th><td>Clear your away status</td></tr>
+	<tr id="command-setname"><th scope="row"><code>/setname &lt;real name&gt;</code></th><td>Change your real name<span class="hint">The real name may contain spaces. Requires server support for SETNAME.</span></td></tr>
+	<tr id="command-umode"><th scope="row"><code>/umode [flags] [arguments]</code></th><td>View or change your user modes<span class="hint">Replace &lt;placeholders&gt; with values. Items in [brackets] are optional.</span></td></tr>
+	<tr id="command-pass"><th scope="row"><code>/pass &lt;password&gt;</code></th><td>Send a server connection password<span class="hint">Replace &lt;placeholders&gt; with values. Items in [brackets] are optional.</span></td></tr>
+	<tr id="command-sasl"><th scope="row"><code>/sasl [status | auth [mechanism] | mechanism &lt;name | automatic&gt; [only] | token &lt;token | clear&gt;]</code></th><td>Show or change how SASL signs in<span class="hint">status lists the account and each mechanism. auth signs in again now. mechanism sets which one signs in first; only stops fallback. token stores an OAuth token in the keychain.</span></td></tr>
+	<tr id="command-register"><th scope="row"><code>/register [&lt;account|*&gt; &lt;email|*&gt; &lt;password&gt; | cancel]</code></th><td>Register an account on the server<span class="hint">* names the account after your nickname or leaves out the email. Without arguments, shows what the server accepts. The command is never kept in input history.</span></td></tr>
+	<tr id="command-verify"><th scope="row"><code>/verify [account|*] &lt;code&gt;</code></th><td>Verify a newly registered account with its code<span class="hint">Without an account, the code completes the registration in progress. The command is never kept in input history.</span></td></tr>
+	<tr id="command-metadata"><th scope="row"><code>/metadata [target] &lt;get|list|set|clear|sub|unsub|subs|sync&gt; [arguments]</code></th><td>Show or change the profile data people and channels set on the server<span class="hint">Without a target the command is about you. set &lt;key&gt; &lt;value&gt; stores a value, set &lt;key&gt; &quot;&quot; an empty one, and set &lt;key&gt; alone removes it.</span></td></tr>
+	<tr id="command-transport"><th scope="row"><code>/transport [irc | websocket [path]]</code></th><td>Show or change how the first server is reached<span class="hint">Without arguments, shows the current transport. Changes apply on the next connect.</span></td></tr>
+	<tr id="command-sslcontext"><th scope="row"><code>/sslcontext</code></th><td>Inspect this connection’s TLS certificate</td></tr>
+	<tr id="command-serverconfig"><th scope="row"><code>/serverconfig [list | &lt;setting&gt; [value] | reset &lt;setting&gt;]</code></th><td>Show or change this server’s settings<span class="hint">The same settings as Server Properties, checked the same way. Passwords and tokens are asked for in a secure field: type the setting alone.</span></td></tr>
+	<tr id="command-channelconfig"><th scope="row"><code>/channelconfig [channel] [list | &lt;setting&gt; [value] | reset &lt;setting&gt;]</code></th><td>Show or change a saved channel’s settings<span class="hint">The same settings as Channel Properties. Without a channel, the one you are in. The key is asked for in a secure field.</span></td></tr>
+</table>
+
+<h2>History and display</h2>
+<p>Load history and manage the transcript.</p>
+<table>
+	<tr id="command-chathistory"><th scope="row"><code>/chathistory &lt;latest | before | after | around | between | targets | fill&gt; [target] [arguments]</code></th><td>Request history from the server<span class="hint">Server support is required. latest, before, after, around and between fetch messages; targets finds conversations you missed; fill loads missing messages.</span></td></tr>
+	<tr id="command-clear"><th scope="row"><code>/clear</code></th><td>Clear the selected transcript</td></tr>
+	<tr id="command-clearall"><th scope="row"><code>/clearall</code></th><td>Clear transcripts on configured connections</td></tr>
+	<tr id="command-notifybubble"><th scope="row"><code>/notifybubble [channel] &lt;message&gt;</code></th><td>Show a local notification<span class="hint">An optional channel links the notification to that conversation.</span></td></tr>
+	<tr id="command-notifysound"><th scope="row"><code>/notifysound &lt;sound name&gt;</code></th><td>Play a notification sound<span class="hint">Enter the name of a system notification sound, such as Glass.</span></td></tr>
+</table>
+
+<h2>Files and direct chats</h2>
+<p>Send files, start direct chats and request packs.</p>
+<table>
+	<tr id="command-dcc"><th scope="row"><code>/dcc chat|schat [nickname] | send|ssend &lt;nickname&gt; &lt;path&gt; | accept|decline &lt;id&gt; | trust &lt;id&gt; &lt;answer&gt; | fingerprint | certificates [nickname] | forget &lt;nickname&gt;</code></th><td>Start a direct chat or send a file<span class="hint">Use chat for a direct conversation or send with a file path for a file transfer.</span></td></tr>
+	<tr id="command-xdcc"><th scope="row"><code>/xdcc send|get &lt;bot&gt; &lt;#pack&gt; | batch &lt;bot&gt; &lt;packs&gt; | list &lt;bot&gt; | info &lt;bot&gt; &lt;#pack&gt; | cancel [bot] | remove &lt;bot&gt; [#pack] | requests</code></th><td>Request packs from XDCC bots and manage the requests<span class="hint">Packs are numbers such as #5; batch takes a list such as 1-5,7, at most 20 packs.</span></td></tr>
+</table>
+
+<h2>Bouncers</h2>
+<p>Commands for ZNC bouncers.</p>
+<table>
+	<tr id="command-attach"><th scope="row"><code>/attach [channel]</code></th><td>Attach a ZNC channel<span class="hint">Requires a ZNC connection. Omit the channel to use the selected channel.</span></td></tr>
+	<tr id="command-detach"><th scope="row"><code>/detach [channel]</code></th><td>Detach a ZNC channel<span class="hint">Requires a ZNC connection. Omit the channel to use the selected channel.</span></td></tr>
+	<tr id="command-znccert"><th scope="row"><code>/znccert</code></th><td>Inspect the certificate reported by ZNC</td></tr>
+</table>
+
+<h2>Questions</h2>
+<p>Answer the questions Glasstual asks in the conversation. See <a href="interaction-style.html">Choose how Glasstual asks you questions</a>.</p>
+<table>
+	<tr id="command-answer"><th scope="row"><code>/answer &lt;number&gt; [answer] [--remember]</code></th><td>Answer a question by its number<span class="hint">Name the answer by its word or button title. Questions about passwords, certificates and links need it spelled out. --remember stops asking where the question offers it.</span></td></tr>
+	<tr id="command-yes"><th scope="row"><code>/yes [number] [--remember]</code></th><td>Answer yes to the question waiting here<span class="hint">Chooses the one way forward. Questions about passwords, certificates and links need /answer with the answer spelled out.</span></td></tr>
+	<tr id="command-no"><th scope="row"><code>/no [number]</code></th><td>Decline the question waiting here<span class="hint">Chooses the way out, which never sends, opens or deletes anything.</span></td></tr>
+	<tr id="command-prompts"><th scope="row"><code>/prompts</code></th><td>List the questions waiting for an answer</td></tr>
+</table>
+
+<h2>Diagnostics and automation</h2>
+<p>Check the connection, send raw lines and run commands later.</p>
+<table>
+	<tr id="command-lagcheck"><th scope="row"><code>/lagcheck</code></th><td>Measure the connection round-trip time</td></tr>
+	<tr id="command-mylag"><th scope="row"><code>/mylag</code></th><td>Report connection latency to this conversation</td></tr>
+	<tr id="command-myversion"><th scope="row"><code>/myversion</code></th><td>Report your Glasstual version</td></tr>
+	<tr id="command-weights"><th scope="row"><code>/weights</code></th><td>Show nickname-completion priorities</td></tr>
+	<tr id="command-cap"><th scope="row"><code>/cap</code><span class="aliases">Also: /caps</span></th><td>Show enabled IRC capabilities</td></tr>
+	<tr id="command-defaults"><th scope="row"><code>/defaults help | enable|disable [-a] &quot;feature&quot;</code></th><td>Change an advanced connection setting<span class="hint">Use help to list supported features. The -a flag applies a change to all connections.</span></td></tr>
+	<tr id="command-timer"><th scope="row"><code>/timer &lt;seconds&gt; [repeat] &lt;command&gt; | help | list | stop|restart|remove &lt;ID&gt;</code></th><td>Schedule commands or manage timers<span class="hint">Seconds must be positive. Repeat 0 runs indefinitely. Use help for management commands.</span></td></tr>
+	<tr id="command-debug"><th scope="row"><code>/debug &lt;message&gt;</code><span class="aliases">Also: /echo</span></th><td>Print text or toggle the raw protocol log<span class="hint">Enter text to display locally, or raw on / raw off to toggle the protocol log.</span></td></tr>
+	<tr id="command-quote"><th scope="row"><code>/quote &lt;IRC line&gt;</code><span class="aliases">Also: /raw</span></th><td>Send a raw IRC protocol line<span class="hint">Enter a complete IRC protocol line. Include a colon before a trailing parameter containing spaces.</span></td></tr>
+	<tr id="command-aquote"><th scope="row"><code>/aquote &lt;IRC line&gt;</code><span class="aliases">Also: /araw</span></th><td>Send a raw IRC line on every connection<span class="hint">Enter a complete IRC protocol line. Include a colon before a trailing parameter containing spaces.</span></td></tr>
+</table>
+
+<h2>Server operators</h2>
+<p>Commands that need server operator privileges.</p>
+<table>
+	<tr id="command-adchat"><th scope="row"><code>/adchat &lt;message&gt;</code><span class="aliases">Also: /chatops, /globops, /locops, /nachat, /wallops</span></th><td>Send a server operator message<span class="hint">Requires server operator privileges. Supported masks, durations and options depend on the server.</span></td></tr>
+	<tr id="command-kill"><th scope="row"><code>/kill &lt;nickname&gt; [reason]</code></th><td>Disconnect a user from the server<span class="hint">Requires server operator privileges. Supported masks, durations and options depend on the server.</span></td></tr>
+	<tr id="command-gline"><th scope="row"><code>/gline &lt;+|-&gt;&lt;mask|nickname&gt; [duration] [reason]</code></th><td>Manage a network-wide ban<span class="hint">Requires server operator privileges. Supported masks, durations and options depend on the server.</span></td></tr>
+	<tr id="command-gzline"><th scope="row"><code>/gzline &lt;+|-&gt;&lt;mask|nickname&gt; [duration] [reason]</code><span class="aliases">Also: /zline</span></th><td>Manage an IP-address ban<span class="hint">Requires server operator privileges. Supported masks, durations and options depend on the server.</span></td></tr>
+	<tr id="command-shun"><th scope="row"><code>/shun &lt;+|-&gt;&lt;mask|nickname&gt; [duration] [reason]</code></th><td>Manage a server-side user restriction<span class="hint">Requires server operator privileges. Supported masks, durations and options depend on the server.</span></td></tr>
+	<tr id="command-tempshun"><th scope="row"><code>/tempshun &lt;+|-&gt;&lt;mask|nickname&gt; [reason]</code></th><td>Temporarily restrict a user on the server<span class="hint">Requires server operator privileges. Supported masks, durations and options depend on the server.</span></td></tr>
+</table>
+
+<p>Scripts you install add their own commands, which the suggestions list as scripts.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="conversations.html">Channels and conversations</a> · <a href="main-window.html">The main window</a></p>
+</nav>
+</body>
+</html>

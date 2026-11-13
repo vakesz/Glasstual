@@ -1,0 +1,295 @@
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import CocoaExtensions
+import Foundation
+import os
+
+/*  How the two ends of one transfer reach each other, and what happens once
+ they have.
+
+ A transfer that listens has to find a port, ask the router to forward it and
+ work out which address to announce before it can be offered at all; one that
+ dials has none of that to do. Either way the bytes themselves belong to a
+ ``DCCTransfer`` actor, and what it reports is turned back here, on the main
+ actor, into the status the row reads — so nothing it says crosses isolation
+ twice. */
+
+// MARK: - Listening, port mapping and this Mac's address
+
+extension FileTransfer {
+	func listeningServerDidStart(on port: UInt16) {
+		guard transferStatus == .initializing else {
+			assertionFailure("Listener started in an invalid transfer state")
+			return
+		}
+
+		hostPort = port
+		let mapper = PortMapper(port: port)
+		mapper.mapTCP = true
+		mapper.mapUDP = false
+		mapper.desiredPublicPort = port
+		negotiation.portMapping = mapper
+
+		negotiation.portMapperNotifications.cancelAll()
+		negotiation.portMapperNotifications.observe(.portMapperDidChange, object: mapper) { [weak self] notification in
+			self?.portMapperDidFinishWork(notification)
+		}
+		transferStatus = .mappingListeningPort
+
+		if !mapper.open() {
+			portMapperDidFinishWork(nil)
+		}
+	}
+
+	func noteIPAddressLookupSucceeded() {
+		guard transferStatus.isAwaitingAddress else { return }
+		if isSender {
+			transferStatus = isReversed ? .waitingForReceiverToAccept : .isListeningAsSender
+		} else if isReversed {
+			transferStatus = .isListeningAsReceiver
+		} else {
+			return
+		}
+		sendTransferRequestToSession()
+		guard isSender, isReversed else { return }
+
+		/* A reverse offer the peer never answers leaves a listening port open and
+		 a row that says it is waiting, with nothing left to wait for. */
+		let run = negotiation.sessionID
+		negotiation.offerTimeout?.cancel()
+		negotiation.offerTimeout = Task { [weak self] in
+			do { try await Task.sleep(for: FileTransferLimits.reverseOfferTimeout) } catch { return }
+			guard let self, isCurrent(run), transferStatus == .waitingForReceiverToAccept else { return }
+			close(with: .connectTimeout)
+		}
+	}
+
+	func noteIPAddressLookupFailed() {
+		guard transferStatus.isAwaitingAddress else { return }
+		close(with: .sourceIPAddressUnknown)
+	}
+
+	/** `PortMapper` reports on every mDNSResponder callback, and a NAT-PMP
+	 mapping is renewed for as long as it is held — so this fires again long
+	 after the first result moved the transfer on. Only the first one has
+	 anything to do. */
+	private func portMapperDidFinishWork(_: Notification?) {
+		guard transferStatus == .mappingListeningPort, let portMapping = negotiation.portMapping else { return }
+
+		if portMapping.isMapped, portMapping.publicPort != 0 {
+			/* The router picks the public port, and it need not be the one asked
+			 for. The offer names it, and the peer's RESUME echoes it back, so it
+			 is the port this transfer is known by from here on. */
+			hostPort = portMapping.publicPort
+			/* Bound to a local because the log message is an autoclosure, where
+			 `self.` would be required and SwiftFormat would strip it. */
+			let mappedPort = hostPort
+			fileTransferLogger.info("Mapped DCC port \(mappedPort, privacy: .public)")
+			updateIPAddress()
+			return
+		}
+
+		fileTransferLogger.error(
+			"DCC port mapping failed with code \(portMapping.error, privacy: .public)"
+		)
+		/* A listener can still be reachable directly or through a manually
+		 forwarded port. That is equally true when a reverse-DCC receiver is
+		 the listener, so a failed automatic mapping does not decide whether
+		 either direction can continue. */
+		updateIPAddress()
+	}
+
+	/** Works out the address the offer names, and moves the transfer on.
+
+	 The transfer waits for it in `waitingForLocalIPAddress`, which is what the
+	 center settles when the address is known, known to be unavailable, or
+	 looked up — whichever comes first.
+
+	 Reached from the negotiation as well as from a finished port mapping: a
+	 reverse offer is announced by address alone, with no port to map first. */
+	func updateIPAddress() {
+		transferStatus = .waitingForLocalIPAddress
+		/* A transfer whose list has gone has nobody left to work the address out
+		 for it, which is the same position as there being no address to be had. */
+		switch center?.resolveIPAddress(routerAddress: negotiation.portMapping?.publicAddress) {
+		case .known:
+			noteIPAddressLookupSucceeded()
+		case .unavailable, .none:
+			noteIPAddressLookupFailed()
+		case .pending:
+			break
+		}
+	}
+}
+
+// MARK: - Following the transfer actor
+
+extension FileTransfer {
+	/// Hands the transfer to a ``DCCTransfer`` actor and follows it.
+	///
+	/// Every event arrives back here on the main actor, which is where the
+	/// status, the progress and the dialog all live, so nothing the actor
+	/// reports has to cross isolation a second time.
+	func startTransfer(with config: DCCTransfer.Config) {
+		secureSession = nil
+		guard security == .plain else {
+			startSecureTransfer(with: config)
+			return
+		}
+
+		let transfer = DCCTransfer(config: config)
+		negotiation.transfer = transfer
+
+		let stopping = stopTask
+
+		negotiation.transferEvents = Task { [weak self] in
+			await stopping?.value
+			guard Task.isCancelled == false else { await transfer.cancel(); return }
+			await transfer.start()
+
+			for await event in transfer.events {
+				guard Task.isCancelled == false else { return }
+				self?.transferDidReport(event, from: transfer)
+			}
+		}
+	}
+
+	/** Starts a transfer over TLS once this network's identity is loaded.
+
+	 The identity comes out of the keychain, off the main actor; until it is
+	 here nothing is opened, and a transfer stopped meanwhile opens nothing. A
+	 secure transfer that cannot load it fails rather than falling back to
+	 plain. */
+	private func startSecureTransfer(with config: DCCTransfer.Config) {
+		guard let session else {
+			close(with: .notConnectedToIRC)
+			return
+		}
+		let run = negotiation.sessionID
+		let stopping = stopTask
+		let context = peerContext(for: run)
+
+		negotiation.transferEvents = Task { [weak self] in
+			await stopping?.value
+			let identity: DCCLocalIdentity
+			do {
+				identity = try await session.dccLocalIdentity()
+			} catch {
+				fileTransferLogger.error(
+					"Could not load the identity for a secure transfer: \(error.localizedDescription, privacy: .public)"
+				)
+				guard let self, isCurrent(run) else { return }
+				transferDidFail(with: .identityUnavailable)
+				return
+			}
+			guard let self, isCurrent(run) else { return }
+
+			var secured = config
+			secured.security = .tls(session.dccTLSConfiguration(identity: identity, context: context))
+			let transfer = DCCTransfer(config: secured)
+			negotiation.transfer = transfer
+			await transfer.start()
+
+			for await event in transfer.events {
+				guard Task.isCancelled == false else { return }
+				transferDidReport(event, from: transfer)
+			}
+		}
+	}
+
+	/// Who the verifier asks about, for as long as `run` is this transfer's.
+	private func peerContext(for run: UUID) -> DCCPeerContext {
+		DCCPeerContext(
+			nickname: { [weak self] in self?.peerNickname ?? "" },
+			isCurrent: { [weak self] in self?.negotiation.sessionID == run },
+			awaitingDecision: { [weak self] waiting in
+				guard let self, negotiation.sessionID == run else { return }
+				noteAwaitingCertificateDecision(waiting)
+			}
+		)
+	}
+
+	/// Shows that the handshake waits for the user, and what the row said
+	/// before once they have answered.
+	func noteAwaitingCertificateDecision(_ waiting: Bool) {
+		if waiting {
+			guard transferStatus.isNegotiating, transferStatus != .waitingForCertificateDecision else { return }
+			negotiation.statusBeforeCertificateDecision = transferStatus
+			transferStatus = .waitingForCertificateDecision
+		} else if transferStatus == .waitingForCertificateDecision {
+			transferStatus = negotiation.statusBeforeCertificateDecision ?? .connecting
+			negotiation.statusBeforeCertificateDecision = nil
+		}
+	}
+
+	/// Stops the running transfer, if there is one.
+	func stopTransfer() {
+		negotiation.sessionID = UUID()
+		negotiation.transferEvents?.cancel()
+		negotiation.transferEvents = nil
+
+		guard let transfer = negotiation.transfer else {
+			return
+		}
+
+		negotiation.transfer = nil
+		enqueueStop { await transfer.cancel() }
+	}
+
+	func transferDidReport(_ event: DCCTransferEvent, from transfer: DCCTransfer) {
+		guard negotiation.transfer === transfer else { return }
+		switch event {
+		case let .listening(port):
+			listeningServerDidStart(on: port)
+		case let .connected(secureSession):
+			self.secureSession = secureSession
+			negotiation.statusBeforeCertificateDecision = nil
+			transferStatus = isSender ? .sending : .receiving
+			center?.updateMaintenanceTimer()
+		case let .progress(processedBytes):
+			transferDidProgress(to: processedBytes)
+		case let .completion(completion):
+			self.completion = completion
+		case .finished:
+			if isSender == false {
+				quarantineReceivedFile()
+			}
+			transferStatus = .complete
+			close()
+		case let .failed(error):
+			transferDidFail(with: error)
+		}
+	}
+
+	/// Marks the download as coming from the peer, inside the access the user
+	/// granted to the folder it landed in. The transfer has succeeded and stays
+	/// so when the mark cannot be written, but the session's console says that
+	/// macOS will not check the file when it is opened.
+	func quarantineReceivedFile() {
+		guard let localFile else { return }
+		let origin = DCCQuarantine.Origin(peerNickname: peerNickname, hostAddress: hostAddress)
+		guard localFile.withAccess({ DCCQuarantine.apply(to: $0, origin: origin) }) == false else { return }
+		session?.printDebugInformation(toConsole: String(localized: .FileTransfer.quarantineFailed(filename)))
+	}
+
+	private func transferDidProgress(to processedBytes: UInt64) {
+		/* `currentRecord` is the byte count the maintenance timer turns into a
+		 transfer rate once a second, so it takes the delta, not the total. */
+		if processedBytes > processedFilesize {
+			currentRecord += processedBytes - processedFilesize
+		}
+
+		processedFilesize = processedBytes
+	}
+
+	func transferDidFail(with error: DCCTransferError) {
+		guard transferStatus.isFinished == false else {
+			return
+		}
+
+		fileTransferLogger.error("DCC transfer failed: \(String(describing: error), privacy: .public)")
+		close(with: FileTransferFailure(error))
+	}
+}

@@ -1,0 +1,82 @@
+# Glasstual
+
+An IRC client for macOS 26 and later on Apple Silicon, built with Swift 6,
+SwiftUI and AppKit.
+
+[Download a release](https://github.com/vakesz/Glasstual/releases).
+Updates are installed manually.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/website/assets/main-window-dark.png">
+  <img src=".github/website/assets/main-window-light.png" alt="Glasstual showing servers, a conversation and the member list">
+</picture>
+
+## Features
+
+- Multiple servers, favorites, unread filters and mentions, with network icons
+  and soju bouncer networks grouped under one account.
+- IRCv3 support, including SASL (with ECDSA keys), multiline messages, message
+  redaction, channel renames, no-implicit-names, extended-monitor, typing
+  notifications, replies, reactions, read markers and chat history.
+- Search across all stored history, and a viewer for transcript logs.
+- Shortcuts actions, Spotlight conversation search and a Focus filter that
+  mutes notifications and sets you away, also when idle.
+- Editors for channel ban, exception, invite exception and quiet lists.
+- Lines and Bubbles transcript styles with light and dark appearances.
+- Notifications, file transfers, local history and transcript logging.
+- Slash-command suggestions, message rules and user scripts.
+- A native macOS 26 interface built with SwiftUI and AppKit.
+
+## Build
+
+Requires an Apple Silicon Mac running macOS 26 or later and Xcode 27.
+
+Set `DEVELOPMENT_TEAM` in `project.yml` for your signing team. Use your own
+`GLASSTUAL_BUNDLE_IDENTIFIER` when building under another identity. Signing
+must support the app's sandbox, app group and embedded XPC service.
+
+```sh
+make build
+make run
+```
+
+Edit `project.yml` for build settings, targets and entitlements. `make build`
+generates the untracked Xcode project and installs pinned, checksum-verified
+tools as needed. Build artifacts use Xcode's configured locations. Tools use
+`~/Library/Caches/Glasstual`; E2E logs use `~/Library/Logs/Glasstual`.
+
+## Check changes
+
+```sh
+make generate
+make build
+make test
+make e2e-fixtures
+make lint
+```
+
+`make e2e-fixtures` checks loopback peers without launching the app.
+`make e2e` drives the Debug app through Accessibility. It runs from your
+terminal and uses the terminal app's Accessibility permission: grant it once
+in System Settings > Privacy & Security > Accessibility. It sends no key or
+mouse events, so you can keep working in other apps; keep the screen unlocked
+and leave Glasstual's windows alone for the few minutes it runs. Pass `E2E_ARGS="--only a,b --keep-artifacts"` to narrow a run.
+Failure artifacts go to `~/Library/Logs/Glasstual`.
+Use `make tsan` for concurrency changes.
+Run `make help` for all commands.
+
+## Contribute
+
+Read [AGENTS.md](AGENTS.md) for repository rules and
+[Sources/App/README.md](Sources/App/README.md) for code ownership.
+
+## Credits and license
+
+Glasstual is an independent fork of
+[Textual](https://github.com/Codeux-Software/Textual). Codeux Software, LLC
+does not publish, endorse or support it.
+
+See [LICENSE](LICENSE),
+[Acknowledgements.pdf](Sources/App/Resources/Documentation/Acknowledgements.pdf)
+and the [Cocoa Extensions provenance record](Sources/CocoaExtensions/PROVENANCE.md)
+for copyright, license and attribution notices.

@@ -1,0 +1,119 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("Highlight log")
+struct HighlightLogTests {
+	private func entry(body: String, receivedAt: Date) -> HighlightRecord {
+		var line = ChatLine()
+		line.messageBody = body
+		line.nickname = "alice"
+		line.lineType = .privateMessage
+		line.receivedAt = receivedAt
+		return HighlightRecord(lineLogged: line, sessionId: "session", conversationId: "channel")
+	}
+
+	@Test("The native table starts with the newest highlight first")
+	func newestHighlightIsFirst() {
+		let older = entry(body: "older", receivedAt: Date(timeIntervalSince1970: 100))
+		let newer = entry(body: "newer", receivedAt: Date(timeIntervalSince1970: 200))
+		let model = HighlightLogModel()
+
+		model.replace(with: [older, newer])
+
+		#expect(model.rows.map(\.entry.lineNumber) == [newer.lineNumber, older.lineNumber])
+	}
+
+	@Test("Changing the table sort order reorders the model")
+	func changingSortOrderReordersRows() {
+		let older = entry(body: "older", receivedAt: Date(timeIntervalSince1970: 100))
+		let newer = entry(body: "newer", receivedAt: Date(timeIntervalSince1970: 200))
+		let model = HighlightLogModel()
+		model.replace(with: [older, newer])
+
+		model.sort(using: [HighlightLogComparator(field: .time, order: .forward)])
+
+		#expect(model.rows.map(\.entry.lineNumber) == [older.lineNumber, newer.lineNumber])
+	}
+
+	@Test("Copying selected rows joins their visible messages into one item")
+	func copiedSelectionUsesVisibleContent() throws {
+		let first = entry(body: "release is ready", receivedAt: Date(timeIntervalSince1970: 100))
+		let second = entry(body: "tests are green", receivedAt: Date(timeIntervalSince1970: 200))
+		let model = HighlightLogModel()
+		model.replace(with: [first, second])
+
+		model.selection = Set(model.rows.map(\.id))
+
+		let copied = try #require(model.selectedCopyItems.first)
+		#expect(model.selectedCopyItems.count == 1)
+		#expect(copied.contains("release is ready"))
+		#expect(copied.contains("tests are green"))
+		#expect(copied.contains("\n"))
+		#expect(copied.contains(first.lineNumber) == false)
+		#expect(copied.contains(second.lineNumber) == false)
+	}
+
+	/// A relative time is wrong as soon as it is pasted, so the pasteboard gets
+	/// the absolute time. The table's own label follows the clock it is given.
+	@Test("A copied row carries the absolute time, and the label is relative to now")
+	func copiedTimeIsAbsolute() throws {
+		let receivedAt = Date(timeIntervalSince1970: 1_700_000_000)
+		let model = HighlightLogModel()
+		model.replace(with: [entry(body: "ping", receivedAt: receivedAt)])
+		let row = try #require(model.rows.first)
+
+		#expect(row.copyText.hasPrefix(receivedAt.formatted(date: .abbreviated, time: .shortened) + "\t"))
+		#expect(
+			row.timeLabel(relativeTo: receivedAt.addingTimeInterval(120))
+				!= row.timeLabel(relativeTo: receivedAt.addingTimeInterval(3600))
+		)
+	}
+
+	@Test("Clearing the native table also clears selection")
+	func clearRemovesRowsAndSelection() throws {
+		let model = HighlightLogModel()
+		model.replace(with: [entry(body: "message", receivedAt: .now)])
+		model.selection = try [#require(model.rows.first?.id)]
+
+		model.clear()
+
+		#expect(model.rows.isEmpty)
+		#expect(model.selection.isEmpty)
+	}
+
+	/** The list opens on what the session has already logged, and takes the
+	 highlights that arrive while it is up. A sheet could only be filled from the
+	 cache it was opened with; a window is open long enough to matter. */
+	@Test("A highlight logged while the window is open joins the table")
+	func aHighlightLoggedWhileOpenIsAdded() {
+		let session = TestServerSession()
+		session.cachedHighlights = [entry(body: "earlier", receivedAt: Date(timeIntervalSince1970: 100))]
+		let window = HighlightLogWindow(session: session)
+
+		#expect(window.model.rows.count == 1)
+
+		window.addEntry(entry(body: "later", receivedAt: Date(timeIntervalSince1970: 200)))
+
+		#expect(window.model.rows.count == 2)
+	}
+
+	/// Clearing the window clears the session's log with it: the list is a view of
+	/// that log, so leaving one full and the other empty would refill the table
+	/// the next time the window opened.
+	@Test("Clearing the window clears the session's logged highlights")
+	func clearingTheWindowClearsTheSessionLog() {
+		let session = TestServerSession()
+		session.cachedHighlights = [entry(body: "message", receivedAt: .now)]
+		let window = HighlightLogWindow(session: session)
+
+		window.clearHighlights()
+
+		#expect(window.model.rows.isEmpty)
+		#expect(session.cachedHighlights.isEmpty)
+	}
+}

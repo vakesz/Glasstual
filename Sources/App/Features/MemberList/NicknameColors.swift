@@ -1,0 +1,193 @@
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import CocoaExtensions
+import CryptoKit
+import os
+
+/** The pinned nickname colours, read once.
+
+ Resolving one colour reads the overrides dictionary out of the defaults store,
+ and every detached read builds its own handle on the suite: a transcript batch
+ that colours a hundred nicknames paid for a hundred handles. The table cannot
+ change part-way through a batch, so it is a value a caller reads once and hands
+ to every name it has to colour. */
+nonisolated struct NicknameColorOverrides: Sendable {
+	fileprivate let stored: [String: PropertyListValue]
+}
+
+nonisolated enum NicknameColors {
+	private static let logger = Logger(
+		subsystem: LogSubsystem.current,
+		category: "NicknameColors"
+	)
+
+	/// Native transcript colour for a nickname. Pinned colours still win; an
+	/// unpinned name uses the same stable hash as before, drawn for the active
+	/// native theme appearance.
+	static func color(for inputString: String, overrides: NicknameColorOverrides? = nil) -> NSColor {
+		color(
+			for: inputString,
+			isDark: LiveThemeSnapshot.current.isDarkAppearance,
+			overrides: overrides
+		)
+	}
+
+	/// The pinned colours as they stand, for a caller about to resolve more than
+	/// one nickname.
+	static func overridesSnapshot() -> NicknameColorOverrides {
+		NicknameColorOverrides(stored: storedOverrides())
+	}
+
+	/// The chroma every generated nickname colour is drawn at, shared with
+	/// whoever needs the same hue at a lightness of their own.
+	static let chroma = 0.13
+
+	/** The colour for one appearance.
+
+	 The hue comes from the hash. Chroma is fixed, and lightness is fixed per
+	 appearance, both in the OKLCH space, so every hue reads at the same
+	 perceived brightness: a blue is as legible as a yellow on a dark ground,
+	 and neither washes out on a light one. HSB brightness could not promise
+	 that, and pure blues at 75 % brightness vanished against a dark transcript. */
+	static func color(
+		for inputString: String,
+		isDark: Bool,
+		overrides: NicknameColorOverrides? = nil
+	) -> NSColor {
+		if let pinned = pinnedColor(for: inputString, in: overrides) {
+			return pinned
+		}
+
+		return generatedColor(for: inputString, isDark: isDark)
+	}
+
+	/** The colour for a name whose owner chose one on the server.
+
+	 A pinned colour still wins. Otherwise the chosen colour keeps its hue, its
+	 chroma is held to a range the generated colours share, and its lightness
+	 is replaced by the one this appearance draws names at, so no server can
+	 make a name invisible or match the ground it is drawn on. */
+	static func color(
+		for nickname: String,
+		profileColor: ProfileColor?,
+		isDark: Bool,
+		overrides: NicknameColorOverrides? = nil
+	) -> NSColor {
+		if let pinned = pinnedColor(for: nickname, in: overrides) {
+			return pinned
+		}
+
+		guard let profileColor else {
+			return generatedColor(for: nickname, isDark: isDark)
+		}
+
+		return relit(profileColor, lightness: isDark ? 0.80 : 0.50)
+	}
+
+	/// `color` at `lightness`, with its hue and a chroma in the legible range.
+	static func relit(_ color: ProfileColor, lightness: Double) -> NSColor {
+		let source = OKLCHColor(red: color.red, green: color.green, blue: color.blue)
+
+		return OKLCHColor(
+			lightness: lightness,
+			chroma: min(max(source.chroma, profileChromaRange.lowerBound), profileChromaRange.upperBound),
+			hue: source.hue
+		).nsColor
+	}
+
+	/// The chroma a server-chosen colour is held to.
+	static let profileChromaRange = 0.04 ... chroma * 1.4
+
+	/** The key a nickname's pinned colour is stored under.
+
+	 Case is folded the ASCII way rather than under the server's casemapping:
+	 the store is shared by every connection and its keys were written this way
+	 before there was one to ask. */
+	static func colorKey(for nickname: String) -> String {
+		nickname.lowercased()
+	}
+
+	/// The colour a nickname hashes to, before any pinned colour replaces it.
+	/// The sheet that pins one shows this as what the default colour means.
+	static func generatedColor(for inputString: String) -> NSColor {
+		generatedColor(for: inputString, isDark: LiveThemeSnapshot.current.isDarkAppearance)
+	}
+
+	static func generatedColor(for inputString: String, isDark: Bool) -> NSColor {
+		OKLCHColor(lightness: isDark ? 0.80 : 0.50, chroma: chroma, hue: hue(for: inputString)).nsColor
+	}
+
+	/// The hue in degrees a nickname hashes to. A caller that draws the name on
+	/// a ground of its own — an avatar, a chip — keeps the identity the reader
+	/// learned from the transcript while choosing its own lightness.
+	static func hue(for inputString: String) -> Double {
+		Double(hash(for: colorKey(for: inputString)).uint32Value % 360)
+	}
+
+	/// The theme's colour style does not take part in the hash; the parameter
+	/// this used to declare was ignored.
+	static func hash(for inputString: String) -> NSNumber {
+		let digest = Insecure.MD5.hash(data: Data("a-\(inputString)".utf8))
+		let value = digest.withUnsafeBytes { bytes in
+			bytes.loadUnaligned(as: UInt32.self)
+		}
+
+		return NSNumber(value: value)
+	}
+
+	/// An override is stored as its sRGB components, which is the only shape
+	/// there is a reader for: anything else a hand-edited plist holds reads as
+	/// no override, leaving the nickname the colour it hashes to.
+	static func pinnedColor(
+		for nickname: String,
+		in overrides: NicknameColorOverrides? = nil
+	) -> NSColor? {
+		let styleKey = colorKey(for: nickname)
+		guard let stored = (overrides?.stored ?? storedOverrides())[styleKey]?.dictionary,
+		      let components = NicknameColorComponents(stored: stored.compactMapValues(\.double))
+		else {
+			return nil
+		}
+
+		return components.color
+	}
+
+	static func setOverride(_ styleValue: NSColor?, for nickname: String) {
+		let styleKey = colorKey(for: nickname)
+		let existingOverrides = overridesKey.detachedPropertyListValue?.dictionary
+
+		if existingOverrides == nil, styleValue == nil {
+			return
+		}
+
+		var overrides = existingOverrides ?? [:]
+
+		if let styleValue {
+			guard let components = NicknameColorComponents(styleValue) else {
+				logger.error("Could not convert a nickname colour to sRGB for storage")
+
+				return
+			}
+
+			overrides[styleKey] = .dictionary(components.storedValue.mapValues(PropertyListValue.double))
+		} else {
+			overrides.removeValue(forKey: styleKey)
+		}
+
+		overridesKey.detachedPropertyListValue = overrides.isEmpty ? nil : .dictionary(overrides)
+	}
+
+	/// The overrides as they are stored. Read through the detached handle, not
+	/// the main actor's: a nickname colour is resolved while a line renders,
+	/// which happens off the main actor.
+	private static func storedOverrides() -> [String: PropertyListValue] {
+		overridesKey.detachedPropertyListValue?.dictionary ?? [:]
+	}
+
+	private static var overridesKey: UntypedSettingsKey {
+		SettingsKeys.Messages.nicknameColorStyleOverrides
+	}
+}

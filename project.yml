@@ -1,0 +1,556 @@
+# Glasstual project specification for XcodeGen.
+#
+# Single source of truth for targets, schemes, build settings, generated
+# Info.plist files, signing, capabilities, and entitlements. Declare those
+# values here rather than editing the generated files. Regenerate with:
+#
+#   xcodegen generate --spec project.yml
+#
+# Do not edit Glasstual.xcodeproj by hand.
+
+name: Glasstual
+
+options:
+  bundleIdPrefix: com.vakesz
+  deploymentTarget:
+    macOS: "26.0"
+  # The Xcode that CI and the release workflow build with. XcodeGen writes it
+  # as the project's last upgrade check, so Xcode 27 does not offer to update
+  # the settings. The deployment target above stays macOS 26.
+  xcodeVersion: "27.0"
+  minimumXcodeGenVersion: "2.46.0"
+  generateEmptyDirectories: false
+  createIntermediateGroups: true
+  groupSortPosition: top
+  defaultConfig: Debug
+  transitivelyLinkDependencies: false
+  groupOrdering:
+    - order: [Sources, Tests]
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    # ---- Product identity -------------------------------------------------
+    GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
+    GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
+    # ---- Unit test scratch state ------------------------------------------
+    # The defaults suite and the "UI Reviews" directory the unit tests run
+    # against, named after the checkout. Every checkout launches the same
+    # bundle identifier, so one fixed pair would be one set of settings, one
+    # scrollback database and one keychain prefix for all of them, and a test
+    # run starting in one checkout would clear them under a run in another.
+    GLASSTUAL_TEST_SCRATCH_NAME: $(SRCROOT:rfc1034identifier)
+    GLASSTUAL_TEST_DEFAULTS_SUITE: com.vakesz.glasstual.tests.$(GLASSTUAL_TEST_SCRATCH_NAME)
+    GLASSTUAL_TEST_REVIEW_DIRECTORY: GlasstualTests-$(GLASSTUAL_TEST_SCRATCH_NAME)
+    MARKETING_VERSION: "2.5.0"
+    # CFBundleVersion is what LaunchServices and updaters compare, so it has to
+    # move every release. The release workflow overrides MARKETING_VERSION on
+    # the xcodebuild line and refuses to run for a tag that already exists, so
+    # deriving the build version from it makes every release distinct without
+    # the workflow having to pass a second value.
+    CURRENT_PROJECT_VERSION: $(MARKETING_VERSION)
+
+    # ---- Signing ----------------------------------------------------------
+    # Local builds sign automatically with Apple Development. The Signed
+    # Release workflow overrides the identity, style, team and
+    # GLASSTUAL_*_PROVISIONING_PROFILE on the xcodebuild line for its archive.
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: Apple Development
+    DEVELOPMENT_TEAM: H8W5DK3FN2
+    PROVISIONING_PROFILE_SPECIFIER: ""
+    # The signed targets name these instead of a profile, so both configurations
+    # sign the same way wherever they are built: empty unless CI names a profile.
+    GLASSTUAL_MAIN_PROVISIONING_PROFILE: ""
+    GLASSTUAL_IRC_PROVISIONING_PROFILE: ""
+
+    # ---- Platform ---------------------------------------------------------
+    # MACOSX_DEPLOYMENT_TARGET is not declared here: XcodeGen writes it from
+    # options.deploymentTarget above, and a second copy is only a way for the
+    # two to drift.
+    # Releases support Apple Silicon only. Keep this explicit rather than
+    # accepting Xcode's recommendation to build a universal product.
+    ARCHS: arm64
+
+    # ---- Swift ------------------------------------------------------------
+    # Every target is Swift, and nothing generated is C or Objective-C, so the
+    # clang warning, analyzer and preprocessor settings have nothing to act
+    # on and are not declared here. XcodeGen's base presets still write
+    # Xcode's template defaults for them into the generated project.
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_ENABLE_EXPLICIT_MODULES: YES
+    SWIFT_ENFORCE_EXCLUSIVE_ACCESS: full
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+    SWIFT_INSTALL_OBJC_HEADER: NO
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+    # ---- Build behaviour --------------------------------------------------
+    APPLY_RULES_IN_COPY_FILES: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GCC_GENERATE_DEBUGGING_SYMBOLS: YES
+    GENERATE_INFOPLIST_FILE: NO
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
+    REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES: YES
+    # Only Glasstual links AppIntents. Other targets skip the metadata tool,
+    # which Xcode would otherwise schedule for every target and warn about.
+    LM_SKIP_METADATA_EXTRACTION: YES
+    ENABLE_DEBUG_DYLIB: NO
+    LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks @executable_path/../Frameworks"
+    ENABLE_HARDENED_RUNTIME: YES
+
+  configs:
+    Debug:
+      SWIFT_COMPILATION_MODE: singlefile
+      # Caches compiler outputs by content, so a clean build after a branch
+      # switch or Clean Build Folder reuses them. Release builds stay uncached.
+      COMPILATION_CACHE_ENABLE_CACHING: YES
+      VALIDATE_PRODUCT: NO
+      # Hardened runtime blocks attaching the debugger to XPC services.
+      ENABLE_HARDENED_RUNTIME: NO
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: YES
+    Release:
+      # A release is archived and notarized, so it carries its symbols
+      # separately. A Debug build keeps them in the binary, which is Xcode's
+      # default and what the debugger reads.
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      DEPLOYMENT_POSTPROCESSING: YES
+      ENABLE_TESTABILITY: NO
+      VALIDATE_PRODUCT: YES
+      ENABLE_HARDENED_RUNTIME: YES
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+
+# Navigator-only entries, so that everything the repository is governed and
+# checked by can be opened from Xcode. No build-phase effect.
+fileGroups:
+  - project.yml
+  - Makefile
+  - README.md
+  - AGENTS.md
+  - CHANGELOG.md
+  - .swiftlint.yml
+  - .swiftformat
+  - .editorconfig
+  - scripts
+
+# ---------------------------------------------------------------------------
+# Reusable fragments
+# ---------------------------------------------------------------------------
+
+targetTemplates:
+  # Shared platform and generated version metadata.
+  GlasstualTarget:
+    platform: macOS
+    info:
+      path: Generated/Xcode/${target_name}-Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+
+  # The app and everything loaded into or written against it: AppKit UI and app
+  # state, so main actor by default. Helpers, parsers and value types opt out
+  # with an explicit `nonisolated`.
+  GlasstualMainActorTarget:
+    templates: [GlasstualTarget]
+    settings:
+      base:
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+
+  # Services in Glasstual.app/Contents/XPCServices.
+  GlasstualXPCService:
+    templates: [GlasstualTarget]
+    type: xpc-service
+    info:
+      properties:
+        XPCService:
+          ServiceType: Application
+    entitlements:
+      path: Generated/Xcode/${target_name}.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+    settings:
+      base:
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@loader_path/../../../../Frameworks"
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+
+  # Dynamic frameworks embedded by the application or an XPC service.
+  GlasstualFramework:
+    templates: [GlasstualTarget]
+    type: framework
+    settings:
+      base:
+        # Swift emits .swiftmodule files directly; these frameworks have no
+        # umbrella header, so do not ask Clang to synthesize a module map.
+        # XcodeGen's framework preset turns this on, so it needs an override.
+        DEFINES_MODULE: NO
+        # The framework preset also pins CURRENT_PROJECT_VERSION to 1, which
+        # would put CFBundleVersion 1 in an embedded framework while every
+        # other product carries the release version; the release check
+        # requires them to agree.
+        CURRENT_PROJECT_VERSION: $(MARKETING_VERSION)
+        # Embedded frameworks are signed by the host's CodeSignOnCopy phase.
+        CODE_SIGN_IDENTITY: ""
+        FRAMEWORK_VERSION: A
+        INSTALL_PATH: "@rpath"
+        LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks"
+
+# ---------------------------------------------------------------------------
+# Targets
+# ---------------------------------------------------------------------------
+
+targets:
+  # ---- Frameworks ---------------------------------------------------------
+
+  CocoaExtensions:
+    templates: [GlasstualFramework]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.CocoaExtensions
+    info:
+      properties:
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
+    sources:
+      - path: Sources/CocoaExtensions
+        excludes:
+          # Notes for whoever edits the catalogues and the vendoring record;
+          # not shipped resources.
+          - LocalizationCatalogNotices.md
+          - PROVENANCE.md
+          - LICENSE.txt
+          - ACKNOWLEDGEMENT.txt
+      - path: Sources/CocoaExtensions/LICENSE.txt
+        buildPhase: resources
+      - path: Sources/CocoaExtensions/ACKNOWLEDGEMENT.txt
+        buildPhase: resources
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: AppKit.framework
+      - sdk: Security.framework
+
+  # ---- XPC service --------------------------------------------------------
+
+  IRCConnectionHost:
+    templates: [GlasstualXPCService]
+    productName: IRC Connection Host
+    settings:
+      base:
+        PRODUCT_NAME: IRC Connection Host
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.IRCConnectionHost
+        PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
+    info:
+      properties:
+        CFBundleDisplayName: IRC Connection Host
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017 - 2020 Codeux Software, LLC and respective contributors.
+    entitlements:
+      properties:
+        # A group of the service's own, and only that: the client-side
+        # certificate is looked up by the persistent reference the app hands
+        # over, which needs the keychain but none of the app's groups. The
+        # app's secrets are in groups this service is deliberately not given.
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)$(GLASSTUAL_BUNDLE_IDENTIFIER).connection-host"
+        com.apple.security.network.client: true
+    sources:
+      - path: Sources/ConnectionHost
+        excludes:
+          # Notes for whoever edits the catalogues; not a shipped resource.
+          - LocalizationCatalogNotices.md
+          - PrivacyInfo.xcprivacy
+      - path: Sources/ConnectionHost/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      # Sources/Shared holds only what both targets compile, so the folder is
+      # globbed rather than listed file by file.
+      - path: Sources/Shared
+    dependencies:
+      - sdk: Security.framework
+      - sdk: SecurityInterface.framework
+      - sdk: SystemConfiguration.framework
+
+  # ---- Application --------------------------------------------------------
+
+  Glasstual:
+    templates: [GlasstualMainActorTarget]
+    type: application
+    settings:
+      base:
+        REGISTER_APP_GROUPS: YES
+        PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
+        # Shortcuts intents, entities, the App Shortcuts provider and the Focus filter.
+        LM_SKIP_METADATA_EXTRACTION: NO
+    info:
+      properties:
+        CFBundleDisplayName: Glasstual
+        CFBundleDocumentTypes:
+          # No icon file ships for either type, and an undeclared icon leaves
+          # the Finder drawing a blank page. CFBundleTypeIconSystemGenerated
+          # asks Launch Services to badge the application icon instead, which
+          # is what a document type without art of its own should do.
+          - CFBundleTypeName: Glasstual IRC Client Script
+            CFBundleTypeRole: Viewer
+            CFBundleTypeIconSystemGenerated: 1
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.apple.applescript.script
+        # The Help Book: the folder inside Resources and its bundle identifier,
+        # which is how Help Viewer and NSHelpManager name it.
+        CFBundleHelpBookFolder: Glasstual.help
+        CFBundleHelpBookName: com.vakesz.glasstual.help
+        CFBundleIconName: AppIcon
+        CFBundleURLTypes:
+          # Two types, because they are two things: the system's chooser lists
+          # the name beside the scheme, and "Internet Relay Chat" was a poor
+          # label for glasstual:// links that open a folder or a settings pane.
+          - CFBundleTypeRole: Viewer
+            CFBundleURLName: Internet Relay Chat
+            CFBundleURLSchemes:
+              - irc
+              - ircs
+          - CFBundleTypeRole: Viewer
+            CFBundleURLName: Glasstual Application Link
+            CFBundleURLSchemes:
+              - glasstual
+        GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
+        ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.social-networking
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        # No NSAppTransportSecurity exception: the transcript is native, there
+        # is no web content to relax ATS for, and the exception that was here
+        # relaxed nothing the native URLSession image loader uses anyway.
+        NSAppleEventsUsageDescription: $(PRODUCT_NAME) runs user scripts that can control other applications.
+        NSHumanReadableCopyright: Glasstual is an independent fork of Textual, continuing it on macOS 26 and later. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.
+        NSPrincipalClass: GlasstualApplication
+    # Debug and Release use the same sandbox. In Release the hardened runtime
+    # keeps library validation on, and no entitlement turns it off, so only
+    # Apple-signed or same-Team-ID bundles load.
+    entitlements:
+      path: Generated/Xcode/Glasstual.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
+        com.apple.security.automation.apple-events: true
+        com.apple.security.files.bookmarks.app-scope: true
+        com.apple.security.files.downloads.read-write: true
+        com.apple.security.files.user-selected.read-write: true
+        # KeychainStore names the first group on every call — it writes, reads
+        # and deletes there and nowhere else — and no other target lists it.
+        # The second is where builds before it stored secrets. Nothing reads or
+        # writes it any more and nothing moves what is in it: an item left
+        # there stays, unread, until the user removes it in Keychain Access.
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER).secrets"
+          - "$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)"
+        com.apple.security.network.client: true
+        com.apple.security.network.server: true
+        com.apple.security.print: true
+    sources:
+      - path: Sources/App/Application
+      - path: Sources/App/Chat
+      - path: Sources/App/Controls
+      - path: Sources/App/Features
+      - path: Sources/App/Localization
+        excludes:
+          # Notes for whoever edits the catalogues; not a shipped resource.
+          - LocalizationCatalogNotices.md
+      - path: Sources/App/Protocol
+      - path: Sources/App/SettingsKeys
+      # Sources/Shared holds the declarations the connection host shares, and
+      # only those; the IRCConnectionHost target globs the same folder.
+      - path: Sources/Shared
+      # Resources -----------------------------------------------------------
+      - path: Sources/App/Resources/AppIcon.icon
+        type: file
+        buildPhase: resources
+      - path: Sources/App/Resources/IRCNetworks.plist
+      - path: Sources/App/Resources/PrivacyInfo.xcprivacy
+      - path: Sources/App/Resources/StaticStore.plist
+      # The leaf name is a runtime bundle path, so it keeps its spelling and
+      # ships as a folder reference.
+      - path: Sources/App/Resources/Bundled Scripts
+        type: folder
+      - path: Sources/App/Resources/Documentation
+        type: folder
+        buildPhase: resources
+      # The Help Book ships as a folder reference; its search index is built
+      # by the "Index Help Book" phase below.
+      - path: Sources/App/Resources/Glasstual.help
+        type: folder
+        buildPhase: resources
+
+    # Runs after Copy Bundle Resources and before signing. The inputs are the
+    # English pages and the output is the index inside the copied book, so the
+    # phase reruns only when a page changes and stays within user script
+    # sandboxing. Adding a page means listing it in the file list; the script
+    # stops the build when a page is missing from it.
+    postBuildScripts:
+      - name: Index Help Book
+        basedOnDependencyAnalysis: true
+        inputFiles:
+          - $(SRCROOT)/scripts/index-help-book.sh
+          - $(SRCROOT)/Sources/App/Resources/Glasstual.help/Contents/Resources/en.lproj
+        inputFileLists:
+          - $(SRCROOT)/scripts/help-book-pages.xcfilelist
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Glasstual.help/Contents/Resources/en.lproj/Glasstual.cshelpindex
+        script: |
+          "${SCRIPT_INPUT_FILE_0}" "${SCRIPT_INPUT_FILE_1}" "${SCRIPT_INPUT_FILE_LIST_0}" "${SCRIPT_OUTPUT_FILE_0}"
+
+    dependencies:
+      - sdk: AudioToolbox.framework
+      - sdk: Cocoa.framework
+      - sdk: CoreData.framework
+      - sdk: CoreServices.framework
+      - sdk: IOKit.framework
+      - sdk: Network.framework
+      - sdk: QuartzCore.framework
+      - sdk: QuickLookUI.framework
+      - sdk: Security.framework
+      - sdk: SystemConfiguration.framework
+      - sdk: UserNotifications.framework
+      - target: CocoaExtensions
+        embed: true
+        codeSign: true
+      - target: IRCConnectionHost
+        embed: true
+        codeSign: true
+
+  # ---- Tests --------------------------------------------------------------
+
+  # Unit tests run inside Glasstual.app so that they can use the app's
+  # classes directly. Network fixtures use loopback listeners.
+  GlasstualTests:
+    templates: [GlasstualMainActorTarget]
+    type: bundle.unit-test
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
+    # No entitlements: a unit-test bundle is loaded into the host process and
+    # runs under the host's sandbox. A sandbox/inherit pair on its own
+    # signature is never consulted.
+    sources:
+      - path: Tests/GlasstualTests
+      # The listener's admission decision is a pure function the service and
+      # the tests both compile; the rest of the folder is the service's alone.
+      - path: Sources/ConnectionHost/ConnectionPeerAdmission.swift
+      # So is the flood-control pacing window.
+      - path: Sources/ConnectionHost/FloodControlWindow.swift
+      # And the WebSocket handshake, frame and line codecs.
+      - path: Sources/ConnectionHost/WebSocketFrameCodec.swift
+      - path: Sources/ConnectionHost/WebSocketHandshake.swift
+      - path: Sources/ConnectionHost/WebSocketLineCodec.swift
+      # Specification corpora the IRCSpec suites read back at runtime. Only
+      # the JSON vectors ship. The upstream LICENSE stays beside them in the
+      # source tree, as Tests/Corpora/IRCSpec/README.md describes.
+      - path: Tests/Corpora/IRCSpec/parser-tests
+        buildPhase: resources
+        includes:
+          - "*.json"
+      # A throwaway self-signed identity for the loopback TLS listener the
+      # trust-gate test drives the connection service against. See the README
+      # beside it, which is not a shipped resource.
+      - path: Tests/Corpora/TLS
+        buildPhase: resources
+        includes:
+          - "*.p12"
+    dependencies:
+      - target: Glasstual
+      - target: CocoaExtensions
+        embed: false
+
+  # `glasstual-e2e`: the end-to-end suite. It drives the Debug app through
+  # Accessibility and plays the IRC server on loopback, outside the app
+  # sandbox. `make e2e` runs it from the terminal, whose Accessibility grant it
+  # inherits.
+  GlasstualE2EHarness:
+    templates: [GlasstualMainActorTarget]
+    type: tool
+    productName: glasstual-e2e
+    sources:
+      - path: Tests/E2EHarness
+    settings:
+      base:
+        PRODUCT_NAME: glasstual-e2e
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.e2e-harness
+        CREATE_INFOPLIST_SECTION_IN_BINARY: YES
+        ENABLE_APP_SANDBOX: NO
+    dependencies:
+      - sdk: AppKit.framework
+      - sdk: ApplicationServices.framework
+      - sdk: CryptoKit.framework
+      - sdk: Network.framework
+      - sdk: Security.framework
+
+# ---------------------------------------------------------------------------
+# Schemes
+# ---------------------------------------------------------------------------
+
+schemes:
+  # Build-only: the Debug app and `glasstual-e2e` beside it in the same
+  # products folder, where the harness looks for the app.
+  GlasstualE2E:
+    build:
+      parallelizeBuild: true
+      buildImplicitDependencies: true
+      targets:
+        Glasstual: all
+        GlasstualE2EHarness: all
+
+  Glasstual:
+    build:
+      parallelizeBuild: true
+      buildImplicitDependencies: true
+      targets:
+        Glasstual: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      # The tests run inside a full launch of Glasstual.app (TEST_HOST). The
+      # suite moves preferences to a scratch defaults domain. The review
+      # directory moves the group container and Application Support, which
+      # hold the scrollback database, caches, scripts and extensions, into
+      # "UI Reviews". Both are named after the checkout by the build settings
+      # GLASSTUAL_TEST_DEFAULTS_SUITE and GLASSTUAL_TEST_REVIEW_DIRECTORY, so
+      # runs in two checkouts keep apart. The pre-action empties both before
+      # every run, from Xcode or from `make test`, and reads the same two
+      # settings. GLASSTUAL_UNIT_TEST_HOST keeps that launch in the
+      # background: no activation, no windows raised or restored, no welcome
+      # flow. `make e2e` launches the app with GLASSTUAL_E2E instead.
+      environmentVariables:
+        - variable: GLASSTUAL_UI_REVIEW_SUITE
+          value: $(GLASSTUAL_TEST_DEFAULTS_SUITE)
+          isEnabled: true
+        - variable: GLASSTUAL_UI_REVIEW_DIRECTORY
+          value: $(GLASSTUAL_TEST_REVIEW_DIRECTORY)
+          isEnabled: true
+        - variable: GLASSTUAL_UNIT_TEST_HOST
+          value: "1"
+          isEnabled: true
+      preActions:
+        - name: Clear test scratch state
+          settingsTarget: Glasstual
+          script: |
+            "${SRCROOT}/scripts/clear-test-scratch.sh" "${GLASSTUAL_TEST_DEFAULTS_SUITE}" "${GLASSTUAL_TEST_REVIEW_DIRECTORY}"
+      targets:
+        - GlasstualTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: true

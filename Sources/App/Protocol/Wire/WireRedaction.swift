@@ -1,0 +1,296 @@
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+
+/** Masking the credentials an outgoing line carries.
+
+ The raw traffic window is a user-visible transcript that ends up pasted into
+ bug reports, so every parameter that carries a credential is masked while the
+ command and its routing parameters stay legible. Only the lines that name a
+ secret are rewritten; everything else is returned untouched.
+ */
+nonisolated enum WireRedaction {
+	private static let credentialMask = "••••••"
+
+	/** The mechanism names an `AUTHENTICATE` may carry instead of a payload.
+
+	 The first `AUTHENTICATE` of an exchange names the mechanism the session is
+	 about to try, and that is the one parameter of the exchange that is not a
+	 secret — masking it left a traffic log unable to say which mechanism the
+	 login failed under, which is the first thing anyone reading one wants. Only
+	 the names this session can send are spared; anything else is a payload. */
+	private static let saslMechanismNames = Set(SASLMechanism.allCases.map(\.wireName))
+	private static let sensitiveServiceVerbs: Set<String> = [
+		"AUTH", "CONFIRM", "GHOST", "GROUP", "IDENTIFY", "LOGIN", "PASSWD", "PASSWORD", "RECOVER",
+		"REGAIN", "REGISTER", "RELEASE", "RESETPASS", "SENDPASS", "SET", "SETPASS", "SIDENTIFY",
+	]
+
+	/// The outgoing line as the raw traffic log may show it.
+	static func redactedRawChatLine(_ line: String) -> String {
+		let body = line.trimmingCharacters(in: .whitespacesAndNewlines)
+		let (prefix, remainder) = splitWirePrefix(Substring(body))
+		var (parameters, hasTrailing) = wireParameters(remainder)
+
+		guard let command = parameters.first?.uppercased() else {
+			return line
+		}
+
+		switch command {
+		case "PASS":
+			guard parameters.count >= 2 else { return line }
+			// A bouncer password can be several parameters wide, so none survive.
+			parameters = [parameters[0], credentialMask]
+			hasTrailing = false
+		case "AUTHENTICATE":
+			// "+" is the empty response and "*" aborts: neither is a secret,
+			// and neither is the mechanism name that opens the exchange.
+			guard parameters.count >= 2,
+			      parameters[1] != "+",
+			      parameters[1] != "*",
+			      saslMechanismNames.contains(parameters[1].uppercased()) == false
+			else { return line }
+			parameters[1] = credentialMask
+		case "OPER":
+			guard parameters.count >= 3 else { return line }
+			parameters[2] = credentialMask
+		case "REGISTER", "VERIFY":
+			guard maskAccountRegistration(&parameters, hasTrailing: &hasTrailing) else { return line }
+		case "JOIN":
+			// The second parameter is the comma list of channel keys, one per
+			// channel in the order of the first. Empty slots stay empty.
+			guard parameters.count >= 3 else { return line }
+			parameters[2] = parameters[2].components(separatedBy: ",").map { key in
+				key.isEmpty ? key : credentialMask
+			}.joined(separator: ",")
+		case "MODE":
+			guard parameters.count >= 4, parameters[2].contains("k") else { return line }
+			maskChannelKeys(inModeParameters: &parameters)
+		case "NICKSERV", "NS":
+			guard parameters.count >= 2 else { return line }
+			let message = parameters.dropFirst().joined(separator: " ")
+			let redacted = redactedServiceMessage(message, sentTo: "NickServ")
+			guard redacted != message else { return line }
+			/* The verb and its secret arrive either as separate parameters or as
+			 one trailing parameter, and the redaction answers with the same
+			 tokens in the same order. Putting them back into the parameters they
+			 came from is what keeps the logged line the shape that went out: the
+			 flat split dropped the `:` from `NICKSERV :IDENTIFY hunter2`, so the
+			 log no longer matched the wire it was a log of. */
+			parameters = [parameters[0]] + regrouped(redacted, like: Array(parameters.dropFirst()))
+		case "PRIVMSG", "SQUERY":
+			guard parameters.count >= 3 else { return line }
+			let redacted = redactedServiceMessage(parameters[2], sentTo: parameters[1])
+			guard redacted != parameters[2] else { return line }
+			parameters[2] = redacted
+		default:
+			return line
+		}
+
+		let lastIndex = parameters.count - 1
+
+		return prefix + parameters.enumerated().map { index, value in
+			index == lastIndex && hasTrailing ? ":\(value)" : value
+		}.joined(separator: " ")
+	}
+
+	/** Masks what `REGISTER` and `VERIFY` carry. Reports whether anything was.
+
+	 `REGISTER <account> <email> <password>` keeps the account legible; the
+	 email address is personal data and the password a secret.
+	 `VERIFY <account> <code>` loses the code, which proves the address. A
+	 trailing parameter with spaces is one parameter here. */
+	private static func maskAccountRegistration(_ parameters: inout [String], hasTrailing: inout Bool) -> Bool {
+		let isRegister = parameters[0].uppercased() == "REGISTER"
+		let secretIndex = isRegister ? 3 : 2
+
+		guard parameters.count > secretIndex else { return false }
+
+		if isRegister, parameters[2] != "*" {
+			parameters[2] = credentialMask
+		}
+		parameters[secretIndex] = credentialMask
+		hasTrailing = hasTrailing && parameters.count > secretIndex + 1
+
+		return true
+	}
+
+	/// Mode letters that take an argument whether they are set or unset.
+	private static let modesWithArgument: Set<Character> = ["k", "b", "e", "I", "o", "v", "h", "q", "a"]
+	/// Mode letters that take an argument only when they are set.
+	private static let modesWithSetArgument: Set<Character> = ["l"]
+	/// Mode letters known to take no argument. A letter in neither set is
+	/// unknown, and an unknown letter may or may not consume an argument.
+	private static let modesWithoutArgument: Set<Character> = [
+		"i", "m", "n", "p", "s", "t", "r", "c", "C", "S", "R", "M", "N", "T", "z", "u", "Q", "K",
+	]
+
+	/** Masks the argument of every `k` in the mode string at index 2.
+
+	 The mode string is walked with its `+`/`-` state so that each letter picks
+	 up the argument that belongs to it: `+lk 10 key` and `+kl key 10` both
+	 mask only the key. A letter this walk does not know may consume an
+	 argument or not, so the alignment cannot be trusted past it; every argument
+	 is masked then, which loses legibility rather than a key. */
+	private static func maskChannelKeys(inModeParameters parameters: inout [String]) {
+		let firstArgument = 3
+		var index = firstArgument
+		var isSetting = true
+		var keyIndexes: [Int] = []
+		var isAligned = true
+
+		for letter in parameters[2] {
+			switch letter {
+			case "+":
+				isSetting = true
+			case "-":
+				isSetting = false
+			default:
+				if modesWithArgument.contains(letter) || (isSetting && modesWithSetArgument.contains(letter)) {
+					if letter == "k" {
+						keyIndexes.append(index)
+					}
+					index += 1
+				} else if modesWithSetArgument.contains(letter) || modesWithoutArgument.contains(letter) {
+					continue
+				} else {
+					isAligned = false
+				}
+			}
+		}
+
+		guard isAligned else {
+			for argument in firstArgument ..< parameters.count {
+				parameters[argument] = credentialMask
+			}
+			return
+		}
+
+		for keyIndex in keyIndexes where keyIndex < parameters.count {
+			parameters[keyIndex] = credentialMask
+		}
+	}
+
+	/** `redacted` cut back into parameters as wide as the ones it came from.
+
+	 The redaction works on the parameters joined into one string, and each
+	 parameter may itself be several tokens wide — a trailing parameter is the
+	 rest of the line. Token counts are preserved by the redaction, so the widths
+	 are enough to put the pieces back; a mismatch means something replaced more
+	 than it masked, and the tokens go back one per parameter with the remainder
+	 on the last. */
+	private static func regrouped(_ redacted: String, like original: [String]) -> [String] {
+		var tokens = redacted.components(separatedBy: " ")
+		var result: [String] = []
+
+		for parameter in original {
+			let width = max(parameter.components(separatedBy: " ").count, 1)
+
+			guard tokens.count >= width, result.count < original.count - 1 else {
+				break
+			}
+
+			result.append(tokens.prefix(width).joined(separator: " "))
+			tokens.removeFirst(width)
+		}
+
+		result.append(tokens.joined(separator: " "))
+
+		return result
+	}
+
+	/// The message tags and source prefix, which name no secret and are kept
+	/// whole, split from the command and its parameters.
+	private static func splitWirePrefix(_ line: Substring) -> (prefix: String, remainder: Substring) {
+		var prefix = ""
+		var remainder = line
+
+		while let marker = remainder.first, marker == "@" || marker == ":" {
+			guard let space = remainder.firstIndex(of: " ") else {
+				return (prefix, remainder)
+			}
+
+			let boundary = remainder.index(after: space)
+			prefix += remainder[..<boundary]
+			remainder = remainder[boundary...]
+		}
+
+		return (prefix, remainder)
+	}
+
+	/// The command and its parameters, with the trailing parameter's `:`
+	/// removed and reported separately so it can be put back.
+	private static func wireParameters(_ body: Substring) -> (parameters: [String], hasTrailing: Bool) {
+		var parameters: [String] = []
+		var remainder = body
+
+		while remainder.isEmpty == false {
+			if remainder.first == ":" {
+				parameters.append(String(remainder.dropFirst()))
+
+				return (parameters, true)
+			}
+
+			guard let space = remainder.firstIndex(of: " ") else {
+				parameters.append(String(remainder))
+
+				break
+			}
+
+			parameters.append(String(remainder[..<space]))
+			remainder = remainder[remainder.index(after: space)...]
+
+			while remainder.first == " " {
+				remainder = remainder.dropFirst()
+			}
+		}
+
+		return (parameters, false)
+	}
+
+	static func redactedServiceMessage(_ message: String, sentTo target: String?) -> String {
+		guard targetLooksLikeService(target) else {
+			return message
+		}
+
+		let tokens = message.components(separatedBy: " ")
+
+		guard tokens.count >= 2, sensitiveServiceVerbs.contains(tokens[0].uppercased()) else {
+			return message
+		}
+
+		var visibleTokenCount = 1
+
+		if tokens[0].caseInsensitiveCompare("SET") == .orderedSame {
+			guard tokens.count >= 3, tokens[1].caseInsensitiveCompare("PASSWORD") == .orderedSame else {
+				return message
+			}
+
+			visibleTokenCount = 2
+		}
+
+		return tokens.enumerated().map { index, token in
+			guard index >= visibleTokenCount, token.isEmpty == false else {
+				return token
+			}
+
+			return credentialMask
+		}.joined(separator: " ")
+	}
+
+	static func targetLooksLikeService(_ target: String?) -> Bool {
+		guard var nickname = target, nickname.isEmpty == false else {
+			return false
+		}
+
+		if let separator = nickname.firstIndex(of: "@") {
+			nickname = String(nickname[..<separator])
+		}
+
+		let lowercaseNickname = nickname.lowercased()
+
+		return lowercaseNickname.hasSuffix("serv")
+			|| ["authserv", "l", "q", "x"].contains(lowercaseNickname)
+	}
+}

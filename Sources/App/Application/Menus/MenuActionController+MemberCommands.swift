@@ -1,0 +1,483 @@
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import CocoaExtensions
+
+// MARK: - Member commands
+
+/* The items these answer are only ever menu items, so the sender is one: what a
+ command is aimed at comes off the item, and `MenuContextResolver` turns it into
+ the connection, the conversation and the nicknames the command applies to. */
+
+extension MenuActionController {
+	@objc func memberMute(_ sender: NSMenuItem?) {
+		setMemberMuted(true, sender: sender)
+	}
+
+	@objc func memberUnmute(_ sender: NSMenuItem?) {
+		setMemberMuted(false, sender: sender)
+	}
+
+	@objc func memberAddIgnore(_ sender: NSMenuItem?) {
+		performIgnore(sender: sender, remove: false)
+	}
+
+	@objc func memberRemoveIgnore(_ sender: NSMenuItem?) {
+		performIgnore(sender: sender, remove: true)
+	}
+
+	@objc func memberModifyIgnore(_ sender: NSMenuItem?) {
+		modifyIgnore(sender: sender)
+	}
+
+	@objc func memberSendWhois(_ sender: NSMenuItem?) {
+		performForNicknames(sender: sender) { $0.sendWhois($1) }
+	}
+
+	@objc func memberStartDirectConversation(_ sender: NSMenuItem?) {
+		startDirectConversation(sender: sender)
+	}
+
+	/// Starts a private reply to one member from the channel, tagged with it.
+	@objc func memberMessagePrivatelyInChannel(_ sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender), target.conversation.isChannel,
+		      target.nicknames.count == 1, let nickname = target.nicknames.first,
+		      target.session.canSendChannelContext
+		else { return }
+		context.deselectMembers(for: sender)
+		mainWindow.select(target.conversation)
+		mainWindow.inputTextField?.beginPrivateReply(to: nickname, messageIdentifier: nil, excerpt: nil)
+	}
+
+	@objc func memberChangeColor(_ sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender),
+		      let nickname = target.nicknames.first
+		else { return }
+
+		showNicknameColorSheet(for: nickname)
+	}
+
+	@objc func memberSendCTCPPing(_ sender: NSMenuItem?) {
+		performForNicknames(sender: sender) { $0.sendCTCPPing($1) }
+	}
+
+	@objc func memberSendCTCPFinger(_ sender: NSMenuItem?) {
+		performCTCP("FINGER", sender: sender)
+	}
+
+	@objc func memberSendCTCPTime(_ sender: NSMenuItem?) {
+		performCTCP("TIME", sender: sender)
+	}
+
+	@objc func memberSendCTCPVersion(_ sender: NSMenuItem?) {
+		performCTCP("VERSION", sender: sender)
+	}
+
+	@objc func memberSendCTCPUserinfo(_ sender: NSMenuItem?) {
+		performCTCP("USERINFO", sender: sender)
+	}
+
+	@objc func memberSendCTCPClientInfo(_ sender: NSMenuItem?) {
+		performCTCP("CLIENTINFO", sender: sender)
+	}
+
+	@objc func memberModeGiveOp(_ sender: NSMenuItem?) {
+		performMode("OP", sender: sender)
+	}
+
+	@objc func memberModeTakeOp(_ sender: NSMenuItem?) {
+		performMode("DEOP", sender: sender)
+	}
+
+	@objc func memberModeGiveHalfop(_ sender: NSMenuItem?) {
+		performMode("HALFOP", sender: sender)
+	}
+
+	@objc func memberModeTakeHalfop(_ sender: NSMenuItem?) {
+		performMode("DEHALFOP", sender: sender)
+	}
+
+	@objc func memberModeGiveVoice(_ sender: NSMenuItem?) {
+		performMode("VOICE", sender: sender)
+	}
+
+	@objc func memberModeTakeVoice(_ sender: NSMenuItem?) {
+		performMode("DEVOICE", sender: sender)
+	}
+
+	@objc func memberKickFromChannel(_ sender: NSMenuItem?) {
+		performChannelModeration(.kick, sender: sender) { session, channel, nickname in
+			session.kick(nickname, in: channel)
+		}
+	}
+
+	@objc func memberBanFromChannel(_ sender: NSMenuItem?) {
+		performChannelModeration(.ban, sender: sender) { session, channel, nickname in
+			session.sendCommand("BAN \(nickname)", completeTarget: true, target: channel.name)
+		}
+	}
+
+	@objc func memberBanAccountFromChannel(_ sender: NSMenuItem?) {
+		performChannelModeration(.banAccount, sender: sender) { session, channel, nickname in
+			session.sendCommand(MemberModerationCommand.banAccount(nickname), completeTarget: true, target: channel.name)
+		}
+	}
+
+	@objc func memberKickbanFromChannel(_ sender: NSMenuItem?) {
+		performChannelModeration(.kickban, sender: sender) { session, channel, nickname in
+			session.sendCommand(
+				MemberModerationCommand.kickban(nickname, reason: SettingsKeys.Commands.kickMessage.value),
+				completeTarget: true,
+				target: channel.name
+			)
+		}
+	}
+
+	@objc func memberKillFromServer(_ sender: NSMenuItem?) {
+		performOperatorCommand("KILL", reason: SettingsKeys.Commands.irCopKillMessage.value, sender: sender)
+	}
+
+	@objc func memberShunOnServer(_ sender: NSMenuItem?) {
+		performOperatorCommand("SHUN", reason: SettingsKeys.Commands.irCopShunMessage.value, sender: sender)
+	}
+
+	@objc func memberBanFromServer(_ sender: NSMenuItem?) {
+		performGline(sender: sender)
+	}
+
+	@objc func memberSetVirtualHost(_ sender: NSMenuItem?) {
+		showSetVirtualHostPrompt(sender: sender)
+	}
+
+	@objc func memberSendFileRequest(_ sender: NSMenuItem?) {
+		showFilePicker(sender: sender)
+	}
+
+	/// Send File over TLS, whatever the setting for offers says.
+	@objc func memberSendFileSecurelyRequest(_ sender: NSMenuItem?) {
+		showFilePicker(sender: sender, secure: true)
+	}
+
+	/// The member list's own double click. It carries no menu item, so the
+	/// command applies to the row the list just recorded.
+	func memberInMemberListDoubleClicked() {
+		guard mainWindow.memberList.primaryInteractedMember != nil else { return }
+		performDoubleClick(sender: nil)
+	}
+
+	/// The same, for a nickname double-clicked in the transcript: the name is
+	/// already in `pointedNickname`.
+	func memberInTranscriptDoubleClicked() {
+		performDoubleClick(sender: nil)
+	}
+}
+
+private extension MenuActionController {
+	func setMemberMuted(_ muted: Bool, sender: NSMenuItem?) {
+		guard let target = context.muteTarget(for: sender) else { return }
+		context.deselectMembers(for: sender)
+		target.session.setUserMuted(muted, nickname: target.nickname)
+	}
+
+	func performIgnore(sender: NSMenuItem?, remove: Bool) {
+		guard let target = context.commandTarget(for: sender),
+		      let nickname = target.nicknames.first
+		else { return }
+		context.deselectMembers(for: sender)
+		let command = remove ? MemberModerationCommand.unignore(nickname) : MemberModerationCommand.ignore(nickname)
+		target.session.sendCommand(command, completeTarget: true, target: target.conversation.name)
+	}
+
+	func modifyIgnore(sender: NSMenuItem?) {
+		guard let session = context.selectedSession else { return }
+		let selectedMembers = context.selectedMembers(for: sender)
+		context.deselectMembers(for: sender)
+		guard selectedMembers.count == 1,
+		      let hostmask = selectedMembers.first?.user.hostmask
+		else { return }
+		let ignores = session.findIgnores(forHostmask: hostmask)
+		if ignores.count == 1 {
+			MenuSheetPresenter.presentServerProperties(for: session, at: .editIgnoreEntry(ignores[0]))
+		} else {
+			MenuSheetPresenter.presentServerProperties(for: session, at: .addressBook)
+		}
+	}
+
+	func performDoubleClick(sender: NSMenuItem?) {
+		switch SettingsKeys.Input.userDoubleClickAction.value {
+		case .whois:
+			performForNicknames(sender: sender) { $0.sendWhois($1) }
+		case .startDirectConversation:
+			startDirectConversation(sender: sender)
+		case .insertTextField:
+			insertNicknames(sender: sender)
+		@unknown default:
+			break
+		}
+	}
+
+	func insertNicknames(sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender),
+		      target.nicknames.isEmpty == false
+		else { return }
+		context.deselectMembers(for: sender)
+
+		guard let textView = mainWindow.inputTextField else { return }
+		let selectedRange = textView.selectedRange
+		var insertion = ""
+		if selectedRange.location > 0 {
+			/* selectedRange is measured in UTF-16 code units, so it must be
+			 read back through NSString. Feeding it to String.index(_:offsetBy:)
+			 counts Characters and lands on the wrong one — or traps — as soon
+			 as the field holds an emoji. */
+			let text = textView.stringValue as NSString
+			let previous = text.character(at: selectedRange.location - 1)
+			/* A surrogate half is never whitespace, so nil reads as false. */
+			let isWhitespace = Unicode.Scalar(previous).map { scalar in
+				CharacterSet.whitespacesAndNewlines.contains(scalar)
+			} ?? false
+			if isWhitespace == false {
+				insertion.append(" ")
+			}
+		}
+		insertion += target.nicknames.joined(separator: ", ")
+		insertion += SettingsKeys.Input.tabCompletionSuffix.storedValue ?? ""
+		/* Through the editing pair, so the bar resizes, the placeholder hides,
+		 the typing state is sent and the insertion is undoable. */
+		guard textView.shouldChangeText(in: selectedRange, replacementString: insertion) else { return }
+		textView.replaceCharacters(in: selectedRange, with: insertion)
+		/* The text that was there is gone: what has to be recoloured is what
+		 replaced it. Reusing the pre-edit range walks off the end of a storage
+		 the replacement shrank -- select eleven characters, insert a nickname
+		 shorter than that, and the range check throws. */
+		textView.resetFontColor(
+			in: MenuInsertionRangePolicy.insertedRange(replacing: selectedRange, with: insertion)
+		)
+		textView.didChangeText()
+		textView.focus()
+	}
+
+	func performForNicknames(sender: NSMenuItem?, action: (ServerSession, String) -> Void) {
+		guard let target = context.commandTarget(for: sender) else { return }
+		for nickname in target.nicknames {
+			action(target.session, nickname)
+		}
+		context.deselectMembers(for: sender)
+	}
+
+	func startDirectConversation(sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender) else { return }
+		for nickname in target.nicknames {
+			guard let direct = target.session.findConversationOrCreate(nickname, isDirect: true) else { continue }
+			mainWindow.select(direct)
+		}
+		context.deselectMembers(for: sender)
+	}
+
+	func performCTCP(_ command: String, sender: NSMenuItem?) {
+		performForNicknames(sender: sender) { $0.sendCTCPQuery($1, command: command, text: nil) }
+	}
+
+	func performMode(_ command: String, sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender),
+		      target.session.isLoggedIn, target.conversation.isChannel
+		else { return }
+		context.deselectMembers(for: sender)
+		target.session.sendCommand(
+			MemberModerationCommand.mode(command, nicknames: target.nicknames),
+			completeTarget: true,
+			target: target.conversation.name
+		)
+	}
+
+	/** Asks, then applies `action` to each selected member. Kick, ban and kickban
+	 only mean anything inside a `#channel`, so the one guard they share sits here.
+
+	 The target is read once, before the sheet: the selection can change while
+	 it is up, and the question names the people the answer will act on. */
+	func performChannelModeration(
+		_ kind: ChannelModeration,
+		sender: NSMenuItem?,
+		action: @escaping (ServerSession, Conversation, String) -> Void
+	) {
+		guard let target = context.commandTarget(for: sender),
+		      target.session.isLoggedIn, target.conversation.isChannel
+		else { return }
+		let session = target.session
+		let channel = target.conversation
+		let nicknames = target.nicknames
+		guard nicknames.isEmpty == false else { return }
+
+		let request = kind.request(members: nicknames.formatted(.list(type: .and)), channel: channel.name)
+		Alerts.present(
+			request, about: session.promptScope(in: channel, boundToConnection: false, revealsMainWindow: false)
+		) { answer in
+			guard answer.response == .default, session.isLoggedIn else { return }
+			for nickname in nicknames {
+				action(session, channel, nickname)
+			}
+			self.context.deselectMembers(for: sender)
+		}
+	}
+
+	func performOperatorCommand(_ command: String, reason: String, sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender), target.session.isLoggedIn else { return }
+		for nickname in target.nicknames {
+			target.session.sendCommand(
+				MemberModerationCommand.operatorCommand(command, nickname: nickname, reason: reason)
+			)
+		}
+		context.deselectMembers(for: sender)
+	}
+
+	func performGline(sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender), target.session.isLoggedIn else { return }
+		for nickname in target.nicknames {
+			if target.session.nicknameIsMyself(nickname) {
+				target.session.printDebugInformation(
+					String(localized: .IRC.glasstualHasPreventedYouFromBanning(target.session.serverAddress ?? "")),
+					in: target.conversation
+				)
+				continue
+			}
+			target.session.sendCommand(MemberModerationCommand.operatorCommand(
+				"GLINE",
+				nickname: nickname,
+				reason: SettingsKeys.Commands.irCopGlineMessage.value
+			))
+		}
+		context.deselectMembers(for: sender)
+	}
+
+	func showSetVirtualHostPrompt(sender: NSMenuItem?) {
+		guard let target = context.commandTarget(for: sender), target.session.isLoggedIn,
+		      target.nicknames.isEmpty == false
+		else { return }
+		context.deselectMembers(for: sender)
+		let session = target.session
+		let nicknames = target.nicknames
+		/* One member's virtual host is a command the reader finishes; several
+		 members share one answer, asked once. */
+		if nicknames.count == 1, let nickname = nicknames.first, mainWindow.selectedItem != nil,
+		   case let .prefill(command, selection) = EditorRouting.route(
+		   	.virtualHost(nickname: nickname), style: SettingsKeys.Interaction.style.value
+		   )
+		{
+			mainWindow.prefillInput(command, selecting: selection)
+			return
+		}
+		Alerts.present(Self.virtualHostRequest, about: session.promptScope(in: target.conversation, boundToConnection: false)) { answer in
+			guard answer.response == .default, let input = answer.text else { return }
+			let vhost = input.firstToken
+			guard vhost.isEmpty == false else { return }
+			for nickname in nicknames {
+				session.sendCommand(
+					MemberModerationCommand.setVhost(vhost, nickname: nickname),
+					completeTarget: false,
+					target: nil
+				)
+			}
+		}
+	}
+
+	func showFilePicker(sender: NSMenuItem?, secure: Bool = false) {
+		guard let target = context.commandTarget(for: sender), target.session.isLoggedIn,
+		      target.nicknames.isEmpty == false
+		else { return }
+		context.deselectMembers(for: sender)
+		let session = target.session
+		let nicknames = target.nicknames
+		mainWindow.sheetModel.chooseTransferFiles { urls in
+			guard session.isLoggedIn else { return }
+			for nickname in nicknames {
+				for url in urls {
+					AppServices.fileTransfers.offerSender(
+						for: session,
+						nickname: nickname,
+						path: url.path,
+						autoOpen: true,
+						accessURL: url,
+						secure: secure || session.environment.settings.fileTransferOffersAreSecure
+					)
+				}
+			}
+		}
+	}
+}
+
+extension MenuActionController {
+	/// The question asking for the virtual host to give several members.
+	static var virtualHostRequest: AlertRequest {
+		AlertRequest(
+			title: PromptStrings.VirtualHost.title,
+			body: PromptStrings.VirtualHost.body,
+			defaultButton: PromptStrings.Action.confirmation,
+			alternateButton: PromptStrings.Action.cancel,
+			field: .text(placeholder: PromptStrings.VirtualHost.placeholder, initialValue: ""),
+			keywords: [.default: .submit, .alternate: .cancel]
+		)
+	}
+
+	/// The channel moderation commands that remove someone, which is why each
+	/// one asks before it acts.
+	enum ChannelModeration {
+		case kick
+		case ban
+		case banAccount
+		case kickban
+
+		func title(members: String, channel: String) -> String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickTitle(members, channel))
+			case .ban: String(localized: .Prompts.moderationBanTitle(members, channel))
+			case .banAccount: String(localized: .Prompts.moderationBanAccountTitle(members, channel))
+			case .kickban: String(localized: .Prompts.moderationKickbanTitle(members, channel))
+			}
+		}
+
+		var body: String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickBody)
+			case .ban, .kickban: String(localized: .Prompts.moderationBanBody)
+			case .banAccount: String(localized: .Prompts.moderationBanAccountBody)
+			}
+		}
+
+		/// The word the confirming button is typed as in the conversation.
+		var keyword: PromptKeyword {
+			switch self {
+			case .kick: .kick
+			case .ban: .ban
+			case .banAccount: .banAccount
+			case .kickban: .kickban
+			}
+		}
+
+		/** The confirmation. Removing someone is destructive and not what the
+		 reader is asked about by reflex, so no button is on Return and Escape
+		 cancels. */
+		func request(members: String, channel: String) -> AlertRequest {
+			var request = AlertRequest(
+				title: title(members: members, channel: channel),
+				body: body,
+				defaultButton: button,
+				alternateButton: PromptStrings.Action.cancel,
+				destructiveButton: .default,
+				keywords: [.default: keyword, .alternate: .cancel]
+			)
+			request.accessibilityIdentifier = AccessibilityIdentifier.moderationConfirmation
+			return request
+		}
+
+		var button: String {
+			switch self {
+			case .kick: String(localized: .Prompts.moderationKickButton)
+			case .ban: String(localized: .Prompts.moderationBanButton)
+			case .banAccount: String(localized: .Prompts.moderationBanAccountButton)
+			case .kickban: String(localized: .Prompts.moderationKickbanButton)
+			}
+		}
+	}
+}

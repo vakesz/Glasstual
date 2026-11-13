@@ -1,0 +1,312 @@
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+/// Behaviour corpus for the encode/decode ladder applied to wire text.
+///
+/// The policy tries the configured primary encoding, then the configured
+/// fallback, then a last resort that never fails: lossy ASCII when encoding
+/// and ISO Latin-1 when decoding.
+@MainActor
+struct TextEncodingCorpusTests {
+	private static func policy(
+		primary: String.Encoding,
+		fallback: String.Encoding,
+		requiresUTF8: Bool = false
+	) -> TextEncodingOptions {
+		TextEncodingOptions(
+			primary: primary,
+			fallback: fallback,
+			requiresUTF8: requiresUTF8
+		)
+	}
+
+	// MARK: - Encoding
+
+	nonisolated struct EncodeCase: Sendable {
+		let primary: String.Encoding
+		let fallback: String.Encoding
+		let text: String
+		let bytes: [UInt8]
+
+		init(primary: String.Encoding, fallback: String.Encoding, _ text: String, _ bytes: [UInt8]) {
+			self.primary = primary
+			self.fallback = fallback
+			self.text = text
+			self.bytes = bytes
+		}
+	}
+
+	nonisolated static let encodeCases: [EncodeCase] = [
+		/* The primary encoding is used whenever it can represent the text. */
+		EncodeCase(primary: .utf8, fallback: .isoLatin1, "hello", [104, 101, 108, 108, 111]),
+		EncodeCase(primary: .utf8, fallback: .isoLatin1, "h\u{00E9}llo", [104, 195, 169, 108, 108, 111]),
+		EncodeCase(primary: .ascii, fallback: .isoLatin1, "hello", [104, 101, 108, 108, 111]),
+		/* ASCII cannot hold U+00E9, so the Latin-1 fallback takes over. */
+		EncodeCase(primary: .ascii, fallback: .isoLatin1, "h\u{00E9}llo", [104, 233, 108, 108, 111]),
+		EncodeCase(primary: .isoLatin1, fallback: .utf8, "\u{00E9}", [233]),
+		/* Neither Latin-1 nor ASCII holds U+2713, so UTF-8 fallback wins. */
+		EncodeCase(primary: .isoLatin1, fallback: .utf8, "\u{2713}", [226, 156, 147]),
+		EncodeCase(primary: .utf8, fallback: .ascii, "\u{2713}", [226, 156, 147]),
+		/* An empty string encodes to no bytes under every encoding. */
+		EncodeCase(primary: .ascii, fallback: .isoLatin1, "", []),
+	]
+
+	@Test(arguments: Self.encodeCases)
+	func encodesWithoutLossWhereverPossible(testCase: EncodeCase) throws {
+		let policy = Self.policy(primary: testCase.primary, fallback: testCase.fallback)
+		let encoded = try #require(policy.encode(testCase.text))
+
+		#expect(Array(encoded) == testCase.bytes)
+	}
+
+	/// When no configured encoding can represent the text, the last resort is
+	/// a lossy ASCII conversion rather than a failure.
+	@Test(arguments: ["\u{2713}", "\u{65E5}\u{672C}", "\u{1F600}"])
+	func fallsBackToLossyAsciiAsALastResort(text: String) throws {
+		let policy = Self.policy(primary: .ascii, fallback: .isoLatin1)
+		let encoded = try #require(policy.encode(text))
+
+		/* The conversion succeeded but did not preserve the text. */
+		#expect(encoded != Data(text.utf8))
+		#expect(encoded.isEmpty == false)
+	}
+
+	// MARK: - Decoding
+
+	nonisolated struct DecodeCase: Sendable {
+		let primary: String.Encoding
+		let fallback: String.Encoding
+		let bytes: [UInt8]
+		let text: String
+
+		init(primary: String.Encoding, fallback: String.Encoding, _ bytes: [UInt8], _ text: String) {
+			self.primary = primary
+			self.fallback = fallback
+			self.bytes = bytes
+			self.text = text
+		}
+	}
+
+	nonisolated static let decodeCases: [DecodeCase] = [
+		DecodeCase(primary: .utf8, fallback: .isoLatin1, [104, 105], "hi"),
+		/* Valid UTF-8 is decoded by the primary encoding. */
+		DecodeCase(primary: .utf8, fallback: .isoLatin1, [0xC3, 0xA9], "\u{00E9}"),
+		/* A lone high byte is not UTF-8; Latin-1 reads it. */
+		DecodeCase(primary: .utf8, fallback: .isoLatin1, [0xE9], "\u{00E9}"),
+		/* Latin-1 is also the last resort when the fallback cannot decode. */
+		DecodeCase(primary: .utf8, fallback: .ascii, [0xFF], "\u{00FF}"),
+		DecodeCase(primary: .utf8, fallback: .ascii, [0x80], "\u{0080}"),
+		DecodeCase(primary: .utf8, fallback: .ascii, [0xE9, 0x41], "\u{00E9}A"),
+		/* The ladder ends at Latin-1: two UTF-8 bytes read as two of its own. */
+		DecodeCase(primary: .ascii, fallback: .isoLatin1, [0xC3, 0xA9], "\u{00C3}\u{00A9}"),
+		DecodeCase(primary: .utf8, fallback: .isoLatin1, [], ""),
+	]
+
+	@Test(arguments: Self.decodeCases)
+	func decodesThroughTheFallbackLadder(testCase: DecodeCase) throws {
+		let policy = Self.policy(primary: testCase.primary, fallback: testCase.fallback)
+		let decoded = try #require(policy.decode(Data(testCase.bytes)))
+
+		#expect(decoded == testCase.text)
+	}
+
+	@Test("IRC tags remain UTF-8 beside legacy-encoded message text")
+	func ircTagsUseUTF8Independently() throws {
+		let policy = Self.policy(primary: .isoLatin1, fallback: .ascii)
+		let line = "@+example/label=é;+draft/react=👍 PRIVMSG #chat :café"
+		var wire = Data("@+example/label=é;+draft/react=👍 ".utf8)
+		try wire.append(#require("PRIVMSG #chat :café".data(using: .isoLatin1)))
+
+		#expect(policy.encodeIRCLine(line) == wire)
+		#expect(policy.decodeIRCLine(wire) == line)
+		let untagged = try #require(policy.encode("PRIVMSG #chat :café"))
+		#expect(policy.decodeIRCLine(untagged) == "PRIVMSG #chat :café")
+	}
+
+	@Test("Invalid UTF-8 tag values cannot become colliding replacement identifiers")
+	func invalidTagValuesAreOmitted() throws {
+		let policy = Self.policy(primary: .isoLatin1, fallback: .ascii)
+		var wire = Data("@msgid=earlier;msgid=".utf8)
+		wire.append(0xFF)
+		wire.append(contentsOf: ";time=2026-09-26T10:00:00.000Z PRIVMSG #chat :hello".utf8)
+		let decoded = try #require(policy.decodeIRCLine(wire))
+		let parsed = try #require(Message(line: decoded))
+		#expect(parsed.messageIdentifier == nil)
+		#expect(parsed.messageTags?["time"] == "2026-09-26T10:00:00.000Z")
+		#expect(parsed.params.last == "hello")
+	}
+
+	// MARK: - UTF8ONLY
+
+	nonisolated struct EncodingPair: Sendable {
+		let primary: String.Encoding
+		let fallback: String.Encoding
+
+		init(_ primary: String.Encoding, _ fallback: String.Encoding) {
+			self.primary = primary
+			self.fallback = fallback
+		}
+	}
+
+	@Test(arguments: [
+		EncodingPair(.ascii, .isoLatin1),
+		EncodingPair(.isoLatin1, .ascii),
+		EncodingPair(.utf8, .utf8),
+		EncodingPair(.japaneseEUC, .shiftJIS),
+	])
+	func utf8OnlyOverridesBothConfiguredEncodings(testCase: EncodingPair) {
+		let policy = Self.policy(primary: testCase.primary, fallback: testCase.fallback, requiresUTF8: true)
+
+		#expect(policy.primary == .utf8)
+		#expect(policy.fallback == .utf8)
+	}
+
+	@Test
+	func utf8OnlyEncodesTextThatAsciiCouldNotHold() throws {
+		let policy = Self.policy(primary: .ascii, fallback: .ascii, requiresUTF8: true)
+		let encoded = try #require(policy.encode("\u{2713}"))
+
+		#expect(encoded == Data("\u{2713}".utf8))
+	}
+}
+
+/// The encodings a session derives from its configuration and from ISUPPORT.
+@MainActor
+struct ServerSessionTextEncodingTests {
+	@Test
+	func defaultsToUTF8WithALatin1Fallback() {
+		let session = TestServerSession()
+
+		#expect(session.effectivePrimaryEncoding == .utf8)
+		#expect(session.effectiveFallbackEncoding == .isoLatin1)
+	}
+
+	@Test
+	func configuredEncodingsAreUsed() {
+		let session = TestServerSession(configDictionary: [
+			"primaryEncoding": String.Encoding.isoLatin1.rawValue,
+			"fallbackEncoding": String.Encoding.ascii.rawValue,
+		])
+
+		#expect(session.effectivePrimaryEncoding == .isoLatin1)
+		#expect(session.effectiveFallbackEncoding == .ascii)
+	}
+
+	@Test
+	func utf8OnlyServersPinBothEncodings() {
+		let session = TestServerSession(configDictionary: [
+			"primaryEncoding": String.Encoding.isoLatin1.rawValue,
+			"fallbackEncoding": String.Encoding.ascii.rawValue,
+		])
+
+		session.supportInfo.processConfigurationData("UTF8ONLY")
+
+		#expect(session.effectivePrimaryEncoding == .utf8)
+		#expect(session.effectiveFallbackEncoding == .utf8)
+	}
+
+	@Test(arguments: ["hello", "h\u{00E9}llo", "\u{2713} check", "\u{65E5}\u{672C}\u{8A9E}"])
+	func roundTripsThroughTheCommonEncoding(text: String) throws {
+		let session = TestServerSession()
+		let encoded = try #require(session.convert(toCommonEncoding: text))
+		let decoded = try #require(session.convert(fromCommonEncoding: encoded))
+
+		#expect(decoded == text)
+	}
+
+	// MARK: - What the wire can carry
+
+	nonisolated static let wideEncodings: [String.Encoding] = [
+		.utf16, .utf16BigEndian, .utf16LittleEndian, .utf32, .utf32BigEndian, .utf32LittleEndian,
+	]
+
+	nonisolated static let asciiCompatibleEncodings: [String.Encoding] = [
+		.utf8, .ascii, .isoLatin1, .isoLatin2, .windowsCP1252, .shiftJIS, .japaneseEUC, .iso2022JP,
+	]
+
+	@Test("UTF-16 and UTF-32 cannot carry IRC lines", arguments: wideEncodings)
+	func wideEncodingsAreNotWireCompatible(encoding: String.Encoding) {
+		#expect(TextEncodingOptions.isWireCompatible(encoding) == false)
+	}
+
+	@Test("Encodings that keep ASCII as ASCII can carry IRC lines", arguments: asciiCompatibleEncodings)
+	func asciiCompatibleEncodingsAreWireCompatible(encoding: String.Encoding) {
+		#expect(TextEncodingOptions.isWireCompatible(encoding))
+	}
+
+	@Test("An encoding the wire cannot carry falls back to the default for its place")
+	func wideEncodingsAreReplaced() {
+		let policy = TextEncodingOptions(primary: .utf16BigEndian, fallback: .utf32, requiresUTF8: false)
+
+		#expect(policy.primary == .utf8)
+		#expect(policy.fallback == .isoLatin1)
+	}
+
+	@Test("A saved configuration with UTF-16 is read back as the defaults")
+	func savedWideEncodingDecodesToDefaults() {
+		let session = TestServerSession(configDictionary: [
+			"primaryEncoding": String.Encoding.utf16.rawValue,
+			"fallbackEncoding": String.Encoding.utf32LittleEndian.rawValue,
+		])
+
+		#expect(session.config.primaryEncoding == String.Encoding.utf8.rawValue)
+		#expect(session.config.fallbackEncoding == String.Encoding.isoLatin1.rawValue)
+		#expect(session.effectivePrimaryEncoding == .utf8)
+	}
+
+	@Test("A saved configuration with an ASCII-compatible encoding keeps it")
+	func savedNarrowEncodingIsKept() {
+		let session = TestServerSession(configDictionary: [
+			"primaryEncoding": String.Encoding.shiftJIS.rawValue,
+			"fallbackEncoding": String.Encoding.windowsCP1252.rawValue,
+		])
+
+		#expect(session.config.primaryEncoding == String.Encoding.shiftJIS.rawValue)
+		#expect(session.config.fallbackEncoding == String.Encoding.windowsCP1252.rawValue)
+	}
+
+	nonisolated struct WireLineCase: Sendable, CustomTestStringConvertible {
+		let name: String
+		let bytes: [UInt8]
+		let isSafe: Bool
+
+		var testDescription: String {
+			name
+		}
+	}
+
+	nonisolated static let wireLineCases: [WireLineCase] = {
+		func line(_ text: String, _ encoding: String.Encoding) -> [UInt8] {
+			Array(text.data(using: encoding) ?? Data())
+		}
+		return [
+			WireLineCase(name: "ASCII", bytes: Array("PRIVMSG #a :hi\r\n".utf8), isSafe: true),
+			WireLineCase(name: "embedded NUL", bytes: Array("PRIVMSG #a :h\0i\r\n".utf8), isSafe: false),
+			WireLineCase(name: "embedded CR", bytes: Array("PRIVMSG #a :h\ri\r\n".utf8), isSafe: false),
+			WireLineCase(name: "embedded LF", bytes: Array("PRIVMSG #a :h\ni\r\n".utf8), isSafe: false),
+			WireLineCase(name: "no terminator", bytes: Array("PRIVMSG #a :hi".utf8), isSafe: false),
+			WireLineCase(name: "LF only", bytes: Array("PRIVMSG #a :hi\n".utf8), isSafe: false),
+			WireLineCase(name: "empty", bytes: [], isSafe: false),
+			WireLineCase(name: "UTF-16BE", bytes: line("PRIVMSG #a :hi\r\n", .utf16BigEndian), isSafe: false),
+			WireLineCase(
+				name: "Shift_JIS",
+				bytes: line("PRIVMSG #a :\u{65E5}\u{672C}\u{8A9E}\u{30C6}\u{30B9}\u{30C8}\r\n", .shiftJIS),
+				isSafe: true
+			),
+			WireLineCase(
+				name: "ISO-2022-JP",
+				bytes: line("PRIVMSG #a :\u{65E5}\u{672C}\u{8A9E}\u{30C6}\u{30B9}\u{30C8}\r\n", .iso2022JP),
+				isSafe: true
+			),
+		]
+	}()
+
+	@Test("Only exactly one terminated line is sent", arguments: wireLineCases)
+	func wireLineSafety(testCase: WireLineCase) {
+		#expect(TextEncodingOptions.isSafeWireLine(Data(testCase.bytes)) == testCase.isSafe)
+	}
+}

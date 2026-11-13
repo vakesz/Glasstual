@@ -1,0 +1,90 @@
+// Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import CocoaExtensions
+import Foundation
+
+/// One thing the application asked the host to do.
+///
+/// The commands are closures so that they can wait their turn in a queue. NSXPC
+/// delivers messages in order on its own serial queue; putting each one in here
+/// is what carries that order across to the actor.
+private typealias HostCommand = @Sendable (ConnectionHost) async -> Void
+
+/// The object NSXPC exports for a connection host.
+///
+/// Every exported method is a one-line hop into `ConnectionHost`, which owns
+/// all of the state. The hop goes through a single stream that one task drains
+/// in order: an unstructured `Task` per call would have handed the messages to
+/// the global executor, which schedules them against each other however it
+/// likes, so `open` could land after the first `send` and two sends could swap
+/// places on the wire.
+final class ConnectionHostProcess: NSObject, RemoteConnectionServerProtocol {
+	private let commands: AsyncStream<HostCommand>.Continuation
+
+	init(host: ConnectionHost) {
+		let (commands, continuation) = AsyncStream<HostCommand>.makeStream(
+			/* Nothing the application asks for may be dropped, and a command
+			 that takes a while (a write behind an unresponsive peer) must not
+			 cost the ones queued behind it. */
+			bufferingPolicy: .unbounded
+		)
+
+		self.commands = continuation
+		Task {
+			for await command in commands {
+				await command(host)
+			}
+		}
+
+		super.init()
+	}
+
+	/** Finishing, rather than cancelling, lets the task run what is already
+	 queued before it ends. A command that carries a reply block (the secure
+	 connection information) has to be answered whatever became of the object
+	 that took it, and the rest are safe to run late: `close` is idempotent, and
+	 `send` is refused once `detach()` has dropped the client. */
+	deinit {
+		commands.finish()
+	}
+
+	func open(with config: ConnectionConfigEnvelope) {
+		let config = config.config
+		commands.yield { await $0.open(with: config) }
+	}
+
+	func close() {
+		commands.yield { await $0.close() }
+	}
+
+	func send(_ data: Data) {
+		send(data, bypassQueue: false)
+	}
+
+	func send(_ data: Data, bypassQueue: Bool) {
+		commands.yield { await $0.send(data, bypassQueue: bypassQueue) }
+	}
+
+	func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
+		/* The caller treats this as a reply block, so it has to be invoked on
+		 every path. */
+		commands.yield { await receiver($0.secureConnectionInformation()) }
+	}
+
+	func enforceFloodControl() {
+		commands.yield { await $0.enforceFloodControl() }
+	}
+
+	func clearSendQueue() {
+		commands.yield { await $0.clearSendQueue() }
+	}
+
+	func disableAppNap() {
+		commands.yield { await $0.disableAppNap() }
+	}
+
+	func disableSuddenTermination() {
+		commands.yield { await $0.disableSuddenTermination() }
+	}
+}

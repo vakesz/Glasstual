@@ -1,0 +1,141 @@
+reporter: xcode
+
+# SwiftLint receives Sources and Tests explicitly from the Makefile. Keep this
+# file free of path exclusions, baselines, and broad disabled-rule lists so
+# migrated and vendored Swift code is checked by the same policy.
+
+# SwiftFormat owns brace placement and trailing commas. SwiftLint's versions
+# conflict with the checked-in formatter for nested multiline collections, so
+# keep those two purely syntactic rules in one tool.
+disabled_rules:
+  - opening_brace
+  - trailing_comma
+
+cyclomatic_complexity:
+  # Migrated protocol parsers still contain large command switches. These
+  # limits keep them visible while making further growth an error.
+  warning: 20
+  error: 30
+
+file_length:
+  # A growth ceiling, not a measured limit: the longest file in the tree is
+  # 1057 lines, so neither threshold can fire today. They are here to stop a
+  # file growing past the point where it is still one subject.
+  warning: 1200
+  error: 2000
+  ignore_comment_only_lines: true
+
+function_body_length:
+  warning: 100
+  error: 200
+
+function_parameter_count:
+  # Initializers are exempt from this rule, so it only ever applies to free
+  # functions and methods. The widest in the tree take seven — the transcript's
+  # history loader, the message rule entry points and the trust panel among
+  # them — and each one's arity is fixed by the request or callback it builds.
+  # Ten keeps those readable without forcing call-site dictionaries or untyped
+  # argument bags, while making further growth an error.
+  warning: 10
+  error: 12
+
+identifier_name:
+  max_length:
+    # Protocol-state and preference-key properties should describe their role
+    # without project-specific abbreviations.
+    warning: 64
+    error: 72
+  min_length:
+    warning: 2
+    error: 1
+  excluded:
+    # A conventional collection index, the geometry coordinates, and `/j`,
+    # which is the IRC alias for JOIN and so is spelled the way users type it.
+    - i
+    - j
+    - x
+    - y
+
+type_name:
+  max_length:
+    # Feature-scoped controller names are intentionally explicit; the @objc
+    # runtime names that archives and XPC depend on are listed in
+    # ObjCRuntimeNameTests.
+    warning: 50
+    error: 60
+
+line_length:
+  # The same limit SwiftFormat wraps at (--maxwidth in .swiftformat), stated
+  # again for the lines it cannot break — a long literal, an identifier chain —
+  # which is the only way this rule ever fires.
+  warning: 140
+  error: 180
+  ignores_comments: true
+  ignores_urls: true
+  ignores_function_declarations: true
+  ignores_interpolated_strings: true
+
+type_body_length:
+  warning: 600
+  error: 1200
+
+# Repository architecture invariants belong beside the Swift rules they
+# complement. These replace separate source-scanning shell scripts, so one
+# parser and one `make lint` invocation report every source-level violation.
+# `no_magic_numbers` is intentionally not enabled: layout proportions, IRC
+# field indexes, colour components, and corpus values are clearer inline.
+# The rules below instead reject raw strings at boundaries where a typo would
+# silently create a second persistence or presentation contract.
+custom_rules:
+  isolation_escape_hatch:
+    name: "Isolation Escape Hatch"
+    regex: '(?:nonisolated\(unsafe\)|@unchecked\s+Sendable|MainActor\.assumeIsolated|Thread\.isMainThread|DispatchQueue\.main\.sync)'
+    message: "Move the state to its isolation domain or pass a Sendable snapshot."
+    severity: error
+
+  manual_lock_or_queue:
+    name: "Manual Lock or Queue"
+    regex: '(?:NSLock\(|NSRecursiveLock\(|objc_sync_enter|DispatchQueue\(label:|OperationQueue\(\)|perform(?:Asynchronously|Synchronously)OnMainQueue)'
+    message: "Use actor isolation, or Mutex<Value> for a small synchronous value."
+    severity: error
+
+  unmarked_nonisolated:
+    name: "Unmarked Nonisolated Declaration"
+    regex: '(?m)^[ \t]*(?:(?:private|fileprivate|internal|public|open|package|final|static|class|override|dynamic|convenience|required|@[A-Za-z_][A-Za-z0-9_]*(?:\([^)\n]*\))?)[ \t]+)*nonisolated\b(?!\s*\()(?=[^\n]*\b(?:class|actor|func|var)\b)[^\n]*(?<!// nonisolated: pure)(?<!// nonisolated: xpc-shim)(?<!// nonisolated: immutable)(?<!// nonisolated: guarded)$'
+    message: "Mark a pure, XPC shim, immutable, or guarded declaration with its approved nonisolated reason."
+    severity: error
+
+  disabled_test:
+    name: "Disabled Test"
+    included: 'Tests/.*\.swift'
+    regex: '\.disabled\s*\('
+    message: "A test that does not run is not passing; fix it or remove it."
+    severity: error
+
+  known_issue_test:
+    name: "Known-Issue Test"
+    included: 'Tests/.*\.swift'
+    regex: '\bwithKnownIssue\b'
+    message: "Do not turn a known failure green; fix it or remove the test."
+    severity: error
+
+  raw_notification_observation:
+    name: "Raw Notification Observation"
+    included: 'Sources/.*\.swift'
+    regex: '(?:observe\(|publisher\(for:\s*)Notification\.Name\("'
+    message: "Declare the notification name once at its owning boundary and observe the typed member."
+    severity: error
+
+  raw_alert_suppression_key:
+    name: "Raw Alert Suppression Key"
+    included: 'Sources/.*\.swift'
+    regex: 'suppressionKey:\s*"'
+    message: "Declare the suppression key in the feature that owns the alert."
+    severity: error
+
+  raw_defaults_key:
+    name: "Raw User Defaults Key"
+    included: 'Sources/.*\.swift'
+    regex: '(?:UserDefaults|GlasstualUserDefaults)[^\n]*forKey:\s*"'
+    message: "Read or write through a typed SettingsKey declaration."
+    severity: error

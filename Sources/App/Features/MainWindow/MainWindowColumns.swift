@@ -1,0 +1,174 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import Observation
+import SwiftUI
+
+/// Owns column visibility, the displayed transcript and its background.
+/// Sheets and toolbar state belong to `MainWindowSheetModel` and `MainWindowChrome`.
+@MainActor
+@Observable
+final class MainWindowColumnModel {
+	var isSidebarVisible = true {
+		didSet { window?.updateMinimumContentSize() }
+	}
+
+	/// True when the selected channel has a member list.
+	private(set) var isMemberListAvailable = false {
+		didSet { window?.updateMinimumContentSize() }
+	}
+
+	/// Visibility combines selection availability with the user's preference.
+	var isMemberListVisible: Bool {
+		isMemberListAvailable && userPrefersMemberList && !isReopeningAfterLateCollapse
+	}
+
+	/// Persists independently of availability so selecting a server preserves the preference.
+	private(set) var userPrefersMemberList = true {
+		didSet { window?.updateMinimumContentSize() }
+	}
+
+	/** The inspector was open when its channel went away, and the split view
+	 still owes the report that it collapsed.
+
+	 AppKit collapses the item and reports it on a later turn of the main
+	 queue. When a channel is selected again first, the collapse lands after
+	 the reopening and the report arrives while the list is available. It is
+	 not the reader closing the list. */
+	@ObservationIgnored private var owesAvailabilityCollapseReport = false
+
+	/// That late collapse left the inspector closed beside an available
+	/// channel. The column reads as closed until SwiftUI has drawn it closed,
+	/// so that opening it again is a change SwiftUI applies.
+	private(set) var isReopeningAfterLateCollapse = false
+
+	/// The widths the columns last came to rest at, or open at. A closed
+	/// column keeps its width for when it opens again.
+	@ObservationIgnored private(set) var sidebarWidth = CGFloat(SettingsKeys.MainWindow.sidebarWidth.value)
+	@ObservationIgnored private(set) var memberListWidth = CGFloat(SettingsKeys.MainWindow.memberListWidth.value)
+
+	var transcript: TranscriptView?
+	/// The transcript host hides its AppKit view while the loading overlay is visible.
+	var isConversationObscured = false
+
+	@ObservationIgnored weak var window: MainWindow?
+	@ObservationIgnored private let theme: ThemeStore
+
+	init(theme: ThemeStore = AppServices.theme) {
+		self.theme = theme
+	}
+
+	func attach(to window: MainWindow) {
+		precondition(self.window == nil || self.window === window)
+		self.window = window
+	}
+
+	/// A joined channel makes the member-list column available.
+	func applyMemberListAvailability(_ isAvailable: Bool) {
+		if !isAvailable {
+			window?.prepareToHideMemberList()
+			if isMemberListVisible {
+				owesAvailabilityCollapseReport = true
+			}
+		}
+		isMemberListAvailable = isAvailable
+	}
+
+	/// The native inspector reports that it opened or closed. The collapse an
+	/// unavailable selection caused is not the reader's choice.
+	func inspectorDidChangePresentation(_ isPresented: Bool) {
+		if isPresented == false, owesAvailabilityCollapseReport {
+			owesAvailabilityCollapseReport = false
+			isReopeningAfterLateCollapse = isMemberListAvailable && userPrefersMemberList
+			return
+		}
+		setMemberListVisible(isPresented)
+	}
+
+	/// SwiftUI has drawn the column closed; one that a late collapse closed
+	/// opens again.
+	func memberListDidClose() {
+		isReopeningAfterLateCollapse = false
+	}
+
+	/// Shared by the menu and toolbar commands.
+	func toggleMemberList() {
+		setMemberListVisible(!userPrefersMemberList)
+	}
+
+	/// Native inspector changes apply only while the selection has a member list.
+	func setMemberListVisible(_ isVisible: Bool) {
+		owesAvailabilityCollapseReport = false
+		guard isMemberListAvailable else { return }
+		if !isVisible {
+			window?.prepareToHideMemberList()
+		}
+		userPrefersMemberList = isVisible
+	}
+
+	/// Notes the sidebar's width while it is open.
+	func recordSidebarWidth(_ width: CGFloat) {
+		guard isSidebarVisible, SettingsKeys.MainWindow.sidebarWidth.accepts(Double(width)) else { return }
+		sidebarWidth = width
+		window?.updateMinimumContentSize()
+	}
+
+	/// Notes the member list's width while it is open.
+	func recordMemberListWidth(_ width: CGFloat) {
+		guard isMemberListVisible, SettingsKeys.MainWindow.memberListWidth.accepts(Double(width)) else { return }
+		memberListWidth = width
+		window?.updateMinimumContentSize()
+	}
+
+	/// The narrowest content that holds the open columns.
+	var minimumContentWidth: CGFloat {
+		MainWindowConstants.minimumContentWidth(
+			sidebar: isSidebarVisible ? sidebarWidth : nil,
+			memberList: isMemberListVisible ? memberListWidth : nil
+		)
+	}
+
+	/** The widest the member list may be in content `contentWidth` points wide.
+
+	 The window is never left narrower than its open columns: once the list
+	 is open the minimum counts it, and SwiftUI widens a narrower window to
+	 that minimum either before it opens the list or while it does. Measured
+	 against the width the window still has in the second case, the list
+	 would open at its narrowest and that width would be stored. */
+	func memberListMaximumWidth(inContentWidth contentWidth: CGFloat) -> CGFloat {
+		MainWindowConstants.memberListMaximumWidth(
+			inContentWidth: max(contentWidth, minimumContentWidth),
+			sidebar: isSidebarVisible ? sidebarWidth : nil
+		)
+	}
+
+	/// Restores saved column visibility preferences.
+	func restoreColumns(_ state: MainWindowLayoutState) {
+		isSidebarVisible = state.isSidebarVisible
+		userPrefersMemberList = state.isMemberListVisible
+	}
+
+	var columnState: MainWindowLayoutState {
+		MainWindowLayoutState(
+			isSidebarVisible: isSidebarVisible,
+			isMemberListVisible: userPrefersMemberList
+		)
+	}
+
+	/// The theme's background for the published appearance and contrast.
+	/// Reading it observes `ThemeStore`, so the background redraws in place.
+	var conversationBackground: Color {
+		Color(nsColor: theme.backgroundColor)
+	}
+}
+
+/// Column commands share the system's Reduce Motion setting.
+@MainActor
+enum MainWindowColumnAnimation {
+	static func run(_ change: () -> Void) {
+		withAnimation(ReduceMotion.animation(.default)) {
+			change()
+		}
+	}
+}

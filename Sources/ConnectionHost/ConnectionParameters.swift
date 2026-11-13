@@ -1,0 +1,195 @@
+// Copyright (c) 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import CocoaExtensions
+import Foundation
+import Network
+import Security
+
+/** The Network.framework parameters a configuration asks for.
+
+ The configuration determines which IP versions to dial, which protocol versions
+ and cipher suites the handshake offers, and which proxy routes the connection.
+ A configured client identity is resolved from the keychain during construction;
+ an unavailable identity fails the connection before any traffic is sent. */
+nonisolated enum ConnectionParameters {
+	private static let torProxyAddress = "127.0.0.1"
+	private static let torProxyPort: UInt16 = 9150
+
+	/// Where the connection actually dials, when it is not the server itself.
+	static func proxyEndpoint(for config: ConnectionConfig) -> (host: String, port: UInt16)? {
+		switch config.proxyType {
+		case .socks5, .HTTP:
+			guard let host = config.proxyAddress, host.isEmpty == false else {
+				return nil
+			}
+
+			return (host: host, port: config.proxyPort)
+		case .tor:
+			return (host: torProxyAddress, port: torProxyPort)
+		case .none, .automatic:
+			return nil
+		@unknown default:
+			return nil
+		}
+	}
+
+	static func tcp(for config: ConnectionConfig) -> TCP {
+		switch config.addressType {
+		case .v4:
+			TCP { IP().version(.v4) }
+		case .v6:
+			TCP { IP().version(.v6) }
+		default:
+			TCP()
+		}
+	}
+
+	/** The handshake as configured, without its certificate validator: who the
+	 peer has to be is the socket's question, not the configuration's.
+
+	 `offeringLegacyCipherSuites` is the transport's own second attempt, never a
+	 setting: it adds the suites with no forward secrecy *after* the selected
+	 ones, so a server that has anything better still picks it. Everything else
+	 about the handshake -- the minimum protocol version, the client identity,
+	 the certificate validation the socket adds -- is the same on both dials.
+
+	 `TLS.cipherSuites(_:)` replaces the list rather than adding to it, so the
+	 legacy suites go in the same call as the selected ones. The system default
+	 is a group, which cannot be extended, so its retry names the group's suites
+	 instead. The compatibility group is no substitute: it leads with RSA key
+	 exchange and adds 3DES. */
+	static func tls(for config: ConnectionConfig, offeringLegacyCipherSuites: Bool) throws -> TLS {
+		var tls = TLS { tcp(for: config) }
+			.version(min: SecureTransportSupport.minimumProtocolType)
+
+		if let identity = try clientIdentity(for: config) {
+			tls = tls.localIdentity(identity)
+		}
+
+		let selected = SecureTransportSupport.cipherSuites(inCollection: config.cipherSuites)
+
+		if offeringLegacyCipherSuites {
+			let forwardSecret = selected.isEmpty ? systemDefaultSuites : selected
+			tls = tls.cipherSuites(suiteValues(forwardSecret + SecureTransportSupport.legacyCipherSuites))
+		} else if selected.isEmpty {
+			tls = tls.cipherSuiteGroups([.default])
+		} else {
+			tls = tls.cipherSuites(suiteValues(selected))
+		}
+
+		return tls
+	}
+
+	/** The TLS 1.2 suites of the platform's default group, in the order its
+	 handshake offers them. The TLS 1.3 suites are offered whatever the list.
+	 `LegacyCipherSuiteRetryOfferTests` checks this against what the default
+	 group actually sends, so a platform that changes the group is noticed. */
+	private static let systemDefaultSuites: [NSNumber] = [
+		0xC02C, 0xC02B, 0xCCA9, 0xC030, 0xC02F, 0xCCA8, 0xC00A, 0xC009, 0xC014, 0xC013,
+	].map { NSNumber(value: $0 as UInt16) }
+
+	/// The suites the framework negotiates from. A raw value outside
+	/// `tls_ciphersuite_t` is not a weaker choice but no choice at all, which is
+	/// why `SecureTransportTests` pins every list against the enum.
+	private static func suiteValues(_ suites: [NSNumber]) -> [tls_ciphersuite_t] {
+		suites.compactMap { tls_ciphersuite_t(rawValue: $0.uint16Value) }
+	}
+
+	static func applyProxy(
+		_ config: ConnectionConfig,
+		to parameters: NWParameters,
+		uniqueIdentifier: String
+	) throws {
+		switch config.proxyType {
+		case .none:
+			parameters.preferNoProxies = true
+		case .automatic:
+			/* The default privacy context consults the system proxy settings
+			 (including PAC) so there is nothing to configure. */
+			parameters.preferNoProxies = false
+		case .socks5, .HTTP, .tor:
+			guard let endpoint = proxyEndpoint(for: config) else {
+				throw ConnectionError.other(message: String(localized: .ConnectionErrors.proxyAddressMissing))
+			}
+
+			let nwEndpoint = NWEndpoint.hostPort(
+				host: NWEndpoint.Host(endpoint.host),
+				port: NWEndpoint.Port(integerLiteral: endpoint.port)
+			)
+
+			var proxyConfiguration = if config.proxyType == .HTTP {
+				ProxyConfiguration(httpCONNECTProxy: nwEndpoint)
+			} else {
+				ProxyConfiguration(socksv5Proxy: nwEndpoint)
+			}
+
+			/* A proxy the user asked for must be used; never fall back to a
+			 direct connection. */
+			proxyConfiguration.allowFailover = false
+
+			if config.proxyType != .tor,
+			   let username = config.proxyUsername, username.isEmpty == false,
+			   let password = config.proxyPassword, password.isEmpty == false
+			{
+				proxyConfiguration.applyCredential(username: username, password: password)
+			}
+
+			let privacyContext = NWParameters.PrivacyContext(description: "Glasstual.IRCConnection.\(uniqueIdentifier)")
+
+			privacyContext.proxyConfigurations = [proxyConfiguration]
+
+			parameters.setPrivacyContext(privacyContext)
+
+			parameters.preferNoProxies = false
+		@unknown default:
+			throw ConnectionError.other(message: String(localized: .ConnectionErrors.unsupportedProxyType))
+		}
+	}
+
+	/** The client-side identity this connection presents, when one is configured.
+
+	 Resolving the keychain reference for each handshake also catches an identity
+	 that was removed or whose private key is no longer accessible. */
+	private static func clientIdentity(for config: ConnectionConfig) throws -> sec_identity_t? {
+		guard let certificateData = config.identityClientSideCertificate else {
+			return nil
+		}
+
+		var certificateObject: CFTypeRef?
+
+		var status = SecItemCopyMatching(
+			[
+				kSecClass: kSecClassCertificate,
+				kSecValuePersistentRef: certificateData,
+				kSecReturnRef: true,
+			] as CFDictionary, &certificateObject
+		)
+
+		if status != errSecSuccess {
+			ConnectionHostLog.connection.error("Client certificate lookup failed: \(status, privacy: .public)")
+
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
+		}
+
+		guard let certificateObject,
+		      CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
+		else {
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(errSecDecode))
+		}
+		// Security exposes the typed certificate through a CFTypeRef result.
+		let certificate = unsafeDowncast(certificateObject, to: SecCertificate.self)
+
+		var identity: SecIdentity?
+
+		status = SecIdentityCreateWithCertificate(nil, certificate, &identity)
+
+		guard status == noErr, let identity else {
+			ConnectionHostLog.connection.error("Client identity lookup failed: \(status, privacy: .public)")
+
+			throw NSError(domain: NSOSStatusErrorDomain, code: Int(status == errSecSuccess ? errSecItemNotFound : status))
+		}
+
+		return try SecureTransportSupport.localIdentity(identity)
+	}
+}

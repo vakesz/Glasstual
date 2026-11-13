@@ -1,0 +1,184 @@
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import SwiftUI
+
+nonisolated enum ReactionInput {
+	static func emoji(from input: String) -> String? {
+		let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard value.isEmpty == false else { return nil }
+
+		let first = value.rangeOfComposedCharacterSequence(at: value.startIndex)
+		return String(value[first])
+	}
+}
+
+/** Which reactions the picker offers, and in which order.
+
+ A reaction is a one-tap gesture everywhere else, so the row is the control and
+ the character palette is the way out for anything that is not on it. What the
+ reader reaches for stays at the front of the row, and the common set fills what
+ is left so the row never changes length. */
+nonisolated enum RecentReactions {
+	/// The reactions offered before the user has picked anything.
+	static let common = ["👍", "❤️", "😂", "😮", "😢", "🎉"]
+	/// How many of the user's own choices are remembered.
+	static let maximumRememberedCount = 6
+	/// How many buttons the row shows, whatever the mix.
+	static let rowLength = 6
+
+	/// The row to draw: the user's own choices first, the common set filling the
+	/// rest, no repeats.
+	static func row(recent: [String]) -> [String] {
+		var result: [String] = []
+		for emoji in recent + common where result.contains(emoji) == false {
+			result.append(emoji)
+			if result.count == rowLength {
+				break
+			}
+		}
+		return result
+	}
+
+	/// What to store once `emoji` has been used: it moves to the front, and the
+	/// list stays bounded.
+	static func recording(_ emoji: String, in recent: [String]) -> [String] {
+		guard let emoji = ReactionInput.emoji(from: emoji) else {
+			return recent
+		}
+		return Array(([emoji] + recent.filter { $0 != emoji }).prefix(maximumRememberedCount))
+	}
+}
+
+private struct ReactionPopoverView: View {
+	let send: (String) -> Void
+
+	@State private var recent = SettingsKeys.Reactions.recent.value
+	@State private var input = ""
+	/// Whether the reader asked for an emoji that is not on the row.
+	@State private var isChoosingOther = false
+	@FocusState private var inputIsFocused: Bool
+	/// The row's hit targets, scaled with the reader's text size so the emoji
+	/// drawn in them are never clipped.
+	@ScaledMetric private var buttonSize: CGFloat = 30
+
+	var body: some View {
+		HStack(spacing: UISpacing.tight) {
+			ForEach(RecentReactions.row(recent: recent), id: \.self) { emoji in
+				Button {
+					submit(emoji)
+				} label: {
+					Text(emoji)
+						.font(.title2)
+						.frame(width: buttonSize, height: buttonSize)
+				}
+				.buttonStyle(.accessoryBar)
+				.help(String(localized: .Transcript.reactWithEmoji(emoji)))
+				.accessibilityLabel(String(localized: .Transcript.reactWithEmoji(emoji)))
+			}
+
+			/* The row is the emoji and one button for the rest, as a Tapback
+			 row is. The palette types into whatever holds the keyboard, so a
+			 field takes it -- but only once the reader asked for the palette:
+			 it is where the palette's choice lands and where a pasted emoji
+			 goes, and `ReactionInput.emoji(from:)` still decides what counts. */
+			if isChoosingOther {
+				TextField(String(localized: .Transcript.customReaction), text: $input)
+					.labelsHidden()
+					.textFieldStyle(.roundedBorder)
+					.multilineTextAlignment(.center)
+					.frame(width: buttonSize * 1.5)
+					.focused($inputIsFocused)
+					/* One submission, on the change: the palette and a paste both
+					 write the field without pressing Return, so the change is what
+					 has to act -- and `onSubmit` beside it sent the same emoji a
+					 second time when the reader did press Return. The field is
+					 cleared on the way out, so the next character typed into a
+					 popover that is still open is a reaction of its own rather
+					 than the second character of the last one. */
+					.onChange(of: input) { _, newValue in
+						guard newValue.isEmpty == false else { return }
+						input = ""
+						submit(newValue)
+					}
+					.help(String(localized: .Transcript.customReaction))
+					.onAppear(perform: presentCharacterPalette)
+			}
+
+			Button(String(localized: .Transcript.moreEmoji), systemImage: "face.smiling") {
+				presentCharacterPalette()
+			}
+			.labelStyle(.iconOnly)
+			.buttonStyle(.accessoryBar)
+			.help(String(localized: .Transcript.moreEmoji))
+		}
+		.padding(UISpacing.regular)
+	}
+
+	/** The palette is a system panel that types into the first responder, so
+	 the field appears and takes the keyboard first. The panel is ordered front
+	 once the field has it: asking for it earlier races the focus change and
+	 the panel opens pointed at whatever had the keyboard before. */
+	private func presentCharacterPalette() {
+		if isChoosingOther {
+			inputIsFocused = true
+			Task { @MainActor in
+				NSApp.orderFrontCharacterPalette(nil)
+			}
+		} else {
+			isChoosingOther = true
+		}
+	}
+
+	private func submit(_ candidate: String) {
+		guard let emoji = ReactionInput.emoji(from: candidate) else { return }
+		recent = RecentReactions.recording(emoji, in: recent)
+		SettingsKeys.Reactions.recent.value = recent
+		send(emoji)
+	}
+}
+
+/** AppKit presentation shell for the SwiftUI reaction picker.
+
+ It draws the row and reports what was picked; where the popover is anchored
+ and what the pick means are the transcript's, which is the view that knows
+ which characters the message drew. */
+@MainActor
+final class ReactionPopover: NSObject, NSPopoverDelegate {
+	/// The emoji the reader picked. The picker closes itself first.
+	var onPick: ((String) -> Void)?
+	/// Called once the popover has gone, however it went, so its owner can drop
+	/// it -- a transient popover is dismissed by the next click anywhere else.
+	var onClose: (() -> Void)?
+
+	private var popover: NSPopover?
+
+	func present(relativeTo rect: NSRect, of view: NSView) {
+		let popover = NSPopover()
+		popover.behavior = .transient
+		popover.delegate = self
+		popover.contentViewController = NSHostingController(
+			rootView: ReactionPopoverView { [weak self] emoji in
+				self?.submit(emoji)
+			}
+		)
+
+		self.popover = popover
+		popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
+	}
+
+	func close() {
+		popover?.close()
+	}
+
+	func popoverDidClose(_: Notification) {
+		popover = nil
+		onClose?()
+	}
+
+	private func submit(_ emoji: String) {
+		close()
+		onPick?(emoji)
+	}
+}

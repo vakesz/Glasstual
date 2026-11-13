@@ -1,0 +1,178 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+
+enum SidebarNodeID: Hashable {
+	case server(String)
+	case conversation(String)
+	case favorites
+	case favorite(String)
+
+	/// Whether the node is a connection rather than a conversation.
+	var isServer: Bool {
+		if case .server = self {
+			true
+		} else {
+			false
+		}
+	}
+
+	var isReorderable: Bool {
+		switch self {
+		case .server, .conversation: true
+		case .favorites, .favorite: false
+		}
+	}
+
+	var itemIdentifier: String {
+		switch self {
+		case let .server(identifier), let .conversation(identifier), let .favorite(identifier): identifier
+		case .favorites: "sidebar-favorites"
+		}
+	}
+}
+
+/// A value delivered to the native outline. Hidden filtered items remain known
+/// so removing a filter restores the same node identities.
+struct SidebarOutlineSnapshot: Equatable {
+	let rows: [ServerRow]
+	let favorites: ServerRow?
+	let selectedIdentifier: String?
+	let isFiltering: Bool
+	let knownIdentifiers: Set<SidebarNodeID>
+
+	init(model: Sidebar) {
+		let projection = model.projection
+		rows = projection.rows
+		favorites = projection.favoriteRows.isEmpty ? nil : ServerRow(
+			id: SidebarNodeID.favorites.itemIdentifier, title: String(localized: .Sidebar.favoritesTitle),
+			isActive: true, isSecured: false, isExpanded: model.favoritesExpanded || model.isFiltering,
+			showsDisclosure: true, conversations: projection.favoriteRows, isFavoritesGroup: true
+		)
+		selectedIdentifier = model.selectedItemIdentifier
+		isFiltering = model.isFiltering
+		knownIdentifiers = projection.knownIdentifiers
+	}
+}
+
+/// NSOutlineView identifies items by object identity. This object stays alive
+/// while its chat item exists; only the snapshot it draws changes.
+final class SidebarOutlineNode: NSObject {
+	enum Content: Equatable {
+		case server(ServerRow)
+		case conversation(ConversationRow)
+	}
+
+	let identity: SidebarNodeID
+	var content: Content
+	var children: [SidebarOutlineNode] = []
+	var parentIdentifier: String?
+
+	init(identity: SidebarNodeID, content: Content) {
+		self.identity = identity
+		self.content = content
+	}
+
+	var accessibilityDescription: String {
+		switch content {
+		case let .server(server):
+			if server.isFavoritesGroup {
+				return server.title
+			}
+			var phrases = [server.isActive
+				? AccessibilityStrings.connectedServer(server.title)
+				: AccessibilityStrings.disconnectedServer(server.title)]
+			if let status = server.bouncerStatus {
+				phrases.append(status.text)
+			}
+			if server.isSecured {
+				phrases.append(String(localized: .MainWindow.connectionSecurity))
+			}
+			return phrases.formatted(.list(type: .and))
+		case let .conversation(conversation):
+			let identity = if conversation.kind != .channel {
+				AccessibilityStrings.directConversation(with: conversation.title)
+			} else if conversation.isActive {
+				AccessibilityStrings.joinedChannel(conversation.title)
+			} else {
+				AccessibilityStrings.unjoinedChannel(conversation.title)
+			}
+			var phrases = [identity]
+			if let network = conversation.networkTitle {
+				phrases.append(network)
+			}
+			if conversation.isFavorite {
+				phrases.append(String(localized: .Sidebar.favoriteAccessibility))
+			}
+			if conversation.hasJoinError {
+				phrases.append(String(localized: .MainWindow.sidebarJoinFailed))
+			}
+			if conversation.unreadCount > 0 {
+				phrases.append(String(localized: .ChannelSpotlight.unreadMessageCount(conversation.unreadCount)))
+			}
+			if conversation.highlightCount > 0 {
+				phrases.append(String(localized: .ChannelSpotlight.highlightCount(conversation.highlightCount)))
+			}
+			return phrases.formatted(.list(type: .and))
+		}
+	}
+}
+
+final class SidebarOutlineTree {
+	private(set) var roots: [SidebarOutlineNode] = []
+	private(set) var nodes: [SidebarNodeID: SidebarOutlineNode] = [:]
+
+	/// Returns whether the outline's hierarchy or order changed. Metadata-only
+	/// refreshes do not reload, replace, or animate native rows.
+	@discardableResult
+	func apply(_ snapshot: SidebarOutlineSnapshot) -> Bool {
+		let previousOrder = roots.map(Self.order(of:))
+		roots = snapshot.rows.map { server in
+			serverNode(server, parentIdentifier: nil)
+		}
+		if let favorites = snapshot.favorites {
+			let parent = node(.favorites, content: .server(favorites))
+			parent.children = favorites.conversations.map { conversation in
+				let child = node(.favorite(conversation.id), content: .conversation(conversation))
+				child.parentIdentifier = favorites.id
+				return child
+			}
+			roots.insert(parent, at: 0)
+		}
+		nodes = nodes.filter { snapshot.knownIdentifiers.contains($0.key) }
+		return previousOrder != roots.map(Self.order(of:))
+	}
+
+	/// A connection's node: its own conversations first, then its networks.
+	private func serverNode(_ server: ServerRow, parentIdentifier: String?) -> SidebarOutlineNode {
+		let parent = node(.server(server.id), content: .server(server))
+		parent.parentIdentifier = parentIdentifier
+		let conversations = server.conversations.map { conversation in
+			let child = node(.conversation(conversation.id), content: .conversation(conversation))
+			child.parentIdentifier = server.id
+			return child
+		}
+		parent.children = conversations + server.networks.map { serverNode($0, parentIdentifier: server.id) }
+		return parent
+	}
+
+	/// The identities of a node and everything beneath it, in drawing order.
+	private static func order(of node: SidebarOutlineNode) -> [SidebarNodeID] {
+		[node.identity] + node.children.flatMap(order(of:))
+	}
+
+	func node(withItemIdentifier identifier: String) -> SidebarOutlineNode? {
+		nodes[.server(identifier)] ?? nodes[.conversation(identifier)]
+	}
+
+	private func node(_ identity: SidebarNodeID, content: SidebarOutlineNode.Content) -> SidebarOutlineNode {
+		if let existing = nodes[identity] {
+			existing.content = content
+			return existing
+		}
+		let created = SidebarOutlineNode(identity: identity, content: content)
+		nodes[identity] = created
+		return created
+	}
+}

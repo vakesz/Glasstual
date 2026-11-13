@@ -1,0 +1,412 @@
+// Copyright (c) 2018 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import CommonCrypto
+import CryptoKit
+import Foundation
+import Security
+
+/// Why a SCRAM exchange failed.
+nonisolated enum SCRAMClientErrorCode: Int, Sendable {
+	case invalidState = 1
+	case malformedServerMessage
+	case nonceMismatch
+	case iterationCountTooLow
+	case serverRejected
+	case serverSignatureMismatch
+	case keyDerivationFailed
+	case iterationCountTooHigh
+	/// RFC 5802 §5.1: the server sent `m=`, a mandatory extension this
+	/// client does not understand, which must fail the exchange.
+	case unsupportedMandatoryExtension
+}
+
+/// The hash a SCRAM mechanism is built on. RFC 5802 is the construction;
+/// RFC 7677 names SHA-256 and draft-melnikov-scram-sha-512 names SHA-512.
+nonisolated enum SCRAMHash: Sendable, CaseIterable {
+	case sha256
+	case sha512
+
+	var mechanism: SASLMechanism {
+		switch self {
+		case .sha256: .scramSHA256
+		case .sha512: .scramSHA512
+		}
+	}
+
+	init?(mechanism: SASLMechanism) {
+		switch mechanism {
+		case .scramSHA256: self = .sha256
+		case .scramSHA512: self = .sha512
+		default: return nil
+		}
+	}
+
+	/// The digest length, which is also the length of the salted password.
+	var keyLength: Int {
+		switch self {
+		case .sha256: Int(CC_SHA256_DIGEST_LENGTH)
+		case .sha512: Int(CC_SHA512_DIGEST_LENGTH)
+		}
+	}
+
+	var pbkdf2Algorithm: CCPseudoRandomAlgorithm {
+		switch self {
+		case .sha256: CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
+		case .sha512: CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
+		}
+	}
+
+	func hmac(key: Data, message: Data) -> Data {
+		let key = SymmetricKey(data: key)
+		switch self {
+		case .sha256: return Data(HMAC<SHA256>.authenticationCode(for: message, using: key))
+		case .sha512: return Data(HMAC<SHA512>.authenticationCode(for: message, using: key))
+		}
+	}
+
+	func hash(_ data: Data) -> Data {
+		switch self {
+		case .sha256: Data(SHA256.hash(data: data))
+		case .sha512: Data(SHA512.hash(data: data))
+		}
+	}
+}
+
+/// A failed SCRAM exchange. It bridges to an `NSError` in
+/// ``errorDomain`` whose code is the ``SCRAMClientErrorCode`` raw value.
+nonisolated struct SCRAMClientError: LocalizedError, CustomNSError {
+	static let errorDomain = "Glasstual.SCRAMClientError"
+
+	let code: SCRAMClientErrorCode
+	/// What went wrong, in terms of the exchange. Not localized: it names wire
+	/// attributes and is shown after a localized lead-in.
+	let reason: String
+
+	var errorCode: Int {
+		code.rawValue
+	}
+
+	var errorDescription: String? {
+		reason
+	}
+}
+
+/// Client side of SASL SCRAM-SHA-256 and SCRAM-SHA-512 (RFC 5802, RFC 7677,
+/// draft-melnikov-scram-sha-512).
+///
+/// The caller drives the exchange: send `clientFirstMessage`, pass the
+/// server's first message to `clientFinalMessage(forServerFirstMessage:)`
+/// and send the result, then pass the server's final message to
+/// `verifyServerFinalMessage(_:)`. The object is single use.
+///
+/// Channel binding is not offered (`n,,`). Passwords are used as typed;
+/// SASLprep is not applied, which matches what IRC servers do.
+///
+/// The exchange is driven from the server session's `SASLSession`, which is
+/// main-actor state, so this state machine belongs to the same domain. Only the
+/// PBKDF2 derivation leaves it, and that is a pure function.
+final class SCRAMClient {
+	/// The exchange, in the order it runs.
+	enum State {
+		case initial
+		case sentClientFirst
+		/// The PBKDF2 derivation the client-final message waits on.
+		case derivingClientFinal
+		case sentClientFinal
+		case authenticated
+		case failed
+	}
+
+	private static let gs2Header = "n,,"
+	private static let minimumIterationCount = 4096
+
+	/// Upper bound on the server supplied `i=`. PBKDF2 is deliberately
+	/// expensive, so an unbounded count is a denial of service; 600000 is
+	/// well above what any deployed IRC server asks for.
+	private static let maximumIterationCount = 600_000
+
+	private(set) var state: State = .initial
+
+	let hash: SCRAMHash
+	private let username: String
+	private let password: String
+	private let clientNonce: String
+	/// Injected so that a test can suspend the derivation and prove a second
+	/// challenge cannot revive the exchange while the first is still deriving.
+	private let deriveKey: @Sendable (String, Data, Int) async -> Data?
+
+	private var clientFirstMessageBare = ""
+	private var serverSignature = Data()
+
+	/// Creates an exchange with a fresh random nonce.
+	convenience init(hash: SCRAMHash = .sha256, username: String, password: String) {
+		self.init(hash: hash, username: username, password: password, clientNonce: SCRAMClient.makeNonce())
+	}
+
+	/// Creates an exchange with a caller supplied nonce. Only tests should
+	/// pick their own nonce.
+	convenience init(hash: SCRAMHash = .sha256, username: String, password: String, clientNonce: String) {
+		self.init(hash: hash, username: username, password: password, clientNonce: clientNonce) { password, salt, iterations in
+			await Self.pbkdf2Offloaded(password: password, salt: salt, iterations: iterations, hash: hash)
+		}
+	}
+
+	init(
+		hash: SCRAMHash = .sha256,
+		username: String,
+		password: String,
+		clientNonce: String,
+		deriveKey: @escaping @Sendable (String, Data, Int) async -> Data?
+	) {
+		self.hash = hash
+		self.username = username
+		self.password = password
+		self.clientNonce = clientNonce
+		self.deriveKey = deriveKey
+	}
+
+	// MARK: - Messages
+
+	/// `n,,n=<user>,r=<nonce>`. Moves the state to `sentClientFirst`.
+	var clientFirstMessage: String {
+		if state == .initial {
+			clientFirstMessageBare = "n=\(SCRAMClient.escapeSASLName(username)),r=\(clientNonce)"
+
+			state = .sentClientFirst
+		}
+
+		return SCRAMClient.gs2Header + clientFirstMessageBare
+	}
+
+	/// Parses `r=,s=,i=` and returns `c=,r=,p=`. Throws on a malformed
+	/// message, a nonce that does not begin with ours, or an iteration
+	/// count below the RFC 7677 minimum.
+	///
+	/// The PBKDF2 derivation runs off the caller's actor, so a large server
+	/// supplied iteration count cannot block the main thread.
+	func clientFinalMessage(forServerFirstMessage serverFirst: String) async throws -> String {
+		let challenge = try parseServerFirstMessage(serverFirst)
+		state = .derivingClientFinal
+		do {
+			try Task.checkCancellation()
+			let derived = await deriveKey(password, challenge.salt, challenge.iterations)
+			try Task.checkCancellation()
+			guard state == .derivingClientFinal else {
+				throw fail(.invalidState, "SCRAM exchange ended during key derivation")
+			}
+			guard let saltedPassword = derived else {
+				throw fail(.keyDerivationFailed, "PBKDF2 failed")
+			}
+			return completeClientFinalMessage(
+				serverFirst: serverFirst,
+				challenge: challenge,
+				saltedPassword: saltedPassword
+			)
+		} catch {
+			state = .failed
+			throw error
+		}
+	}
+
+	private struct ServerFirstChallenge {
+		let combinedNonce: String
+		let salt: Data
+		let iterations: Int
+	}
+
+	private func parseServerFirstMessage(_ serverFirst: String) throws -> ServerFirstChallenge {
+		guard state == .sentClientFirst else {
+			throw fail(.invalidState, "SCRAM exchange is not waiting for the server's first message")
+		}
+
+		let attributes = SCRAMClient.parseAttributes(serverFirst)
+
+		if let serverError = attributes["e"] {
+			throw fail(.serverRejected, serverError)
+		}
+
+		guard attributes["m"] == nil else {
+			throw fail(.unsupportedMandatoryExtension, "Server first message requires an extension (m=)")
+		}
+
+		guard let combinedNonce = attributes["r"],
+		      let saltBase64 = attributes["s"],
+		      let salt = Data(base64Encoded: saltBase64),
+		      let iterationString = attributes["i"],
+		      let iterations = Int(iterationString), iterations > 0
+		else {
+			throw fail(.malformedServerMessage, "Server first message is missing r=, s= or i=")
+		}
+
+		guard combinedNonce.hasPrefix(clientNonce), combinedNonce.count > clientNonce.count else {
+			throw fail(.nonceMismatch, "Server nonce does not begin with the client nonce")
+		}
+
+		guard iterations >= SCRAMClient.minimumIterationCount else {
+			throw fail(.iterationCountTooLow, "Server asked for \(iterations) iterations")
+		}
+
+		guard iterations <= SCRAMClient.maximumIterationCount else {
+			throw fail(.iterationCountTooHigh, "Server asked for \(iterations) iterations")
+		}
+
+		return ServerFirstChallenge(combinedNonce: combinedNonce, salt: salt, iterations: iterations)
+	}
+
+	private func completeClientFinalMessage(
+		serverFirst: String,
+		challenge: ServerFirstChallenge,
+		saltedPassword: Data
+	) -> String {
+		let clientKey = hash.hmac(key: saltedPassword, message: Data("Client Key".utf8))
+		let storedKey = hash.hash(clientKey)
+		let serverKey = hash.hmac(key: saltedPassword, message: Data("Server Key".utf8))
+
+		let channelBinding = Data(SCRAMClient.gs2Header.utf8).base64EncodedString()
+		let clientFinalWithoutProof = "c=\(channelBinding),r=\(challenge.combinedNonce)"
+
+		let authMessage = [clientFirstMessageBare, serverFirst, clientFinalWithoutProof].joined(separator: ",")
+		let authMessageData = Data(authMessage.utf8)
+
+		let clientSignature = hash.hmac(key: storedKey, message: authMessageData)
+		let clientProof = Data(zip(clientKey, clientSignature).map { $0 ^ $1 })
+
+		serverSignature = hash.hmac(key: serverKey, message: authMessageData)
+
+		state = .sentClientFinal
+
+		return clientFinalWithoutProof + ",p=" + clientProof.base64EncodedString()
+	}
+
+	/// Checks `v=` against the expected server signature. A mismatch means
+	/// the server does not know the password and must not be trusted.
+	func verifyServerFinalMessage(_ serverFinal: String) throws {
+		guard state == .sentClientFinal else {
+			throw fail(.invalidState, "SCRAM exchange is not waiting for the server's final message")
+		}
+
+		let attributes = SCRAMClient.parseAttributes(serverFinal)
+
+		if let serverError = attributes["e"] {
+			throw fail(.serverRejected, serverError)
+		}
+
+		guard let verifier = attributes["v"], let received = Data(base64Encoded: verifier) else {
+			throw fail(.malformedServerMessage, "Server final message is missing v=")
+		}
+
+		guard SCRAMClient.constantTimeEquals(received, serverSignature) else {
+			throw fail(.serverSignatureMismatch, "Server signature does not match")
+		}
+
+		state = .authenticated
+	}
+
+	// MARK: - Helpers
+
+	private func fail(_ code: SCRAMClientErrorCode, _ reason: String) -> SCRAMClientError {
+		state = .failed
+
+		return SCRAMClientError(code: code, reason: reason)
+	}
+
+	static func constantTimeEquals(_ lhs: Data, _ rhs: Data) -> Bool {
+		guard lhs.count == rhs.count, lhs.isEmpty == false else {
+			return false
+		}
+
+		var difference: UInt8 = 0
+
+		for (left, right) in zip(lhs, rhs) {
+			difference |= left ^ right
+		}
+
+		return difference == 0
+	}
+
+	/// Splits `a=1,b=2` into a dictionary. Values may contain `=`; only
+	/// the first one separates the attribute from its value.
+	static func parseAttributes(_ message: String) -> [String: String] {
+		var attributes: [String: String] = [:]
+
+		for component in message.split(separator: ",", omittingEmptySubsequences: true) {
+			guard let separator = component.firstIndex(of: "=") else {
+				continue
+			}
+
+			let name = String(component[..<separator])
+			let value = String(component[component.index(after: separator)...])
+
+			if name.count == 1 {
+				attributes[name] = value
+			}
+		}
+
+		return attributes
+	}
+
+	/// RFC 5802 section 5.1: `=` becomes `=3D` and `,` becomes `=2C`.
+	static func escapeSASLName(_ name: String) -> String {
+		name.replacingOccurrences(of: "=", with: "=3D").replacingOccurrences(of: ",", with: "=2C")
+	}
+
+	static func makeNonce() -> String {
+		var bytes = [UInt8](repeating: 0, count: 24)
+
+		let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+
+		if status != errSecSuccess {
+			for index in bytes.indices {
+				bytes[index] = UInt8.random(in: 0 ... 255)
+			}
+		}
+
+		/* The nonce must be printable ASCII without commas. Base64 fits. */
+		return Data(bytes).base64EncodedString()
+	}
+
+	/// `pbkdf2(password:salt:iterations:hash:)` on a background executor.
+	@concurrent
+	static func pbkdf2Offloaded(password: String, salt: Data, iterations: Int, hash: SCRAMHash = .sha256) async -> Data? {
+		pbkdf2(password: password, salt: salt, iterations: iterations, hash: hash)
+	}
+
+	/// PBKDF2 over the hash's HMAC, producing a key as long as its digest.
+	/// Pure, so the offloaded wrapper above can call it from the cooperative pool.
+	nonisolated static func pbkdf2( // nonisolated: pure
+		password: String,
+		salt: Data,
+		iterations: Int,
+		hash: SCRAMHash = .sha256
+	) -> Data? {
+		guard let roundCount = UInt32(exactly: iterations) else {
+			return nil
+		}
+
+		let passwordBytes = password.utf8.map { CChar(bitPattern: $0) }
+		let saltBytes = [UInt8](salt)
+
+		var derived = [UInt8](repeating: 0, count: hash.keyLength)
+
+		let status = passwordBytes.withUnsafeBufferPointer { passwordPointer in
+			CCKeyDerivationPBKDF(
+				CCPBKDFAlgorithm(kCCPBKDF2),
+				passwordPointer.baseAddress,
+				passwordBytes.count,
+				saltBytes,
+				saltBytes.count,
+				hash.pbkdf2Algorithm,
+				roundCount,
+				&derived,
+				derived.count
+			)
+		}
+
+		guard status == kCCSuccess else {
+			return nil
+		}
+
+		return Data(derived)
+	}
+}

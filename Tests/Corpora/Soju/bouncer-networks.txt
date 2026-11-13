@@ -1,0 +1,28 @@
+# soju.im/bouncer-networks and soju.im/bouncer-networks-notify.
+# See README.md for the line prefixes.
+
+== parent
+# The account connection: it asks for both capabilities, lists the networks
+# once registered, and then hears about changes.
+S :bnc.example CAP * LS :batch message-tags server-time soju.im/bouncer-networks soju.im/bouncer-networks-notify
+A
+C CAP END
+S :bnc.example 001 me :Welcome to soju me
+C BOUNCER LISTNETWORKS
+S :bnc.example BATCH +b1 soju.im/bouncer-networks
+S @batch=b1 :bnc.example BOUNCER NETWORK 1 name=Libera;state=connected;host=irc.libera.chat;port=6697;tls=1
+S @batch=b1 :bnc.example BOUNCER NETWORK 2 name=My\sOFTC;state=disconnected;error=Connection\srefused;host=irc.oftc.net
+S :bnc.example BATCH -b1
+# A network added, one changed and one deleted, pushed by the notify capability.
+# A change names only the attributes that changed; an empty value removes one.
+S :bnc.example BOUNCER NETWORK 3 name=Rizon;state=connecting;host=irc.rizon.net
+S :bnc.example BOUNCER NETWORK 2 state=connected;error=
+S :bnc.example BOUNCER NETWORK 1 *
+
+== network
+# A network connection binds before registration ends and never asks for
+# the account's capabilities, even if the bouncer offers them.
+S :bnc.example CAP * LS :batch message-tags server-time soju.im/bouncer-networks soju.im/bouncer-networks-notify
+A
+C BOUNCER BIND 7
+C CAP END

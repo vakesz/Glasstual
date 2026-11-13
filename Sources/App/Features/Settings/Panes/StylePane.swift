@@ -1,0 +1,462 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import SwiftUI
+
+/// One colour the transcript theme names, with the two wells that set it.
+private struct TranscriptThemeColorRole: Identifiable {
+	let id: String
+	let title: LocalizedStringResource
+	let keyPath: WritableKeyPath<TranscriptThemePalette, AdaptiveTranscriptColor>
+
+	static let all = [
+		Self(id: "background", title: .TranscriptTheme.background, keyPath: \.background),
+		Self(id: "chromeBackground", title: .TranscriptTheme.sidebarBackground, keyPath: \.chromeBackground),
+		Self(id: "primaryText", title: .TranscriptTheme.primaryText, keyPath: \.primaryText),
+		Self(id: "secondaryText", title: .TranscriptTheme.secondaryText, keyPath: \.secondaryText),
+		Self(id: "timestampText", title: .TranscriptTheme.timestampText, keyPath: \.timestampText),
+		Self(id: "eventText", title: .TranscriptTheme.eventText, keyPath: \.eventText),
+		Self(id: "link", title: .TranscriptTheme.links, keyPath: \.link),
+		Self(id: "localNickname", title: .TranscriptTheme.yourNickname, keyPath: \.localNickname),
+		Self(id: "remoteNickname", title: .TranscriptTheme.otherNicknames, keyPath: \.remoteNickname),
+		Self(
+			id: "highlightBackground",
+			title: .TranscriptTheme.highlightBackground,
+			keyPath: \.highlightBackground
+		),
+		Self(id: "highlightText", title: .TranscriptTheme.highlightText, keyPath: \.highlightText),
+		Self(id: "bubbleIncoming", title: .TranscriptTheme.incomingBubble, keyPath: \.bubbleIncoming),
+		Self(id: "bubbleOutgoing", title: .TranscriptTheme.outgoingBubble, keyPath: \.bubbleOutgoing),
+		Self(id: "unreadMarker", title: .TranscriptTheme.unreadMarker, keyPath: \.unreadMarker),
+		Self(id: "failure", title: .TranscriptTheme.failure, keyPath: \.failure),
+	]
+}
+
+/// The Style row: the transcript theme, the colours and spacing it draws with,
+/// and what the transcript shows.
+struct StylePane: View {
+	/// The non-key controls this form exposes to Settings search. Colour roles
+	/// come from the same table that draws their wells, so new roles are found.
+	static var searchLabels: [LocalizedStringResource] {
+		[.TranscriptTheme.themeName, .TranscriptTheme.themePreset, .TranscriptTheme.layout, .TranscriptTheme.lines,
+		 .TranscriptTheme.bubbles, .TranscriptTheme.importTheme, .TranscriptTheme.exportTheme,
+		 .TranscriptTheme.colors, .TranscriptTheme.light, .TranscriptTheme.dark,
+		 .TranscriptTheme.lineSpacing, .TranscriptTheme.messageSpacing, .TranscriptTheme.horizontalPadding,
+		 .Settings.styleFontLabel, .Settings.styleFontChange, .Settings.styleNicknameFormatLabel,
+		 .Settings.styleTimestampFormatLabel, .Settings.restoreDefaults]
+			+ TranscriptThemeColorRole.all.map(\.title)
+	}
+
+	private static let scrollbackPresets = [
+		"1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000", "40000", "50000",
+	]
+	/** The default first: a preset list whose first entry is not what the app
+	 ships with reads as though the shipped format were a custom one. */
+	private static let nicknamePresets = [
+		"%@%n:", "%@%n", "%n: ", "%@%n: ", "(%n) ", "<%n> ", "<%@%n> ", "<%@%-9n>",
+	]
+	/// The default first, for the reason above: what the app ships with is
+	/// `%H:%M:%S`, and a list that started with a bracketed format made the
+	/// shipped one look like something the person had typed themselves.
+	private static let timestampPresets = [
+		"%H:%M:%S", "[%H:%M]", "[%H:%M:%S]", "[%I:%M:%S %p]", "[%m/%d/%Y -:- %I:%M:%S %p]",
+	]
+
+	let model: SettingsModel
+	@State private var confirmsThemeReset = false
+	@State private var confirmsPresetReplace = false
+	@State private var pendingPreset: TranscriptThemePreset?
+
+	var body: some View {
+		Section {
+			LabeledContent {
+				SettingsCommittedField(title: .TranscriptTheme.themeName, value: themeName)
+			} label: {
+				Text(.TranscriptTheme.themeName)
+			}
+			presetRow
+			Picker(selection: themeLayout) {
+				Text(.TranscriptTheme.lines).tag(TranscriptThemeLayout.lines)
+				Text(.TranscriptTheme.bubbles).tag(TranscriptThemeLayout.bubbles)
+			} label: {
+				Text(.TranscriptTheme.layout)
+			}
+			fontRow
+			HStack {
+				Button(.TranscriptTheme.importTheme) { model.importTranscriptTheme() }
+				Button(.TranscriptTheme.exportTheme) { model.exportTranscriptTheme() }
+				Spacer()
+				Button(.Settings.restoreDefaults) {
+					confirmResetTranscriptTheme()
+				}
+				.help(Text(.Settings.interfaceResetThemeConfirmation))
+				.confirmationDialog(
+					Text(.Settings.interfaceResetThemeConfirmation),
+					isPresented: $confirmsThemeReset
+				) {
+					Button(.Settings.interfaceResetToDefaults, role: .destructive) {
+						model.resetTranscriptTheme()
+					}
+					Button(PromptStrings.Action.cancel, role: .cancel) {}
+				} message: {
+					Text(.Settings.interfaceResetThemeConfirmationBody)
+				}
+			}
+		} header: {
+			Text(.TranscriptTheme.transcriptTheme)
+		}
+
+		Section {
+			colorGrid
+			SettingsToggle(
+				title: .Settings.styleThemesWindowChrome,
+				note: .Settings.styleThemesWindowChromeNote,
+				isOn: model.settings.binding(for: SettingsKeys.Appearance.themesWindowChrome)
+			)
+		} header: {
+			Text(.TranscriptTheme.colors)
+		} footer: {
+			VStack(alignment: .leading, spacing: UISpacing.tight) {
+				Text(.TranscriptTheme.roleColorNote)
+				Text(.TranscriptTheme.roleColorSystemNote)
+			}
+		}
+
+		Section {
+			formatFields
+			spacingStepper(.TranscriptTheme.lineSpacing, value: lineSpacing, in: 0 ... 16)
+			spacingStepper(.TranscriptTheme.messageSpacing, value: messageSpacing, in: 0 ... 32)
+			spacingStepper(.TranscriptTheme.horizontalPadding, value: horizontalPadding, in: 0 ... 48)
+		} header: {
+			Text(.Settings.styleHeadingLayout)
+		}
+
+		Section {
+			SettingsToggle(
+				title: .Settings.styleAutoScrollbackMarker,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.autoAddUnreadMarker)
+			)
+			SettingsToggle(
+				title: .Settings.styleShowDateChanges,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.showDateChanges)
+			)
+			SettingsToggle(
+				title: .Settings.styleShowJoinLeave,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.showJoinLeave)
+			)
+			SettingsToggle(
+				title: .TranscriptTheme.showInlineImages,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.showInlineMedia)
+			)
+			SettingsToggle(
+				title: .Settings.styleShowServerProfiles,
+				note: .Settings.styleShowServerProfilesNote,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.showServerProfiles)
+			)
+			SettingsToggle(
+				title: .Settings.styleDisableNicknameColors,
+				isOn: model.settings.binding(for: SettingsKeys.Messages.disableNicknameColorHashing)
+			)
+			SettingsToggle(
+				title: .Settings.styleShowMotd,
+				isOn: model.settings.binding(for: SettingsKeys.Connection.displayServerMOTD)
+			)
+		} header: {
+			Text(.Settings.headingGeneral)
+		}
+
+		Section {
+			LabeledContent {
+				SettingsComboField(
+					title: .Settings.styleScrollbackSaveLimit,
+					presets: Self.scrollbackPresets,
+					value: model.settings.numberField(for: SettingsKeys.Logging.scrollbackSaveLimit),
+					rejectionMessage: .SettingsTransfer.enterAValidWholeNumber
+				)
+			} label: {
+				Text(.Settings.styleScrollbackSaveLimit)
+			}
+		} header: {
+			Text(.Settings.styleHeadingScrollback)
+		} footer: {
+			Text(.Settings.styleScrollbackSaveLimitNote)
+		}
+	}
+
+	/// The light and dark wells of every colour role, in a grid so that the
+	/// two columns line up and carry real headings.
+	private var colorGrid: some View {
+		Grid(
+			alignment: .leading,
+			horizontalSpacing: UISpacing.loose,
+			verticalSpacing: UISpacing.regular
+		) {
+			GridRow {
+				Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+				columnHeader(.TranscriptTheme.light)
+				columnHeader(.TranscriptTheme.dark)
+			}
+			.accessibilityHidden(true)
+
+			ForEach(TranscriptThemeColorRole.all) { role in
+				GridRow {
+					Text(role.title)
+						.gridColumnAlignment(.leading)
+					colorWell(role, dark: false)
+					colorWell(role, dark: true)
+				}
+			}
+		}
+		.frame(maxWidth: .infinity, alignment: .leading)
+	}
+
+	private func columnHeader(_ title: LocalizedStringResource) -> some View {
+		Text(title)
+			.font(.caption)
+			.foregroundStyle(.secondary)
+	}
+
+	private func colorWell(_ role: TranscriptThemeColorRole, dark: Bool) -> some View {
+		let appearance = String(localized: dark ? .TranscriptTheme.dark : .TranscriptTheme.light)
+		return ColorPicker(appearance, selection: color(role, dark: dark), supportsOpacity: true)
+			.labelsHidden()
+			.accessibilityLabel(Text(.Settings.styleColorAccessibility(
+				String(localized: role.title),
+				appearance
+			)))
+	}
+
+	/// The shipped theme the stored theme matches, or the row saying it is
+	/// a customization. A menu rather than a picker: a picker needs a
+	/// selection the customized theme cannot give it.
+	private var presetRow: some View {
+		LabeledContent {
+			Menu {
+				ForEach(TranscriptThemePreset.allCases) { preset in
+					Button(preset.displayTitle) {
+						requestPreset(preset)
+					}
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsThemePreset(preset.rawValue))
+				}
+			} label: {
+				Text(currentPresetName)
+			}
+			.accessibilityIdentifier(AccessibilityIdentifier.settingsThemePreset)
+			.confirmationDialog(
+				Text(pendingPresetTitle),
+				isPresented: $confirmsPresetReplace
+			) {
+				Button(.Settings.interfaceResetToDefaults, role: .destructive) {
+					applyPendingPreset()
+				}
+				Button(PromptStrings.Action.cancel, role: .cancel) {}
+			} message: {
+				Text(.Settings.interfaceResetThemeConfirmationBody)
+			}
+		} label: {
+			Text(.TranscriptTheme.themePreset)
+		}
+	}
+
+	/// Applies `preset`, asking first when the stored theme is a
+	/// customization that the preset would replace for good.
+	private func requestPreset(_ preset: TranscriptThemePreset) {
+		guard hasCustomTranscriptTheme else {
+			model.applyTranscriptPreset(preset)
+			return
+		}
+		pendingPreset = preset
+		confirmsPresetReplace = true
+	}
+
+	private func applyPendingPreset() {
+		guard let preset = pendingPreset else { return }
+		pendingPreset = nil
+		model.applyTranscriptPreset(preset)
+	}
+
+	private var pendingPresetTitle: String {
+		guard let preset = pendingPreset else { return "" }
+		return String(localized: .TranscriptTheme.replaceThemeConfirmation(preset.displayTitle))
+	}
+
+	private var currentPresetName: String {
+		let theme = model.transcriptTheme
+		if theme == .lines {
+			return String(localized: .TranscriptTheme.lines)
+		}
+		if theme == .bubbles {
+			return String(localized: .TranscriptTheme.bubbles)
+		}
+		if let preset = TranscriptThemePreset.allCases.first(where: { $0.theme() == theme }) {
+			return preset.displayTitle
+		}
+		return String(localized: .TranscriptTheme.customTheme)
+	}
+
+	private var fontRow: some View {
+		LabeledContent {
+			HStack(spacing: UISpacing.regular) {
+				Text(.Settings.styleFontDescription(
+					TranscriptFontChoice.displayName(for: model.transcriptTheme.fontName),
+					Double(model.transcriptTheme.fontSize)
+						.formatted(.number.precision(.fractionLength(0 ... 1)))
+				))
+				.foregroundStyle(.secondary)
+				Button(.Settings.styleFontChange) { model.selectTranscriptFont() }
+					.accessibilityIdentifier(AccessibilityIdentifier.settingsTranscriptFont)
+			}
+		} label: {
+			Text(.Settings.styleFontLabel)
+		}
+	}
+
+	private func spacingStepper(
+		_ label: LocalizedStringResource,
+		value: Binding<Double>,
+		in range: ClosedRange<Double>
+	) -> some View {
+		LabeledContent {
+			Stepper(value: value, in: range) {
+				Text(verbatim: value.wrappedValue.formatted())
+			}
+			.accessibilityLabel(Text(label))
+		} label: {
+			Text(label)
+		}
+	}
+
+	@ViewBuilder
+	private var formatFields: some View {
+		LabeledContent {
+			SettingsComboField(
+				title: .Settings.styleNicknameFormatLabel,
+				presets: Self.nicknamePresets,
+				value: themeText(\.nicknameFormat)
+			)
+		} label: {
+			Text(.Settings.styleNicknameFormatLabel)
+			Text(.Settings.styleNicknameFormatSymbols(
+				String(localized: .Settings.styleFormatSymbolsLabel),
+				"%@",
+				String(localized: .Settings.styleNicknameFormatSymbolMode),
+				"%n",
+				String(localized: .Settings.styleNicknameFormatSymbolNickname)
+			))
+		}
+
+		LabeledContent {
+			SettingsComboField(
+				title: .Settings.styleTimestampFormatLabel,
+				presets: Self.timestampPresets,
+				value: themeText(\.timestampFormat)
+			)
+		} label: {
+			Text(.Settings.styleTimestampFormatLabel)
+			Text(.Settings.styleTimestampFormatNote)
+		}
+	}
+
+	/// A customised theme cannot be brought back once it is replaced, so the
+	/// reset asks first; a theme still at its defaults has nothing to lose.
+	private func confirmResetTranscriptTheme() {
+		guard hasCustomTranscriptTheme else {
+			model.resetTranscriptTheme()
+			return
+		}
+
+		confirmsThemeReset = true
+	}
+
+	private var hasCustomTranscriptTheme: Bool {
+		TranscriptThemePreset.allShippedThemes.contains(model.transcriptTheme) == false
+	}
+
+	/// A theme with an empty name is rejected, so a blank entry restores the
+	/// stored one rather than being written.
+	private var themeName: SettingsFieldValue {
+		SettingsFieldValue(
+			text: { model.transcriptTheme.name },
+			write: { newValue in
+				let name = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+				guard name.isEmpty == false, name != model.transcriptTheme.name else { return true }
+				return model.updateTheme { $0.name = name }
+			}
+		)
+	}
+
+	private var themeLayout: Binding<TranscriptThemeLayout> {
+		themeBinding(\.layout)
+	}
+
+	private var lineSpacing: Binding<Double> {
+		themeBinding(\.lineSpacing)
+	}
+
+	private var messageSpacing: Binding<Double> {
+		themeBinding(\.messageSpacing)
+	}
+
+	private var horizontalPadding: Binding<Double> {
+		themeBinding(\.horizontalPadding)
+	}
+
+	/** A text field over the theme that writes when editing ends.
+
+	 Every write re-validates, persists and republishes the whole theme to every
+	 open transcript, which is what a format typed one keystroke at a time used
+	 to cost per keystroke. */
+	private func themeText(_ keyPath: WritableKeyPath<TranscriptTheme, String>) -> SettingsFieldValue {
+		SettingsFieldValue(
+			text: { model.transcriptTheme[keyPath: keyPath] },
+			write: { value in
+				guard value != model.transcriptTheme[keyPath: keyPath] else { return true }
+				return model.updateTheme { $0[keyPath: keyPath] = value }
+			}
+		)
+	}
+
+	private func themeBinding<Value>(_ keyPath: WritableKeyPath<TranscriptTheme, Value>) -> Binding<Value> {
+		Binding(
+			get: { model.transcriptTheme[keyPath: keyPath] },
+			set: { value in model.updateTheme { $0[keyPath: keyPath] = value } }
+		)
+	}
+
+	private func color(_ role: TranscriptThemeColorRole, dark: Bool) -> Binding<Color> {
+		Binding(
+			get: {
+				let pair = model.transcriptTheme.palette[keyPath: role.keyPath]
+				return Color(nsColor: pair.resolved(isDark: dark, systemColors: .standard(isDark: dark)))
+			},
+			set: { value in
+				guard let components = TranscriptThemeColor(NSColor(value)) else { return }
+				model.updateTheme {
+					var pair = Self.ownColors(for: $0.palette[keyPath: role.keyPath])
+					if dark {
+						pair.dark = components
+					} else {
+						pair.light = components
+					}
+					$0.palette[keyPath: role.keyPath] = pair
+				}
+			}
+		)
+	}
+
+	/** The role as the colours the wells show, ready for one to be replaced.
+
+	 Choosing a colour stops a role following the system colour, so the other
+	 appearance keeps the system colour the reader saw in its well rather than
+	 jumping to the stored stand-in. */
+	private static func ownColors(for pair: AdaptiveTranscriptColor) -> AdaptiveTranscriptColor {
+		guard pair.system != nil,
+		      let light = TranscriptThemeColor(pair.resolved(isDark: false, systemColors: .standard(isDark: false))),
+		      let dark = TranscriptThemeColor(pair.resolved(isDark: true, systemColors: .standard(isDark: true)))
+		else {
+			return pair
+		}
+		return AdaptiveTranscriptColor(light: light, dark: dark)
+	}
+}

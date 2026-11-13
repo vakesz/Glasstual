@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in Glasstual does not work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Connect to …
+        2. Join …
+        3. …
+  - type: input
+    id: version
+    attributes:
+      label: Glasstual version
+      description: From Glasstual › About Glasstual.
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+    validations:
+      required: true
+  - type: input
+    id: network
+    attributes:
+      label: IRC network and server software
+      description: For example "Libera.Chat (Solanum)" or "self-hosted Ergo 2.x". Leave blank if it does not matter.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output or crash report
+      description: Paste relevant lines from Console.app or a crash report. Remove anything private first.
+      render: text

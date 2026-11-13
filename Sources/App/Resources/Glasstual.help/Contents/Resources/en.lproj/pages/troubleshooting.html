@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>If Glasstual doesn’t work as expected</title>
+	<meta name="description" content="Solve problems connecting, signing in, joining channels, transferring files and loading images.">
+	<meta name="keywords" content="problem, error, cannot connect, troubleshooting, help, nickname in use, SASL failed, images, notifications">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="troubleshooting"></a>
+<h1>If Glasstual doesn’t work as expected</h1>
+<h2>You can’t connect</h2>
+<ul>
+	<li>Check the server address and port in Server Properties &gt; General, and that Connect securely matches the port, often 6697 for TLS and 6667 without it.</li>
+	<li>If Glasstual reports an untrusted certificate, see <a href="connect-securely.html">Connect securely</a>.</li>
+	<li>If you use Tor, open Tor Browser first. If you use another proxy, check its address in the Proxy Server pane, or hold down Option and choose Server &gt; Connect Without Proxy.</li>
+	<li>If the network uses a WebSocket gateway, check the connection type and path; see <a href="websocket.html">Connect to a WebSocket server</a>.</li>
+</ul>
+
+<h2>Your nickname is taken</h2>
+<p>Add alternative nicknames in Server Properties &gt; Identity, or type <code>/nick newname</code>. If the nickname is registered to you, sign in to your account.</p>
+
+<h2>Sign-in fails</h2>
+<ul>
+	<li>Check the SASL mechanism and the account name in Server Properties &gt; Identity. The pane names any missing password, certificate, key or token.</li>
+	<li>If “Use only this mechanism” is selected, Glasstual doesn’t try another one.</li>
+	<li>If your password wasn’t sent, the server’s certificate wasn’t checked or the connection wasn’t encrypted; see <a href="connect-securely.html">Connect securely</a>.</li>
+	<li>After fixing the problem, choose Server &gt; Sign In Again.</li>
+</ul>
+
+<h2>Channels don’t join</h2>
+<ul>
+	<li>Some channels need you to be signed in. In Server Properties &gt; Identity, select “Wait for identification before joining channels.”</li>
+	<li>Joining many channels at once can look like an attack to some networks. Open Glasstual &gt; Settings, click Connection, then increase the delay under Flood Control.</li>
+</ul>
+
+<h2>File transfers fail</h2>
+<p>Transfers need a direct connection between computers. Check the IP address detection and port range in File Transfers settings, or ask the other person to send the file while you use passive requests. See <a href="file-transfers.html">Send and receive files</a>.</p>
+
+<h2>Images don’t appear</h2>
+<ul>
+	<li>Check “Show inline images” in Style settings and “Show inline media” in Channel Properties.</li>
+	<li>On a server with an HTTP or SOCKS proxy, click “Load image from” to load it.</li>
+	<li>Glasstual loads only HTTP and HTTPS images.</li>
+</ul>
+
+<h2>Messages are missing after you reconnect</h2>
+<p>If a banner says some messages weren’t loaded, click Load Missing Messages. The server must keep history; see <a href="history.html">Catch up on history and search it</a>.</p>
+
+<h2>Notifications don’t appear</h2>
+<p>Check that notifications are allowed for Glasstual in System Settings &gt; Notifications, and that Glasstual isn’t muted in the Glasstual menu or by a Focus.</p>
+
+<h2>Get more help</h2>
+<p>Choose Help &gt; Connect to Help Channel to ask other Glasstual users.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="connect-securely.html">Connect securely</a> · <a href="sign-in.html">Sign in</a> · <a href="file-transfers.html">File transfers</a></p>
+</nav>
+</body>
+</html>

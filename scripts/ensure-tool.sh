@@ -1,0 +1,117 @@
+#!/bin/bash
+# Use the pinned tool on PATH or cache a verified release under Library/Caches.
+# Absolute wrappers let Apple's Make 3.81 invoke tools without relying on PATH.
+#
+# Usage
+#   scripts/ensure-tool.sh <swiftformat|swiftlint|actionlint|shellcheck|xcodegen>
+#
+# To bump a tool, change its version, URL and digest together below. GitHub
+# lists each release asset's digest, and `gh release view <tag> --repo
+# <owner/name> --json assets` prints it.
+
+set -euo pipefail
+umask 022
+
+tools_root="${GLASSTUAL_TOOLS_DIR:-$HOME/Library/Caches/Glasstual/Tools}"
+
+fail() {
+	echo "ensure-tool: $*" >&2
+	exit 1
+}
+
+tool="${1:-}"
+case "$tool" in
+	swiftformat)
+		# 0.64.1+ indent+wrap emits space-before-tab under --indent tab, which
+		# SwiftLint rejects. Stay on 0.64.0 until that is fixed upstream.
+		version=0.64.0
+		url="https://github.com/nicklockwood/SwiftFormat/releases/download/$version/swiftformat.zip"
+		sha256=95ea62625d0b898a7af870293311ae6f09e4a3147ecd900593687e4b9ab2fd98
+		executable=swiftformat
+		;;
+	swiftlint)
+		version=0.65.1
+		url="https://github.com/realm/SwiftLint/releases/download/$version/portable_swiftlint.zip"
+		sha256=c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0
+		executable=swiftlint
+		;;
+	actionlint)
+		version=1.7.12
+		url="https://github.com/rhysd/actionlint/releases/download/v$version/actionlint_${version}_darwin_arm64.tar.gz"
+		sha256=aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f
+		executable=actionlint
+		;;
+	shellcheck)
+		version=0.11.0
+		url="https://github.com/koalaman/shellcheck/releases/download/v$version/shellcheck-v$version.darwin.aarch64.tar.gz"
+		sha256=339b930feb1ea764467013cc1f72d09cd6b869ebf1013296ba9055ab2ffbd26f
+		executable="shellcheck-v$version/shellcheck"
+		;;
+	xcodegen)
+		version=2.46.0
+		url="https://github.com/yonaskolb/XcodeGen/releases/download/$version/xcodegen.zip"
+		sha256=4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+		# XcodeGen finds its setting presets in ../share beside the binary, so
+		# the whole unpacked tree stays together.
+		executable=xcodegen/bin/xcodegen
+		;;
+	*)
+		fail "usage: $0 <swiftformat|swiftlint|actionlint|shellcheck|xcodegen>"
+		;;
+esac
+
+# Each tool prints its version differently; the pinned version appearing as a
+# whole word in that output is the check.
+installed_version_matches() {
+	local output
+	case "$tool" in
+		swiftlint) output="$("$1" version 2> /dev/null)" ;;
+		*) output="$("$1" --version 2> /dev/null)" ;;
+	esac
+	[[ "$output" =~ (^|[^0-9.])${version//./\\.}($|[^0-9.]) ]]
+}
+
+bin_dir="$tools_root/bin"
+install_dir="$tools_root/$tool-$version"
+target="$install_dir/$executable"
+if found="$(command -v "$tool")" && installed_version_matches "$found"; then
+	target="$found"
+elif [ ! -x "$target" ]; then
+	if [ -n "${found:-}" ]; then
+		echo "ensure-tool: $found is not $tool $version; installing the pinned release under $tools_root" >&2
+	else
+		echo "ensure-tool: installing $tool $version under $tools_root" >&2
+	fi
+	command -v curl > /dev/null || fail "curl is required to download $tool $version"
+
+	staging="$(mktemp -d "${TMPDIR:-/tmp}/glasstual-$tool.XXXXXX")"
+	trap 'rm -rf "$staging"' EXIT
+	archive="$staging/${url##*/}"
+	curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+		--retry 3 --output "$archive" "$url" ||
+		fail "could not download $url. Install $tool $version yourself and put it on PATH."
+	actual="$(shasum -a 256 "$archive" | cut -d ' ' -f 1)"
+	[ "$actual" = "$sha256" ] ||
+		fail "checksum mismatch for $url: expected $sha256, got $actual"
+
+	mkdir -p "$staging/unpacked"
+	case "$archive" in
+		*.zip) ditto -x -k "$archive" "$staging/unpacked" ;;
+		*.tar.gz) tar -xzf "$archive" -C "$staging/unpacked" ;;
+		*) fail "unsupported archive $archive" ;;
+	esac
+	[ -f "$staging/unpacked/$executable" ] || fail "$url did not contain $executable"
+	chmod +x "$staging/unpacked/$executable"
+
+	mkdir -p "$tools_root"
+	rm -rf "$install_dir"
+	mv "$staging/unpacked" "$install_dir"
+fi
+
+# The wrapper runs the real binary by its full path, where a symlink would not,
+# so XcodeGen still finds its presets beside it.
+mkdir -p "$bin_dir"
+printf '#!/bin/bash\nexec %q "$@"\n' "$target" > "$bin_dir/$tool"
+chmod +x "$bin_dir/$tool"
+installed_version_matches "$bin_dir/$tool" ||
+	fail "$target does not report version $version"

@@ -1,0 +1,115 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+@testable import Glasstual
+import Testing
+
+@MainActor
+struct TranscriptViewSelectionTests {
+	@Test("Clearing selected text clears the transcript's cached selection")
+	func clearingRemovesSelection() throws {
+		try withSelectedTranscript { view in
+			view.clearLines()
+			#expect(view.textView.selectedRange().length == 0)
+			#expect(view.hasSelection == false)
+			#expect(view.selection == nil)
+		}
+	}
+
+	@Test("Trimming one selected endpoint does not select the surviving remainder")
+	func trimmingSelectedEndpointClearsSelection() throws {
+		try withSelectedTranscript { view in
+			let text = view.textView.string as NSString
+			let start = text.range(of: "first body").location
+			let end = NSMaxRange(text.range(of: "second body"))
+			view.textView.setSelectedRange(NSRange(location: start, length: end - start))
+			view.appendLines([line("third body")])
+			#expect(view.displayedLines.map(\.lineNumber) == ["second body", "third body"])
+			#expect(view.textView.selectedRange().length == 0)
+			#expect(view.hasSelection == false)
+		}
+	}
+
+	@Test("Removing a selected unread marker does not move selection into the message header")
+	func removingSelectedSegmentClearsSelection() throws {
+		try withSelectedTranscript { view in
+			view.setUnreadMarker(.line("first body"))
+			let storage = try #require(view.textView.textStorage)
+			var marker: NSRange?
+			let documentRange = NSRange(location: 0, length: storage.length)
+			storage.enumerateAttribute(.transcriptSelectionSegment, in: documentRange) { value, range, stop in
+				if value as? String == "marker-unread" {
+					marker = range
+					stop.pointee = true
+				}
+			}
+			let selectedMarker = try #require(marker)
+			view.textView.setSelectedRange(selectedMarker)
+			view.setUnreadMarker(.none)
+			#expect(view.textView.selectedRange().length == 0)
+			#expect(view.hasSelection == false)
+		}
+	}
+
+	@Test("The cached selection is exactly the selected text, after a multi-byte character too")
+	func selectionIsTheSelectedSubstring() throws {
+		try withSelectedTranscript { view in
+			view.setBufferLimit(10)
+			view.appendLines([line("emoji \u{1F600} caf\u{00E9} tail")])
+			let range = (view.textView.string as NSString).range(of: "caf\u{00E9} tail")
+			try #require(range.location != NSNotFound)
+			view.textView.setSelectedRange(range)
+			view.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification))
+			#expect(view.selection == "caf\u{00E9} tail")
+			view.textView.setSelectedRange(NSRange(location: range.location, length: 0))
+			view.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification))
+			#expect(view.selection == nil)
+		}
+	}
+
+	@Test("A selection below an older-history prepend still names the same text")
+	func selectionSurvivesAPrepend() throws {
+		try withSelectedTranscript { view in
+			view.setBufferLimit(10)
+			view.prependLines([line("older one"), line("older two")])
+			#expect(view.textView.string.contains("older one"))
+			#expect((view.textView.string as NSString).substring(with: view.textView.selectedRange()) == "first body")
+			#expect(view.selection == "first body")
+		}
+	}
+
+	private func withSelectedTranscript(_ body: (TranscriptView) throws -> Void) throws {
+		let copyOnSelect = SettingsKeys.Messages.copyOnSelect.value
+		defer { SettingsKeys.Messages.copyOnSelect.value = copyOnSelect }
+		SettingsKeys.Messages.copyOnSelect.value = false
+		let session = ServerSession(config: ServerConfig())
+		let window = MainWindow(contentRect: .zero, styleMask: .borderless, backing: .buffered, defer: false)
+		let controller = TranscriptController(session: session, in: window)
+		let view = controller.ensureBackingView()
+		view.setBufferLimit(2)
+		view.appendLines([line("first body"), line("second body")])
+		view.textView.setSelectedRange((view.textView.string as NSString).range(of: "first body"))
+		view.textViewDidChangeSelection(Notification(name: NSTextView.didChangeSelectionNotification))
+		try #require(view.hasSelection)
+		try body(view)
+	}
+
+	private func line(_ text: String) -> TranscriptRow {
+		TranscriptRow(
+			lineNumber: text,
+			receivedAt: Date(timeIntervalSince1970: 0),
+			nickname: "alice",
+			memberType: .normal,
+			lineType: .privateMessage,
+			command: "PRIVMSG",
+			messageIdentifier: nil,
+			replyToMessageIdentifier: nil,
+			deliveryState: .none,
+			deliveryFailureReason: nil,
+			reactions: [:],
+			markers: [],
+			body: TranscriptBody(plainText: text, runs: [TranscriptTextRun(text: text)])
+		)
+	}
+}

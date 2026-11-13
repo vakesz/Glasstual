@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Use a bouncer</title>
+	<meta name="description" content="Connect through a ZNC or soju bouncer and manage soju networks.">
+	<meta name="keywords" content="bouncer, ZNC, soju, playback, networks, BNC">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="bouncers"></a>
+<h1>Use a bouncer</h1>
+<p>A bouncer stays connected for you and replays what you missed. Add it like any server, using the address, port, username and password the bouncer gives you.</p>
+
+<h2>ZNC</h2>
+<p>In Server Properties, click ZNC Bouncer to choose whether Glasstual skips joining channels on connect, skips notifications for the playback buffer, and plays back only the messages you missed. These options need ZNC 1.2 or later.</p>
+<p>Use <code>/detach</code> to stop following a channel while the bouncer stays in it, and <code>/attach</code> to follow it again. <code>/znccert</code> shows the certificate the bouncer reports.</p>
+
+<h2>soju networks</h2>
+<p>A soju account can hold several networks. Glasstual shows each one as its own server under the account in the sidebar.</p>
+<ol>
+	<li>Select the bouncer’s server, then choose Server &gt; Server Properties.</li>
+	<li>Click Bouncer Networks. Select “Show the bouncer’s networks as servers” and, if you like, “Hide this connection when it has networks.”</li>
+	<li>While connected, click Add Network, or select a network and click Edit Network or Delete Network.</li>
+</ol>
+<p>Each network connects on its own and signs in with the bouncer account. Its server, identity and security settings come from the bouncer connection. When a network is deleted, its conversations stay in Glasstual, read-only.</p>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="add-server.html">Add a server</a> · <a href="history.html">History and search</a></p>
+</nav>
+</body>
+</html>

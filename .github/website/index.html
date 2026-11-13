@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Glasstual: IRC Client for macOS</title>
+    <meta name="description" content="Glasstual is a native IRC client for macOS 26 and later on Apple silicon, with IRCv3, SASL sign-in, history search, WebSocket, proxies, Tor and secure DCC.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <link rel="canonical" href="https://vakesz.github.io/Glasstual/">
+    <link rel="icon" type="image/png" href="assets/app-icon-64.png">
+    <link rel="apple-touch-icon" href="assets/app-icon-192.png">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Glasstual">
+    <meta property="og:title" content="Glasstual: IRC Client for macOS">
+    <meta property="og:description" content="A native IRC client for macOS 26 and later, with IRCv3, SASL sign-in, history search, WebSocket, proxies, Tor and secure DCC.">
+    <meta property="og:url" content="https://vakesz.github.io/Glasstual/">
+    <meta property="og:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Glasstual, an IRC client for macOS">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Glasstual: IRC Client for macOS">
+    <meta name="twitter:description" content="A native IRC client for macOS 26 and later, with IRCv3, SASL sign-in, history search, WebSocket, proxies, Tor and secure DCC.">
+    <meta name="twitter:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta name="twitter:image:alt" content="Glasstual, an IRC client for macOS">
+    <link rel="stylesheet" href="styles.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Glasstual",
+      "applicationCategory": "CommunicationApplication",
+      "operatingSystem": "macOS 26",
+      "processorRequirements": "Apple silicon",
+      "description": "A native IRC client for macOS with IRCv3, SASL sign-in, chat history and search, IRC over WebSocket, proxies and Tor, secure DCC, Shortcuts and Focus filters.",
+      "url": "https://vakesz.github.io/Glasstual/",
+      "image": "https://vakesz.github.io/Glasstual/assets/og.png",
+      "downloadUrl": "https://github.com/vakesz/Glasstual/releases/latest",
+      "license": "https://github.com/vakesz/Glasstual/blob/master/LICENSE",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell">
+        <a class="wordmark" href="#top" aria-label="Glasstual home">
+          <img src="assets/app-icon-64.png" alt="" width="28" height="28">
+          <span>Glasstual</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="#features">Features</a>
+          <a href="#style">Style</a>
+          <a href="#gallery">Gallery</a>
+          <a href="support.html">Support</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/vakesz/Glasstual" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="shell">
+          <p class="eyebrow">Glasstual for macOS</p>
+          <h1 id="hero-title">IRC, made for the Mac.</h1>
+          <p class="lead">A native IRC client for macOS 26 with a system sidebar, Liquid Glass and modern IRCv3.</p>
+          <div class="actions">
+            <a class="button" id="download-button" href="https://github.com/vakesz/Glasstual/releases/latest" rel="noopener">
+              <span>Download Latest Release</span>
+              <small>macOS 26 or later, Apple silicon</small>
+            </a>
+            <a class="text-link" href="https://github.com/vakesz/Glasstual" rel="noopener">View Source <span aria-hidden="true">&#8599;</span></a>
+          </div>
+          <p class="note" id="release-note" aria-live="polite">Signed and notarized. Free and open source.</p>
+        </div>
+        <div class="hero-shot">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="assets/main-window-dark.png">
+            <img src="assets/main-window-light.png" alt="Glasstual main window with the server sidebar, a conversation and the member list" width="1440" height="760" fetchpriority="high" decoding="async">
+          </picture>
+        </div>
+      </section>
+
+      <section id="features" aria-labelledby="features-title">
+        <div class="shell">
+          <div class="heading">
+            <p class="eyebrow">Features</p>
+            <h2 id="features-title">Everything IRC, the way a Mac app should do it.</h2>
+          </div>
+          <ul class="features">
+            <li class="feature">
+              <h3>History and Search</h3>
+              <p>On servers that keep history, Glasstual loads recent messages when you join, fills gaps after a reconnect and loads earlier messages as you scroll up. Search every stored conversation with <kbd>Shift-Command-F</kbd>, filter by server, conversation, nickname or date, and jump to the message in context.</p>
+            </li>
+            <li class="feature">
+              <h3>Sign In Your Way</h3>
+              <p>SASL sign-in with a password (PLAIN), a password proof (SCRAM-SHA-256 or SCRAM-SHA-512), a client certificate (EXTERNAL), an ECDSA signing key (ECDSA-NIST256P-CHALLENGE) or an OAuth token (OAUTHBEARER). Passwords, keys and tokens are stored in the macOS Keychain.</p>
+            </li>
+            <li class="feature">
+              <h3>Account Registration</h3>
+              <p>On networks that support it, register an account from the app and enter the verification code the network emails you. Glasstual then signs in with SASL.</p>
+            </li>
+            <li class="feature">
+              <h3>IRC over WebSocket</h3>
+              <p>Connect to networks that accept IRC over WebSocket, encrypted with TLS (<code>wss://</code>) or not (<code>ws://</code>), with the gateway path set per server.</p>
+            </li>
+            <li class="feature">
+              <h3>Proxies and Tor</h3>
+              <p>Give each server its own SOCKS5 or HTTP proxy, or connect through Tor with Tor Browser running. Images never go around a server&#8217;s proxy: with a SOCKS5 or HTTP proxy, each image loads only when you click it.</p>
+            </li>
+            <li class="feature">
+              <h3>Secure DCC and XDCC</h3>
+              <p>Send files and open direct chats, optionally encrypted with TLS. The first time you connect securely with someone you check their certificate fingerprint and choose whether to trust it, and Glasstual warns you if it later changes. Request packs from XDCC bots and see your place in the queue.</p>
+            </li>
+            <li class="feature">
+              <h3>Profiles</h3>
+              <p>On servers that support profile metadata, set a display name, a picture and a color, and see the ones other people have set.</p>
+            </li>
+            <li class="feature">
+              <h3>Dialogs or In-Conversation Prompts</h3>
+              <p>Choose whether questions open as dialogs or appear in the conversation, where you answer with a click or a command such as <code>/yes</code>, <code>/no</code> or <code>/answer</code>.</p>
+            </li>
+            <li class="feature">
+              <h3>Modern IRCv3</h3>
+              <p>Multiline messages, message deletion, channel renames, replies, reactions, typing notifications and read markers, negotiated with each server.</p>
+            </li>
+            <li class="feature">
+              <h3>Bouncers</h3>
+              <p>Connect to a soju bouncer once and see each of its networks nested under one account. ZNC playback options are built in.</p>
+            </li>
+            <li class="feature">
+              <h3>Shortcuts and Spotlight</h3>
+              <p>Send a message, join a channel, connect, disconnect or open a conversation from Shortcuts. Servers and channels can appear in Spotlight, and direct conversations if you opt in. Only names are indexed, on your Mac, and you can turn it off.</p>
+            </li>
+            <li class="feature">
+              <h3>Focus Filters and Idle Away</h3>
+              <p>Let a Focus filter mute notifications, set you away, or both, and set yourself away automatically when your Mac is idle.</p>
+            </li>
+            <li class="feature">
+              <h3>Transcript Themes</h3>
+              <p>The default theme follows your Mac&#8217;s appearance, accent color and Increase Contrast setting. Or choose a preset (Classic, GitHub, Tokyo Night, One Dark, Dracula, Nord or Solarized), or set each color yourself.</p>
+            </li>
+            <li class="feature">
+              <h3>Server Properties and People</h3>
+              <p>Each server&#8217;s properties open in a window of their own, so you can keep them open while you chat. The People window lists who you ignore and who you want to hear about when they come online.</p>
+            </li>
+            <li class="feature">
+              <h3>Logs and Channel Lists</h3>
+              <p>Browse saved transcript logs without leaving the app, and view or edit a channel&#8217;s bans, ban exceptions, invite exceptions and quiets.</p>
+            </li>
+            <li class="feature">
+              <h3>Built-In Help</h3>
+              <p>Glasstual Help, in the Help menu, covers setup, sign-in, secure connections, file transfers, commands, keyboard shortcuts and troubleshooting.</p>
+            </li>
+            <li class="feature">
+              <h3>Native macOS 26 Interface</h3>
+              <p>A system sidebar, a Liquid Glass input field, and light and dark appearances that follow your Mac. Pick a color and an icon for each server; a network that advertises its own icon shows it in the sidebar.</p>
+            </li>
+            <li class="feature">
+              <h3>Made for Daily Use</h3>
+              <p>Multiple servers, favorites, unread filters, mentions, notifications, slash-command suggestions, message rules and user scripts.</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="alt" id="style" aria-labelledby="style-title">
+        <div class="shell picker">
+          <div>
+            <p class="eyebrow">Transcript Styles</p>
+            <h2 id="style-title">Lines or Bubbles.</h2>
+            <p>Choose the compact IRC layout or a conversation view with bubbles. Both work with every transcript theme, in light and dark.</p>
+            <div class="segmented" id="style-picker" role="group" aria-label="Preview transcript style" hidden>
+              <button type="button" data-style="lines" aria-pressed="true">Lines</button>
+              <button type="button" data-style="bubbles" aria-pressed="false">Bubbles</button>
+            </div>
+          </div>
+          <div class="sample" id="style-sample" data-style="lines" role="group" aria-label="Sample conversation">
+            <div class="msg"><time datetime="10:41">10:41</time><b>mira</b><span>Morning. Did the history sync?</span></div>
+            <div class="msg me"><time datetime="10:42">10:42</time><b>fox</b><span>Yep, picked up right where I left off.</span></div>
+            <div class="msg"><time datetime="10:42">10:42</time><b>mira</b><span>Perfect.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="gallery" aria-labelledby="gallery-title">
+        <div class="shell">
+          <div class="heading">
+            <p class="eyebrow">Gallery</p>
+            <h2 id="gallery-title">A closer look.</h2>
+          </div>
+          <ul class="gallery">
+            <li class="wide">
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/search-dark.png">
+                  <img src="assets/search-light.png" alt="The Search All History window listing matching messages across conversations" width="900" height="600" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Search All History</strong> Find any message and jump to it in context.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/welcome-dark.png">
+                  <img src="assets/welcome-light.png" alt="The Glasstual welcome window asking whether questions open as dialogs or appear in the conversation" width="800" height="672" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Welcome</strong> A short first run sets up your nickname, look and first network.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/settings-dark.png">
+                  <img src="assets/settings-light.png" alt="The Glasstual settings window on its Style pane, with the transcript theme preset" width="820" height="552" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Settings</strong> Tune notifications, behavior, text and themes.</figcaption>
+              </figure>
+            </li>
+            <!-- Optional item: delete this whole <li> if networks images are not published.
+                 app.js also hides it automatically when the image fails to load. -->
+            <li data-optional>
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/networks-dark.png">
+                  <img src="assets/networks-light.png" alt="Bouncer networks nested under one account in the sidebar" width="1440" height="760" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Networks</strong> Bouncer networks nested under one account.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/server-properties-dark.png">
+                  <img src="assets/server-properties-light.png" alt="The Server Properties window on its Identity pane, with the SASL mechanism menu" width="860" height="620" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Server Properties</strong> Each network keeps its own identity and way of signing in.</figcaption>
+              </figure>
+            </li>
+            <li class="wide">
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/inline-prompt-dark.png">
+                  <img src="assets/inline-prompt-light.png" alt="A question card above the message field asking for a new account's password and naming the /answer command that answers it" width="1440" height="760" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Questions in the conversation</strong> Answer with a button, or type the command the question names.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/secure-dcc-dark.png">
+                  <img src="assets/secure-dcc-light.png" alt="The File Transfers window listing a file received over an encrypted connection from a verified sender" width="820" height="440" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>Secure file transfers</strong> Encrypted transfers from senders whose certificate you trust.</figcaption>
+              </figure>
+            </li>
+            <li>
+              <figure>
+                <picture>
+                  <source media="(prefers-color-scheme: dark)" srcset="assets/people-dark.png">
+                  <img src="assets/people-light.png" alt="The People window with one ignored address and one tracked nickname" width="480" height="420" loading="lazy" decoding="async">
+                </picture>
+                <figcaption><strong>People</strong> Ignore the noise and keep track of the people you care about.</figcaption>
+              </figure>
+            </li>
+          </ul>
+          <p class="demo-note">Screenshots show a loopback-only demo network. No real accounts or messages appear.</p>
+        </div>
+      </section>
+
+      <section class="alt download" aria-labelledby="download-title">
+        <div class="shell">
+          <img src="assets/app-icon-192.png" alt="" width="96" height="96" loading="lazy" decoding="async">
+          <h2 id="download-title">Come back to IRC.</h2>
+          <p>Glasstual runs on macOS 26 and later on Apple silicon.</p>
+          <a class="button" id="download-button-bottom" href="https://github.com/vakesz/Glasstual/releases/latest" rel="noopener">
+            <span>Download Latest Release</span>
+            <small>Signed and notarized</small>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell">
+        <p>Glasstual is an independent fork of Textual. Copyright notices remain with their respective owners.</p>
+        <nav aria-label="Footer navigation">
+          <a href="https://github.com/vakesz/Glasstual/releases" rel="noopener">Releases</a>
+          <a href="https://github.com/vakesz/Glasstual#build" rel="noopener">Build It</a>
+          <a href="https://github.com/vakesz/Glasstual/blob/master/LICENSE" rel="noopener">License</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html">Support</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="app.js" defer></script>
+  </body>
+</html>

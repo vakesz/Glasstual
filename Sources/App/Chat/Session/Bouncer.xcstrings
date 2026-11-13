@@ -1,0 +1,342 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "certificate-conversion-error": {
+      "comment": "Error shown when ZNC certificate information cannot be converted for display. Migrated from legacy key wco-zv.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An error occurred while converting certificate information to a friendlier format"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiba történt a tanúsítványadatok olvashatóbb formátumba alakításakor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Umwandeln der Zertifikatsinformationen in ein lesbareres Format ist ein Fehler aufgetreten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ha producido un error al convertir la información del certificado a un formato más legible"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une erreur s’est produite lors de la conversion des informations du certificat dans un format plus lisible"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "証明書情報を、より読みやすい形式に変換する際にエラーが発生しました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocorreu um erro ao converter as informações do certificado para um formato mais amigável"
+          }
+        }
+      }
+    },
+    "close-button": {
+      "comment": "Title of the button that closes the certificate information panel.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezárás"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
+          }
+        }
+      }
+    },
+    "delete-account-networks-notice": {
+      "comment": "Added to the confirmation for deleting a bouncer account connection: its networks are deleted too. The argument is the list of network names.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This also deletes its networks: %@. Their conversations stay in your history, read-only."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a hozzá tartozó hálózatokat is törli: %@. A beszélgetéseik az előzményekben maradnak, csak olvashatóként."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dadurch werden auch die zugehörigen Netzwerke gelöscht: %@. Ihre Unterhaltungen bleiben im Verlauf erhalten, sind aber schreibgeschützt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto también elimina sus redes: %@. Sus conversaciones permanecen en el historial, solo de lectura."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela supprime aussi ses réseaux : %@. Leurs conversations restent dans l’historique, en lecture seule."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これにより、このアカウントのネットワークも削除されます: %@。それらの会話は履歴に読み取り専用で残ります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isso também apaga as redes da conta: %@. As conversas permanecem no histórico, somente para leitura."
+          }
+        }
+      }
+    },
+    "detach-confirmation": {
+      "comment": "Confirmation shown after detaching a channel. The argument is the channel name. Migrated from legacy key 0fr-kb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The \u0002detach\u0002 command has been sent for the channel \u0002%@\u0002. Automatic join on connect for this channel has been disabled as well. Use the command \u0002attach\u0002 at any time to be returned to this channel and have automatic join turned back on."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A \u0002detach\u0002 parancs elküldve a(z) \u0002%@\u0002 csatornához. A csatornához való automatikus csatlakozás is ki lett kapcsolva. Az \u0002attach\u0002 paranccsal bármikor visszatérhetsz, és újra bekapcsolhatod az automatikus csatlakozást."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Befehl \u0002detach\u0002 wurde für den Kanal \u0002%@\u0002 gesendet. Der automatische Beitritt beim Verbinden wurde ebenfalls deaktiviert. Mit \u0002attach\u0002 kannst du jederzeit zurückkehren und den automatischen Beitritt wieder aktivieren."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El comando \u0002detach\u0002 se ha enviado para el canal \u0002%@\u0002. La unión automática al conectar a este canal también se ha desactivado. Usa el comando \u0002attach\u0002 en cualquier momento para volver a este canal y reactivar la unión automática."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La commande \u0002detach\u0002 a été envoyée pour le canal \u0002%@\u0002. La connexion automatique à ce canal au démarrage a également été désactivée. Utilisez la commande \u0002attach\u0002 à tout moment pour revenir dans ce canal et réactiver la connexion automatique."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チャンネル\u0002%@\u0002に対して\u0002detach\u0002コマンドを送信しました。このチャンネルの接続時の自動参加も無効になりました。このチャンネルに戻って自動参加を再び有効にするには、いつでも\u0002attach\u0002コマンドを使用してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O comando \u0002detach\u0002 foi enviado para o canal \u0002%@\u0002. A entrada automática ao conectar também foi desativada para este canal. Use o comando \u0002attach\u0002 a qualquer momento para voltar a este canal e reativar a entrada automática."
+          }
+        }
+      }
+    },
+    "network-removed-notice": {
+      "comment": "Printed in the console of a bouncer network that the bouncer no longer lists; the network connection can no longer be opened.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network was removed from the bouncer. Its conversations are kept, but it can no longer connect."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezt a hálózatot eltávolították a bouncerből. A beszélgetései megmaradnak, de már nem tud csatlakozni."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Netzwerk wurde vom Bouncer entfernt. Die Unterhaltungen bleiben erhalten, aber es kann keine Verbindung mehr herstellen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta red se ha eliminado del bouncer. Se conservan sus conversaciones, pero ya no puede conectarse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce réseau a été supprimé du bouncer. Ses conversations sont conservées, mais il ne peut plus se connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このネットワークはバウンサーから削除されました。会話は保持されますが、接続できなくなりました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta rede foi removida do bouncer. As conversas são mantidas, mas ela não pode mais se conectar."
+          }
+        }
+      }
+    },
+    "no-information-available": {
+      "comment": "Message shown when ZNC has no certificate information. Migrated from legacy key moh-hg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No information is available"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs elérhető információ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Informationen verfügbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay información disponible"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune information n’est disponible"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用できる情報はありません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma informação está disponível"
+          }
+        }
+      }
+    },
+    "znc-connection-required": {
+      "comment": "Message shown when a ZNC-only command is used on another server. Migrated from legacy key xex-nl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command is not available because you aren't connected to ZNC"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a parancs nem érhető el, mert nem ZNC-hez kapcsolódsz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Befehl ist nicht verfügbar, da du nicht mit ZNC verbunden bist"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este comando no está disponible porque no estás conectado a ZNC"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette commande n’est pas disponible, car vous n’êtes pas connecté à ZNC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNCに接続していないため、このコマンドは利用できません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este comando não está disponível porque você não está conectado ao ZNC"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

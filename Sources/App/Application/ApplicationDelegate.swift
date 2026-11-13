@@ -1,0 +1,428 @@
+// Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+import CocoaExtensions
+import CoreSpotlight
+import Network
+import os
+
+/// AppKit ships `NSWorkspace.WillSleepMessage` but no power-off equivalent, so
+/// the interop shape is spelled out here: the notification to bridge from, and
+/// how to make the message. Declaring it as a `MainActorMessage` is what makes
+/// Foundation deliver the power-off warning synchronously *on* the main actor
+/// instead of handing a nonisolated block to a caller who has to assume.
+private struct WorkspaceWillPowerOffMessage: NotificationCenter.MainActorMessage {
+	typealias Subject = NSWorkspace
+
+	static var name: Notification.Name {
+		NSWorkspace.willPowerOffNotification
+	}
+
+	static func makeMessage(_: Notification) -> Self? {
+		Self()
+	}
+}
+
+@MainActor
+final class ApplicationDelegate: NSObject, NSApplicationDelegate {
+	private static let logger = Logger(
+		subsystem: LogSubsystem.current,
+		category: "ApplicationDelegate"
+	)
+	/// The name the main window's frame is saved under; saved frames depend on it.
+	private static let mainWindowFrameName = "Main Window"
+
+	private var hasInstalledMainWindow = false
+
+	private(set) var ghostModeIsOn = false
+	private(set) var applicationIsLaunched = false
+
+	/// The shutdown sequence and every piece of state only it reads.
+	private(set) lazy var termination = ApplicationTermination(delegate: self)
+
+	/// Shutdown has begun; accepted Settings saves finish before teardown.
+	var applicationIsTerminating: Bool {
+		termination.isTerminating
+	}
+
+	private var reachabilityTask: Task<Void, Never>?
+	/// Kept across monitor restarts so a change during sleep is reported on wake.
+	private var reachability = NetworkReachability()
+
+	let notifications = NotificationSubscriptions()
+
+	/// IUO preserves the established launch-time contract while allowing nil in tests.
+	var mainWindow: MainWindow!
+	weak var menuController: MenuActionController?
+	var chatSession: ChatSession!
+	private var idleMonitor: IdleMonitor?
+
+	// MARK: - Initialization
+
+	override init() {
+		super.init()
+
+		AppServices.setDelegate(self)
+		prepareInitialState()
+	}
+
+	private func prepareInitialState() {
+		#if DEBUG
+			ghostModeIsOn = true // Do not use auto connect during debug
+		#else
+			let keyboardKeys = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
+			if keyboardKeys.contains(.shift) {
+				ghostModeIsOn = true
+				Self.logger.info("Launching without auto connecting to the configured servers")
+			}
+		#endif
+	}
+
+	/** Builds the main window after the programmatic application and menu graph.
+
+	 It has to exist before `applicationDidFinishLaunching`, because AppKit
+	 restores windows before that call. A restoration class with no window to
+	 hand back restores nothing, so the frame, full screen and the Space were
+	 all lost. */
+	private func installMainWindow() {
+		guard hasInstalledMainWindow == false else {
+			return
+		}
+
+		hasInstalledMainWindow = true
+
+		SettingsRegistration.prepareForLaunch()
+
+		_ = AppServices.appearance
+
+		let window = MainWindow(
+			contentRect: NSRect(origin: .zero, size: MainWindowConstants.defaultWindowSize),
+			styleMask: [.titled, .closable, .miniaturizable, .resizable],
+			backing: .buffered,
+			defer: false
+		)
+		window.title = ApplicationInfo.applicationName()
+		window.identifier = NSUserInterfaceItemIdentifier("GlasstualMainWindow")
+		window.contentMinSize = MainWindowConstants.minimumContentSize
+		window.tabbingMode = .disallowed
+		window.collectionBehavior.insert(.fullScreenPrimary)
+		window.isReleasedWhenClosed = false
+		window.setAccessibilityLabel(AccessibilityStrings.mainWindow)
+		mainWindow = window
+		SheetPresentation.install(window)
+		chatSession = ChatSession()
+		window.configure()
+		/* A first launch opens at the default size, centred; afterwards the
+		 saved frame wins. After `configure()`, because installing the content
+		 view controller sizes the window to its content, which is the
+		 window's minimum. The saved frame is in the container's own defaults,
+		 which a test launch shares with the person's launches, so a test
+		 launch neither reads nor saves it and always opens as a first launch. */
+		let savesFrame = ApplicationForeground.mode.restoresWindows
+		if savesFrame == false || window.setFrameUsingName(Self.mainWindowFrameName) == false {
+			window.setFrame(window.defaultWindowFrame, display: false)
+			window.center()
+		}
+		if savesFrame {
+			window.setFrameAutosaveName(Self.mainWindowFrameName)
+		}
+		AppServices.theme.reload()
+		menuController?.prepareInitialState()
+		// Install both observers before restoring the sessions that publish their rows.
+		installSessionServices()
+		chatSession.setupConfiguration()
+		window.restoreSessionSelection()
+		DockIcon.drawWithoutCount()
+		window.observeNotifications()
+		startApplicationServices()
+	}
+
+	/** Hands the IRC layer the window, the menus and this controller, and makes
+	 both of the first two observers of the chat session. Everything the connection code
+	 used to reach for through `AppServices.delegate` arrives this way. */
+	private func installSessionServices() {
+		let services = ChatServices.shared
+		services.output = mainWindow
+		services.prompts = AppServices.prompts
+		services.configurationCommands = AppServices.configurationCommands
+		installPromptRouting()
+		services.menu = menuController
+		services.channelList = AppServices.serverChannelLists
+		services.applicationState = self
+		services.notifications = AppServices.notifications
+		services.fileTransfers = AppServices.fileTransfers
+		services.messageRules = AppServices.messageRules.engine
+		services.scripts = AppServices.scripts
+		services.chatSession = chatSession
+		services.themeNicknameFormat = { AppServices.theme.theme.nicknameFormat }
+		services.updateDockBadge = { DockIcon.updateDockIcon() }
+
+		if let mainWindow {
+			chatSession?.addObserver(mainWindow)
+		}
+
+		if let menuController {
+			chatSession?.addObserver(menuController)
+		}
+
+		chatSession?.addObserver(AppServices.conversationIndex)
+		AppServices.conversationIndex.schedule()
+	}
+
+	/// Tells the prompt router where a question can appear in the window and
+	/// which connection each session is on.
+	private func installPromptRouting() {
+		let router = AppServices.prompts
+		router.resolveAnchor = { [weak self] scope in
+			self?.mainWindow?.promptAnchor(for: scope)
+		}
+		router.revealWindow = { [weak self] in
+			guard let window = self?.mainWindow, window.isVisible == false else { return }
+			ApplicationForeground.bringForward(window)
+		}
+		router.announce = { [weak self] prompt in
+			self?.mainWindow?.announcePrompt(prompt)
+		}
+		router.registry.isConnectionCurrent = { [weak self] scope in
+			guard let connection = scope.connection else { return true }
+			guard let sessionID = scope.sessionID,
+			      let session = self?.chatSession?.findSession(withId: sessionID)
+			else { return false }
+			return session.promptConnection == connection
+		}
+	}
+
+	private func startApplicationServices() {
+		SystemSleepState.beginObserving()
+
+		startWatchingNetworkPath()
+
+		let idleMonitor = IdleMonitor(chatSession: { [weak self] in self?.chatSession })
+		idleMonitor.start()
+		self.idleMonitor = idleMonitor
+		Task { await GlasstualFocusFilter.restoreActiveFilter() }
+
+		let workspaceCenter = NSWorkspace.shared.notificationCenter
+		notifications.observe(NSWorkspace.didWakeNotification, center: workspaceCenter) { [weak self] notification in
+			self?.computerDidWakeUp(notification)
+		}
+		notifications.observeSynchronously(NSWorkspace.WillSleepMessage.self, center: workspaceCenter) { [weak self] in
+			self?.computerWillSleep()
+		}
+		notifications
+			.observeSynchronously(WorkspaceWillPowerOffMessage.self, center: workspaceCenter) { [weak self] in
+				self?.computerWillPowerOff()
+			}
+		notifications
+			.observe(NSWorkspace.screensDidWakeNotification, center: workspaceCenter) { [weak self] notification in
+				self?.computerScreenDidWake(notification)
+			}
+		notifications
+			.observe(NSWorkspace.screensDidSleepNotification, center: workspaceCenter) { [weak self] notification in
+				self?.computerScreenWillSleep(notification)
+			}
+		NSAppleEventManager.shared().setEventHandler(
+			self,
+			andSelector: #selector(handleURLEvent(_:withReplyEvent:)),
+			forEventClass: AEEventClass(kInternetEventClass),
+			andEventID: AEEventID(kAEGetURL)
+		)
+
+		/* The mask has to be set before anything creates the shared panel, which
+		 is the only reason a colour-picker detail is settled at launch. The
+		 panel itself is not touched here: reading `NSColorPanel.shared` builds
+		 the whole system picker, and its colour wheel draws through CoreImage,
+		 so every launch loaded Metal and its shader caches for a picker most
+		 sessions never open. Each presenter configures the panel it shows —
+		 the formatting menu turns alpha off, a SwiftUI `ColorPicker` sets it
+		 from `supportsOpacity`. */
+		NSColorPanel.setPickerMask([
+			.rgbModeMask,
+			.grayModeMask,
+			.colorListModeMask,
+			.wheelModeMask,
+			.crayonModeMask,
+		])
+
+		Task {
+			await ScriptCatalogStore.linkCustomScriptsIntoGroupContainer()
+		}
+
+		// The script scan reads directories, so it runs off the main actor and
+		// lands whenever it lands; nothing at launch waits for it.
+		AppServices.scripts.refreshCommands()
+		completeApplicationLaunch()
+	}
+
+	// MARK: - Network reachability
+
+	/** Watches the default network path and tells the sessions when it comes and
+	 goes. `ChatSession` lives on the main actor, so the loop does too: no
+	 lock, no queue hop, no opting out of the checker. */
+	private func startWatchingNetworkPath() {
+		/* A path monitor is single use: once cancelled it never delivers another
+		 update. Create a fresh one for every start. */
+		reachabilityTask?.cancel()
+
+		reachabilityTask = Task { @MainActor [weak self] in
+			for await path in NWPathMonitor() {
+				guard let self else { return }
+
+				if let reachable = reachability.update(isReachable: path.status == .satisfied) {
+					chatSession?.noteReachabilityChanged(reachable)
+				}
+			}
+		}
+	}
+
+	func stopWatchingNetworkPath() {
+		reachabilityTask?.cancel()
+		reachabilityTask = nil
+	}
+
+	// MARK: - NSApplication Delegate
+
+	func applicationWillFinishLaunching(_: Notification) {
+		/* Before anything else: the policy decides whether the activation the
+		 launch asked for happens at all. */
+		ApplicationForeground.prepareForLaunch(NSApp)
+
+		/* A second copy used to be met with a modal warning that the
+		 settings "may become corrupted". `LSMultipleInstancesProhibited`
+		 means there is never a second copy to warn about: Launch Services
+		 activates the one that is already running. */
+		AppServices.scenes.install(in: NSApp)
+
+		/* UserNotifications.framework wants delegation set before app has
+		 finished launching. A simple access to the singleton will set this
+		 for us which we can just do here. */
+		_ = AppServices.notifications
+
+		installMainWindow()
+	}
+
+	func applicationDidFinishLaunching(_: Notification) {
+		/* The test host lays the main window out without showing it, and
+		 shows no welcome flow over it. */
+		guard ApplicationForeground.mode.takesForeground else { return }
+
+		mainWindow.makeMain()
+		ApplicationForeground.raise(mainWindow)
+		presentOnboardingIfNeeded()
+	}
+
+	private func completeApplicationLaunch() {
+		applicationIsLaunched = true
+
+		if mainWindow.reloadLoadingScreen() {
+			chatSession.autoConnect(afterWakeup: false)
+		}
+	}
+
+	/** First launch: no session has been configured and the setup flow has not
+	 been completed or skipped before. The flow is shown on top of the main
+	 window's "add a server" placeholder. */
+	private func presentOnboardingIfNeeded() {
+		guard OnboardingModel.shouldPresentOnLaunch() else {
+			return
+		}
+
+		AppServices.scenes.open(ApplicationSceneID.onboarding)
+	}
+
+	/* The delegate stays attached until the process exits. The callbacks below
+	 can therefore arrive during termination, and they must not start work that
+	 teardown is already undoing. */
+
+	func applicationDidBecomeActive(_: Notification) {
+		guard applicationIsTerminating == false else { return }
+		AppServices.scripts.refreshCommands()
+	}
+
+	func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows: Bool) -> Bool {
+		if applicationIsTerminating {
+			return false
+		}
+		guard hasVisibleWindows == false else {
+			return true
+		}
+
+		ApplicationForeground.raise(mainWindow)
+		return true
+	}
+
+	/** Scripts the user opened from the Finder. The declared
+	 document types used to name an `NSDocument` subclass, whose nonisolated
+	 `read(from:ofType:)` had to assume the main actor before it could put an
+	 alert on screen; this delegate method is isolated by declaration. */
+	/// A Spotlight result for an indexed conversation or server arrives here.
+	func application(
+		_: NSApplication,
+		continue userActivity: NSUserActivity,
+		restorationHandler _: @escaping ([any NSUserActivityRestoring]) -> Void
+	) -> Bool {
+		guard userActivity.activityType == CSSearchableItemActionType,
+		      let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String
+		else { return false }
+
+		ApplicationLinkHandler.openIndexedItem(identifier: identifier)
+		return true
+	}
+
+	func application(_: NSApplication, open urls: [URL]) {
+		guard applicationIsTerminating == false else { return }
+		ScriptFileImporter.open(urls)
+	}
+
+	func applicationDockMenu(_: NSApplication) -> NSMenu? {
+		menuController?.dockMenu
+	}
+
+	func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
+		/* The main window encodes its selection with secure coding. */
+		true
+	}
+
+	// MARK: - NSWorkspace Notifications
+
+	/// Registered with `NSAppleEventManager`, which reaches it by selector.
+	@objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent _: NSAppleEventDescriptor) {
+		guard let stringValue = event.atIndex(1)?.stringValue else {
+			return
+		}
+
+		ApplicationLinkHandler.open(stringValue)
+	}
+
+	private func computerScreenWillSleep(_: Notification) {
+		Self.logger.log("Preparing for screen sleep")
+		chatSession.prepareForScreenSleep()
+	}
+
+	private func computerScreenDidWake(_: Notification) {
+		Self.logger.log("Waking from screen sleep")
+		chatSession.wakeFromScreenSleep()
+	}
+
+	private func computerWillSleep() {
+		Self.logger.log("Preparing for sleep")
+
+		chatSession.prepareForSleep()
+
+		stopWatchingNetworkPath()
+	}
+
+	private func computerDidWakeUp(_: Notification) {
+		Self.logger.log("Waking from sleep")
+
+		startWatchingNetworkPath()
+
+		chatSession.autoConnect(afterWakeup: true)
+	}
+
+	private func computerWillPowerOff() {
+		terminateGracefully()
+	}
+}

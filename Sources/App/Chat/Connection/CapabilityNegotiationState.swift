@@ -1,0 +1,295 @@
+// Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+
+/// The reasons `CAP END` is being held back.
+struct CapabilityNegotiationHolds: OptionSet, Sendable {
+	let rawValue: UInt8
+
+	/// A SASL exchange is in progress.
+	static let sasl = Self(rawValue: 1 << 0)
+	/// An account registration sent before connecting awaits its outcome.
+	static let accountRegistration = Self(rawValue: 1 << 1)
+}
+
+/** Everything `CAP` negotiation remembers for one connection.
+
+ Requests are pipelined. Every capability the server has offered whose
+ dependencies it has already acknowledged is grouped into byte-bounded `CAP REQ` lines in one
+ pass, and each `ACK` or `NAK` is matched back by name; `CAP END` follows the
+ moment nothing is outstanding and nothing else is eligible. A `CAP DEL` naming
+ an outstanding request counts as its refusal, so a withdrawal cannot leave a
+ request waiting for an answer that is never coming. A server that simply never
+ answers a `REQ` holds registration open until the session's own registration
+ timeout fires — the same bound that already covers a server which never sends
+ `CAP LS` at all.
+
+ The bitset every caller reads through `ServerSession.capabilities` is stored rather
+ than projected on each read: `isCapabilityEnabled(_:)` sits on the path of
+ every inbound line, and the projection walks the registry to a fixed point.
+ Each mutation below refreshes it, which is why the stores it derives from are
+ private to this type. */
+struct CapabilityNegotiationState {
+	/// Ceiling on what a multi-line `CAP LS` may offer. The names are arbitrary
+	/// server-controlled tokens and only a final, non-`*` line clears the
+	/// table, so a server sending nothing but continuations grows it forever.
+	/// The largest advertisement any real network sends is a few dozen.
+	static let maximumOfferedCapabilities = 256
+
+	/// What `CAP LS`/`NEW` advertised, keyed by the name the server used.
+	/// IRCv3 names are case-sensitive, so a key is already the spelling to
+	/// echo back in a request.
+	private(set) var offeredCapabilities: [String: [String]] = [:]
+
+	/// Names a `CAP REQ` went out for whose answer has not arrived.
+	private(set) var outstandingRequests: Set<String> = []
+
+	/// Names the server refused. They are not asked for again until it
+	/// re-advertises them.
+	private(set) var refusedNames: Set<String> = []
+
+	/// Names that were on a `CAP REQ` line the server refused whole. Which of
+	/// them it objected to is unknown, so each is asked for on its own line.
+	private(set) var soloRequestNames: Set<String> = []
+
+	/// Names the server withdrew with `CAP DEL`. A late `ACK` for one of these
+	/// must not bring it back; only a fresh advertisement can.
+	private(set) var withdrawnNames: Set<String> = []
+
+	/// Names the server acknowledged, in the order they arrived.
+	private(set) var acknowledgedNames: [String] = []
+
+	/// Bits that do not come from `CAP` at all: SASL results and the ISUPPORT
+	/// tokens that stand in for a capability. They survive a `CAP DEL` of a
+	/// name carrying the same bit, and vice versa.
+	private(set) var facts: CapabilitySet = []
+
+	/// `acknowledgedNames` projected onto the bitset, plus `facts`.
+	private(set) var capabilities: CapabilitySet = []
+
+	/// Whether a multi-line `CAP LS` is still arriving. Nothing may be
+	/// requested until its last line lands.
+	var isCollectingList = false
+
+	/// Why `CAP END` must not go out yet: a SASL exchange, or an account
+	/// registration that has to finish before the connection is complete.
+	/// Each reason is lifted on its own.
+	var holds: CapabilityNegotiationHolds = []
+
+	/// Whether anything holds the negotiation open.
+	var isPaused: Bool {
+		holds.isEmpty == false
+	}
+
+	/// Whether `CAP END` has already been sent for this registration.
+	var endSent = false
+
+	/// Whether `ISUPPORT` went out on this connection (draft/extended-isupport).
+	var sentISupportRequest = false
+
+	/// Legacy `PROTOCTL` lines an ISUPPORT before registration asked for. They
+	/// go out once the server has registered the connection.
+	var deferredLegacyCapabilities: [ISupportEffects.LegacyCapability] = []
+
+	private let registry: CapabilityRegistry
+
+	init(registry: CapabilityRegistry = .defaultRegistry) {
+		self.registry = registry
+	}
+
+	// MARK: - Queries
+
+	func isAcknowledged(_ name: String) -> Bool {
+		acknowledgedNames.contains(name)
+	}
+
+	func isOutstanding(_ name: String) -> Bool {
+		outstandingRequests.contains(name)
+	}
+
+	func isWithdrawn(_ name: String) -> Bool {
+		withdrawnNames.contains(name)
+	}
+
+	func mustRequestAlone(_ name: String) -> Bool {
+		soloRequestNames.contains(name)
+	}
+
+	/// The advertisement to measure requests against: what the server offered,
+	/// less anything it has already refused, so a dependent capability is not
+	/// asked for on the strength of a dependency that will never be granted.
+	var requestableOffer: [String: [String]] {
+		offeredCapabilities.filter { refusedNames.contains($0.key) == false }
+	}
+
+	var enabledCapabilitiesStringValue: String {
+		acknowledgedNames.joined(separator: ", ")
+	}
+
+	// MARK: - Advertisements
+
+	/// Starts a fresh `CAP LS`. A continuation line adds to the table the first
+	/// line opened; only a new listing clears it.
+	mutating func beginListing() {
+		guard isCollectingList == false else { return }
+		offeredCapabilities.removeAll()
+		isCollectingList = true
+	}
+
+	mutating func finishListing() {
+		isCollectingList = false
+	}
+
+	/// Drops an advertisement that grew past the ceiling, along with anything
+	/// queued off the back of it.
+	mutating func discardListing() {
+		offeredCapabilities.removeAll()
+		isCollectingList = false
+	}
+
+	mutating func offer(_ name: String, values: [String]) {
+		offeredCapabilities[name] = values
+		withdrawnNames.remove(name)
+		refusedNames.remove(name)
+	}
+
+	/// Records a `CAP DEL`. A request still outstanding for the name is
+	/// answered by the withdrawal: nothing else is coming for it.
+	mutating func withdraw(_ name: String) {
+		offeredCapabilities.removeValue(forKey: name)
+		if registry.capability(named: name) != nil {
+			withdrawnNames.insert(name)
+		}
+		outstandingRequests.remove(name)
+	}
+
+	// MARK: - Requests
+
+	mutating func noteRequested(_ name: String) {
+		outstandingRequests.insert(name)
+	}
+
+	/// Marks a request answered.
+	mutating func resolveRequest(_ name: String) {
+		outstandingRequests.remove(name)
+	}
+
+	/// Records a name from a refused group, to be asked for again by itself.
+	mutating func requestAlone(_ name: String) {
+		guard registry.capability(named: name) != nil else { return }
+		soloRequestNames.insert(name)
+	}
+
+	mutating func refuse(_ name: String) {
+		guard registry.capability(named: name) != nil else { return }
+		refusedNames.insert(name)
+	}
+
+	// MARK: - Acknowledgement
+
+	/** Records an acknowledged name. Reports whether it took.
+
+	 A name the server has withdrawn is refused: a `CAP DEL` and a late `ACK`
+	 can cross, and the withdrawal is the newer fact. The ceiling is the same
+	 one `CAP LS` is held to, because an `ACK` is server-controlled input too. */
+	mutating func acknowledge(_ name: String) -> Bool {
+		guard withdrawnNames.contains(name) == false,
+		      acknowledgedNames.count < Self.maximumOfferedCapabilities
+		else {
+			return false
+		}
+
+		guard acknowledgedNames.contains(name) == false else { return true }
+
+		acknowledgedNames.append(name)
+		recomputeCapabilities()
+
+		return true
+	}
+
+	mutating func revoke(_ name: String) {
+		guard acknowledgedNames.contains(name) else { return }
+		acknowledgedNames.removeAll { $0 == name }
+		recomputeCapabilities()
+	}
+
+	// MARK: - Bitset entry points
+
+	/** Turns a bitset into the names and facts that produce it.
+
+	 Bits the registry knows are recorded as the acknowledged name that carries
+	 them, so a later `CAP DEL` of that name takes them away again. Bits it does
+	 not know are facts. */
+	mutating func enable(_ capability: CapabilitySet) {
+		facts.formUnion(capability.subtracting(registry.knownIdentifiers))
+
+		var remaining = capability.intersection(registry.knownIdentifiers)
+
+		/* A name carrying every remaining bit is the right name for them; one
+		 carrying only some is used once no exact carrier is left, so a bitset
+		 naming one capability is not filed under a vendor alias that overlaps. */
+		claimNames(for: &remaining) { remaining, entry in remaining.contains(entry.identifier) }
+		claimNames(for: &remaining) { remaining, entry in remaining.isDisjoint(with: entry.identifier) == false }
+
+		recomputeCapabilities()
+	}
+
+	mutating func disable(_ capability: CapabilitySet) {
+		facts.subtract(capability)
+		acknowledgedNames.removeAll { name in
+			guard let entry = registry.capability(named: name) else { return false }
+			return entry.identifier.isDisjoint(with: capability) == false
+		}
+		recomputeCapabilities()
+	}
+
+	mutating func addFacts(_ capability: CapabilitySet) {
+		guard facts.contains(capability) == false else { return }
+		facts.formUnion(capability)
+		recomputeCapabilities()
+	}
+
+	mutating func removeFacts(_ capability: CapabilitySet) {
+		guard facts.isDisjoint(with: capability) == false else { return }
+		facts.subtract(capability)
+		recomputeCapabilities()
+	}
+
+	// MARK: - Reset
+
+	/// Returns the negotiation to what it was before the connection opened.
+	mutating func reset() {
+		offeredCapabilities.removeAll()
+		outstandingRequests.removeAll()
+		refusedNames.removeAll()
+		soloRequestNames.removeAll()
+		withdrawnNames.removeAll()
+		acknowledgedNames.removeAll()
+		facts = []
+		capabilities = []
+		isCollectingList = false
+		holds = []
+		endSent = false
+		sentISupportRequest = false
+		deferredLegacyCapabilities.removeAll()
+	}
+
+	// MARK: - Private
+
+	private mutating func claimNames(
+		for remaining: inout CapabilitySet,
+		matching supplies: (CapabilitySet, Capability) -> Bool
+	) {
+		for entry in registry.capabilities where supplies(remaining, entry) {
+			if acknowledgedNames.contains(entry.name) == false {
+				acknowledgedNames.append(entry.name)
+			}
+			remaining.subtract(entry.identifier)
+		}
+	}
+
+	private mutating func recomputeCapabilities() {
+		capabilities = registry.projection(of: acknowledgedNames).union(facts)
+	}
+}

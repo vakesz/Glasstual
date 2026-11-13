@@ -1,0 +1,66 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("Channel list sort ordering")
+struct ConversationOrderingTests {
+	private func makeChannel(named name: String, isQuery: Bool) -> Conversation {
+		Conversation(
+			config: ConversationConfig(name: name, type: isQuery ? .direct : .channel)
+		)
+	}
+
+	@Test("Channels sort before queries in both directions")
+	func isStrictWeakOrdering() {
+		let channel = makeChannel(named: "#zulu", isQuery: false)
+		let query = makeChannel(named: "alpha", isQuery: true)
+
+		#expect(ConversationOrdering.channelsFirst(channel, query))
+		// The reverse must answer false. Reporting "unordered" both ways is
+		// not a strict weak ordering and lets sort(by:) misbehave.
+		#expect(ConversationOrdering.channelsFirst(query, channel) == false)
+	}
+
+	@Test("Items of the same kind sort case-insensitively by name")
+	func sortsByNameWithinKind() {
+		let first = makeChannel(named: "#Alpha", isQuery: false)
+		let second = makeChannel(named: "#beta", isQuery: false)
+
+		#expect(ConversationOrdering.channelsFirst(first, second))
+		#expect(ConversationOrdering.channelsFirst(second, first) == false)
+	}
+
+	@Test("Sorting a mixed list puts every channel ahead of every query")
+	func sortsMixedList() {
+		let items = [
+			makeChannel(named: "zoe", isQuery: true),
+			makeChannel(named: "#beta", isQuery: false),
+			makeChannel(named: "adam", isQuery: true),
+			makeChannel(named: "#alpha", isQuery: false),
+		]
+
+		let sorted = items.sorted(by: ConversationOrdering.channelsFirst)
+
+		#expect(sorted.map(\.name) == ["#alpha", "#beta", "adam", "zoe"])
+	}
+
+	@Test("An item never sorts before itself")
+	func isIrreflexive() {
+		let channel = makeChannel(named: "#chat", isQuery: false)
+
+		#expect(ConversationOrdering.channelsFirst(channel, channel) == false)
+	}
+
+	@Test("Names differing only by case are tied in both directions")
+	func caseOnlyDifferencesTie() {
+		let lower = makeChannel(named: "#chat", isQuery: false)
+		let upper = makeChannel(named: "#CHAT", isQuery: false)
+
+		#expect(ConversationOrdering.channelsFirst(lower, upper) == false)
+		#expect(ConversationOrdering.channelsFirst(upper, lower) == false)
+	}
+}

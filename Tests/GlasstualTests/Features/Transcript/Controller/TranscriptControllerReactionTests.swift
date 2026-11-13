@@ -1,0 +1,69 @@
+// Copyright (c) 2026 Codeux Software, LLC & respective contributors.
+// SPDX-License-Identifier: BSD-3-Clause
+
+import AppKit
+@testable import Glasstual
+import Testing
+
+/// A reaction arrives for a line that is already drawn, so recording it is only
+/// half the job: the transcript has to be told, or the reaction stays invisible
+/// until the view is cleared and history reloaded.
+@MainActor
+@Suite("Live message reactions", .serialized)
+struct TranscriptControllerReactionTests {
+	@Test("A reaction to a line already on screen is drawn without a history reload")
+	func reactionReachesTheTranscript() async throws {
+		/* The transcript only draws live lines once the initial history load has
+		 finished; loading it lazily waits for a visible view, which a headless
+		 window never becomes. */
+		let session = ServerSession(config: ServerConfig())
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = window.transcriptControllers.controller(for: session)
+		controller.loadsHistoryLazily = { false }
+		let transcriptView = controller.ensureBackingView()
+		transcriptView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
+		window.contentView = transcriptView
+		await controller.drainRenderJobs()
+
+		var line = ChatLine()
+		line.messageBody = "shipping it"
+		line.lineType = .privateMessage
+		line.nickname = "alice"
+		line.messageIdentifier = "msg-\(UUID().uuidString)"
+		controller.print(line)
+
+		let transcript = transcriptView.textView
+		await controller.drainRenderJobs()
+		try #require(transcript.string.contains("shipping it"))
+
+		try controller.noteReaction(
+			"\u{1f44d}",
+			fromNickname: "bob",
+			toMessageIdentifier: #require(line.messageIdentifier)
+		)
+		await controller.drainRenderJobs()
+
+		#expect(visibleTranscriptText(transcript.attributedString()).contains("\u{1f44d} 1"))
+	}
+
+	@Test("A reaction to a message the server deleted is not recorded")
+	func redactedMessageTakesNoReactions() {
+		let window = MainWindow(
+			contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+			styleMask: .borderless,
+			backing: .buffered,
+			defer: false
+		)
+		let controller = TranscriptController(session: ServerSession(config: ServerConfig()), in: window)
+		controller.redactions.record("gone")
+
+		controller.noteReaction("\u{1f44d}", fromNickname: "bob", toMessageIdentifier: "gone")
+
+		#expect(controller.reactions.reactions(forMessage: "gone") == nil)
+	}
+}

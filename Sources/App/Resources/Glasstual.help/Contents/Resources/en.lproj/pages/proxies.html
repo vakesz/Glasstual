@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Connect through a proxy or Tor</title>
+	<meta name="description" content="Route a server connection through an HTTP or SOCKS proxy, the system proxy or Tor.">
+	<meta name="keywords" content="proxy, SOCKS, SOCKS5, HTTP proxy, Tor, anonymity, onion">
+	<link rel="stylesheet" href="../../Shared/help.css">
+</head>
+<body>
+<a name="proxies"></a>
+<h1>Connect through a proxy or Tor</h1>
+<p>Each server can use its own proxy. A proxy hides your address from the IRC network.</p>
+
+<h2>Choose a proxy</h2>
+<ol>
+	<li>Select the server, then choose Server &gt; Server Properties.</li>
+	<li>Click Proxy Server, then choose a type of proxy:
+		<ul>
+			<li><strong>None</strong>: Connect directly.</li>
+			<li><strong>Automatic</strong>: Use the proxy set in System Settings. Click Open System Settings to change it.</li>
+			<li><strong>HTTP Proxy</strong> or <strong>SOCKS 5 Proxy</strong>: Enter the proxy’s address and port, and a username and password if it needs them. The password is stored in your keychain.</li>
+			<li><strong>Tor Anonymity Network</strong>: Connect through Tor Browser, which must be running before you connect.</li>
+		</ul>
+	</li>
+	<li>Click Save, then reconnect.</li>
+</ol>
+<p>To connect once without the proxy, hold down the Option key and choose Server &gt; Connect Without Proxy.</p>
+
+<h2>Images and the proxy</h2>
+<p>Glasstual never bypasses a server’s proxy to show an image:</p>
+<ul>
+	<li>With Tor, inline images load through Tor.</li>
+	<li>With an HTTP or SOCKS proxy, an image shows as “Load image from” its host. Click it, or select it and press Return or Space, to load the image through the proxy. Network icons and profile pictures aren’t loaded.</li>
+	<li>If the proxy has no address, nothing is loaded.</li>
+</ul>
+
+<nav class="related">
+	<p><a href="../index.html">Glasstual Help</a> · <a href="add-server.html">Add a server</a> · <a href="privacy.html">Privacy and security</a></p>
+</nav>
+</body>
+</html>
