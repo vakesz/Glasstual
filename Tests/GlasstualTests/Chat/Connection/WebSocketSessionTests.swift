@@ -86,6 +86,49 @@ struct WebSocketSessionTests {
 		#expect(connection.connectionRequiresTrustedCertificate)
 	}
 
+	private func hostOnlyPolicy() -> STSPolicyStore {
+		let policies = STSPolicyStore(userDefaults: nil)
+		policies.setPolicy(STSPolicy(scope: .host, expiresAt: .distantFuture, preload: false), forHost: "irc.example.net")
+		return policies
+	}
+
+	@Test("A host-only STS policy keeps an IRC entry's own TLS port")
+	func hostOnlyPolicyKeepsIRCPort() throws {
+		let entry = ServerEndpoint(serverAddress: "irc.example.net", serverPort: 6697, prefersSecuredConnection: true)
+		let connection = try #require(session(entry, policies: hostOnlyPolicy()).takeConnectionEndpoint())
+		#expect(connection.transport == .stream)
+		#expect(connection.serverPort == 6697)
+		#expect(connection.connectionPrefersSecuredConnection)
+		#expect(connection.connectionRequiresTrustedCertificate)
+	}
+
+	@Test("A host-only STS policy secures a plaintext IRC entry on its own port")
+	func hostOnlyPolicySecuresPlainIRC() throws {
+		let entry = ServerEndpoint(serverAddress: "irc.example.net", serverPort: 6667)
+		let connection = try #require(session(entry, policies: hostOnlyPolicy()).takeConnectionEndpoint())
+		#expect(connection.transport == .stream)
+		#expect(connection.serverPort == 6667)
+		#expect(connection.connectionPrefersSecuredConnection)
+		#expect(connection.connectionRequiresTrustedCertificate)
+	}
+
+	@Test("A host-only STS policy secures a plain WebSocket and keeps its transport and port")
+	func hostOnlyPolicySecuresPlainWebSocket() throws {
+		let connection = try #require(
+			session(webSocketEndpoint(secured: false, port: 80), policies: hostOnlyPolicy()).takeConnectionEndpoint()
+		)
+		#expect(connection.transport == .webSocket(WebSocketTransportOptions(path: "/irc", subprotocols: [.text, .binary])))
+		#expect(connection.serverPort == 80)
+		#expect(connection.connectionPrefersSecuredConnection)
+		#expect(connection.connectionRequiresTrustedCertificate)
+	}
+
+	@Test("A connection's framing names the transport an STS offer arrived over")
+	func connectionTransportMapsToServerTransport() {
+		#expect(ServerTransport(.stream) == .irc)
+		#expect(ServerTransport(.webSocket(WebSocketTransportOptions(path: "/", subprotocols: []))) == .webSocket)
+	}
+
 	@Test("/conn keeps the WebSocket transport on its default port")
 	func connCommandKeepsTransport() {
 		let endpoint = session(webSocketEndpoint(secured: true, port: 8443)).connectCommandEndpoint(host: "other.example.net")

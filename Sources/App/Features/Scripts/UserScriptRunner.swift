@@ -52,7 +52,7 @@ enum UserScriptRunner {
 	 another script's output from being read. The caller owns the open handle
 	 until this method returns and must not read it concurrently. */
 	@concurrent
-	static func readOutput(from handle: FileHandle) async throws -> Data {
+	static func readOutput(from handle: FileHandle, stop: AsyncStream<Void>? = nil) async throws -> Data {
 		try Task.checkCancellation()
 		let descriptor = handle.fileDescriptor
 		let flags = fcntl(descriptor, F_GETFL)
@@ -63,7 +63,18 @@ enum UserScriptRunner {
 		}
 		let (readiness, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
 		handle.readabilityHandler = { _ in continuation.yield(()) }
+		/* The caller's stop request ends the wait for end of file: whatever the
+		 pipe holds is taken, and the rest is left to whoever else holds it. */
+		let stopWatcher = stop.map { stop in
+			Task {
+				for await _ in stop {
+					continuation.finish()
+					return
+				}
+			}
+		}
 		defer {
+			stopWatcher?.cancel()
 			handle.readabilityHandler = nil
 			continuation.finish()
 			_ = fcntl(descriptor, F_SETFL, flags)
@@ -95,7 +106,22 @@ enum UserScriptRunner {
 				exceededLimit = exceededLimit || kept < count
 			}
 		}
-		throw CancellationError()
+		/* The stream ends for two reasons: the caller asked to stop, or this task
+		 was cancelled. Only the first keeps what was read. */
+		try Task.checkCancellation()
+		/* One last pass over what arrived without a readiness wake-up. */
+		while true {
+			let count = buffer.withUnsafeMutableBytes { Darwin.read(descriptor, $0.baseAddress, $0.count) }
+			if count < 0, errno == EINTR {
+				continue
+			}
+			guard count > 0 else { break }
+			let kept = min(count, maximumOutputBytes - accumulated.count)
+			accumulated.append(contentsOf: buffer.prefix(kept))
+			exceededLimit = exceededLimit || kept < count
+		}
+		guard exceededLimit == false else { throw OutputError.tooLarge }
+		return accumulated
 	}
 
 	/// Runs the executable at `url` with `arguments` and returns what it wrote
@@ -120,7 +146,8 @@ enum UserScriptRunner {
 		// task deliberately outlives caller cancellation: the Foundation task
 		// keeps executing, so cancelling an async-let reader would strand it in
 		// write(2). This scope joins the reader before closing its handle.
-		let output = Task { try await readOutput(from: readHandle) }
+		let (stopReading, stopContinuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
+		let output = Task { try await readOutput(from: readHandle, stop: stopReading) }
 		defer { output.cancel() }
 		let executionError: (any Error)?
 		do {
@@ -133,7 +160,7 @@ enum UserScriptRunner {
 		// The task holds the only other reference to the write end; closing it
 		// here is what lets the drain above see EOF.
 		try? writeHandle.close()
-		let outputResult = await output.result
+		let outputResult = await drained(output, stop: stopContinuation, grace: outputGracePeriod)
 		try Task.checkCancellation()
 		let data = try outputResult.get()
 
@@ -142,6 +169,42 @@ enum UserScriptRunner {
 		}
 
 		return data
+	}
+
+	/// How long a script's output is waited for once the script has exited.
+	nonisolated static let outputGracePeriod = Duration.seconds(2)
+
+	/** Waits for the reader to reach end of file, but not for longer than
+	 `grace`. A process the script left running in the background holds the
+	 pipe's write end open, and end of file waits for it. On the deadline the
+	 reader is told to stop and hands back what it has read. Cancelling the
+	 caller stops the reader too. */
+	static func drained(
+		_ output: Task<Data, any Error>,
+		stop: AsyncStream<Void>.Continuation,
+		grace: Duration
+	) async -> Result<Data, any Error> {
+		await withTaskCancellationHandler {
+			await withTaskGroup(of: Result<Data, any Error>?.self) { group in
+				group.addTask { await output.result }
+				group.addTask {
+					try? await Task.sleep(for: grace)
+					stop.yield(())
+					return nil
+				}
+				var result: Result<Data, any Error>?
+				for await finished in group {
+					if let finished {
+						result = finished
+						group.cancelAll()
+						break
+					}
+				}
+				return result ?? .failure(CancellationError())
+			}
+		} onCancel: {
+			output.cancel()
+		}
 	}
 
 	/// Runs `handler` in the user AppleScript at `url` and returns its result

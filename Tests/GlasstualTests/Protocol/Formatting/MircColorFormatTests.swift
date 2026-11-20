@@ -238,7 +238,7 @@ struct MircColorFormatTests {
 	func linesConsumeEveryCharacterExactlyOnce() {
 		let session = TestServerSession()
 		let payload = String(String(repeating: "word ", count: 160).prefix(800))
-		var cursor = LineCursor(NSAttributedString(string: payload))
+		var cursor = LineCursor(NSAttributedString(string: payload), keepsBreakSpace: true)
 		let payloadLength = cursor.length
 
 		#expect(payloadLength == (payload as NSString).length)
@@ -291,7 +291,7 @@ struct MircColorFormatTests {
 			runIndex += 1
 		}
 
-		var cursor = LineCursor(text)
+		var cursor = LineCursor(text, keepsBreakSpace: true)
 		var reassembled = ""
 
 		while true {
@@ -426,7 +426,7 @@ struct MircColorFormatTests {
 		let session = TestServerSession()
 		let family = "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"
 		let payload = String(repeating: "\(family) ", count: 60)
-		var cursor = LineCursor(NSAttributedString(string: payload))
+		var cursor = LineCursor(NSAttributedString(string: payload), keepsBreakSpace: true)
 		var reassembled = ""
 
 		while true {
@@ -453,7 +453,7 @@ struct MircColorFormatTests {
 	func linesDoNotSplitColourCodes() {
 		let session = TestServerSession()
 		let payload = String(repeating: "\u{3}04word\u{3} ", count: 120)
-		var cursor = LineCursor(NSAttributedString(string: payload))
+		var cursor = LineCursor(NSAttributedString(string: payload), keepsBreakSpace: true)
 		var reassembled = ""
 
 		while true {

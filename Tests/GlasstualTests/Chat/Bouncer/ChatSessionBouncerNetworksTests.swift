@@ -151,6 +151,19 @@ struct ChatSessionBouncerNetworksTests {
 		#expect(removed.map(\.label) == ["Libera"])
 	}
 
+	@Test("A listing longer than the network limit retires no connection it still names")
+	func listingPastTheLimitKeepsNetworks() throws {
+		apply(.init(added: [network("late", "Late")]))
+		let limit = BouncerNetworkAttributes.maximumNetworks
+		var set = BouncerNetworkSet()
+		let listing = (0 ..< limit).map { network(String($0), "N\($0)") } + [network("late", "Late")]
+
+		apply(set.apply(.snapshot(listing)))
+
+		let late = try #require(children().first { $0.config.bouncerNetwork?.networkIdentifier == "late" })
+		#expect(late.config.bouncerNetwork?.isRemoved == false)
+	}
+
 	@Test("Editing the account reaches its networks without touching their own conversations")
 	func parentEditsPropagate() throws {
 		apply(.init(added: [network("1", "Libera")]))

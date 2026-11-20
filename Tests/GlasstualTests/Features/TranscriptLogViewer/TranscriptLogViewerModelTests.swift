@@ -138,4 +138,30 @@ struct TranscriptLogViewerModelTests {
 		#expect(model.lines.first?.text == "needle")
 		#expect(model.scrollRequest?.lineID == 0)
 	}
+
+	/// One read reaches back at most `maximumChunkBytes`, so a match further
+	/// than that takes several, and the counter only moves once the view does.
+	@Test("A match more than one read before the loaded lines is still scrolled to")
+	func matchBeyondOneReadIsReached() async throws {
+		let fixture = try TranscriptLogFixture()
+		defer { fixture.remove() }
+		let padding = String(repeating: "x", count: 99) + "\n"
+		let lineCount = (TranscriptLogLibrary.maximumChunkBytes + 2 * TranscriptLogLibrary.chunkBytes) / padding.utf8.count
+		let text = "needle\n" + String(repeating: padding, count: lineCount) + "needle\n"
+		try fixture.write(text, server: "S (00000)", folder: "Console", day: "2026-01-01")
+		let model = model(for: fixture)
+		await model.refresh()
+		try model.selectConversation(id: #require(model.servers.first?.conversations.first?.id))
+		await model.loadSelectedLog()
+		model.searchText = "needle"
+		await model.search()
+		#expect(model.currentMatchIndex == 1)
+		#expect(model.startOffset > TranscriptLogLibrary.maximumChunkBytes)
+
+		await model.previousMatch()
+
+		#expect(model.currentMatchIndex == 0)
+		#expect(model.startOffset == 0)
+		#expect(model.scrollRequest?.lineID == 0)
+	}
 }

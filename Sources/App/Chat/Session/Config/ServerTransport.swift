@@ -13,6 +13,14 @@ nonisolated enum ServerTransport: String, Codable, Sendable, CaseIterable {
 	case irc
 	case webSocket = "websocket"
 
+	/// The transport a connection's framing belongs to.
+	init(_ transport: ConnectionTransport) {
+		switch transport {
+		case .stream: self = .irc
+		case .webSocket: self = .webSocket
+		}
+	}
+
 	/// The port a server entry of this transport takes when none is given.
 	func defaultPort(secured: Bool) -> UInt16 {
 		switch self {

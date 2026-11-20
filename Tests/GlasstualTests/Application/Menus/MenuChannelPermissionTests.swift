@@ -112,6 +112,22 @@ extension MenuContentViewTests {
 		}
 	}
 
+	@Test("A kick or ban confirmed after the channel was left or replaced is not sent")
+	func moderationNeedsTheSameJoinedChannel() async throws {
+		try await withChannelMenu { _, _, session, _ in
+			let channel = try preparePermissionChannel(session)
+			#expect(MenuActionController.channelAcceptsModeration(channel, on: session))
+
+			channel.deactivate()
+			#expect(MenuActionController.channelAcceptsModeration(channel, on: session) == false)
+
+			channel.activate()
+			session.conversationList = []
+			_ = try #require(session.findConversationOrCreate("#permissions"))
+			#expect(MenuActionController.channelAcceptsModeration(channel, on: session) == false)
+		}
+	}
+
 	private func preparePermissionChannel(_ session: TestServerSession) throws -> Conversation {
 		session.userNickname = "local"
 		session.markAsLoggedIn()

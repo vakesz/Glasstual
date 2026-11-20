@@ -90,6 +90,9 @@ extension TranscriptView {
 			? NSRect(origin: point, size: .zero).insetBy(dx: -1, dy: -1)
 			: textView.convert(window.convertFromScreen(screenRect), from: nil)
 		showMemberInformation(for: nickname, relativeTo: rect, of: textView)
+		if memberInformationPopover != nil {
+			memberInformationAnchorLine = document.index(ofLineContaining: range.location).map { document[$0].lineNumber }
+		}
 	}
 
 	/** The image placeholder under a point. The insertion index a point names

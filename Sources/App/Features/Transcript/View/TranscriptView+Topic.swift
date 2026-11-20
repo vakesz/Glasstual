@@ -72,6 +72,7 @@ extension TranscriptView {
 	func closeMemberInformation() {
 		memberInformationPopover?.close()
 		memberInformationPopover = nil
+		memberInformationAnchorLine = nil
 	}
 
 	/** Offers the reactions for a message, anchored to the characters the

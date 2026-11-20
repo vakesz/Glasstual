@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Codeux Software, LLC & respective contributors.
 // SPDX-License-Identifier: BSD-3-Clause
 
+import CoreServices
 import Foundation
 @testable import Glasstual
 import Testing
@@ -48,6 +49,20 @@ struct FileTransferResumeSafetyTests {
 		#expect(transfer.filename == claimed)
 		#expect(try await file.size() == 128)
 		#expect(transfer.wireFilename == "photo.jpg")
+	}
+
+	@Test("A reserved destination is quarantined before any byte arrives")
+	func aReservedDestinationIsQuarantined() async throws {
+		let directory = try temporaryDirectory()
+		defer { try? FileManager.default.removeItem(atPath: directory) }
+		let transfer = try receiver(filename: "tool.dmg", in: directory)
+
+		await transfer.claimDestinationFilename()
+
+		let url = try #require(transfer.fileURL)
+		#expect(try await #require(transfer.ownedFile).size() == 0)
+		let stored = try url.resourceValues(forKeys: [.quarantinePropertiesKey]).quarantineProperties
+		#expect(stored?[kLSQuarantineAgentNameKey as String] as? String == "Glasstual")
 	}
 
 	@Test("A resume accept nobody asked for moves nothing")

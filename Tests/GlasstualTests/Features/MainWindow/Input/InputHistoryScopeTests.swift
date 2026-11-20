@@ -79,6 +79,51 @@ struct InputHistoryScopeTests {
 		#expect(history.up(NSAttributedString(string: "only in the first"))?.string == "shared")
 	}
 
+	@Test("Forking while an item is focused keeps history working for it without a selection change")
+	func forkingKeepsTheFocusedItemCurrent() {
+		let setting = SettingsKeys.Input.historyIsPerSelection
+		let previous = setting.storedValue
+		defer { setting.storedValue = previous }
+		setting.value = false
+		let window = makeWindow()
+		defer { window.close() }
+		let history = InputHistory(window: window)
+		history.add(NSAttributedString(string: "before"))
+
+		setting.value = true
+		let session = ServerSession(config: ServerConfig())
+		history.forkGlobalHistory(into: [session.uniqueIdentifier], focusing: session.uniqueIdentifier)
+		history.add(NSAttributedString(string: "after"))
+
+		#expect(history.currentScope == .item(session.uniqueIdentifier))
+		#expect(history.up(NSAttributedString(string: ""))?.string == "after")
+		#expect(history.up(NSAttributedString(string: "after"))?.string == "before")
+	}
+
+	@Test("Switching back to shared history keeps the focused item's buffer and drops the others")
+	func collapsingSeedsTheGlobalBufferFromTheFocusedItem() {
+		let setting = SettingsKeys.Input.historyIsPerSelection
+		let previous = setting.storedValue
+		defer { setting.storedValue = previous }
+		setting.value = true
+		let window = makeWindow()
+		defer { window.close() }
+		let history = InputHistory(window: window)
+		let first = ServerSession(config: ServerConfig())
+		let second = ServerSession(config: ServerConfig())
+		history.forkGlobalHistory(into: [], focusing: first.uniqueIdentifier)
+		history.add(NSAttributedString(string: "in the first"))
+		history.forkGlobalHistory(into: [], focusing: second.uniqueIdentifier)
+		history.add(NSAttributedString(string: "in the second"))
+
+		setting.value = false
+		history.collapseToGlobalHistory(seededFrom: first.uniqueIdentifier)
+
+		#expect(history.currentScope == .global)
+		#expect(history.up(NSAttributedString(string: ""))?.string == "in the first")
+		#expect(history.up(NSAttributedString(string: "in the first"))?.string == nil)
+	}
+
 	@Test("A draft left in one item's field comes back when the item is focused again, and not in another")
 	func draftsFollowTheirItem() throws {
 		let setting = SettingsKeys.Input.historyIsPerSelection

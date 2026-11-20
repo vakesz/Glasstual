@@ -401,6 +401,53 @@ nonisolated struct ConnectionHostSendOrderingTests {
 		#expect(disconnected, "the writer held the command drain behind a network completion")
 	}
 
+	/** A close the application asks for is a clean disconnect, even when a
+	 write is stuck in the transport. Closing used to cancel that write first,
+	 and its cancellation was reported back as the reason for the disconnect. */
+	@Test("Closing while a write is blocked reports a disconnect without an error")
+	@concurrent
+	func closeDuringBlockedWriteIsClean() async throws {
+		let server = LoopbackTCPServer(readsTraffic: false)
+		let port = try await server.start()
+		var config = ConnectionConfig()
+		config.serverAddress = "127.0.0.1"
+		config.serverPort = port
+		config.connectionPrefersSecuredConnection = false
+		let (events, continuation) = AsyncStream<ConnectionEvent>.makeStream()
+		let service = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
+		service.remoteObjectInterface = RemoteConnectionInterface.server()
+		service.exportedInterface = RemoteConnectionInterface.client()
+		service.exportedObject = SendOrderingSessionShim(events: continuation)
+		service.resume()
+		defer {
+			service.invalidate()
+			Task { await server.stop() }
+		}
+		let host = try #require(service.remoteObjectProxy as? RemoteConnectionServerProtocol)
+		host.open(with: ConnectionConfigEnvelope(config: config))
+		var disconnected = false
+		var disconnectError: String?
+		await Eventually.withUnisolatedDeadline(.seconds(30), onExpiry: { continuation.finish() }, perform: {
+			for await event in events {
+				switch event {
+				case .didConnect:
+					// More than the TCP window can hold while the peer never reads.
+					host.send(Data(repeating: 0x78, count: 32 * 1024 * 1024))
+					// A round trip through the host, so the write is under way first.
+					host.exportSecureConnectionInformation { _ in host.close() }
+				case let .didDisconnect(error):
+					disconnected = true
+					disconnectError = error.map { String(describing: $0) }
+					continuation.finish()
+				case .received, .withheldRead, .closedReadStream:
+					break
+				}
+			}
+		})
+		#expect(disconnected)
+		#expect(disconnectError == nil)
+	}
+
 	/** The host reads the next chunk only once the application has answered
 	 for the last one.
 

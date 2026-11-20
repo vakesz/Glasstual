@@ -57,6 +57,30 @@ struct RemoteImageStoreTests {
 		#expect(changes.count == 0)
 	}
 
+	@Test("A refused address records a failure but holds no owner")
+	func refusedAddressHoldsNoOwner() throws {
+		let store = store(stubbed: false)
+		let url = try #require(URL(string: "http://10.0.0.1/a"))
+
+		store.request(url, route: .system, owner: "a")
+
+		#expect(store.ownedURLCount == 0)
+		#expect(store.failureCount == 1)
+	}
+
+	@Test("Remembered failures are capped")
+	func failuresAreCapped() throws {
+		let store = store(stubbed: false)
+
+		for index in 0 ..< RemoteImageStore.maximumFailures + 50 {
+			let url = try #require(URL(string: "http://10.0.0.1/\(index)"))
+			store.request(url, route: .system, owner: "a")
+		}
+
+		#expect(store.failureCount == RemoteImageStore.maximumFailures)
+		#expect(store.ownedURLCount == 0)
+	}
+
 	@Test("A non-web address is never fetched")
 	func nonWebAddressIsRefused() throws {
 		let store = store(stubbed: false)

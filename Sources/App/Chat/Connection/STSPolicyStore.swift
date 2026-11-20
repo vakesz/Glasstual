@@ -9,6 +9,8 @@ import Foundation
 struct STSConnectionPolicy {
 	let host: String
 	let port: UInt16
+	/// The transport the offer arrived over, which decides the stored scope.
+	let transport: ServerTransport
 	let values: STSCapabilityValues
 }
 
@@ -60,17 +62,17 @@ final class STSPolicyStore {
 		save()
 	}
 
-	/// The port a stored policy pins `host` to, or `nil` when there is no
-	/// policy. A stored policy always requires a secured connection, so the
-	/// port is the whole answer.
-	func enforcedPort(forHost host: String) -> UInt16? {
-		policy(forHost: host)?.port
+	/// What a stored policy enforces for `host`, or `nil` when there is no
+	/// policy. Every stored policy requires a secured connection.
+	func enforcement(forHost host: String) -> STSPolicyScope? {
+		policy(forHost: host)?.scope
 	}
 
 	func applyCapabilityValues(
 		_ values: STSCapabilityValues,
 		forHost host: String,
 		connectedPort: UInt16,
+		transport: ServerTransport,
 		secured: Bool,
 		certificateChainValidated: Bool
 	) -> STSPolicyAction {
@@ -103,22 +105,34 @@ final class STSPolicyStore {
 			return .cleared
 		}
 
-		// The upgrade port is meaningful only on an insecure connection.
-		let policyPort = connectedPort
-
-		guard policyPort > 0 else {
-			return .none
+		/* The upgrade port is meaningful only on an insecure connection. Over
+		 IRC the connected port is a proven TLS IRC port. Over a WebSocket it
+		 is an HTTPS port, so the policy only requires TLS, and an existing
+		 pin learned over IRC keeps its port. */
+		let scope: STSPolicyScope
+		switch transport {
+		case .irc:
+			guard connectedPort > 0 else {
+				return .none
+			}
+			scope = .port(connectedPort)
+		case .webSocket:
+			if case let .port(pinned) = policy(forHost: host)?.scope {
+				scope = .port(pinned)
+			} else {
+				scope = .host
+			}
 		}
 
 		let policy = STSPolicy(
-			port: policyPort,
+			scope: scope,
 			expiresAt: Date(timeIntervalSinceNow: values.duration),
 			preload: values.preload
 		)
 
 		setPolicy(policy, forHost: host)
 
-		return .stored(port: policyPort)
+		return .stored(scope)
 	}
 
 	/// Records that a plaintext-to-TLS upgrade to `port` failed, so the next

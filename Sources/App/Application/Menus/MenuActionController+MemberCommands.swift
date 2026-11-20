@@ -174,6 +174,15 @@ extension MenuActionController {
 	}
 }
 
+extension MenuActionController {
+	/// Whether the channel the question named is still one this session is in:
+	/// the nicknames it listed mean nothing in a channel that was left or
+	/// replaced while the sheet was up.
+	static func channelAcceptsModeration(_ channel: Conversation, on session: ServerSession) -> Bool {
+		session.isLoggedIn && channel.isActive && session.findConversation(channel.name) === channel
+	}
+}
+
 private extension MenuActionController {
 	func setMemberMuted(_ muted: Bool, sender: NSMenuItem?) {
 		guard let target = context.muteTarget(for: sender) else { return }
@@ -312,9 +321,9 @@ private extension MenuActionController {
 
 		let request = kind.request(members: nicknames.formatted(.list(type: .and)), channel: channel.name)
 		Alerts.present(
-			request, about: session.promptScope(in: channel, boundToConnection: false, revealsMainWindow: false)
+			request, about: session.promptScope(in: channel, boundToConnection: true, revealsMainWindow: false)
 		) { answer in
-			guard answer.response == .default, session.isLoggedIn else { return }
+			guard answer.response == .default, Self.channelAcceptsModeration(channel, on: session) else { return }
 			for nickname in nicknames {
 				action(session, channel, nickname)
 			}

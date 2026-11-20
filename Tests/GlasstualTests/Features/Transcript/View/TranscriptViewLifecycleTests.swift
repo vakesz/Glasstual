@@ -15,15 +15,19 @@ struct TranscriptViewLifecycleTests {
 		}
 	}
 
-	private func transcriptLine(_ text: String) -> TranscriptRow {
+	private func transcriptLine(
+		_ text: String,
+		messageIdentifier: String? = nil,
+		receivedAt: Date = Date()
+	) -> TranscriptRow {
 		TranscriptRow(
 			lineNumber: UUID().uuidString,
-			receivedAt: Date(),
+			receivedAt: receivedAt,
 			nickname: "alice",
 			memberType: .normal,
 			lineType: .privateMessage,
 			command: "PRIVMSG",
-			messageIdentifier: nil,
+			messageIdentifier: messageIdentifier,
 			replyToMessageIdentifier: nil,
 			deliveryState: .none,
 			deliveryFailureReason: nil,
@@ -540,6 +544,72 @@ struct TranscriptViewLifecycleTests {
 		#expect(transcript.transcriptView.memberInformationPopover != nil)
 
 		transcript.transcriptView.clearLines()
+		#expect(transcript.transcriptView.memberInformationPopover == nil)
+	}
+
+	/// Anything that leaves the anchor characters where they are keeps the
+	/// popover: a line appended under the name, a reaction on a line below it.
+	@Test("Appended lines and edits below the name leave the profile popover open")
+	func editsBelowTheNameKeepTheProfilePopover() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
+		let start = Date()
+		transcript.transcriptView.replaceLines([
+			transcriptLine("first", messageIdentifier: "m1", receivedAt: start),
+			transcriptLine("second", messageIdentifier: "m2", receivedAt: start.addingTimeInterval(10)),
+		])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+		try clickNickname(in: transcript)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
+
+		transcript.transcriptView.appendLines([
+			transcriptLine("third", receivedAt: start.addingTimeInterval(20)),
+		])
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
+
+		transcript.transcriptView.updateReactions(["+1": ["bob"]], messageIdentifier: "m2")
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
+	}
+
+	@Test("Redrawing the anchor line or one above it closes the profile popover")
+	func redrawingAtTheAnchorClosesTheProfilePopover() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
+		let start = Date()
+		transcript.transcriptView.replaceLines([
+			transcriptLine("first", messageIdentifier: "m1", receivedAt: start),
+		])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+		try clickNickname(in: transcript)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
+
+		transcript.transcriptView.updateReactions(["+1": ["bob"]], messageIdentifier: "m1")
+		#expect(transcript.transcriptView.memberInformationPopover == nil)
+	}
+
+	@Test("A line recovered into the middle closes the profile popover")
+	func recoveredInsertionClosesTheProfilePopover() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
+		let start = Date()
+		transcript.transcriptView.replaceLines([
+			transcriptLine("first", receivedAt: start),
+			transcriptLine("last", receivedAt: start.addingTimeInterval(100)),
+		])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+		try clickNickname(in: transcript)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
+
+		transcript.transcriptView.insertRecoveredLines([transcriptLine("between", receivedAt: start.addingTimeInterval(50))])
+		#expect(transcript.transcriptView.memberInformationPopover == nil)
+	}
+
+	@Test("Rebuilding the transcript closes the profile popover")
+	func rebuildClosesTheProfilePopover() throws {
+		let transcript = makeTranscript(width: 800, withMember: "alice")
+		transcript.transcriptView.replaceLines([transcriptLine("hello there")])
+		transcript.window.contentView?.layoutSubtreeIfNeeded()
+		try clickNickname(in: transcript)
+		#expect(transcript.transcriptView.memberInformationPopover != nil)
+
+		transcript.transcriptView.setTextScale(1.5)
 		#expect(transcript.transcriptView.memberInformationPopover == nil)
 	}
 

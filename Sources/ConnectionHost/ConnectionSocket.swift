@@ -194,12 +194,12 @@ actor ConnectionSocket {
 	func fail(with error: ConnectionError) -> Bool {
 		guard disconnected == false || disconnecting else { return false }
 
-		/* The reason is recorded whether or not a close is already under way: a
-		 read failure and a write failure land in the same turn, and a plain
-		 `close()` carries none at all, so dropping the error here was how a
-		 disconnect the transport had a reason for reached the client as one it
-		 did not. The first reason given is the one that caused the close. */
-		if alternateDisconnectError == nil {
+		/* The first reason given is the one that caused the close. A failure
+		 after a close began, or after the owner asked for one, is a consequence
+		 of that close: the owner's close carries no error, and the write it
+		 interrupts must not invent one. */
+		let isReason = DisconnectReason.records(error, closedByOwner: closedByOwner, disconnecting: disconnecting)
+		if alternateDisconnectError == nil, isReason {
 			alternateDisconnectError = error
 		}
 

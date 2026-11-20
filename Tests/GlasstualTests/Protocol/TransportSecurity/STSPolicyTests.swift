@@ -51,15 +51,15 @@ struct STSPolicyTests {
 		defer { userDefaults.removePersistentDomain(forName: suiteName) }
 		let store = STSPolicyStore(userDefaults: userDefaults)
 		#expect(store.applyCapabilityValues(
-			values, forHost: "irc.example.net", connectedPort: 6697,
+			values, forHost: "irc.example.net", connectedPort: 6697, transport: .irc,
 			secured: true, certificateChainValidated: true
-		) == .stored(port: 6697))
+		) == .stored(.port(6697)))
 
 		let reloadedStore = STSPolicyStore(userDefaults: userDefaults)
 		let policy = try #require(reloadedStore.policy(forHost: "irc.example.net"))
 		#expect(policy.expiresAt.timeIntervalSince1970.isFinite)
 		#expect(policy.expiresAt.timeIntervalSince1970 == .greatestFiniteMagnitude)
-		#expect(reloadedStore.enforcedPort(forHost: "irc.example.net") == 6697)
+		#expect(reloadedStore.enforcement(forHost: "irc.example.net") == .port(6697))
 	}
 
 	@Test("A policy written to user defaults is read back by a fresh store")
@@ -80,7 +80,7 @@ struct STSPolicyTests {
 		let reloadedStore = STSPolicyStore(userDefaults: userDefaults)
 		let reloadedPolicy = try #require(reloadedStore.policy(forHost: "irc.example.net"))
 
-		#expect(reloadedPolicy.port == 6697)
+		#expect(reloadedPolicy.scope == .port(6697))
 		#expect(reloadedPolicy.preload)
 	}
 
@@ -93,7 +93,7 @@ struct STSPolicyTests {
 			forHost: "irc.example.net"
 		)
 
-		#expect(store.enforcedPort(forHost: "irc.example.net") == 6697)
+		#expect(store.enforcement(forHost: "irc.example.net") == .port(6697))
 	}
 
 	@Test("A host with no policy is left with the endpoint the caller had")
@@ -101,7 +101,7 @@ struct STSPolicyTests {
 		let store = makeStore()
 
 		/* No policy: nothing to enforce, so the caller keeps what it had. */
-		#expect(store.enforcedPort(forHost: "irc.example.net") == nil)
+		#expect(store.enforcement(forHost: "irc.example.net") == nil)
 	}
 
 	@Test("A validated secure connection stores the policy on the port it connected to")
@@ -112,15 +112,92 @@ struct STSPolicyTests {
 			values,
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
 
-		#expect(action == .stored(port: 6697))
+		#expect(action == .stored(.port(6697)))
 
 		let policy = try #require(store.policy(forHost: "irc.example.net"))
 
-		#expect(policy.port == 6697) // The connected port when none advertised
+		#expect(policy.scope == .port(6697)) // The connected port when none advertised
+	}
+
+	@Test("A policy learned over a WebSocket requires TLS without pinning a port")
+	func webSocketStoresHostOnlyPolicy() throws {
+		let store = makeStore()
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=300"]))
+
+		let action = store.applyCapabilityValues(
+			values, forHost: "irc.example.net", connectedPort: 443, transport: .webSocket,
+			secured: true, certificateChainValidated: true
+		)
+
+		#expect(action == .stored(.host))
+		#expect(store.enforcement(forHost: "irc.example.net") == .host)
+	}
+
+	@Test("A WebSocket offer renews an existing port pin and keeps its port; an IRC offer replaces it")
+	func webSocketKeepsExistingPortPin() throws {
+		let store = makeStore()
+		store.setPolicy(STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: 60), preload: false), forHost: "irc.example.net")
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=300", "preload"]))
+
+		let action = store.applyCapabilityValues(
+			values, forHost: "irc.example.net", connectedPort: 443, transport: .webSocket,
+			secured: true, certificateChainValidated: true
+		)
+
+		#expect(action == .stored(.port(6697)))
+		let renewed = try #require(store.policy(forHost: "irc.example.net"))
+		#expect(renewed.scope == .port(6697))
+		#expect(renewed.preload)
+		#expect(renewed.expiresAt > Date(timeIntervalSinceNow: 200))
+
+		store.setPolicy(STSPolicy(scope: .host, expiresAt: .distantFuture, preload: false), forHost: "irc.example.net")
+		#expect(store.applyCapabilityValues(
+			values, forHost: "irc.example.net", connectedPort: 7000, transport: .irc,
+			secured: true, certificateChainValidated: true
+		) == .stored(.port(7000)))
+		#expect(store.enforcement(forHost: "irc.example.net") == .port(7000))
+	}
+
+	@Test("A host-only policy is read back by a fresh store")
+	func hostOnlyPolicyPersists() throws {
+		let suiteName = "STSPolicyTests.\(UUID().uuidString)"
+		let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+		defer { userDefaults.removePersistentDomain(forName: suiteName) }
+		STSPolicyStore(userDefaults: userDefaults).setPolicy(
+			STSPolicy(scope: .host, expiresAt: Date(timeIntervalSinceNow: 300), preload: true),
+			forHost: "irc.example.net"
+		)
+
+		let reloaded = try #require(STSPolicyStore(userDefaults: userDefaults).policy(forHost: "irc.example.net"))
+
+		#expect(reloaded.scope == .host)
+		#expect(reloaded.preload)
+		let stored = try #require(userDefaults.dictionary(forKey: SettingsKeys.Connection.stsPolicies.name))
+		let entry = try #require(stored["irc.example.net"] as? [String: Any])
+		#expect(entry["port"] == nil)
+	}
+
+	@Test("A policy stored before host-only scopes reads back as pinned to its port")
+	func legacyPolicyReadsAsPortPin() throws {
+		let suiteName = "STSPolicyTests.\(UUID().uuidString)"
+		let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+		defer { userDefaults.removePersistentDomain(forName: suiteName) }
+		userDefaults.set([
+			"irc.example.net": [
+				"port": 6697,
+				"expiresAt": Date(timeIntervalSinceNow: 300).timeIntervalSince1970,
+				"preload": false,
+			],
+		], forKey: SettingsKeys.Connection.stsPolicies.name)
+
+		let store = STSPolicyStore(userDefaults: userDefaults)
+
+		#expect(store.enforcement(forHost: "irc.example.net") == .port(6697))
 	}
 
 	/** A policy is about a name, not a spelling of it. `irc.example.com.` is the

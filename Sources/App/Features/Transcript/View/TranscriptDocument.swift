@@ -120,6 +120,23 @@ struct TranscriptDocument {
 		storedLineStarts[index] + lineStartBias
 	}
 
+	/// The line that drew the character at `location`, found by bisection.
+	func index(ofLineContaining location: Int) -> Int? {
+		guard lines.isEmpty == false, location >= self.location(ofLineAt: 0) else { return nil }
+		var low = 0
+		var high = lines.count
+		while low < high {
+			let middle = (low + high) / 2
+			if self.location(ofLineAt: middle) <= location {
+				low = middle + 1
+			} else {
+				high = middle
+			}
+		}
+		let index = low - 1
+		return location < self.location(ofLineAt: index) + length(ofLineAt: index) ? index : nil
+	}
+
 	/// How many characters a line drew.
 	func length(ofLineAt index: Int) -> Int {
 		storedLineStarts[index + 1] - storedLineStarts[index]

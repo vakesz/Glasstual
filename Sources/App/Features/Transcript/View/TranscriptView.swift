@@ -30,6 +30,9 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	let commands: TranscriptCommands
 	/// The profile popover a click on a nickname opened, while it is open.
 	var memberInformationPopover: NSPopover?
+	/// The line whose characters the profile popover is anchored to, so an edit
+	/// at or above it, which can move the anchor, takes the popover down.
+	var memberInformationAnchorLine: String?
 	/// The reaction picker, while it is open, anchored to the message it
 	/// answers.
 	var reactionPicker: ReactionPopover?
@@ -278,7 +281,6 @@ final class TranscriptView: NSView, NSTextViewDelegate, NSTextLayoutManagerDeleg
 	 selection, the viewport and the buffer limit are settled once at the end,
 	 by `endEditing`. Every edit to the transcript goes through here. */
 	func performEditingBatch<Output>(_ edits: () -> Output) -> Output {
-		closeMemberInformation()
 		beginEditing()
 		defer { endEditing() }
 		return edits()
