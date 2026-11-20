@@ -161,6 +161,11 @@ extension FileTransfer {
 			}
 			takeOwnership(of: file)
 			filename = (file.path as NSString).lastPathComponent
+			/* The file already holds the peer's bytes as they arrive, so it is
+			 marked now: a transfer that fails or overruns keeps what it wrote. */
+			if isSender == false {
+				quarantineReceivedFile()
+			}
 		} catch {
 			guard isCurrent(run) else { return }
 			/* The folder is forgotten with the failure. Keeping it made every

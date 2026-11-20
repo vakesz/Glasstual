@@ -100,6 +100,25 @@ struct AddressBookUserTrackingTests {
 		#expect(tracker.trackedUsers.isEmpty)
 	}
 
+	@Test("A tracked user who is also muted still signs on")
+	func mixedMatchStillRecordsSignOn() throws {
+		let session = loggedInSession(tracking: ["bob"])
+		var mute = AddressBookEntry.newIgnoreEntry(forHostmask: "bob!*@*")
+		mute.muteMessages = true
+		session.config.ignoreList.append(mute)
+		session.populateISONTrackedUsersList()
+		#expect(session.trackedUsers.status(ofUser: "bob") == .notAvailable)
+
+		let message = try #require(Message(line: ":bob!u@h JOIN #room", on: session))
+		let match = session.findAddressBookEntry(forHostmask: "bob!u@h")
+		#expect(match?.entryType == .mixed)
+
+		let entry = try #require(match)
+		session.updateUserTrackingStatus(for: entry, message: message)
+
+		#expect(session.trackedUsers.status(ofUser: "bob") == .available)
+	}
+
 	@Test("A session with no channels has no WHO batch to send")
 	func whoBatchPolicyReturnsNoRangeForAnEmptyChannelList() {
 		#expect(UserTrackingWhoBatchPolicy.indexRange(startingAt: 0, conversationCount: 0) == nil)

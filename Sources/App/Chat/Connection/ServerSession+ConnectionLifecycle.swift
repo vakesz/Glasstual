@@ -220,8 +220,9 @@ extension ServerSession {
 		var port = target.port
 		var secured = target.secured
 		var transport = target.transport
-		let enforcedPort = environment.services.stsPolicies.enforcedPort(forHost: host)
-		if let enforcedPort {
+		let enforcement = environment.services.stsPolicies.enforcement(forHost: host)
+		switch enforcement {
+		case let .port(enforcedPort):
 			/* A secure WebSocket already is what the policy asks for, and the
 			 policy's port is a TLS IRC port, not a WebSocket one: it keeps its
 			 own port and only gains the trusted-certificate requirement. A
@@ -238,12 +239,21 @@ extension ServerSession {
 				port = enforcedPort
 				secured = true
 			}
+		case .host:
+			/* Learned over a WebSocket, the policy proves TLS but no port: each
+			 entry keeps its own transport and port and gains TLS. */
+			if secured == false {
+				printDebugInformation(toConsole: String(localized: .IRC.strictTransportSecurityPolicy(String(port))))
+				secured = true
+			}
+		case nil:
+			break
 		}
 		var connectionConfig = ConnectionConfig()
 		connectionConfig.serverAddress = host
 		connectionConfig.serverPort = port
 		connectionConfig.connectionPrefersSecuredConnection = secured
-		connectionConfig.connectionRequiresTrustedCertificate = enforcedPort != nil || target.reason == .stsUpgrade
+		connectionConfig.connectionRequiresTrustedCertificate = enforcement != nil || target.reason == .stsUpgrade
 		if transport == .webSocket {
 			connectionConfig.transport = .webSocket(WebSocketTransportOptions(
 				path: target.webSocketPath,

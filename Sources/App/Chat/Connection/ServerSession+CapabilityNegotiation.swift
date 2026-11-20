@@ -175,10 +175,12 @@ extension ServerSession {
 		}
 
 		let connectedPort = socket?.config.serverPort ?? 0
+		let connectedTransport = socket.map { ServerTransport($0.config.transport) } ?? .irc
 		let action = environment.services.stsPolicies.applyCapabilityValues(
 			parsed,
 			forHost: host,
 			connectedPort: connectedPort,
+			transport: connectedTransport,
 			secured: isSecured,
 			certificateChainValidated: socket?.isSecuredWithValidatedCertificate ?? false
 		)
@@ -214,9 +216,16 @@ extension ServerSession {
 			disconnect()
 
 			return true
-		case let .stored(policyPort):
-			sts.activePolicy = STSConnectionPolicy(host: host, port: policyPort, values: parsed)
-			printDebugInformation(toConsole: String(localized: .IRC.storedAStrictTransportSecurityPolicy(String(policyPort))))
+		case let .stored(scope):
+			sts.activePolicy = STSConnectionPolicy(
+				host: host, port: connectedPort, transport: connectedTransport, values: parsed
+			)
+			switch scope {
+			case let .port(policyPort):
+				printDebugInformation(toConsole: String(localized: .IRC.storedAStrictTransportSecurityPolicy(String(policyPort))))
+			case .host:
+				printDebugInformation(toConsole: String(localized: .IRC.storedAStrictTransportSecurityHostPolicy))
+			}
 		case .cleared:
 			sts.activePolicy = nil
 			printDebugInformation(toConsole: String(localized: .IRC.serverWithdrewItsStrictTransportSecurity))
@@ -481,6 +490,12 @@ extension ServerSession {
 		for name in CapabilityRegistry.parseCapabilityList(actions).keys {
 			capabilityNegotiation.withdraw(name)
 			toggleCapability(name, enabled: false)
+			/* A sign-in waiting on `CAP REQ sasl` loses its answer: the late
+			 ACK is refused once the name is withdrawn. */
+			if name == "sasl", sasl.pendingReauthentication != nil {
+				sasl.pendingReauthentication = nil
+				reportSASLReauthenticationRefusal(.saslNotOffered)
+			}
 		}
 	}
 

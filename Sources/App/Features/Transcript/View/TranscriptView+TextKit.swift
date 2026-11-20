@@ -35,6 +35,7 @@ extension TranscriptView: NSPopoverDelegate {
 	func popoverDidClose(_ notification: Notification) {
 		if notification.object as? NSPopover === memberInformationPopover {
 			memberInformationPopover = nil
+			memberInformationAnchorLine = nil
 		}
 	}
 }

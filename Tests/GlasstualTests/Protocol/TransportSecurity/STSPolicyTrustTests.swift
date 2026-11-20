@@ -23,6 +23,7 @@ struct STSPolicyTrustTests {
 			values(["duration=300"]),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: false
 		)
@@ -44,6 +45,7 @@ struct STSPolicyTrustTests {
 			values(["duration=0"]),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: false
 		)
@@ -59,6 +61,7 @@ struct STSPolicyTrustTests {
 			values(["port=6697", "duration=300"]),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
+			transport: .irc,
 			secured: false,
 			certificateChainValidated: false
 		)
@@ -101,14 +104,27 @@ struct STSPolicyTrustTests {
 		let session = ServerSession(config: ServerConfig(), environment: ChatEnvironment(settings: .current(), services: services))
 		let offer = try values(["duration=300", "port=6697"])
 		policyStore.setPolicy(STSPolicy(port: 7000, expiresAt: .distantPast, preload: false), forHost: "irc.example.net")
-		session.sts.activePolicy = STSConnectionPolicy(host: "irc.example.net", port: 7000, values: offer)
+		session.sts.activePolicy = STSConnectionPolicy(host: "irc.example.net", port: 7000, transport: .irc, values: offer)
 		let closedAt = Date()
 
 		session.resetAllPropertyValues()
 
 		let renewed = try #require(policyStore.policy(forHost: "irc.example.net"))
-		#expect(renewed.port == 7000)
+		#expect(renewed.scope == .port(7000))
 		#expect(renewed.expiresAt >= closedAt.addingTimeInterval(300))
 		#expect(session.sts.activePolicy == nil)
+	}
+
+	@Test("Closing a secure WebSocket renews a host-only policy, not one pinned to its port")
+	func webSocketDisconnectRenewsHostOnlyPolicy() throws {
+		let policyStore = store()
+		let services = ChatServices(stsPolicies: policyStore)
+		let session = ServerSession(config: ServerConfig(), environment: ChatEnvironment(settings: .current(), services: services))
+		let offer = try values(["duration=300"])
+		session.sts.activePolicy = STSConnectionPolicy(host: "irc.example.net", port: 443, transport: .webSocket, values: offer)
+
+		session.resetAllPropertyValues()
+
+		#expect(policyStore.enforcement(forHost: "irc.example.net") == .host)
 	}
 }

@@ -107,6 +107,15 @@ extension ConnectionSocket {
 			}
 		} catch {
 			sending = false
+
+			/* A write the host's close cancelled, or one that failed because the
+			 connection was already closing, ends quietly: the close is under
+			 way and carries its own reason. Translating first would turn a
+			 cancellation into a socket error. */
+			guard DisconnectReason.records(error, closedByOwner: closedByOwner, disconnecting: disconnecting) else {
+				return
+			}
+
 			fail(with: ConnectionError.translating(error))
 
 			return

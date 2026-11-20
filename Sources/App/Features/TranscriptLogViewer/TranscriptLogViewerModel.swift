@@ -201,12 +201,23 @@ final class TranscriptLogViewerModel {
 
 	private func moveToMatch(_ index: Int) async {
 		guard matchOffsets.indices.contains(index) else { return }
+		let previousIndex = currentMatchIndex
 		currentMatchIndex = index
 		let offset = matchOffsets[index]
-		if offset < startOffset {
+		/* One read reaches back a bounded distance, so a match further than that
+		 takes several. A read that moves nothing, because another is under way
+		 or the file could not be read, ends the attempt. */
+		while offset < startOffset, hasEarlierLines {
+			let before = startOffset
 			await loadEarlier(reachingBack: offset)
+			guard startOffset < before else { break }
 		}
-		guard offset >= startOffset else { return }
+		guard offset >= startOffset else {
+			/* The match is not on screen, so the counter keeps naming the one
+			 that is, and stepping again retries this one. */
+			currentMatchIndex = previousIndex
+			return
+		}
 		scrollSerial += 1
 		scrollRequest = TranscriptLogScrollRequest(lineID: offset, serial: scrollSerial)
 	}

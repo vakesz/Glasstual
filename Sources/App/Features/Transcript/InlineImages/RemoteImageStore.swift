@@ -65,6 +65,8 @@ final class RemoteImageStore {
 	/// Least recently used first.
 	private var order: [URL] = []
 	private var owners: [URL: Set<String>] = [:]
+	/// How many failed requests are remembered; the oldest go first.
+	static let maximumFailures = 256
 	private var failures: [Request: ContinuousClock.Instant] = [:]
 	private var tasks: [Request: Task<Void, Never>] = [:]
 	private var queue: [Request] = []
@@ -104,24 +106,40 @@ final class RemoteImageStore {
 	 or known to fail. */
 	func request(_ url: URL, route: InlineImageRoute, owner: String) {
 		guard configuration.fetchPolicy(route) == .automatic else { return }
-		owners[url, default: []].insert(owner)
 
 		let request = Request(url: url, route: route)
-		guard images[url] == nil, tasks[request] == nil, queue.contains(request) == false,
-		      hasRecentlyFailed(request) == false
-		else { return }
+		let isKnown = images[url] != nil || tasks[request] != nil || queue.contains(request)
+		if isKnown {
+			owners[url, default: []].insert(owner)
+			return
+		}
+		guard hasRecentlyFailed(request) == false else { return }
 		guard LinkSchemeRules.isWebURL(url),
 		      InlineImageHostPolicy.verdict(forHost: url.host(percentEncoded: false)) != .refused
 		else {
-			failures[request] = now()
+			recordFailure(request)
 			return
 		}
 
+		/* An owner is recorded only for a URL the store acts on: a refused,
+		 failed or dropped one would otherwise hold an entry nothing frees. */
 		if tasks.count < configuration.maximumConcurrentFetches {
+			owners[url, default: []].insert(owner)
 			start(request)
 		} else if queue.count < configuration.maximumQueuedFetches {
+			owners[url, default: []].insert(owner)
 			queue.append(request)
 		}
+	}
+
+	/// How many failed requests are remembered.
+	var failureCount: Int {
+		failures.count
+	}
+
+	/// How many URLs have an owner.
+	var ownedURLCount: Int {
+		owners.count
 	}
 
 	/// Whether a fetch for `url` over `route` is under way.
@@ -166,6 +184,7 @@ final class RemoteImageStore {
 		for url in abandoned {
 			images.removeValue(forKey: url)
 		}
+		failures = failures.filter { abandoned.contains($0.key.url) == false }
 		order.removeAll { abandoned.contains($0) }
 		queue.removeAll { abandoned.contains($0.url) }
 		for (request, task) in tasks where abandoned.contains(request.url) {
@@ -176,6 +195,16 @@ final class RemoteImageStore {
 	}
 
 	// MARK: - Fetching
+
+	/// Remembers a failure, evicting the oldest ones past ``maximumFailures``.
+	private func recordFailure(_ request: Request) {
+		failures[request] = now()
+		while failures.count > Self.maximumFailures,
+		      let oldest = failures.min(by: { $0.value < $1.value })?.key
+		{
+			failures.removeValue(forKey: oldest)
+		}
+	}
 
 	private func hasRecentlyFailed(_ request: Request) -> Bool {
 		guard let failedAt = failures[request] else { return false }
@@ -216,7 +245,7 @@ final class RemoteImageStore {
 		defer { startQueued() }
 
 		guard let image else {
-			failures[request] = now()
+			recordFailure(request)
 			return
 		}
 

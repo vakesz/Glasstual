@@ -16,59 +16,93 @@ nonisolated enum STSPolicyAction: Sendable, Equatable {
 	/// The connection should be reopened, secured, on this port.
 	case upgrade(port: UInt16)
 
-	/// A policy pinning the host to this port was stored.
-	case stored(port: UInt16)
+	/// A policy with this scope was stored.
+	case stored(STSPolicyScope)
 
 	/// The host's stored policy was withdrawn.
 	case cleared
 }
 
+/// What a stored policy pins.
+///
+/// A policy learned over IRC names the TLS IRC port the server proved it serves.
+/// One learned over a WebSocket only proves TLS: the port it arrived on is an
+/// HTTPS port, so every entry for the host keeps its own port and gains TLS.
+nonisolated enum STSPolicyScope: Sendable, Equatable {
+	/// TLS IRC on this port.
+	case port(UInt16)
+	/// TLS on each entry's own port and transport.
+	case host
+}
+
 nonisolated struct STSPolicy: Sendable, Equatable {
-	let port: UInt16
+	let scope: STSPolicyScope
 	let expiresAt: Date
 	let preload: Bool
 
-	init(port: UInt16, expiresAt: Date, preload: Bool) {
-		precondition(port > 0)
+	init(scope: STSPolicyScope, expiresAt: Date, preload: Bool) {
+		if case let .port(port) = scope {
+			precondition(port > 0)
+		}
 
-		self.port = port
+		self.scope = scope
 		self.expiresAt = expiresAt
 		self.preload = preload
+	}
+
+	init(port: UInt16, expiresAt: Date, preload: Bool) {
+		self.init(scope: .port(port), expiresAt: expiresAt, preload: preload)
 	}
 
 	var isExpired: Bool {
 		expiresAt.timeIntervalSinceNow <= 0
 	}
 
+	/// Entries without a `scope` predate host-only policies and pin `port`.
 	init?(dictionary: [String: PropertyListValue]) {
-		guard
-			let port = dictionary[StorageKey.port]?.integer,
-			let expiresAt = dictionary[StorageKey.expiresAt]?.double,
-			port > 0,
-			port <= UInt16.max
-		else {
+		guard let expiresAt = dictionary[StorageKey.expiresAt]?.double else {
 			return nil
 		}
 
+		let scope: STSPolicyScope
+		if dictionary[StorageKey.scope]?.string == StorageKey.hostScope {
+			scope = .host
+		} else {
+			guard let port = dictionary[StorageKey.port]?.integer, port > 0, port <= UInt16.max else {
+				return nil
+			}
+			scope = .port(UInt16(port))
+		}
+
 		self.init(
-			port: UInt16(port),
+			scope: scope,
 			expiresAt: Date(timeIntervalSince1970: expiresAt),
 			preload: dictionary[StorageKey.preload]?.boolean ?? false
 		)
 	}
 
+	/// A host-only policy writes no `port`, so a build that predates it drops
+	/// the entry instead of pinning the host to a WebSocket port.
 	var dictionaryValue: [String: PropertyListValue] {
-		[
-			StorageKey.port: .integer(Int(port)),
+		var dictionary: [String: PropertyListValue] = [
 			StorageKey.expiresAt: .double(expiresAt.timeIntervalSince1970),
 			StorageKey.preload: .boolean(preload),
 		]
+		switch scope {
+		case let .port(port):
+			dictionary[StorageKey.port] = .integer(Int(port))
+		case .host:
+			dictionary[StorageKey.scope] = .string(StorageKey.hostScope)
+		}
+		return dictionary
 	}
 
 	private enum StorageKey {
 		static let port = "port"
 		static let expiresAt = "expiresAt"
 		static let preload = "preload"
+		static let scope = "scope"
+		static let hostScope = "host"
 	}
 }
 

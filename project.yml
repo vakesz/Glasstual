@@ -447,6 +447,8 @@ targets:
       - path: Sources/ConnectionHost/ConnectionPeerAdmission.swift
       # So is the flood-control pacing window.
       - path: Sources/ConnectionHost/FloodControlWindow.swift
+      # And which transport failure a disconnect is reported with.
+      - path: Sources/ConnectionHost/DisconnectReason.swift
       # And the WebSocket handshake, frame and line codecs.
       - path: Sources/ConnectionHost/WebSocketFrameCodec.swift
       - path: Sources/ConnectionHost/WebSocketHandshake.swift

@@ -154,6 +154,13 @@ public enum KeychainItem: Sendable, Equatable, Hashable {
 		KeychainStore.readPassword(service: storedService)
 	}
 
+	/// The stored secret with the reason a read came back empty kept: an item
+	/// that is not there is ``KeychainReadResult/absent``, and any other
+	/// refusal is ``KeychainReadResult/unreadable(_:)``.
+	public var passwordRead: KeychainReadResult {
+		KeychainStore.readPasswordResult(service: storedService)
+	}
+
 	/// Writes `password`, creating the item when it does not exist yet.
 	@discardableResult
 	public func write(_ password: String) -> Bool {
@@ -383,6 +390,29 @@ enum KeychainStore {
 		return String(data: data, encoding: .utf8)
 	}
 
+	/// Like ``readPassword(service:)``, but only `errSecItemNotFound` counts as
+	/// absent. Any other status, or data that is not UTF-8, is unreadable, so a
+	/// caller never mistakes a refused read for an empty keychain.
+	static func readPasswordResult(service: String) -> KeychainReadResult {
+		var query = identityQuery(service: service)
+		query[kSecMatchLimit] = kSecMatchLimitOne
+		query[kSecReturnData] = true
+
+		var result: CFTypeRef?
+		let status = SecItemCopyMatching(query as CFDictionary, &result)
+		switch status {
+		case errSecSuccess:
+			guard let data = result as? Data, let value = String(data: data, encoding: .utf8) else {
+				return .unreadable(errSecDecode)
+			}
+			return .present(value)
+		case errSecItemNotFound:
+			return .absent
+		default:
+			return .unreadable(status)
+		}
+	}
+
 	/// The attributes that name one item and nothing else. Everything a user can
 	/// rename in Keychain Access stays out of it, so renaming an item there does
 	/// not hide it from the update that follows — which used to fail as
@@ -404,4 +434,13 @@ enum KeychainStore {
 
 		return query
 	}
+}
+
+/// What reading a keychain secret came to.
+public enum KeychainReadResult: Equatable, Sendable {
+	/// No such item exists.
+	case absent
+	case present(String)
+	/// The item may exist, but the keychain refused or garbled the read.
+	case unreadable(OSStatus)
 }

@@ -94,7 +94,7 @@ extension ServerSession {
 				continue
 			}
 
-			var cursor = LineCursor(line)
+			var cursor = LineCursor(line, keepsBreakSpace: true)
 			var isFirstPiece = true
 
 			while let piece = cursor.nextLine(forTarget: conversation.name, on: self, with: policy.lineType) {

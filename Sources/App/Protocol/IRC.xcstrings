@@ -11291,6 +11291,54 @@
         }
       }
     },
+    "stored-a-strict-transport-security-host-policy": {
+      "comment": "Strict Transport Security (STS). Console line when a policy offered over a WebSocket is stored: it requires TLS for the host without pinning a port.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored a Strict Transport Security policy for this host: TLS required."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strict Transport Security szabályzat elmentve ehhez a géphez: TLS kötelező."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strict-Transport-Security-Richtlinie für diesen Host gespeichert: TLS erforderlich."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se ha guardado una política Strict Transport Security para este host: TLS obligatorio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Une politique Strict Transport Security a été enregistrée pour cet hôte : TLS obligatoire."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このホストのStrict Transport Securityポリシーを保存しました: TLSが必須です。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uma política de Strict Transport Security foi armazenada para este host: TLS obrigatório."
+          }
+        }
+      }
+    },
     "strict-transport-security-policy": {
       "comment": "Strict Transport Security (STS). Legacy key: sts-p1.",
       "extractionState": "manual",
@@ -17737,6 +17785,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ de %2$@ não foi listado porque as transferências estão definidas para Ignorar."
+          }
+        }
+      }
+    },
+    "dcc-offer-throttled": {
+      "comment": "DCC messages. Printed in the console when a file transfer offer is dropped because the sender, or everyone together, sent too many offers within a minute. %1$@ is the sender's nickname and %2$@ the offered filename.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dropped a file transfer offer from %1$@ for “%2$@” because too many offers arrived in a short time."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ ajánlata („%2$@”) eldobva, mert rövid idő alatt túl sok ajánlat érkezett."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ein Dateiübertragungsangebot von %1$@ für „%2$@“ wurde verworfen, weil in kurzer Zeit zu viele Angebote eingingen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se descartó una oferta de transferencia de %1$@ para «%2$@» porque llegaron demasiadas ofertas en poco tiempo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Une offre de transfert de %1$@ pour « %2$@ » a été ignorée, car trop d’offres sont arrivées en peu de temps."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "短時間に届いた提案が多すぎるため、%1$@からの「%2$@」のファイル転送の提案を破棄しました。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uma oferta de transferência de %1$@ para “%2$@” foi descartada porque chegaram ofertas demais em pouco tempo."
           }
         }
       }

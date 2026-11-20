@@ -25,7 +25,7 @@ extension ServerSession {
 		if let policy = sts.resetForTeardown() {
 			_ = environment.services.stsPolicies.applyCapabilityValues(
 				policy.values, forHost: policy.host, connectedPort: policy.port,
-				secured: true, certificateChainValidated: true
+				transport: policy.transport, secured: true, certificateChainValidated: true
 			)
 		}
 		batchMessages.dequeueEntries()

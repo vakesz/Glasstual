@@ -20,6 +20,9 @@ enum InboundTextPolicy {
 		if let close = text.firstIndex(of: "\u{1}") {
 			text = String(text[..<close])
 		}
+		if isPrivmsg, text.utf8.count == 6, hasActionPrefix(text + " ") {
+			return Classification(text: "", lineType: .action)
+		}
 		if isPrivmsg, hasActionPrefix(text) {
 			return Classification(text: String(text.dropFirst(actionPrefix.count)), lineType: .action)
 		}

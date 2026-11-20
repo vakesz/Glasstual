@@ -205,7 +205,12 @@ struct ServerSessionSecureDCCOfferTests {
 			try offer(text, on: session)
 		}
 
-		#expect(session.printedLines.count == budget)
+		let notices = ["file.txt", "other.txt"].map { String(localized: .IRC.dccOfferThrottled("alice", $0)) }
+		let dropped = printedBodies(of: session).filter(notices.contains)
+		#expect(session.printedLines.count - dropped.count == budget)
+		/* Three of the six offers are dropped; the one in an unsupported form is
+		 dropped without a line, as a flood of declines would otherwise be one. */
+		#expect(dropped.count == 2)
 	}
 
 	@Test("An offer that is not addressed to this user is not acted on")

@@ -78,11 +78,17 @@ nonisolated struct BouncerNetworkSet: Equatable, Sendable {
 				changes.added.append(network)
 			}
 		}
-		changes.removed = networks.map(\.id).filter { identifier in
-			next.contains { $0.id == identifier } == false
+		/* Removal is judged against the whole listing, not the capped set: a
+		 network dropped only because of the cap still exists on the bouncer,
+		 and retiring its connection would remove it for good. */
+		var listed: [String] = []
+		var seen: Set<String> = []
+		for network in listing where seen.insert(network.id).inserted {
+			listed.append(network.id)
 		}
+		changes.removed = networks.map(\.id).filter { seen.contains($0) == false }
 		networks = next
-		changes.completeListing = next.map(\.id)
+		changes.completeListing = listed
 		return changes
 	}
 

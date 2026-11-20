@@ -113,9 +113,15 @@ extension LineBudget {
 @MainActor
 struct LineCursor {
 	private var remaining: NSAttributedString
+	private let keepsBreakSpace: Bool
+	private var isContinuation = false
 
-	init(_ text: NSAttributedString) {
+	/// `keepsBreakSpace` leaves the space a word wrap broke at on the front of
+	/// the next line, for a caller that rebuilds the text by concatenation.
+	/// Every other send drops it, so a continuation line does not start indented.
+	init(_ text: NSAttributedString, keepsBreakSpace: Bool = false) {
 		remaining = text
+		self.keepsBreakSpace = keepsBreakSpace
 	}
 
 	/// How much of the text is still to be sent. Each line consumes a prefix,
@@ -141,6 +147,13 @@ struct LineCursor {
 		on session: ServerSession,
 		with lineType: ChatLineKind
 	) -> String? {
+		if isContinuation, keepsBreakSpace == false, remaining.length > 0,
+		   let first = (remaining.string as NSString).substring(to: 1).unicodeScalars.first,
+		   CharacterSet.whitespaces.contains(first)
+		{
+			remaining = remaining.attributedSubstring(from: NSRange(location: 1, length: remaining.length - 1))
+		}
+
 		guard remaining.length > 0 else {
 			return nil
 		}
@@ -162,6 +175,8 @@ struct LineCursor {
 		remaining = remaining.attributedSubstring(
 			from: NSRange(location: end, length: remaining.length - end)
 		)
+
+		isContinuation = true
 
 		return line
 	}

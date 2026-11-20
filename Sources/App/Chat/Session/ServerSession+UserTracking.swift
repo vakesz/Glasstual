@@ -279,6 +279,10 @@ extension ServerSession {
 	func updateUserTrackingStatus(for entry: AddressBookEntry, message: Message) {
 		guard supportsAdvancedTracking == false else { return }
 
+		/* A hostmask that also matches an ignore or mute rule comes back as the
+		 merged `.mixed` entry, which carries no tracked nickname. */
+		guard let entry = AddressBookLookupPolicy.userTrackingEntry(in: entry) else { return }
+
 		let trackingStatus = trackedUsers.status(of: entry)
 		guard trackingStatus != .unknown, let senderNickname = message.senderNickname else { return }
 

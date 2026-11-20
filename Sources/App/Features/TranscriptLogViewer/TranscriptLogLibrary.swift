@@ -109,7 +109,9 @@ nonisolated struct TranscriptLogLibrary: Sendable {
 			var conversations: [TranscriptLogConversation] = []
 			for kind in TranscriptKind.allCases {
 				let kindURL = serverURL.appendingPathComponent(kind.folderName, isDirectory: true)
-				let folders = kind == .console ? [kindURL] : Self.subdirectories(of: kindURL, using: fileManager)
+				let folders = kind == .console
+					? (Self.isRealDirectory(kindURL) ? [kindURL] : [])
+					: Self.subdirectories(of: kindURL, using: fileManager)
 				for url in folders {
 					let days = Self.days(in: url, using: fileManager)
 					guard days.isEmpty == false else { continue }
@@ -229,6 +231,12 @@ nonisolated struct TranscriptLogLibrary: Sendable {
 		return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
 	}
 
+	/// A directory that is not a link to one.
+	private static func isRealDirectory(_ url: URL) -> Bool {
+		let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+		return values?.isDirectory == true && values?.isSymbolicLink != true
+	}
+
 	private static func subdirectories(of url: URL, using fileManager: FileManager) -> [URL] {
 		let keys: [URLResourceKey] = [.isDirectoryKey, .isSymbolicLinkKey]
 		let contents = (try? fileManager.contentsOfDirectory(
@@ -237,10 +245,7 @@ nonisolated struct TranscriptLogLibrary: Sendable {
 			options: [.skipsHiddenFiles]
 		)) ?? []
 
-		return contents.filter { entry in
-			let values = try? entry.resourceValues(forKeys: Set(keys))
-			return values?.isDirectory == true && values?.isSymbolicLink != true
-		}
+		return contents.filter(isRealDirectory)
 	}
 
 	private static func days(in url: URL, using fileManager: FileManager) -> [TranscriptDay] {

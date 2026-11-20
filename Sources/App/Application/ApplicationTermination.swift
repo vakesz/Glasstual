@@ -98,6 +98,11 @@ final class ApplicationTermination {
 	func applicationShouldTerminate() -> NSApplication.TerminateReply {
 		let hasReviewedUnsavedEdits = reviewsUnsavedServerProperties
 		reviewsUnsavedServerProperties = false
+		/* The power-off that set it asked for this one request. Left set after
+		 a step one that was abandoned, it would skip the reviews and the
+		 confirmation of every later quit. */
+		let skipsConfirmation = skipConfirmation
+		skipConfirmation = false
 		if isTerminating {
 			/* Termination is already under way. Answering .terminateNow here
 			 used to schedule step one a second time, tearing everything down
@@ -106,7 +111,7 @@ final class ApplicationTermination {
 		} else if stage == .confirming {
 			/* The machine powering off cannot wait for a question the reader may
 			 never come back to answer. */
-			if skipConfirmation {
+			if skipsConfirmation {
 				Self.logger.debug("Termination can no longer wait for the confirmation")
 				confirmation?.cancel()
 				confirmation = nil
@@ -115,11 +120,11 @@ final class ApplicationTermination {
 			} else {
 				Self.logger.debug("Termination confirmation is already on screen")
 			}
-		} else if skipConfirmation == false, hasReviewedUnsavedEdits == false,
+		} else if skipsConfirmation == false, hasReviewedUnsavedEdits == false,
 		          case let edited = AppServices.serverProperties.editorsWithUnsavedChanges, edited.isEmpty == false
 		{
 			presentUnsavedChangesReview(of: edited)
-		} else if skipConfirmation
+		} else if skipsConfirmation
 			|| SettingsKeys.Connection.confirmQuit.value == false
 			|| delegate.chatSession.sessions.contains(where: { $0.isConnecting || $0.isConnected }) == false
 		{

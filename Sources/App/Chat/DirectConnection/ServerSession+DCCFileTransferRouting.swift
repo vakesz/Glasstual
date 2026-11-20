@@ -57,7 +57,10 @@ extension ServerSession {
 			printInvalidDCCRequest(from: sender)
 			return
 		}
-		processFileTransferRequest(request, sender: sender, hostmask: message.senderHostmask)
+		/* The account is the offer's own, and only a server that negotiated
+		 `account-tag` is vouching for the tag; see `updateUserIdentity`. */
+		let account = isCapabilityEnabled(.accountTag) ? IdentityPolicy.account(fromWireValue: message.senderAccount) : nil
+		processFileTransferRequest(request, sender: sender, hostmask: message.senderHostmask, account: account)
 	}
 
 	/// Counts an unsolicited offer from `sender` against the throttle, and says
@@ -80,19 +83,30 @@ extension ServerSession {
 	 `user@host` the entry itself pins. An offer from anyone else is still
 	 listed for the user to accept, but it does not download on its own,
 	 however the automatic download is set. */
-	func isKnownFileTransferPeer(_ nickname: String) -> Bool {
+	func isKnownFileTransferPeer(_ nickname: String, senderHostmask: String?, senderAccount: String?) -> Bool {
 		guard let entry = findUserTrackingAddressBookEntry(forNickname: nickname) else {
 			return false
 		}
-		let sender = findUser(nickname)
 
 		return FileTransferPeerTrust.isTrusted(
-			senderHostmask: sender?.hostmask,
-			senderAccount: sender?.account,
+			senderHostmask: senderHostmask,
+			senderAccount: senderAccount ?? cachedAccount(of: nickname, ifSender: senderHostmask),
 			trackedNickname: nickname,
 			entryHostmask: entry.hostmask,
 			caseMapping: supportInfo.caseMapping
 		)
+	}
+
+	/** The services account the directory holds for `nickname`, but only when
+	 the directory's entry is the person who sent the message: their
+	 `nick!user@host` is the same, compared case-insensitively. A nickname can
+	 change hands without the directory hearing of it, and an account cached
+	 for its last holder says nothing about whoever uses it now. */
+	func cachedAccount(of nickname: String, ifSender senderHostmask: String?) -> String? {
+		guard let senderHostmask, let user = findUser(nickname), let cached = user.hostmask,
+		      supportInfo.casefoldString(cached) == supportInfo.casefoldString(senderHostmask)
+		else { return nil }
+		return user.account
 	}
 
 	func receivedDCCSend(
@@ -103,9 +117,16 @@ extension ServerSession {
 		filesize totalFilesize: UInt64,
 		token transferToken: String?,
 		security: DCCOfferSecurity = .plain,
-		hostmask: String? = nil
+		hostmask: String? = nil,
+		account: String? = nil
 	) {
-		guard admitsDCCOffer(from: nickname) else { return }
+		/* An offer answering one of the user's own XDCC requests was asked for,
+		 so it does not spend the budget meant for unsolicited ones. */
+		let requested = matchXDCCRequest(nickname: nickname, hostmask: hostmask, filename: filename, filesize: totalFilesize)
+		if requested == nil, admitsDCCOffer(from: nickname) == false {
+			printDebugInformation(toConsole: String(localized: .IRC.dccOfferThrottled(nickname, filename)))
+			return
+		}
 		if security == .secure, environment.settings.fileTransferAcceptsSecureOffers == false {
 			print(String(localized: .IRC.secureFileOfferDeclinedBySetting(nickname, filename)), by: nil, in: nil,
 			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
@@ -123,7 +144,6 @@ extension ServerSession {
 		/* An offer answering one of the user's own XDCC requests is labelled
 		 as such and, when the user said so, counts as coming from someone they
 		 know. It is listed on exactly the terms any other offer is. */
-		let requested = matchXDCCRequest(nickname: nickname, hostmask: hostmask, filename: filename, filesize: totalFilesize)
 		if let requested {
 			print(String(localized: .IRC.xdccOfferMatched(nickname, Self.xdccLabel(for: requested))), by: nil, in: nil,
 			      as: .dccFileTransfer, command: ChatLineFormat.defaultCommand)
@@ -137,7 +157,7 @@ extension ServerSession {
 		}
 		/* Only a request bound to the bot's host vouches for the sender: one
 		 matched on nickname alone may be answered by whoever took it. */
-		let peerIsKnown = isKnownFileTransferPeer(nickname)
+		let peerIsKnown = isKnownFileTransferPeer(nickname, senderHostmask: hostmask, senderAccount: account)
 			|| (requested?.isBoundToHost == true && environment.settings.xdccRequestsAreKnownPeers)
 		guard let fileTransfers, let identifier = fileTransfers.addReceiver(
 			for: self, nickname: nickname, address: address, port: port,
@@ -214,7 +234,9 @@ extension ServerSession {
 		return formattedAddress
 	}
 
-	private func processFileTransferRequest(_ request: DCCFileTransferRequest, sender: String, hostmask: String?) {
+	private func processFileTransferRequest(
+		_ request: DCCFileTransferRequest, sender: String, hostmask: String?, account: String?
+	) {
 		switch request {
 		case let .unsupported(verb):
 			/* Each decline is a line in front of the user, so a flood of them is
@@ -235,7 +257,7 @@ extension ServerSession {
 			guard let token else {
 				receivedDCCSend(
 					sender, filename: filename, address: address, port: port, filesize: filesize,
-					token: nil, security: security, hostmask: hostmask
+					token: nil, security: security, hostmask: hostmask, account: account
 				)
 				return
 			}
@@ -250,7 +272,7 @@ extension ServerSession {
 				}
 				receivedDCCSend(
 					sender, filename: filename, address: address, port: port,
-					filesize: filesize, token: token, security: security, hostmask: hostmask
+					filesize: filesize, token: token, security: security, hostmask: hostmask, account: account
 				)
 				return
 			}

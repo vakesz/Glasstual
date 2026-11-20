@@ -54,6 +54,22 @@ struct TranscriptLogLibraryTests {
 		#expect(await TranscriptLogLibrary(root: fixture.root).index().isEmpty)
 	}
 
+	@Test("A Console folder that is a symbolic link is not followed")
+	func symbolicConsoleFolderIsNotFollowed() async throws {
+		let fixture = try TranscriptLogFixture()
+		let outside = try TranscriptLogFixture()
+		defer { fixture.remove(); outside.remove() }
+		try outside.write("secret\n", server: "Elsewhere (00000)", folder: "Console", day: "2026-01-01")
+		let server = fixture.root.appendingPathComponent("Libera (1a2b3)", isDirectory: true)
+		try FileManager.default.createDirectory(at: server, withIntermediateDirectories: true)
+		try FileManager.default.createSymbolicLink(
+			at: server.appendingPathComponent("Console"),
+			withDestinationURL: outside.root.appendingPathComponent("Elsewhere (00000)/Console")
+		)
+
+		#expect(await TranscriptLogLibrary(root: fixture.root).index().isEmpty)
+	}
+
 	@Test("A small file is read whole, with each line's offset")
 	func smallFileIsReadWhole() async throws {
 		let fixture = try TranscriptLogFixture()

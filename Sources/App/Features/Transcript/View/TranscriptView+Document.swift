@@ -195,6 +195,11 @@ extension TranscriptView {
 	 marker can change, and it is redrawn when it does. */
 	private func insert(_ rows: [TranscriptRow], at index: Int) {
 		guard let storage = textView.textStorage, rows.isEmpty == false else { return }
+		/* Lines appended under the name leave its characters where they are.
+		 Anywhere else the anchor moves. */
+		if index < document.count {
+			closeMemberInformation()
+		}
 		let signposter = PerformanceSignposts.signposter
 		let interval = signposter.beginInterval("TranscriptInsert")
 		defer { signposter.endInterval("TranscriptInsert", interval) }
@@ -268,6 +273,13 @@ extension TranscriptView {
 	/// boundary or a decoded image changes that line and nothing else.
 	func refresh(at index: Int) {
 		guard let storage = textView.textStorage, document.indices.contains(index) else { return }
+		/* A redrawn line can change height, and everything below it moves with
+		 it, the popover's anchor included. */
+		if let anchor = memberInformationAnchorLine,
+		   document.index(ofLine: anchor).map({ index <= $0 }) != false
+		{
+			closeMemberInformation()
+		}
 		beginNicknameColorBatch()
 		let rendered = renderVisibleLine(document[index])
 		storage.replaceCharacters(
@@ -287,6 +299,7 @@ extension TranscriptView {
 	 A caller runs it inside ``performEditingBatch(_:)``, which puts the
 	 selection and the viewport back once the batch ends. */
 	func rebuild() {
+		closeMemberInformation()
 		beginNicknameColorBatch()
 		let retainedLines = document.takeLinesForRebuild()
 		textView.textStorage?.beginEditing()

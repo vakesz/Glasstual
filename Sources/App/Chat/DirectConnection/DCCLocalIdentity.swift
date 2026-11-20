@@ -21,6 +21,8 @@ nonisolated struct DCCLocalIdentity: Equatable, Sendable {
 		case mismatchedCertificate
 		/// Security refused to pair the certificate with the key.
 		case identityUnavailable
+		/// The stored pair exists, or may exist, but could not be read.
+		case unreadableStorage
 	}
 
 	/// How long a new certificate is valid. Peers pin the fingerprint rather
@@ -92,10 +94,21 @@ nonisolated struct DCCLocalIdentity: Equatable, Sendable {
 /// Where local DCC identities are kept. The keychain in the app, memory in
 /// tests.
 nonisolated protocol DCCIdentityStorage: Sendable {
-	/// The stored key and certificate, or `nil` when either is absent.
-	func load(network: String) -> (privateKey: Data, certificate: Data)?
+	/// What is stored for the network. Only a pair confirmed missing is
+	/// ``DCCStoredIdentity/absent``; a failed read says so instead.
+	func read(network: String) -> DCCStoredIdentity
 	func save(privateKey: Data, certificate: Data, network: String) throws
 	func remove(network: String)
+}
+
+/// What a storage holds for one network.
+nonisolated enum DCCStoredIdentity: Equatable, Sendable {
+	/// Neither item exists.
+	case absent
+	case present(privateKey: Data, certificate: Data)
+	/// A half pair, undecodable data or a keychain error: something may be
+	/// stored, and it must not be overwritten.
+	case unreadable
 }
 
 /** The keychain items behind a network's identity: the key and the
@@ -105,14 +118,28 @@ nonisolated protocol DCCIdentityStorage: Sendable {
  They are not settings, so settings export never carries them, and they are
  not copied when a server configuration is duplicated. */
 nonisolated struct KeychainDCCIdentityStorage: DCCIdentityStorage {
-	func load(network: String) -> (privateKey: Data, certificate: Data)? {
-		guard let key = KeychainItem.dccIdentityKey(network).password.flatMap({ Data(base64Encoded: $0) }),
-		      let certificate = KeychainItem.dccIdentityCertificate(network).password
-		      	.flatMap({ Data(base64Encoded: $0) })
-		else {
-			return nil
+	func read(network: String) -> DCCStoredIdentity {
+		Self.combine(
+			key: KeychainItem.dccIdentityKey(network).passwordRead,
+			certificate: KeychainItem.dccIdentityCertificate(network).passwordRead
+		)
+	}
+
+	/// Both items absent is absent; both present and base64 is present;
+	/// anything else, including one item without the other, is unreadable.
+	static func combine(key: KeychainReadResult, certificate: KeychainReadResult) -> DCCStoredIdentity {
+		switch (key, certificate) {
+		case (.absent, .absent):
+			.absent
+		case let (.present(keyText), .present(certificateText)):
+			if let keyData = Data(base64Encoded: keyText), let certificateData = Data(base64Encoded: certificateText) {
+				.present(privateKey: keyData, certificate: certificateData)
+			} else {
+				.unreadable
+			}
+		default:
+			.unreadable
 		}
-		return (key, certificate)
 	}
 
 	func save(privateKey: Data, certificate: Data, network: String) throws {
@@ -144,20 +171,30 @@ actor DCCLocalIdentityStore {
 	/// The network's identity, created and stored the first time it is asked
 	/// for.
 	///
-	/// A stored pair that cannot be read is an error rather than a reason to
-	/// make a new one: peers may have pinned it, so replacing it is the
+	/// A stored pair that cannot be read, for any reason, is an error rather
+	/// than a reason to make a new one: peers may have pinned it, so replacing it is the
 	/// user's decision, made through ``regenerate(forNetwork:)``.
 	func identity(forNetwork network: String) throws -> DCCLocalIdentity {
-		if let stored = storage.load(network: network) {
-			return try DCCLocalIdentity(privateKey: stored.privateKey, certificate: stored.certificate)
+		switch storage.read(network: network) {
+		case let .present(privateKey, certificate):
+			return try DCCLocalIdentity(privateKey: privateKey, certificate: certificate)
+		case .absent:
+			return try create(forNetwork: network)
+		case .unreadable:
+			throw DCCLocalIdentity.IdentityError.unreadableStorage
 		}
-		return try create(forNetwork: network)
 	}
 
 	/// The network's identity if one was ever created, without creating one.
 	func existingIdentity(forNetwork network: String) throws -> DCCLocalIdentity? {
-		guard let stored = storage.load(network: network) else { return nil }
-		return try DCCLocalIdentity(privateKey: stored.privateKey, certificate: stored.certificate)
+		switch storage.read(network: network) {
+		case let .present(privateKey, certificate):
+			return try DCCLocalIdentity(privateKey: privateKey, certificate: certificate)
+		case .absent:
+			return nil
+		case .unreadable:
+			throw DCCLocalIdentity.IdentityError.unreadableStorage
+		}
 	}
 
 	/// Replaces the network's identity with a new one. Peers that pinned the

@@ -13,7 +13,7 @@ struct STSUpgradeStateTests {
 
 	private func policy() throws -> STSConnectionPolicy {
 		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=300", "port=6697"]))
-		return STSConnectionPolicy(host: "irc.example.net", port: 6697, values: values)
+		return STSConnectionPolicy(host: "irc.example.net", port: 6697, transport: .irc, values: values)
 	}
 
 	@Test("One attempt upgrades once")

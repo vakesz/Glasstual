@@ -349,4 +349,72 @@ struct ServerSessionXDCCTests {
 			String(localized: .IRC.xdccPackLabel("5")), "Bot", String(localized: .IRC.xdccStatusSent)
 		)))
 	}
+
+	// MARK: - Trust is judged on the offer, not the directory
+
+	private func track(_ hostmask: String, on session: TestServerSession) {
+		var entry = AddressBookEntry(entryType: .userTracking, hostmask: hostmask)
+		entry.trackUserActivity = true
+		session.config.ignoreList = [entry]
+	}
+
+	@Test("A cached user does not vouch for an offer from another host using the nickname")
+	func offerIsJudgedOnItsOwnHostmask() throws {
+		let session = makeSession()
+		track("bob!*@trusted.example", on: session)
+		try receive(":me!u@h JOIN #chan", on: session)
+		try receive(":bob!x@trusted.example JOIN #chan", on: session)
+		try receive(":bob!x@trusted.example QUIT :bye", on: session)
+
+		try receive(":bob!evil@attacker.host PRIVMSG me :\u{01}DCC SEND a.txt 1568397154 5000 1000\u{01}", on: session)
+		try receive(":bob!x@trusted.example PRIVMSG me :\u{01}DCC SEND b.txt 1568397154 5000 1000\u{01}", on: session)
+
+		#expect(fileTransfers.receivers.map(\.peerIsKnown) == [false, true])
+	}
+
+	@Test("A cached account is used only for the person who sent the message")
+	func cachedAccountNeedsMatchingHostmask() throws {
+		let session = makeSession()
+		try receive(":me!u@h JOIN #chan", on: session)
+		try receive(":bob!x@trusted.example JOIN #chan", on: session)
+		session.modifyUser(withNickname: "bob") { $0.account = "bobby" }
+
+		#expect(session.cachedAccount(of: "bob", ifSender: "BOB!x@Trusted.example") == "bobby")
+		#expect(session.cachedAccount(of: "bob", ifSender: "bob!evil@attacker.host") == nil)
+		#expect(session.cachedAccount(of: "bob", ifSender: nil) == nil)
+	}
+
+	// MARK: - The offer throttle
+
+	@Test("Offers answering requested packs do not spend the unsolicited-offer budget")
+	func requestedOffersSkipThrottle() throws {
+		let session = makeSession()
+		let packs = DCCOfferThrottle.perSenderLimit + 2
+		for pack in 1 ... packs {
+			xdcc("send Bot #\(pack)", on: session)
+		}
+
+		for pack in 1 ... packs {
+			try receive(
+				":Bot!bot@host.example PRIVMSG me :\u{01}DCC SEND f\(pack).mkv 1568397154 5000 1000\u{01}", on: session
+			)
+		}
+
+		#expect(fileTransfers.receivers.count == packs)
+		#expect(session.xdccRequests.isEmpty)
+	}
+
+	@Test("A throttled unsolicited offer is dropped and says so")
+	func throttledOfferIsReported() throws {
+		let session = makeSession()
+		for index in 1 ... DCCOfferThrottle.perSenderLimit + 1 {
+			try receive(
+				":Bot!bot@host.example PRIVMSG me :\u{01}DCC SEND f\(index).mkv 1568397154 5000 1000\u{01}", on: session
+			)
+		}
+
+		#expect(fileTransfers.receivers.count == DCCOfferThrottle.perSenderLimit)
+		let notice = String(localized: .IRC.dccOfferThrottled("Bot", "f\(DCCOfferThrottle.perSenderLimit + 1).mkv"))
+		#expect(printed(session).contains(notice))
+	}
 }

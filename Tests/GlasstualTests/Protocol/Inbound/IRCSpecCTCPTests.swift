@@ -162,6 +162,24 @@ struct IRCSpecCTCPTests {
 		#expect(classified.text == "waves")
 	}
 
+	@Test("An empty ACTION without the trailing space is an empty action")
+	func emptyActionWithoutSpaceIsAnAction() {
+		for verb in ["ACTION", "action"] {
+			let classified = InboundTextPolicy.classify(
+				command: .privmsg, payload: "\(Self.delimiter)\(verb)\(Self.delimiter)"
+			)
+
+			#expect(classified.lineType == .action)
+			#expect(classified.text.isEmpty)
+		}
+
+		let query = InboundTextPolicy.classify(command: .privmsg, payload: "\(Self.delimiter)ACTIONX\(Self.delimiter)")
+		#expect(query.lineType == .ctcpQuery)
+
+		let reply = InboundTextPolicy.classify(command: .notice, payload: "\(Self.delimiter)ACTION\(Self.delimiter)")
+		#expect(reply.lineType == .ctcpReply)
+	}
+
 	/// An ACTION never earns a reply: it is a message, not a request.
 	@Test("ACTION is never answered")
 	func actionIsNeverAnswered() throws {

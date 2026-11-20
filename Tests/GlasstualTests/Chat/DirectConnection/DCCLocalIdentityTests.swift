@@ -20,8 +20,23 @@ final nonisolated class InMemoryDCCIdentityStorage: DCCIdentityStorage { // noni
 		self.failsSaves = failsSaves
 	}
 
+	private let unreadable = Mutex<Set<String>>([])
+
+	func read(network: String) -> DCCStoredIdentity {
+		if unreadable.withLock({ $0.contains(network) }) {
+			return .unreadable
+		}
+		guard let item = items.withLock({ $0[network] }) else { return .absent }
+		return .present(privateKey: item.privateKey, certificate: item.certificate)
+	}
+
 	func load(network: String) -> (privateKey: Data, certificate: Data)? {
 		items.withLock { $0[network] }
+	}
+
+	/// Makes every read of the network fail, as a refused keychain read does.
+	func failReads(for network: String) {
+		_ = unreadable.withLock { $0.insert(network) }
 	}
 
 	func save(privateKey: Data, certificate: Data, network: String) throws {
@@ -130,6 +145,38 @@ struct DCCLocalIdentityTests {
 			try await store.identity(forNetwork: "network")
 		}
 		#expect(storage.load(network: "network")?.privateKey == Data([9, 9, 9]))
+	}
+
+	@Test("An unreadable store is an error and nothing is generated or overwritten")
+	func unreadableStorage() async throws {
+		let storage = InMemoryDCCIdentityStorage()
+		let store = DCCLocalIdentityStore(storage: storage)
+		let original = try await store.identity(forNetwork: "network")
+		storage.failReads(for: "network")
+
+		await #expect(throws: DCCLocalIdentity.IdentityError.unreadableStorage) {
+			try await store.identity(forNetwork: "network")
+		}
+		await #expect(throws: DCCLocalIdentity.IdentityError.unreadableStorage) {
+			try await store.existingIdentity(forNetwork: "network")
+		}
+		let stored = try #require(storage.load(network: "network"))
+		#expect(DCCCertificateFingerprint(certificate: stored.certificate) == original.fingerprint)
+	}
+
+	@Test("Only two missing items are absent; a half pair, bad base64 or a keychain error is unreadable")
+	func keychainCombination() {
+		let good = KeychainReadResult.present(Data([1, 2, 3]).base64EncodedString())
+		typealias Storage = KeychainDCCIdentityStorage
+
+		#expect(Storage.combine(key: .absent, certificate: .absent) == .absent)
+		#expect(Storage.combine(key: good, certificate: good)
+			== .present(privateKey: Data([1, 2, 3]), certificate: Data([1, 2, 3])))
+		#expect(Storage.combine(key: good, certificate: .absent) == .unreadable)
+		#expect(Storage.combine(key: .absent, certificate: good) == .unreadable)
+		#expect(Storage.combine(key: .present("***"), certificate: good) == .unreadable)
+		#expect(Storage.combine(key: .unreadable(errSecInteractionNotAllowed), certificate: .absent) == .unreadable)
+		#expect(Storage.combine(key: .absent, certificate: .unreadable(errSecAuthFailed)) == .unreadable)
 	}
 
 	@Test("A failed save leaves nothing half-stored")

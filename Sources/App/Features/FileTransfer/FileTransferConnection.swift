@@ -264,9 +264,11 @@ extension FileTransfer {
 	}
 
 	/// Marks the download as coming from the peer, inside the access the user
-	/// granted to the folder it landed in. The transfer has succeeded and stays
-	/// so when the mark cannot be written, but the session's console says that
-	/// macOS will not check the file when it is opened.
+	/// granted to the folder it landed in. It runs when the file is reserved,
+	/// so partial and failed transfers are marked too, and again on completion.
+	/// A mark that cannot be written does not fail the transfer, but the
+	/// session's console says that macOS will not check the file when it is
+	/// opened.
 	func quarantineReceivedFile() {
 		guard let localFile else { return }
 		let origin = DCCQuarantine.Origin(peerNickname: peerNickname, hostAddress: hostAddress)

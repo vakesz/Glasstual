@@ -142,4 +142,18 @@ struct BouncerNetworkSetTests {
 		#expect(set.network(withIdentifier: "extra") == nil)
 		#expect(set.apply(.upsert(network("0", "Renamed"))).changed.map(\.id) == ["0"])
 	}
+
+	@Test("A network past the limit is still listed and is never reported removed")
+	func networksPastTheLimitStayListed() {
+		let limit = BouncerNetworkAttributes.maximumNetworks
+		var set = BouncerNetworkSet()
+		_ = set.apply(.snapshot([network("late", "Late")]))
+		let listing = (0 ..< limit).map { network(String($0), "N\($0)") } + [network("late", "Late"), network("0", "N0")]
+
+		let changes = set.apply(.snapshot(listing))
+
+		#expect(set.network(withIdentifier: "late") == nil)
+		#expect(changes.removed.isEmpty)
+		#expect(changes.completeListing == (0 ..< limit).map(String.init) + ["late"])
+	}
 }

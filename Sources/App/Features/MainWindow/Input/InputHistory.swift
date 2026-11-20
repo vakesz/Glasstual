@@ -147,26 +147,40 @@ final class InputHistory {
 		}
 	}
 
-	func noteInputHistoryObjectScopeDidChange() {
+	/// `selectedItemIdentifier` is the row focused when the setting changed: it
+	/// becomes the current scope going per-selection, and its buffer seeds the
+	/// global one going back.
+	func noteInputHistoryObjectScopeDidChange(selectedItemIdentifier: String?) {
 		if SettingsKeys.Input.historyIsPerSelection.value {
 			forkGlobalHistory(into: AppServices.chatSession.sessions.flatMap { session in
 				[session.uniqueIdentifier] + session.conversationList.map(\.uniqueIdentifier)
-			})
+			}, focusing: selectedItemIdentifier)
 		} else {
-			historyObjects.removeAll()
-			currentSidebarItem = nil
+			collapseToGlobalHistory(seededFrom: selectedItemIdentifier)
 		}
+	}
+
+	/// Keeps the focused item's buffer as the global one and drops the rest.
+	func collapseToGlobalHistory(seededFrom itemIdentifier: String?) {
+		var seed = itemIdentifier.flatMap { historyObjects[.item($0)] }
+		seed?.lastHistoryItem = nil
+		historyObjects.removeAll()
+		historyObjects[.global] = seed
+		currentSidebarItem = nil
 	}
 
 	/// Gives each item its own copy of the global buffer and retires the global
 	/// one, so what was typed before the switch is still there to walk back
-	/// through, and what is typed after it stays with one item.
-	func forkGlobalHistory(into itemIdentifiers: [String]) {
+	/// through, and what is typed after it stays with one item. `focusing` is the
+	/// row that is current when the fork happens, so history keeps working
+	/// without a selection change.
+	func forkGlobalHistory(into itemIdentifiers: [String], focusing focusedIdentifier: String? = nil) {
 		for identifier in itemIdentifiers {
 			applyGlobalHistory(to: identifier)
 		}
 
 		historyObjects.removeValue(forKey: .global)
+		currentSidebarItem = focusedIdentifier
 	}
 
 	func add(_ string: NSAttributedString) {

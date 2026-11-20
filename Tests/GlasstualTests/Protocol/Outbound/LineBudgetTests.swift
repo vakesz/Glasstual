@@ -120,7 +120,7 @@ struct LineSplittingProgressTests {
 		}
 
 		#expect(cursor.isEmpty)
-		#expect(iterations == 11)
+		#expect(iterations == 10)
 	}
 
 	@Test
@@ -133,6 +133,59 @@ struct LineSplittingProgressTests {
 
 		#expect(message == "hello world")
 		#expect(cursor.isEmpty)
+	}
+}
+
+@MainActor
+struct LineCursorBreakSpaceTests {
+	private static let text = Array(repeating: "wordy", count: 120).joined(separator: " ")
+
+	private func pieces(keepingBreakSpace: Bool, cursorOverText text: String = text) -> [String] {
+		let session = TestServerSession()
+		session.identity.hostmask = "nick!user@host"
+		var cursor = LineCursor(NSAttributedString(string: text), keepsBreakSpace: keepingBreakSpace)
+		var result: [String] = []
+		while let piece = cursor.nextLine(forTarget: "#channel", on: session, with: .privateMessage) {
+			result.append(piece)
+		}
+		return result
+	}
+
+	@Test
+	func continuationLinesDoNotStartWithASpace() {
+		let lines = pieces(keepingBreakSpace: false)
+
+		#expect(lines.count > 1)
+		#expect(lines.allSatisfy { $0.hasPrefix(" ") == false })
+		#expect(lines.joined(separator: " ") == Self.text)
+	}
+
+	@Test
+	func concatenationKeepsTheBreakSpace() {
+		let lines = pieces(keepingBreakSpace: true)
+
+		#expect(lines.count > 1)
+		#expect(lines.joined() == Self.text)
+	}
+
+	@Test
+	func theFirstLinesLeadingSpaceIsKept() {
+		#expect(pieces(keepingBreakSpace: false, cursorOverText: " hi").first == " hi")
+	}
+
+	/// DCC chat, private replies and per-line sends all go through this cursor.
+	@Test
+	func outboundTextCursorSharesTheBehaviour() {
+		let session = TestServerSession()
+		session.identity.hostmask = "nick!user@host"
+		var cursor = OutboundTextCursor(NSAttributedString(string: Self.text))
+		var lines: [String] = []
+		while let line = cursor.next(for: "#channel", on: session, as: .privateMessage) {
+			lines.append(line)
+		}
+
+		#expect(lines.count > 1)
+		#expect(lines.allSatisfy { $0.hasPrefix(" ") == false })
 	}
 }
 

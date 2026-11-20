@@ -103,6 +103,38 @@ struct ServerSessionInviteAutoJoinTests {
 		}
 	}
 
+	@Test
+	func inviteFromAnIgnoredUserIsNeitherJoinedNorAnnounced() throws {
+		try withAutoJoinOnInvite {
+			let fixture = ChatEnvironmentFixture()
+			let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+			session.userNickname = "mynick"
+			session.markAsLoggedIn()
+			session.config.ignoreList = [.newIgnoreEntry(forHostmask: "spammer!*@*")]
+			let message = try #require(Message(line: ":spammer!u@h INVITE mynick #room", on: session))
+
+			session.receiveInvite(message)
+
+			#expect(sentLines(of: session).contains { $0.hasPrefix("JOIN") } == false)
+			#expect(fixture.notifications.posted.isEmpty)
+			#expect(session.printedLines.count == 0)
+		}
+	}
+
+	@Test
+	func inviteFromAMutedUserIsNotAnnounced() throws {
+		let fixture = ChatEnvironmentFixture()
+		let session = TestServerSession(configDictionary: [:], nicknamePassword: nil, fixture: fixture)
+		session.userNickname = "mynick"
+		session.markAsLoggedIn()
+		session.setUserMuted(true, nickname: "noisy")
+		let message = try #require(Message(line: ":noisy!u@h INVITE mynick #room", on: session))
+
+		session.receiveInvite(message)
+
+		#expect(fixture.notifications.posted.isEmpty)
+	}
+
 	/// The user typing `/join 0` deliberately is a different path and keeps
 	/// working.
 	@Test

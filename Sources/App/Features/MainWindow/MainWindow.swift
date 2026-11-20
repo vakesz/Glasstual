@@ -316,7 +316,7 @@ extension MainWindow {
 		}
 
 		if action.contains(.inputHistoryScope) {
-			inputHistory?.noteInputHistoryObjectScopeDidChange()
+			inputHistory?.noteInputHistoryObjectScopeDidChange(selectedItemIdentifier: selectedItem?.uniqueIdentifier)
 		}
 
 		/* Both change how a line is laid out. The theme controller has already

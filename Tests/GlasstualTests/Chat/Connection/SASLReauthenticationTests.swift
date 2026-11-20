@@ -170,6 +170,25 @@ struct SASLReauthenticationTests {
 		#expect(session.sasl.status == .failed(reason: String(localized: .IRC.saslStatusNotOffered)))
 	}
 
+	@Test("CAP DEL sasl before the ACK clears the pending sign-in, so it can be asked again")
+	func withdrawalBeforeAcknowledgementClears() throws {
+		let session = session(acknowledged: false, identified: false, configuration: ["usesSASL": false])
+		defer { session.stopAllTimers() }
+		#expect(session.beginSASLReauthentication(using: nil) == nil)
+
+		try receive(":irc.example.net CAP me DEL :sasl", on: session)
+
+		#expect(session.sasl.pendingReauthentication == nil)
+		#expect(session.sasl.status == .failed(reason: String(localized: .IRC.saslStatusNotOffered)))
+
+		try receive(":irc.example.net CAP me NEW :sasl=PLAIN", on: session)
+
+		#expect(session.canBeginSASLReauthentication)
+		session.sentCapabilityCommands.removeAllObjects()
+		#expect(session.beginSASLReauthentication(using: nil) == nil)
+		#expect((session.sentCapabilityCommands as NSArray).contains("REQ sasl"))
+	}
+
 	@Test("A failure during registration still disconnects when asked to")
 	func registrationFailureStillDisconnects() throws {
 		let session = TestServerSession(

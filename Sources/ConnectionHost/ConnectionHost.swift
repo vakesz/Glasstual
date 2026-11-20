@@ -163,6 +163,11 @@ actor ConnectionHost {
 
 		ConnectionHostLog.connection.debug("Closing connection \(socket.uniqueIdentifier, privacy: .public)...")
 
+		/* The transport learns that its owner closed it before the writer is
+		 cancelled, so a write that the cancellation interrupts ends quietly
+		 instead of reaching the client as the reason for the disconnect. */
+		let disconnectFollows = await socket.close()
+
 		resetState()
 
 		/* The transport is not let go of here when a disconnect is on its way.
@@ -174,11 +179,11 @@ actor ConnectionHost {
 
 		 A transport that never dialled has no such path, though, and closing it
 		 is a no-operation. Waiting for an event that is not coming left the
-		 reference in place for good, and every later `open` was refused. */
-		guard await socket.close() else {
+		 reference in place for good, and every later `open` was refused. Only
+		 the transport this close began with is let go of: a later `open` may
+		 already hold its own. */
+		if disconnectFollows == false, self.socket === socket {
 			releaseSocket()
-
-			return
 		}
 	}
 

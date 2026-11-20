@@ -95,8 +95,10 @@ extension ServerSession {
 		let sender = message.senderNickname ?? ""
 		let invitee = message.params[0]
 		let channelName = message.params[1]
+		let ignore = message.senderHostmask.flatMap(findAddressBookEntry(forHostmask:))
 
 		guard nicknameIsMyself(invitee) else {
+			guard ignore?.ignoreGeneralEventMessages != true else { return }
 			/* An invitation addressed to somebody else reaches a client only
 			 through `invite-notify`, so one that arrives without it is not an
 			 event this session asked to be told about. */
@@ -112,6 +114,8 @@ extension ServerSession {
 			)
 			return
 		}
+
+		guard ignore?.ignorePrivateMessages != true else { return }
 
 		let text = String(localized: .IRC.invitedYouToJoin(
 			sender,

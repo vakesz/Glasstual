@@ -210,6 +210,64 @@ struct UserScriptRunnerTests {
 		#expect(pipe.fileHandleForReading.readabilityHandler == nil)
 	}
 
+	@Test("A stop request returns what was read while a background child still holds the pipe", .timeLimit(.minutes(1)))
+	func stopReturnsOutputReadSoFar() async throws {
+		let pipe = Pipe()
+		defer {
+			try? pipe.fileHandleForReading.close()
+			try? pipe.fileHandleForWriting.close()
+		}
+		let (stop, continuation) = AsyncStream<Void>.makeStream()
+		try pipe.fileHandleForWriting.write(contentsOf: Data("done\n".utf8))
+		let output = Task { try await UserScriptRunner.readOutput(from: pipe.fileHandleForReading, stop: stop) }
+
+		// The write end stays open, as a child the script left running would keep it.
+		let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+		while pipe.fileHandleForReading.readabilityHandler == nil, ContinuousClock.now < deadline {
+			await Task.yield()
+		}
+		continuation.yield(())
+
+		#expect(try await output.value == Data("done\n".utf8))
+	}
+
+	@Test("The drain gives up on a held pipe after the grace period and keeps the partial output", .timeLimit(.minutes(1)))
+	func drainEndsAtTheGracePeriod() async throws {
+		let pipe = Pipe()
+		defer {
+			try? pipe.fileHandleForReading.close()
+			try? pipe.fileHandleForWriting.close()
+		}
+		try pipe.fileHandleForWriting.write(contentsOf: Data("partial".utf8))
+		let (stop, continuation) = AsyncStream<Void>.makeStream()
+		let output = Task { try await UserScriptRunner.readOutput(from: pipe.fileHandleForReading, stop: stop) }
+
+		let result = await UserScriptRunner.drained(output, stop: continuation, grace: .milliseconds(100))
+
+		#expect(try result.get() == Data("partial".utf8))
+	}
+
+	@Test("Cancelling the drain stops the reader instead of waiting for end of file", .timeLimit(.minutes(1)))
+	func cancellingTheDrainStopsTheReader() async {
+		let pipe = Pipe()
+		defer {
+			try? pipe.fileHandleForReading.close()
+			try? pipe.fileHandleForWriting.close()
+		}
+		let (stop, continuation) = AsyncStream<Void>.makeStream()
+		let output = Task { try await UserScriptRunner.readOutput(from: pipe.fileHandleForReading, stop: stop) }
+		let drain = Task { await UserScriptRunner.drained(output, stop: continuation, grace: .seconds(3600)) }
+		let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+		while pipe.fileHandleForReading.readabilityHandler == nil, ContinuousClock.now < deadline {
+			await Task.yield()
+		}
+
+		drain.cancel()
+		let result = await drain.value
+
+		#expect(throws: CancellationError.self) { try result.get() }
+	}
+
 	@Test("Oversized output is drained but rejected, never returned as partial commands")
 	func outputPastTheCeilingIsRejected() async throws {
 		let pipe = Pipe()

@@ -75,6 +75,7 @@ struct IRCSpecTransportSecurityTests {
 			values("port=6697,duration=2592000"),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
+			transport: .irc,
 			secured: false,
 			certificateChainValidated: false
 		)
@@ -90,6 +91,7 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=2592000"),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
+			transport: .irc,
 			secured: false,
 			certificateChainValidated: false
 		)
@@ -107,6 +109,7 @@ struct IRCSpecTransportSecurityTests {
 			values("port=6697,duration=0"),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
+			transport: .irc,
 			secured: false,
 			certificateChainValidated: false
 		)
@@ -120,6 +123,7 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=0"),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
+			transport: .irc,
 			secured: false,
 			certificateChainValidated: false
 		)
@@ -137,6 +141,7 @@ struct IRCSpecTransportSecurityTests {
 			values("port=6697,duration=0"),
 			forHost: "irc.example.net",
 			connectedPort: 6667,
+			transport: .irc,
 			secured: false,
 			certificateChainValidated: false
 		)
@@ -154,6 +159,7 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=2592000,port=6697"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: false
 		)
@@ -171,17 +177,18 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=2592000,port=6697"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
 
-		#expect(action == .stored(port: 6697))
+		#expect(action == .stored(.port(6697)))
 
 		let policy = try #require(policyStore.policy(forHost: "irc.example.net"))
 
-		#expect(policy.port == 6697)
+		#expect(policy.scope == .port(6697))
 		#expect(policy.isExpired == false)
-		#expect(policyStore.enforcedPort(forHost: "irc.example.net") == 6697)
+		#expect(policyStore.enforcement(forHost: "irc.example.net") == .port(6697))
 	}
 
 	@Test("sts: an offer with no port pins the port already in use")
@@ -191,11 +198,12 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=2592000"),
 			forHost: "irc.example.net",
 			connectedPort: 7000,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
 
-		#expect(action == .stored(port: 7000))
+		#expect(action == .stored(.port(7000)))
 	}
 
 	@Test("sts: a secure connection ignores a different advertised upgrade port")
@@ -203,11 +211,11 @@ struct IRCSpecTransportSecurityTests {
 		let policyStore = store()
 		let action = try policyStore.applyCapabilityValues(
 			values("duration=300,port=6697"),
-			forHost: "irc.example.net", connectedPort: 7000,
+			forHost: "irc.example.net", connectedPort: 7000, transport: .irc,
 			secured: true, certificateChainValidated: true
 		)
-		#expect(action == .stored(port: 7000))
-		#expect(policyStore.enforcedPort(forHost: "irc.example.net") == 7000)
+		#expect(action == .stored(.port(7000)))
+		#expect(policyStore.enforcement(forHost: "irc.example.net") == .port(7000))
 	}
 
 	/// `sts`: "A duration of 0 means the policy expires immediately", which is
@@ -220,6 +228,7 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=2592000,port=6697"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
@@ -228,6 +237,7 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=0"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
@@ -245,6 +255,7 @@ struct IRCSpecTransportSecurityTests {
 			values("port=6697"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
@@ -264,6 +275,7 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=\(duration),port=6697"),
 			forHost: "irc.example.net",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
@@ -284,12 +296,13 @@ struct IRCSpecTransportSecurityTests {
 			values("duration=2592000,port=6697"),
 			forHost: "IRC.Example.NET",
 			connectedPort: 6697,
+			transport: .irc,
 			secured: true,
 			certificateChainValidated: true
 		)
 
 		#expect(policyStore.policy(forHost: "irc.example.net") != nil)
-		#expect(policyStore.enforcedPort(forHost: "IRC.EXAMPLE.NET") == 6697)
+		#expect(policyStore.enforcement(forHost: "IRC.EXAMPLE.NET") == .port(6697))
 
 		/* Withdrawal has to fold the host the same way, or a policy could be
 		 stored under one spelling and be unremovable under another. */
@@ -308,6 +321,6 @@ struct IRCSpecTransportSecurityTests {
 
 		#expect(expired.isExpired)
 		#expect(policyStore.policy(forHost: "irc.example.net") == nil)
-		#expect(policyStore.enforcedPort(forHost: "irc.example.net") == nil)
+		#expect(policyStore.enforcement(forHost: "irc.example.net") == nil)
 	}
 }
